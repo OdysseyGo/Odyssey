@@ -1,8 +1,8 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MapScreenStyle } from './MapScreen.styles';
-import { getColorTheme } from '@/utils/getColorTheme';
+import { useColorTheme } from '@/utils/getColorTheme';
 import { useMemo } from 'react';
 
 const initialRegion = {
@@ -18,7 +18,7 @@ const sampleRoute = [
 ];
 
 export default function MapScreen() {
-  const theme = getColorTheme();
+  const theme = useColorTheme();
   const styles = useMemo(() => MapScreenStyle(theme), [theme]);
 
   return (
