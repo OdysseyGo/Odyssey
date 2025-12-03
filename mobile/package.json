@@ -7,7 +7,11 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "format": "prettier --write \"**/*.{ts,tsx,json,js}\""
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc --noEmit",
+    "validate": "npm run lint && npm run format:check && npm run type-check"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -32,7 +36,11 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.20.0",
     "@types/react": "~19.1.0",
+    "eslint": "^8.57.0",
+    "eslint-config-expo": "^7.0.0",
+    "eslint-plugin-react": "^7.37.5",
     "prettier": "^3.7.3",
     "react-test-renderer": "19.1.0",
     "typescript": "~5.9.2"

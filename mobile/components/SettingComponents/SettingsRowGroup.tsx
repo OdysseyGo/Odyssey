@@ -1,10 +1,7 @@
 import React from 'react';
 import { View, ViewStyle } from 'react-native';
 import { settingsRowGroupStyle } from './SettingsRowGroup.styles';
-import { SettingsRowItem } from './SettingsRowItem';
-import { getColorTheme } from '@/utils/getColorTheme';
-import { ThemeName } from '../../constants/Colors';
-
+import { useColorTheme } from '@/utils/getColorTheme';
 
 interface SettingsRowGroupProps {
   children: React.ReactNode;
@@ -12,7 +9,7 @@ interface SettingsRowGroupProps {
 }
 
 export const SettingsRowGroup: React.FC<SettingsRowGroupProps> = ({ children, style }) => {
-  const theme = getColorTheme();
+  const theme = useColorTheme();
 
   const styles = settingsRowGroupStyle(theme);
   const childArray = React.Children.toArray(children);
