@@ -30,5 +30,21 @@ class BadgeService:
                     UserBadge.objects.create(user=user, badge=badge)
                     newly_earned.append(badge.name)
                     continue
+
+            # check City Tour Count 
+            if 'city' in criteria and 'count' in criteria:
+                city = criteria['city']
+                required_count = criteria['count']
+                
+
+                completed_in_city = user.tour_progress.filter(
+                    status='COMPLETED',
+                    tour__city__iexact=city
+                ).count()
+                
+                if completed_in_city >= required_count:
+                    UserBadge.objects.create(user=user, badge=badge)
+                    newly_earned.append(badge.name)
+                    continue
         
         return newly_earned

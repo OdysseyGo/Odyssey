@@ -40,6 +40,7 @@ class Tour(models.Model):
     difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, default=MEDIUM)
     duration_minutes = models.PositiveIntegerField(help_text="Estimated duration in minutes")
     is_premium = models.BooleanField(default=False)
+    city = models.CharField(max_length=100, blank=True, help_text="City where the tour is located")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=DRAFT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

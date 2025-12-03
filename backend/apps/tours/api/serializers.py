@@ -61,7 +61,7 @@ class TourSerializer(serializers.ModelSerializer):
         model = Tour
         fields = [
             'id', 'title', 'description', 'creator', 'tour_type', 'category', 
-            'difficulty', 'duration_minutes', 'is_premium', 'status', 
+            'difficulty', 'duration_minutes', 'is_premium', 'city', 'status', 
             'created_at', 'updated_at', 'steps', 'reviews', 'average_rating'
         ]
         read_only_fields = ['creator', 'created_at', 'updated_at', 'average_rating']
