@@ -65,6 +65,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Prebuild Expo Types
+        run: npx expo export --output-dir ./dist-temp
+        
       - name: Lint (ESLint)
         run: npm run lint
 
