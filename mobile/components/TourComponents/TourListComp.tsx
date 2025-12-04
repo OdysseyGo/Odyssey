@@ -1,7 +1,7 @@
 import { View, Text } from '@/components/Themed';
 import { TourListItemProps } from './TourListComp.config';
 import getStyles from './TourListComp.styles';
-import { useColorTheme } from '@/utils/getColorTheme';
+import { useColorTheme } from '@/utils/useColorTheme';
 import { STAR } from '@/constants/Symbols';
 import { useMemo } from 'react';
 

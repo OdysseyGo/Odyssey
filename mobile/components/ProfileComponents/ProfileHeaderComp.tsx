@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useColorTheme } from '@/utils/getColorTheme';
+import { useColorTheme } from '@/utils/useColorTheme';
 
 import getStyles from './ProfileHeaderComp.styles';
 import { ProfileHeaderProps } from './ProfileHeaderComp.config';

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import getStyles from './ProfileStatsComp.styles';
 import { Props } from './ProfileStatsComp.config';
-import { useColorTheme } from '@/utils/getColorTheme';
+import { useColorTheme } from '@/utils/useColorTheme';
 
 export default function ProfileStatsComp({ xp, tours, badges, followers, following }: Props) {
   const theme = useColorTheme();
