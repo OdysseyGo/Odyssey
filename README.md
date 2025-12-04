@@ -55,3 +55,35 @@ npm start
 - With Expo running, press **`i`** in the Expo terminal.
 
 Changes in `mobile/` are reflected automatically via Fast Refresh.
+
+## 5. Formatting/Linting
+
+### Backend
+
+#### Validate changes
+```bash
+#From /backend
+./scripts/validate.sh
+```
+#### Auto-Fix
+```bash
+#From /backend
+ruff check . --fix
+black .
+```
+
+### Frontend
+
+#### Validate changes
+```bash
+#From /mobile
+npm run validate
+```
+
+#### Auto-Fix
+```bash
+#From /mobile
+npm run format
+npm run lint -- --fix
+```
+
