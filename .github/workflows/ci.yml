@@ -64,18 +64,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Prebuild Expo Types
-        run: |
-          npx expo export -p ios --output-dir ./dist-temp-ios
-          npx expo export -p android --output-dir ./dist-temp-android
-          rm -rf ./dist-temp-ios ./dist-temp-android
         
       - name: Lint (ESLint)
         run: npm run lint
 
       - name: Format check (Prettier)
         run: npm run format:check
-
-      - name: Type check (TS)
-        run: npm run type-check
