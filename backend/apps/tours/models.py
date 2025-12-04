@@ -1,46 +1,55 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
+
 
 class Tour(models.Model):
-    STORY = 'STORY'
-    PUZZLE = 'PUZZLE'
-    HYBRID = 'HYBRID'
-    
+    STORY = "STORY"
+    PUZZLE = "PUZZLE"
+    HYBRID = "HYBRID"
+
     TOUR_TYPE_CHOICES = [
-        (STORY, 'Story Mode'),
-        (PUZZLE, 'Puzzle Mode'),
-        (HYBRID, 'Hybrid Mode'),
+        (STORY, "Story Mode"),
+        (PUZZLE, "Puzzle Mode"),
+        (HYBRID, "Hybrid Mode"),
     ]
 
-    EASY = 'EASY'
-    MEDIUM = 'MEDIUM'
-    HARD = 'HARD'
+    EASY = "EASY"
+    MEDIUM = "MEDIUM"
+    HARD = "HARD"
 
     DIFFICULTY_CHOICES = [
-        (EASY, 'Easy'),
-        (MEDIUM, 'Medium'),
-        (HARD, 'Hard'),
+        (EASY, "Easy"),
+        (MEDIUM, "Medium"),
+        (HARD, "Hard"),
     ]
 
-    DRAFT = 'DRAFT'
-    PUBLISHED = 'PUBLISHED'
-    ARCHIVED = 'ARCHIVED'
+    DRAFT = "DRAFT"
+    PUBLISHED = "PUBLISHED"
+    ARCHIVED = "ARCHIVED"
 
     STATUS_CHOICES = [
-        (DRAFT, 'Draft'),
-        (PUBLISHED, 'Published'),
-        (ARCHIVED, 'Archived'),
+        (DRAFT, "Draft"),
+        (PUBLISHED, "Published"),
+        (ARCHIVED, "Archived"),
     ]
 
     title = models.CharField(max_length=255)
     description = models.TextField()
-    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_tours')
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_tours"
+    )
     tour_type = models.CharField(max_length=20, choices=TOUR_TYPE_CHOICES)
     category = models.CharField(max_length=100)
-    difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, default=MEDIUM)
-    duration_minutes = models.PositiveIntegerField(help_text="Estimated duration in minutes")
+    difficulty = models.CharField(
+        max_length=20, choices=DIFFICULTY_CHOICES, default=MEDIUM
+    )
+    duration_minutes = models.PositiveIntegerField(
+        help_text="Estimated duration in minutes"
+    )
     is_premium = models.BooleanField(default=False)
-    city = models.CharField(max_length=100, blank=True, help_text="City where the tour is located")
+    city = models.CharField(
+        max_length=100, blank=True, help_text="City where the tour is located"
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=DRAFT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -48,37 +57,43 @@ class Tour(models.Model):
     def __str__(self):
         return self.title
 
+
 class TourStep(models.Model):
-    tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name='steps')
+    tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name="steps")
     order = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
     description = models.TextField(help_text="Story content or location description")
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    image = models.ImageField(upload_to='tour_steps/', blank=True, null=True)
-    audio = models.FileField(upload_to='tour_audio/', blank=True, null=True)
+    image = models.ImageField(upload_to="tour_steps/", blank=True, null=True)
+    audio = models.FileField(upload_to="tour_audio/", blank=True, null=True)
 
     class Meta:
-        ordering = ['order']
+        ordering = ["order"]
 
     def __str__(self):
         return f"{self.tour.title} - Step {self.order}"
 
+
 class Puzzle(models.Model):
-    TRIVIA = 'TRIVIA'
-    AR = 'AR'
-    GYROSCOPE = 'GYROSCOPE'
+    TRIVIA = "TRIVIA"
+    AR = "AR"
+    GYROSCOPE = "GYROSCOPE"
 
     PUZZLE_TYPE_CHOICES = [
-        (TRIVIA, 'Trivia'),
-        (AR, 'Augmented Reality'),
-        (GYROSCOPE, 'Gyroscope'),
+        (TRIVIA, "Trivia"),
+        (AR, "Augmented Reality"),
+        (GYROSCOPE, "Gyroscope"),
     ]
 
-    step = models.OneToOneField(TourStep, on_delete=models.CASCADE, related_name='puzzle')
+    step = models.OneToOneField(
+        TourStep, on_delete=models.CASCADE, related_name="puzzle"
+    )
     puzzle_type = models.CharField(max_length=20, choices=PUZZLE_TYPE_CHOICES)
     question = models.TextField()
-    options = models.JSONField(help_text="JSON structure for multiple choice options", blank=True, null=True)
+    options = models.JSONField(
+        help_text="JSON structure for multiple choice options", blank=True, null=True
+    )
     correct_answer = models.CharField(max_length=255)
     hint = models.TextField(blank=True)
     xp_reward = models.PositiveIntegerField(default=10)
@@ -86,9 +101,12 @@ class Puzzle(models.Model):
     def __str__(self):
         return f"Puzzle for {self.step}"
 
+
 class Review(models.Model):
-    tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name='reviews')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews')
+    tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name="reviews")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reviews"
+    )
     rating = models.PositiveSmallIntegerField()
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)

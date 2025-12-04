@@ -1,5 +1,6 @@
 from rest_framework import permissions
 
+
 class IsCreatorOrReadOnly(permissions.BasePermission):
     """
     Custom permission to only allow creators of an object to edit it.

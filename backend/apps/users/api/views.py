@@ -1,12 +1,13 @@
 from django.db.models import QuerySet
-from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
-from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from apps.users.models import User, Follow, Admin
-from .serializers import UserSerializer, FollowSerializer, AdminSerializer
+from apps.users.models import Admin, Follow, User
+
+from .serializers import AdminSerializer, FollowSerializer, UserSerializer
 
 
 class UserViewSet(ModelViewSet):

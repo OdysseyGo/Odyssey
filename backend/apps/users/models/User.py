@@ -1,5 +1,6 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db import models
+
 
 class User(AbstractUser):
     NORMAL = 1
@@ -14,7 +15,7 @@ class User(AbstractUser):
 
     # Removed user_id, name, hashed_password as AbstractUser handles these
     # (id, username/first_name/last_name, password)
-    
+
     xp = models.IntegerField(default=0)
     follow_count = models.IntegerField(default=0)
     follower_count = models.IntegerField(default=0)
