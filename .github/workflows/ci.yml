@@ -66,7 +66,9 @@ jobs:
         run: npm ci
 
       - name: Prebuild Expo Types
-        run: npx expo export --output-dir ./dist-temp
+        run: |
+          npx expo export -p ios --output-dir ./dist-temp-ios
+          npx expo export -p android --output-dir ./dist-temp-android
         
       - name: Lint (ESLint)
         run: npm run lint
