@@ -3,9 +3,11 @@ import MapView, { Marker, Polyline } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MapScreenStyle } from './MapScreen.styles';
 import { useColorTheme } from '@/utils/getColorTheme';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import * as Location from 'expo-location';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const initialRegion = {
+const defaultRegion = {
   latitude: 41.0082,
   longitude: 28.9784,
   latitudeDelta: 0.05,
@@ -20,11 +22,60 @@ const sampleRoute = [
 export default function MapScreen() {
   const theme = useColorTheme();
   const styles = useMemo(() => MapScreenStyle(theme), [theme]);
+  const mapRef = useRef<MapView>(null);
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
+
+      if (mapRef.current) {
+        mapRef.current.animateToRegion({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        }, 1000);
+      }
+    })();
+  }, []);
+
+  const currentRegion = location
+    ? {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      }
+    : defaultRegion;
 
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} initialRegion={initialRegion}>
-        <Marker coordinate={initialRegion} title="Waypoint 1" />
+      <MapView 
+        ref={mapRef}
+        style={styles.map} 
+        initialRegion={defaultRegion}
+        showsUserLocation={true}
+        showsMyLocationButton={true}
+        followsUserLocation={false}
+      >
+        <Marker coordinate={currentRegion} title="Waypoint 1">
+          <View style={{ alignItems: 'center' }}>
+            <MaterialCommunityIcons 
+              name="map-marker-star" 
+              size={48} 
+              color="#FF6B6B" 
+            />
+          </View>
+        </Marker>
         <Polyline coordinates={sampleRoute} strokeWidth={4} />
       </MapView>
 
