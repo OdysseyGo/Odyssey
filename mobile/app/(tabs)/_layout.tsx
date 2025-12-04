@@ -1,10 +1,10 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Link, Tabs } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { Pressable } from 'react-native';
 
 import Colors from '@/constants/Colors';
-import { getColorTheme } from '@/utils/getColorTheme';
+import { useColorTheme } from '@/utils/useColorTheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
@@ -16,7 +16,7 @@ function TabBarIcon(props: {
 }
 
 export default function TabLayout() {
-  const colorTheme = getColorTheme();
+  const colorTheme = useColorTheme();
 
   return (
     <Tabs
@@ -31,7 +31,7 @@ export default function TabLayout() {
           backgroundColor: Colors[colorTheme ?? 'light'].primary,
         },
       }}
->
+    >
       <Tabs.Screen
         name="index"
         options={{

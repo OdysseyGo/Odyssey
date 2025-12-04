@@ -1,5 +1,7 @@
 from django.db import models
+
 from apps.users.models.User import User
+
 
 class Follow(models.Model):
     follow_id = models.BigAutoField(primary_key=True)

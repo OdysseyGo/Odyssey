@@ -1,7 +1,6 @@
 import { StyleSheet } from 'react-native';
-import Colors, {ThemeName} from '@/constants/Colors';
+import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
-
 
 export default function getStyles(theme: ThemeName) {
   const color = Colors[theme];

@@ -3,7 +3,7 @@ import { TourDisplayProps } from './TourDisplayComp.config';
 import { getStyles } from './TourDisplayComp.styles';
 
 import { STAR } from '@/constants/Symbols';
-import { getColorTheme } from '@/utils/getColorTheme';
+import { useColorTheme } from '@/utils/useColorTheme';
 import { useMemo } from 'react';
 
 export default function TourDisplayComp({
@@ -15,7 +15,7 @@ export default function TourDisplayComp({
   reviewCount,
   rating,
 }: TourDisplayProps) {
-  const theme = getColorTheme();
+  const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
 
   return (

@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import getStyles from './ProfileStatsComp.styles';
 import { Props } from './ProfileStatsComp.config';
-import { getColorTheme } from '@/utils/getColorTheme';
+import { useColorTheme } from '@/utils/useColorTheme';
 
 export default function ProfileStatsComp({ xp, tours, badges, followers, following }: Props) {
-  const theme = getColorTheme();
+  const theme = useColorTheme();
   const styles = getStyles(theme);
 
   return (

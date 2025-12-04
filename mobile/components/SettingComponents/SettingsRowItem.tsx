@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Pressable, View, Text, Image } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { rowItemStyle } from './SettingsRowItem.styles';
-import { getColorTheme } from '@/utils/getColorTheme';
+import { useColorTheme } from '@/utils/useColorTheme';
 import type { SettingsItemConfig } from './SettingsRowItem.config';
 
 interface SettingsRowItemProps {
@@ -17,7 +17,7 @@ export const SettingsRowItem: React.FC<SettingsRowItemProps> = ({
   showDivider = false,
   onPress,
 }) => {
-  const theme = getColorTheme();
+  const theme = useColorTheme();
 
   const styles = useMemo(() => rowItemStyle(theme), [theme]);
 

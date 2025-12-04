@@ -1,5 +1,5 @@
 import TourDisplayComp from '@/components/TourComponents/TourDisplayComp';
-import { View, Text, ScrollView } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import { exampleTour } from '@/components/TourComponents/TourDisplayComp.config';
 import TourListComp from '@/components/TourComponents/TourListComp';
 

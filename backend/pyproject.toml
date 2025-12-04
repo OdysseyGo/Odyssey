@@ -1,0 +1,35 @@
+[tool.black]
+line-length = 88
+target-version = ['py311']
+# Regex to ignore specific folders (git, venv, and ALL migrations folders)
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | .*/migrations
+)/
+'''
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+# Exclude migrations from linting
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+# E: pycodestyle errors, F: Pyflakes, I: isort (imports)
+select = ["E", "F", "I"]
+# IGNORE E501 GLOBALLY: We trust Black to handle formatting.
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore "Star imports" in settings (Standard Django pattern)
+"config/settings/__init__.py" = ["F403"]
+
+# Ignore "Import not at top of file" in serializers (Needed for circular deps)
+"apps/gamification/api/serializers.py" = ["E402"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--ds=config.settings --reuse-db"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
