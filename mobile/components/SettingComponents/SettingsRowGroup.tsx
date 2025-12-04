@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, ViewStyle } from 'react-native';
 import { settingsRowGroupStyle } from './SettingsRowGroup.styles';
-import { useColorTheme } from '@/utils/getColorTheme';
+import { useColorTheme } from '@/utils/useColorTheme';
 
 interface SettingsRowGroupProps {
   children: React.ReactNode;

@@ -3,7 +3,7 @@ import { TourDisplayProps } from './TourDisplayComp.config';
 import { getStyles } from './TourDisplayComp.styles';
 
 import { STAR } from '@/constants/Symbols';
-import { useColorTheme } from '@/utils/getColorTheme';
+import { useColorTheme } from '@/utils/useColorTheme';
 import { useMemo } from 'react';
 
 export default function TourDisplayComp({

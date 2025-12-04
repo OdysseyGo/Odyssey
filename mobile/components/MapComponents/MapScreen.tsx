@@ -2,7 +2,7 @@ import { View, Text, Pressable } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MapScreenStyle } from './MapScreen.styles';
-import { useColorTheme } from '@/utils/getColorTheme';
+import { useColorTheme } from '@/utils/useColorTheme';
 import { useMemo } from 'react';
 
 const initialRegion = {
