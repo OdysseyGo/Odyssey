@@ -1,9 +1,6 @@
 from rest_framework import serializers
 
-from apps.users.models.Admin import Admin
-from apps.users.models.Follow import Follow
-from apps.users.models.User import User
-
+from apps.users.models import User, Follow, Admin
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
