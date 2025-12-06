@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
-export default function getStyles(theme: ThemeName) {
+export const profileStatsCompStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     card: {
@@ -76,4 +76,4 @@ export default function getStyles(theme: ThemeName) {
       backgroundColor: '#E0E0E0',
     },
   });
-}
+};
