@@ -4,9 +4,15 @@ import { authTextInputStyle, getPlaceholderColor } from './AuthTextInput.styles'
 import { useColorTheme } from '@/utils/useColorTheme';
 import { AuthTextInputProps } from './AuthTextInput.config';
 
-export default function AuthTextInput({ label, error, accessibilityLabel, accessibilityHint, ...rest }: AuthTextInputProps) {
+export default function AuthTextInput({
+  label,
+  error,
+  accessibilityLabel,
+  accessibilityHint,
+  ...rest
+}: AuthTextInputProps) {
   const resolvedAccessibilityLabel = accessibilityLabel ?? label;
-  
+
   const theme = useColorTheme();
   const styles = authTextInputStyle(theme);
   const placeholderColor = getPlaceholderColor(theme);

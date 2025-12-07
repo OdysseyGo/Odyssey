@@ -7,7 +7,6 @@ import { authLayoutStyles } from '@/components/LoginComponents/AuthLayout.styles
 import { useColorTheme } from '@/utils/useColorTheme';
 import { loginHeaderConfig } from '@/components/LoginComponents/AuthLayout.config';
 
-
 type LoginScreenProps = {
   navigation?: any;
 };
@@ -50,9 +49,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         <Text style={layoutStyles.headerSubtitle}>{loginHeaderConfig.subtitle}</Text>
       </View>
 
-      {errors.general && (
-        <Text style={layoutStyles.errorText}>{errors.general}</Text>
-      )}
+      {errors.general && <Text style={layoutStyles.errorText}>{errors.general}</Text>}
       <View style={layoutStyles.inputContainer}>
         <AuthTextInput
           label="Email"

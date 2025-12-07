@@ -17,7 +17,11 @@ export default function AuthButton({ title, onPress, disabled, loading }: AuthBu
       activeOpacity={0.8}
       disabled={isDisabled}
     >
-      {loading ? <ActivityIndicator accessibilityLabel="Loading" /> : <Text style={styles.title}>{title}</Text>}
+      {loading ? (
+        <ActivityIndicator accessibilityLabel="Loading" />
+      ) : (
+        <Text style={styles.title}>{title}</Text>
+      )}
     </TouchableOpacity>
   );
 }

@@ -16,9 +16,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.container}>
-        {children}
-      </View>
+      <View style={styles.container}>{children}</View>
     </KeyboardAvoidingView>
   );
 };
