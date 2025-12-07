@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "apps.users",
     "apps.tours",
     "apps.gamification",
+    "apps.ai_content",
 ]
 
 MIDDLEWARE = [

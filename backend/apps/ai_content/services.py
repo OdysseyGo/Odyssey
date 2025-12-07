@@ -1,0 +1,146 @@
+import os
+import json
+import google.generativeai as genai
+from apps.tours.models import Tour, TourStep, Puzzle
+
+class GeminiService:
+    """Generating tours w/ Google Gemini AI."""
+    
+    def __init__(self):
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY environment variable is not set")
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel("gemini-2.0-flash")
+    
+    def generate_tour(self, city: str, theme: str, mode: str, duration: int, language: str, creator) -> Tour:
+        """
+        Generate a complete tour with steps and puzzles.
+        
+        Args:
+            city: City name (e.g., "Paris")
+            theme: Tour theme (e.g., "Haunted History")
+            mode: STORY, PUZZLE, or HYBRID
+            duration: Approximate duration in minutes
+            language: Language for content (e.g., "en", "tr")
+            creator: User object who will own the tour
+        
+        Returns:
+            Tour object (saved to database)
+        """
+        prompt = self._build_prompt(city, theme, mode, duration, language)
+        
+        response = self.model.generate_content(prompt)
+        tour_data = self._parse_response(response.text)
+        
+        # Create Tour
+        tour = Tour.objects.create(
+            title=tour_data["title"],
+            description=tour_data["description"],
+            creator=creator,
+            tour_type=mode,
+            category=theme,
+            difficulty=tour_data.get("difficulty", "MEDIUM"),
+            duration_minutes=duration,
+            city=city,
+            status=Tour.DRAFT  # Start as draft so creator can review
+        )
+        
+        # Create Steps and Puzzles
+        for idx, step_data in enumerate(tour_data["steps"], start=1):
+            step = TourStep.objects.create(
+                tour=tour,
+                order=idx,
+                title=step_data["title"],
+                description=step_data["description"],
+                latitude=step_data["latitude"],
+                longitude=step_data["longitude"]
+            )
+            
+            # Create puzzle if present (for PUZZLE and HYBRID modes)
+            if "puzzle" in step_data and step_data["puzzle"]:
+                puzzle_data = step_data["puzzle"]
+                Puzzle.objects.create(
+                    step=step,
+                    puzzle_type=puzzle_data.get("type", "TRIVIA"),
+                    question=puzzle_data["question"],
+                    options=puzzle_data.get("options"),
+                    correct_answer=puzzle_data["answer"],
+                    hint=puzzle_data.get("hint", ""),
+                    xp_reward=puzzle_data.get("xp", 25)
+                )
+        
+        return tour
+    
+    def _build_prompt(self, city: str, theme: str, mode: str, duration: int, language: str) -> str:
+        """Structured prompt for Gemini"""
+        
+        mode_instructions = {
+            "STORY": "Focus on rich narrative storytelling. Each step should have detailed historical or thematic descriptions that immerse the user in the story. No puzzles needed.",
+            "PUZZLE": "Focus on interactive challenges. Each step MUST have a puzzle (trivia question, riddle, or observation task). Keep descriptions brief.",
+            "HYBRID": "Balance storytelling with puzzles. Each step should have both a narrative description AND a puzzle challenge."
+        }
+        
+        puzzle_schema = """
+        "puzzle": {
+            "type": "TRIVIA",
+            "question": "What year was this building constructed?",
+            "options": ["1850", "1875", "1900", "1925"],
+            "answer": "1875",
+            "hint": "It was built during the Victorian era",
+            "xp": 25
+        }"""
+        
+        num_steps = max(3, duration // 15)  # Roughly 15 min per step
+        
+        puzzle_field = '"puzzle": {...}' if mode in ['PUZZLE', 'HYBRID'] else ''
+        puzzle_instruction = "Puzzle schema for each step:" + puzzle_schema if mode in ["PUZZLE", "HYBRID"] else ""
+        
+        prompt = f"""You are a tour guide AI. Generate a {mode} tour in {city} with the theme "{theme}".
+
+LANGUAGE: Generate all content in {language}.
+DURATION: {duration} minutes (approximately {num_steps} locations).
+MODE: {mode} - {mode_instructions.get(mode, mode_instructions["HYBRID"])}
+
+IMPORTANT REQUIREMENTS:
+1. Use REAL locations with accurate GPS coordinates in {city}.
+2. Create a logical walking route between locations.
+3. Make the narrative engaging and connected to the theme.
+
+OUTPUT FORMAT (strict JSON):
+{{
+    "title": "Tour title",
+    "description": "Brief tour description",
+    "difficulty": "EASY" or "MEDIUM" or "HARD",
+    "steps": [
+        {{
+            "title": "Location name",
+            "description": "Narrative/story content for this location",
+            "latitude": 48.8584,
+            "longitude": 2.2945{', ' + puzzle_field if puzzle_field else ''}
+        }}
+    ]
+}}
+
+{puzzle_instruction}
+
+Generate the tour now:"""
+        
+        return prompt
+    
+    def _parse_response(self, response_text: str) -> dict:
+        """Parse Gemini's response (JSON)."""
+        # this is to clean up response 
+        # Gemini sometimes wraps JSON in markdown
+        text = response_text.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        if text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+        
+        try:
+            return json.loads(text.strip())
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Failed to parse AI response as JSON: {e}")
