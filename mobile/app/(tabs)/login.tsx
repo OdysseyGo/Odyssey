@@ -11,7 +11,7 @@ type LoginScreenProps = {
   navigation?: any;
 };
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
+export default function LoginScreen({ navigation }: LoginScreenProps) {
   const theme = useColorTheme();
   const layoutStyles = authLayoutStyles(theme);
 
@@ -83,6 +83,4 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       )}
     </AuthLayout>
   );
-};
-
-export default LoginScreen;
+}
