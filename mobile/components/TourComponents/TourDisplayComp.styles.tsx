@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
-export const getStyles = (theme: ThemeName) => {
+export const tourDisplayCompStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     card: {
