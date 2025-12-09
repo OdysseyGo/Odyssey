@@ -1,17 +1,20 @@
 import AuthLayout from '@/components/LoginComponents/AuthLayout';
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text } from 'react-native';
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import { authLayoutStyles } from '@/components/LoginComponents/AuthLayout.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { loginHeaderConfig } from '@/components/LoginComponents/AuthLayout.config';
+import AuthSubButton from '@/components/LoginComponents/AuthSubButton';
+import {router} from 'expo-router';
 
 type LoginScreenProps = {
   navigation?: any;
 };
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
+  
   const theme = useColorTheme();
   const layoutStyles = authLayoutStyles(theme);
 
@@ -43,6 +46,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   };
 
   return (
+
     <AuthLayout>
       <View style={layoutStyles.headerContainer}>
         <Text style={layoutStyles.headerTitle}>{loginHeaderConfig.title}</Text>
@@ -72,15 +76,12 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         />
 
         <AuthButton title="Log In" onPress={handleLogin} loading={loading} />
+        <AuthSubButton
+          title="No Account? Create One"
+          onPress={() => router.push('/register')}
+          loading={loading}
+        />
       </View>
-      {navigation && (
-        <View style={layoutStyles.footerContainer}>
-          <Text style={layoutStyles.footerMessage}>Don&apos;t have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={layoutStyles.footerLink}>Sign up</Text>
-          </TouchableOpacity>
-        </View>
-      )}
     </AuthLayout>
   );
 }

@@ -31,7 +31,7 @@ export default function TabLayout() {
           backgroundColor: Colors[colorTheme ?? 'light'].primary,
           height: 60,
         },
-        headerShadowVisible: false,
+        headerShadowVisible: false, 
       }}
     >
       <Tabs.Screen
@@ -78,16 +78,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="login"
-        options={{
-          title: 'Login',
-          tabBarIcon: ({ color }) => <TabBarIcon name="sign-in" color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
+          headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
