@@ -4,27 +4,27 @@ import { ActivityIndicator, StyleSheet } from 'react-native';
 import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
 
-import { getApiBaseUrl } from '@/utils/getApiBaseUrl';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? getApiBaseUrl();
+import { getUserById, type User } from '@/api/users';
 
 export default function TabOneScreen() {
-  const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(false);
 
   useEffect(() => {
-    const checkBackend = async () => {
+    const fetchUser = async () => {
+      setUserLoading(true);
       try {
-        const res = await fetch(`${API_BASE_URL}/api/health/`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        setStatus(json.status ?? 'ok');
+        const userData = await getUserById('1');
+        setUser(userData);
       } catch (err: any) {
-        setError(err.message ?? 'Unknown error');
+        setError(err.message ?? 'Failed to fetch user');
+      } finally {
+        setUserLoading(false);
       }
     };
 
-    checkBackend();
+    fetchUser();
   }, []);
 
   return (
@@ -33,26 +33,32 @@ export default function TabOneScreen() {
 
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
 
-      {/* ------------ API STATUS BOX ------------ */}
-      {!status && !error && (
+      {/* ------------ USER DATA BOX ------------ */}
+      {userLoading && (
         <View style={styles.statusBox}>
           <ActivityIndicator />
-          <Text>Checking backend…</Text>
+          <Text>Loading user…</Text>
         </View>
       )}
 
-      {status && (
-        <View style={styles.statusBox}>
-          <Text>Backend status: {status}</Text>
+      {user && (
+        <View style={styles.userBox}>
+          <Text style={styles.subtitle}>User ID 1 Details:</Text>
+          <Text>Username: {user.username}</Text>
+          <Text>Email: {user.email}</Text>
+          <Text>
+            Name: {user.first_name} {user.last_name}
+          </Text>
+          <Text>Level: {user.level}</Text>
+          <Text>XP: {user.xp}</Text>
+          <Text>Rating: {user.rating}</Text>
+          <Text>Tours: {user.tour_count}</Text>
+          <Text>Followers: {user.follower_count}</Text>
+          <Text>Following: {user.follow_count}</Text>
+          <Text>Country: {user.country}</Text>
         </View>
       )}
-
-      {error && (
-        <View style={styles.statusBox}>
-          <Text style={{ color: 'red' }}>Error: {error}</Text>
-        </View>
-      )}
-      {/* ------------ END API STATUS BOX ------------ */}
+      {/* ------------ END USER DATA BOX ------------ */}
 
       <EditScreenInfo path="app/(tabs)/index.tsx" />
     </View>
@@ -69,6 +75,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
   separator: {
     marginVertical: 30,
     height: 1,
@@ -77,5 +88,13 @@ const styles = StyleSheet.create({
   statusBox: {
     alignItems: 'center',
     marginBottom: 20,
+  },
+  userBox: {
+    alignItems: 'flex-start',
+    marginTop: 20,
+    padding: 15,
+    borderRadius: 8,
+    width: '90%',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
 });
