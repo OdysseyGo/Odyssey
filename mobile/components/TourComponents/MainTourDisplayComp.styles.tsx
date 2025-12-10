@@ -2,13 +2,14 @@ import { StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
-export const tourDisplayCompStyles = (theme: ThemeName) => {
+export const mainTourDisplayCompStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     card: {
-      marginHorizontal: Spacing.sm,
-      width: 200,
-      maxHeight: 300,
+
+      width: '90%',
+      height: 400,
+      maxHeight: 1000,
       backgroundColor: color.background,
       borderRadius: Spacing.borderRadius,
       overflow: 'hidden',
@@ -18,7 +19,7 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
       borderWidth: 1,
     },
     image: {
-      height: 120,
+        height: '70%',
       width: '100%',
     },
     header: {
@@ -30,6 +31,7 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
     },
 
     infoContainer: {
+        height: '30%',
       padding: Spacing.lg,
     },
     title: {

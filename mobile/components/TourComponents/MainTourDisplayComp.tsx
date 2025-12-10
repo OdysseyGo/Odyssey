@@ -1,14 +1,12 @@
 import { View, Text, Image, Pressable } from 'react-native';
 import { TourDisplayProps } from './TourDisplayComp.config';
-import { tourDisplayCompStyles } from './TourDisplayComp.styles';
+import { mainTourDisplayCompStyles } from './MainTourDisplayComp.styles';
 
 import { STAR } from '@/constants/Symbols';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { useMemo } from 'react';
-import { router } from 'expo-router';
 
-export default function TourDisplayComp({
-  id,
+export default function MainTourDisplayComp({
   image,
   title,
   author,
@@ -18,18 +16,11 @@ export default function TourDisplayComp({
   rating,
 }: TourDisplayProps) {
   const theme = useColorTheme();
-  const styles = useMemo(() => tourDisplayCompStyles(theme), [theme]);
-
-  const handlePress = () => {
-    router.push({
-      pathname: '/tour/[id]',
-      params: {id:  1 }
-    })
-  }
+  const styles = useMemo(() => mainTourDisplayCompStyles(theme), [theme]);
 
   return (
     <Pressable
-      onPress={handlePress}
+      onPress={() => {}}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.3 }]}
     >
       <Image source={{ uri: image }} style={styles.image} />
