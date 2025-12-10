@@ -1,12 +1,11 @@
+from django.contrib.auth import authenticate  # login direkt
 from django.db.models import QuerySet
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
-
-from rest_framework_simplejwt.tokens import RefreshToken #login token
-from django.contrib.auth import authenticate #login direkt
+from rest_framework_simplejwt.tokens import RefreshToken  # login token
 
 from apps.users.models import Admin, Follow, User
 
@@ -29,12 +28,14 @@ class UserViewSet(ModelViewSet):
 
         refresh = RefreshToken.for_user(user)
 
-        return Response({
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-            #"user": UserSerializer(user).data,
-        })
-    
+        return Response(
+            {
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                # "user": UserSerializer(user).data,
+            }
+        )
+
     @action(detail=False, methods=["post"], url_path="refresh_token")
     def refresh_token(self, request):
         refresh_token = request.data.get("refresh")
