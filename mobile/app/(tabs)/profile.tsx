@@ -12,9 +12,7 @@ import AuthButton from '@/components/LoginComponents/AuthButton';
 const IS_LOGGED_IN = false;
 
 export default function Profile() {
-  
   if (!IS_LOGGED_IN) {
-
     return (
       <View
         style={{
@@ -27,10 +25,7 @@ export default function Profile() {
         <Text style={{ fontSize: 18, marginBottom: 16, textAlign: 'center', color: '#666' }}>
           You need to be logged in to view your profile.
         </Text>
-        <AuthButton
-          title="Oooh I want to log in!"
-          onPress={() => router.push('/login')}
-        />
+        <AuthButton title="Oooh I want to log in!" onPress={() => router.push('/login')} />
       </View>
     );
   }

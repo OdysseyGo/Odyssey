@@ -13,7 +13,6 @@ export default function forgotPassword() {
   const theme = useColorTheme();
   const layoutStyles = authLayoutStyles(theme);
 
-
   const [email, setEmail] = useState<string>('');
   const [confirmEmail, setConfirmEmail] = useState<string>('');
   const [errors, setErrors] = useState<{
@@ -26,7 +25,6 @@ export default function forgotPassword() {
 
   const validate = () => {
     const newErrors: typeof errors = {};
-
 
     if (!email) newErrors.email = 'Email is required';
     if (!confirmEmail) newErrors.confirmEmail = 'Confirm Email is required';
@@ -59,7 +57,6 @@ export default function forgotPassword() {
       {errors.general && <Text style={layoutStyles.errorText}>{errors.general}</Text>}
 
       <View style={layoutStyles.inputContainer}>
-
         <AuthTextInput
           label="Email"
           value={email}
@@ -79,10 +76,9 @@ export default function forgotPassword() {
           autoCapitalize="none"
           error={errors.confirmEmail}
         />
-     
-        <AuthButton title="Reset Password" onPress={handleRegister} loading={loading} />
-        <AuthSubButton title ="Ooh I remembered!" onPress={() => router.back()} />
 
+        <AuthButton title="Reset Password" onPress={handleRegister} loading={loading} />
+        <AuthSubButton title="Ooh I remembered!" onPress={() => router.back()} />
       </View>
     </AuthLayout>
   );

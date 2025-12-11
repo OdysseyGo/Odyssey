@@ -20,7 +20,6 @@ export const authSubButtonStyles = (theme: ThemeName) => {
     },
 
     title: {
-
       color: color.text,
       fontSize: 16,
       fontWeight: '500',
