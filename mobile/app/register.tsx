@@ -81,7 +81,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
           label="First Name"
           value={firstName}
           onChangeText={setFirstName}
-          placeholder="Your full name"
+          placeholder="Your first name"
           autoCapitalize="words"
           error={errors.firstName}
         />
@@ -89,7 +89,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
           label="Last Name"
           value={lastName}
           onChangeText={setLastName}
-          placeholder="Your full name"
+          placeholder="Your last name"
           autoCapitalize="words"
           error={errors.lastName}
         />
@@ -97,8 +97,8 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
           label="Username"
           value={username}
           onChangeText={setUsername}
-          placeholder="Your full name"
-          autoCapitalize="words"
+          placeholder="Your username"
+          autoCapitalize="none"
           error={errors.username}
         />
 
