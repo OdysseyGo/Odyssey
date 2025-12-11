@@ -12,8 +12,6 @@ export default function ProfileHeaderComp({ title, subtitle }: ProfileHeaderProp
 
   return (
     <View style={styles.container}>
-
-
       <View style={styles.avatarWrapper}>
         <View style={styles.avatarCircle}>
           <FontAwesome name="user" size={56} />

@@ -6,16 +6,22 @@ export const authSubButtonStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     button: {
-      backgroundColor: 'transparent',
+      width: '100%',
+      padding: 20,
+      backgroundColor: color.secondary,
       paddingVertical: Spacing.sm,
+      borderRadius: Spacing.borderRadius,
       alignItems: 'center',
-      marginTop: Spacing.sm,
+      marginTop: Spacing.xl,
     },
+
     buttonDisabled: {
       opacity: 0.6,
     },
+
     title: {
-      color: color.secondary,
+
+      color: color.text,
       fontSize: 16,
       fontWeight: '500',
       textDecorationLine: 'underline',

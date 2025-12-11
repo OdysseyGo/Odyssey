@@ -13,10 +13,10 @@ export default function ProfileStackLayout() {
       screenOptions={{
         headerTitle: '',
         headerShadowVisible: false,
+        headerShown: false,
         headerStyle: {
           backgroundColor: Colors[themeKey].primary,
         },
-
       }}
     >
       <Stack.Screen name="index" />

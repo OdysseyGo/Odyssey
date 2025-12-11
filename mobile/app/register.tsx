@@ -17,13 +17,17 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   const theme = useColorTheme();
   const layoutStyles = authLayoutStyles(theme);
 
-  const [name, setName] = useState<string>('');
+  const [firstName, setFirstName] = useState<string>('');
+  const [lastName, setLastName] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
 
   const [errors, setErrors] = useState<{
-    name?: string;
+    firstName?: string;
+    lastName?: string;
+    username?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
@@ -35,7 +39,9 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   const validate = () => {
     const newErrors: typeof errors = {};
 
-    if (!name) newErrors.name = 'Name is required';
+    if (!firstName) newErrors.firstName = 'First name is required';
+    if (!lastName) newErrors.lastName = 'Last name is required';
+    if (!username) newErrors.username = 'Username is required';
     if (!email) newErrors.email = 'Email is required';
     if (!password) newErrors.password = 'Password is required';
     if (!confirmPassword) newErrors.confirmPassword = 'Confirm password is required';
@@ -72,12 +78,28 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
 
       <View style={layoutStyles.inputContainer}>
         <AuthTextInput
-          label="Name"
-          value={name}
-          onChangeText={setName}
+          label="First Name"
+          value={firstName}
+          onChangeText={setFirstName}
           placeholder="Your full name"
           autoCapitalize="words"
-          error={errors.name}
+          error={errors.firstName}
+        />
+        <AuthTextInput
+          label="Last Name"
+          value={lastName}
+          onChangeText={setLastName}
+          placeholder="Your full name"
+          autoCapitalize="words"
+          error={errors.lastName}
+        />
+        <AuthTextInput
+          label="Username"
+          value={username}
+          onChangeText={setUsername}
+          placeholder="Your full name"
+          autoCapitalize="words"
+          error={errors.username}
         />
 
         <AuthTextInput
@@ -110,15 +132,11 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
           error={errors.confirmPassword}
         />
 
-        <AuthButton
-          title="Create Account"
-          onPress={handleRegister}
-          loading={loading}
-        />
+        <AuthButton title="Create Account" onPress={handleRegister} loading={loading} />
 
         <AuthSubButton
           title="Already have an account? Log In"
-          onPress={() => router.replace('/login')}
+          onPress={() => router.back()}
           loading={loading}
         />
       </View>
