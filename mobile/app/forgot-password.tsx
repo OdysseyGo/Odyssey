@@ -9,7 +9,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { resetPasswordHeaderConfig } from '@/components/LoginComponents/AuthLayout.config';
 import { router } from 'expo-router';
 
-export default function forgotPassword() {
+export default function ForgotPasswordScreen() {
   const theme = useColorTheme();
   const layoutStyles = authLayoutStyles(theme);
 
