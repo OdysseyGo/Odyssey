@@ -1,9 +1,11 @@
 from django.db.models import Avg
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
 
 from apps.tours.models import Review, Tour, TourStep
 
 from ..permissions import IsCreatorOrReadOnly
+from .filters import TourFilter
 from .serializers import ReviewSerializer, TourSerializer, TourStepSerializer
 
 
@@ -15,9 +17,20 @@ class TourViewSet(viewsets.ModelViewSet):
     )
     serializer_class = TourSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsCreatorOrReadOnly]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["title", "description", "category"]
-    ordering_fields = ["created_at", "average_rating", "duration_minutes"]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+    filterset_class = TourFilter
+    search_fields = ["title", "description", "category", "city"]
+    ordering_fields = [
+        "created_at",
+        "average_rating",
+        "duration_minutes",
+        "total_distance",
+        "accessibility_rating",
+    ]
 
     def get_queryset(self):
         queryset = super().get_queryset()

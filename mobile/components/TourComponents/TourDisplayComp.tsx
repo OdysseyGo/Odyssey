@@ -1,6 +1,6 @@
 import { View, Text, Image, Pressable } from 'react-native';
 import { TourDisplayProps } from './TourDisplayComp.config';
-import { getStyles } from './TourDisplayComp.styles';
+import { tourDisplayCompStyles } from './TourDisplayComp.styles';
 
 import { STAR } from '@/constants/Symbols';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -16,7 +16,7 @@ export default function TourDisplayComp({
   rating,
 }: TourDisplayProps) {
   const theme = useColorTheme();
-  const styles = useMemo(() => getStyles(theme), [theme]);
+  const styles = useMemo(() => tourDisplayCompStyles(theme), [theme]);
 
   return (
     <Pressable

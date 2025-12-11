@@ -29,7 +29,9 @@ export default function TabLayout() {
         headerTitle: '',
         headerStyle: {
           backgroundColor: Colors[colorTheme ?? 'light'].primary,
+          height: 60,
         },
+        headerShadowVisible: false,
       }}
     >
       <Tabs.Screen
@@ -76,13 +78,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="login"
+        options={{
+          title: 'Login',
+          tabBarIcon: ({ color }) => <TabBarIcon name="sign-in" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          headerTransparent: true,
-          headerStyle: {
-            backgroundColor: 'transparent',
-          },
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />

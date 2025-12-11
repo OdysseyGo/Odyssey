@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
-export default function getStyles(theme: ThemeName) {
+export const profileHeaderCompStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     container: {
@@ -46,4 +46,4 @@ export default function getStyles(theme: ThemeName) {
       marginBottom: 4,
     },
   });
-}
+};
