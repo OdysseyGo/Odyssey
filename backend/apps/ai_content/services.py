@@ -2,6 +2,7 @@ import os
 import json
 import google.generativeai as genai
 from apps.tours.models import Tour, TourStep, Puzzle
+from apps.tours.utils import GoogleMapsFacade
 
 class GeminiService:
     """Generating tours w/ Google Gemini AI."""
@@ -70,6 +71,37 @@ class GeminiService:
                     xp_reward=puzzle_data.get("xp", 25)
                 )
         
+        
+        # Calculate real-world metrics (Distance & Duration)
+        try:
+            maps_facade = GoogleMapsFacade()
+            steps_list = list(tour.steps.all())
+            metrics = maps_facade.calculate_route_metrics(steps_list)
+            
+            if metrics.get("success"):
+                tour.total_distance = metrics.get("total_distance", 0.0)
+                tour.walking_distance = metrics.get("walking_distance", 0.0)
+                tour.elevation_gain = metrics.get("elevation_gain", 0.0)
+                tour.max_leg_distance = metrics.get("max_leg_distance", 0.0)
+                tour.requires_transport = metrics.get("requires_transport", False)
+                tour.is_circular = metrics.get("is_circular", False)
+                
+                # If calculated duration differs significantly, we update it. 
+                # Or just overwrite AI's guess. Let's overwrite for accuracy.
+                calc_duration = metrics.get("duration_minutes", 0)
+                if calc_duration > 0:
+                    tour.duration_minutes = calc_duration
+                
+                tour.metrics_calculated = True
+                
+                # Calculate Accessibility Rating
+                tour.accessibility_rating = maps_facade.estimate_accessibility(metrics)
+                
+                tour.save()
+        except Exception as e:
+            # Fallback: keep AI generated values and log error (or print for now)
+            print(f"Failed to calculate route metrics: {e}")
+
         return tour
     
     def _build_prompt(self, city: str, theme: str, mode: str, duration: int, language: str) -> str:

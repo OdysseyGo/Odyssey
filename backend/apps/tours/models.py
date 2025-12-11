@@ -50,6 +50,40 @@ class Tour(models.Model):
     city = models.CharField(
         max_length=100, blank=True, help_text="City where the tour is located"
     )
+
+    # Advanced Metrics
+    total_distance = models.FloatField(
+        default=0.0, help_text="Total distance in meters"
+    )
+    walking_distance = models.FloatField(
+        default=0.0, help_text="Distance covered by walking in meters"
+    )
+    transport_distance = models.FloatField(
+        default=0.0, help_text="Distance covered by public transport in meters"
+    )
+    
+    # New Accessibility Metrics
+    elevation_gain = models.FloatField(
+        default=0.0, help_text="Cumulative elevation gain in meters"
+    )
+    max_leg_distance = models.FloatField(
+        default=0.0, help_text="Longest single walking segment in meters"
+    )
+    requires_transport = models.BooleanField(
+        default=False, help_text="True if any segment requires public transport (heuristic > 2km)"
+    )
+    is_circular = models.BooleanField(
+        default=False, help_text="True if route ends near the start point (< 200m)"
+    )
+
+    metrics_calculated = models.BooleanField(
+        default=False, help_text="True if real-world metrics have been calculated via API"
+    )
+    accessibility_rating = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        help_text="1-10 rating. 10=Most Accessible (Flat, Short). 1=Least (Steep, Long, Complex)"
+    )
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=DRAFT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
