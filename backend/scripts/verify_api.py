@@ -11,7 +11,7 @@ def request(method, endpoint, data=None, token=None):
     url = f"{BASE_URL}{endpoint}"
     headers = {"Content-Type": "application/json"}
     if token:
-        headers["Authorization"] = f"Token {token}"
+        headers["Authorization"] = f"Bearer {token}"
 
     if data:
         data = json.dumps(data).encode("utf-8")
@@ -51,9 +51,14 @@ def run_test():
     print(f"   Created {player_creds['username']}")
 
     print("\n2. Getting Tokens...")
-    creator_token = request("POST", "/token/", creator_creds)["token"]
-    player_token = request("POST", "/token/", player_creds)["token"]
+    creator_login = request("POST", "/users/login/", creator_creds)
+    player_login  = request("POST", "/users/login/", player_creds)
+
+    creator_token = creator_login["access"]
+    player_token = player_login["access"]
+
     print("   Tokens obtained")
+
 
     print("\n3. Creating Badge (as Creator)...")
     badge_data = {
