@@ -3,6 +3,8 @@ import { View, Text, FlatList, StyleSheet } from 'react-native';
 import TourDisplayComp from './TourDisplayComp';
 import type { TourDisplayProps } from './TourDisplayComp.config';
 import { useColorTheme } from '@/utils/useColorTheme';
+import { tourScrollerCompStyles } from './TourScrollerComp.styles';
+import { useMemo } from 'react';
 
 export type TourScrollerProps = {
   title?: string;
@@ -11,54 +13,27 @@ export type TourScrollerProps = {
 
 export default function TourScrollerComp({ title, data }: TourScrollerProps) {
   const theme = useColorTheme();
-  const isDark = theme === 'dark';
+
+  const styles = useMemo(() => tourScrollerCompStyles(theme), [theme]);
 
   return (
     <View style={styles.container}>
-      {title ? (
-        <Text
-          style={[
-            styles.title,
-            { color: isDark ? '#fff' : '#000' },
-          ]}
-        >
-          {title}
-        </Text>
-      ) : null}
+      <View style={styles.headerTitle}>
+        <Text style={styles.title}>{title}</Text>
+      </View>
 
       <FlatList
         data={data}
         keyExtractor={(_, index) => index.toString()}
         horizontal
-
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         decelerationRate={'fast'}
+        disableIntervalMomentum={true}
+        nestedScrollEnabled={true}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-        renderItem={({ item }) => (
-          <TourDisplayComp {...item} />
-        )}
+        renderItem={({ item }) => <TourDisplayComp {...item} />}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 16,
-    marginBottom: 24,
-    backgroundColor: 'transparent',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  listContent: {
-    paddingHorizontal: 16,
-  },
-  separator: {
-    width: 1,
-  },
-});

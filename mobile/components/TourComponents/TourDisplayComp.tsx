@@ -23,29 +23,32 @@ export default function TourDisplayComp({
   const handlePress = () => {
     router.push({
       pathname: '/tour/[id]',
-      params: {id:  1 }
-    })
-  }
+      params: { id: 1 },
+    });
+  };
 
   return (
     <Pressable
       onPress={handlePress}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.3 }]}
     >
-      <Image source={{ uri: image }} style={styles.image} />
+      <View style={styles.imageWrapper}>
+        <Image source={{ uri: image }} style={styles.image} />
+
+        <View style={styles.ratingBadge}>
+          <Text style={styles.ratingBadgeText}>
+            <Text style={styles.star}>{STAR}</Text> {rating}
+          </Text>
+        </View>
+      </View>
       <View style={styles.infoContainer}>
         <View style={styles.header}>
           <Text style={styles.title} numberOfLines={2}>
             {title}
           </Text>
-          
         </View>
 
         <Text style={styles.author}>by {author}</Text>
-        <Text style={styles.rating}>
-            {STAR}
-            {rating}/5
-          </Text>
 
         <View style={styles.metaRow}>
           <Text style={styles.metaText}>{duration}</Text>

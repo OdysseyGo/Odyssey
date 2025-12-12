@@ -13,6 +13,8 @@ const foregroundSecondaryDark = '#222222';
 const grayLight = '#f6f6f6';
 const grayDark = '#121212';
 
+const blackPale = 'rgba(0, 0, 0, 0.6)';
+
 const textGrayLight = '#2c2c2cff';
 const textGrayDark = '#d3d3d3ff';
 
@@ -21,9 +23,11 @@ const pressDark = '#343333ff';
 
 const Colors = {
   light: {
+    white: white,
     text: black,
     subText: textGrayLight,
     background: white,
+    backgroundBlack: blackPale,
     foreground: grayLight,
     foregroundSecondary: foregroundSecondaryLight,
     press: pressLight,
@@ -38,9 +42,11 @@ const Colors = {
     error: '#ff4d4f',
   },
   dark: {
+    white: white,
     text: white,
     subText: textGrayDark,
     background: black,
+    backgroundBlack: blackPale,
     foreground: grayDark,
     foregroundSecondary: foregroundSecondaryDark,
     press: pressDark,

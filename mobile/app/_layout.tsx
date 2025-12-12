@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { ThemeName } from '@/constants/Colors';
-import Colors  from '@/constants/Colors';
+import Colors from '@/constants/Colors';
 
 import { useColorScheme } from '@/components/useColorScheme';
 
@@ -53,9 +53,16 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ title: '',  headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ title: '', headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="tour/[id]" options={{title:'Tour', headerStyle: { backgroundColor: color.primary}, headerTransparent: true}} />
+        <Stack.Screen
+          name="tour/[id]"
+          options={{
+            title: 'Tour',
+            headerStyle: { backgroundColor: color.primary },
+            headerTransparent: true,
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );
