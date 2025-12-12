@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate  # login direkt
-from django.db.models import QuerySet
+from django.db.models import QuerySet, F # F dbden çıkarmadan yazıyon 
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
@@ -85,7 +85,25 @@ class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = FollowSerializer
 
     def perform_create(self, serializer):
-        serializer.save(follower=self.request.user)
+        follow = serializer.save(follower=self.request.user)
+        # increment counters 
+        User.objects.filter(id=follow.followee_id).update(
+            follower_count=F('follower_count') + 1
+        )
+        User.objects.filter(id=follow.follower_id).update(
+            follow_count=F('follow_count') + 1
+        )
+
+    def perform_destroy(self, instance):
+        # decrement counters safely on unfollow
+        User.objects.filter(id=instance.followee_id).update(
+            follower_count=F('follower_count') - 1
+        )
+        User.objects.filter(id=instance.follower_id).update(
+            follow_count=F('follow_count') - 1
+        )
+
+        instance.delete()    
 
 
 class AdminViewSet(viewsets.ModelViewSet):

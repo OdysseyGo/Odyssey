@@ -1,11 +1,13 @@
 import AuthLayout from '@/components/LoginComponents/AuthLayout';
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import { authLayoutStyles } from '@/components/LoginComponents/AuthLayout.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { loginHeaderConfig } from '@/components/LoginComponents/AuthLayout.config';
+import  {login, UserCredentials} from '@/api/users'
+import * as SecureStore from 'expo-secure-store';
 
 type LoginScreenProps = {
   navigation?: any;
@@ -33,7 +35,23 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
     setLoading(true);
     try {
-      // TODO
+      const credentials: UserCredentials = {
+      username: email,  // email as username bcs backend uses username/password
+      password: password,
+      };
+
+      //alert(`user creds is ${credentials.username}, ${credentials.password}`)
+
+      const response = await login(credentials);
+      //alert(response)
+
+      // response contains: { access: string, refresh: string }
+      const { access, refresh } = response;
+
+      await SecureStore.setItem("userToken",access);
+      await SecureStore.setItem("refreshToken",refresh);
+
+      
     } catch (e) {
       console.error(e);
       setErrors({ general: 'Login failed' });

@@ -41,6 +41,11 @@ export type UsersListResponse = {
   results: User[];
 };
 
+export type UserCredentials = {
+  username: string;
+  password: string;
+}
+
 // API functions
 
 /**
@@ -99,4 +104,24 @@ export const deleteUser = (id: string) =>
   apiRequest<void>({
     method: 'delete',
     url: `/api/users/${id}/`,
+  });
+
+export const login = (payload: UserCredentials) =>
+  apiRequest<void>({
+    method: 'post',
+    url: `/api/users/login/`,
+    data: payload,
+    auth: false, // how can we do auth without loging in !
+  });
+
+  export const getMe = () =>
+  apiRequest<void>({
+    method: 'get',
+    url: `/api/users/me/`,
+  });
+
+  export const getMyBadges = () =>
+  apiRequest<void>({
+    method: 'get',
+    url: `/api/my-badges/`,
   });
