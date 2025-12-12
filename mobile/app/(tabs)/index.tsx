@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet, Button } from 'react-native'; //İLERDE GELECEK İNSAN İÇİN BU button MANUAL LOGOUT TUŞU!!!! TEST İÇİN 
 
 import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
 
 import { getUserById, type User } from '@/api/users';
+import * as SecureStore from "expo-secure-store"; //İLERDE GELECEK İNSAN İÇİN BU hepsi MANUAL LOGOUT TUŞU!!!! TEST İÇİN
+
 
 export default function TabOneScreen() {
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +61,12 @@ export default function TabOneScreen() {
         </View>
       )}
       {/* ------------ END USER DATA BOX ------------ */}
+
+      <Button title="RESET" onPress={async () => { //İLERDE GELECEK İNSAN İÇİN BU button MANUAL LOGOUT TUŞU!!!! TEST İÇİN
+        await SecureStore.deleteItemAsync("userToken");
+        await SecureStore.deleteItemAsync("refreshToken");
+        alert("cleared!");
+      }} />
 
       <EditScreenInfo path="app/(tabs)/index.tsx" />
     </View>

@@ -8,6 +8,8 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { loginHeaderConfig } from '@/components/LoginComponents/AuthLayout.config';
 import  {login, UserCredentials} from '@/api/users'
 import * as SecureStore from 'expo-secure-store';
+import AuthSubButton from '@/components/LoginComponents/AuthSubButton';
+import { router } from 'expo-router';
 
 type LoginScreenProps = {
   navigation?: any;
@@ -17,14 +19,14 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const theme = useColorTheme();
   const layoutStyles = authLayoutStyles(theme);
 
-  const [email, setEmail] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{ username?: string; password?: string; general?: string }>({});
   const [loading, setLoading] = useState<boolean>(false);
 
   const validate = () => {
     const newErrors: typeof errors = {};
-    if (!email) newErrors.email = 'Email is required';
+    if (!username) newErrors.username = 'username is required';
     if (!password) newErrors.password = 'Password is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -36,7 +38,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     setLoading(true);
     try {
       const credentials: UserCredentials = {
-      username: email,  // email as username bcs backend uses username/password
+      username: username,  // username as username bcs backend uses username/password
       password: password,
       };
 
@@ -51,7 +53,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       await SecureStore.setItem("userToken",access);
       await SecureStore.setItem("refreshToken",refresh);
 
-      
+      router.push('/(tabs)/profile')
     } catch (e) {
       console.error(e);
       setErrors({ general: 'Login failed' });
@@ -70,13 +72,13 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       {errors.general && <Text style={layoutStyles.errorText}>{errors.general}</Text>}
       <View style={layoutStyles.inputContainer}>
         <AuthTextInput
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="you@example.com"
-          keyboardType="email-address"
+          label="Username"
+          value={username}
+          onChangeText={setUsername}
+          placeholder="Your username"
+          keyboardType="twitter" 
           autoCapitalize="none"
-          error={errors.email}
+          error={errors.username}
         />
 
         <AuthTextInput
@@ -90,15 +92,17 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         />
 
         <AuthButton title="Log In" onPress={handleLogin} loading={loading} />
+        <AuthSubButton
+          title="No Account? Create One"
+          onPress={() => router.push('/register')}
+          loading={loading}
+        />
+        <AuthSubButton
+          title="Forgot Password?"
+          onPress={() => router.push('/forgot-password')}
+          loading={loading}
+        />
       </View>
-      {navigation && (
-        <View style={layoutStyles.footerContainer}>
-          <Text style={layoutStyles.footerMessage}>Don&apos;t have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={layoutStyles.footerLink}>Sign up</Text>
-          </TouchableOpacity>
-        </View>
-      )}
     </AuthLayout>
   );
 }
