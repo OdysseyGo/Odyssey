@@ -7,6 +7,7 @@ import AuthSubButton from '@/components/LoginComponents/AuthSubButton';
 import { authLayoutStyles } from '@/components/LoginComponents/AuthLayout.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { registerHeaderConfig } from '@/components/LoginComponents/AuthLayout.config';
+import {createUser, CreateUserPayload} from '@/api/users'
 import { router } from 'expo-router';
 
 type RegisterScreenProps = {
@@ -38,11 +39,12 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
 
   const validate = () => {
     const newErrors: typeof errors = {};
-
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
     if (!firstName) newErrors.firstName = 'First name is required';
     if (!lastName) newErrors.lastName = 'Last name is required';
     if (!username) newErrors.username = 'Username is required';
     if (!email) newErrors.email = 'Email is required';
+    if (!emailRegex.test(email)) newErrors.email = 'Email format is wrong. TLD should be at least 2 chars long (.com, .tr etc)';
     if (!password) newErrors.password = 'Password is required';
     if (!confirmPassword) newErrors.confirmPassword = 'Confirm password is required';
     if (password && confirmPassword && password !== confirmPassword) {
@@ -55,10 +57,18 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
 
   const handleRegister = async () => {
     if (!validate()) return;
-
     setLoading(true);
     try {
-      // TODO
+      const user : CreateUserPayload = {
+        username: username,
+        email:email,
+        password:password,
+        first_name:firstName,
+        last_name:lastName
+      }
+      const response = await createUser(user)
+      router.back()
+      alert("User has been created!")
     } catch (e) {
       console.error(e);
       setErrors({ general: 'Registration failed' });
