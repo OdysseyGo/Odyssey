@@ -16,6 +16,23 @@ class UserViewSet(ModelViewSet):
     queryset: QuerySet[User] = User.objects.all().order_by("id")
     serializer_class = UserSerializer
 
+    @action(detail=False, methods=["get"], url_path="get_by_username", )
+    def get_by_username(self, request):
+        username = request.query_params.get("username")
+        if not username:
+            return Response({"error": "username is required"}, status=400)
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+
+        return Response({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+        })
+
     @action(detail=False, methods=["post"], url_path="login")
     def login(self, request):
         username = request.data.get("username")
@@ -75,6 +92,28 @@ class UserViewSet(ModelViewSet):
 
         serializer = self.get_serializer(followees_qs, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=["post"], url_path="reset_password") # This is for the demo, no auth password changing!!!
+    def reset_password(self, request):
+        username = request.data.get("username")
+        email = request.data.get("email")
+        new_password = request.data.get("new_password")
+
+        if not username or not email or not new_password:
+            return Response({"detail": "username, email and new_password required"}, status=400)
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found"}, status=404)
+
+        if user.email.lower() != email.lower():
+            return Response({"detail": "Username and email do not match"}, status=400)
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({"detail": "Password updated successfully"}, status=200)
 
 
 class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
