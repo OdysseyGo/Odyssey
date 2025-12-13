@@ -1,23 +1,33 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+
+const { width: screenWidth } = Dimensions.get('window');
+const contentWidth = screenWidth * 0.85;
+const maxContentWidth = 400;
 
 export const authLayoutStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     flex: {
       flex: 1,
+      backgroundColor: color.foreground,
     },
     container: {
-      flex: 1,
-      paddingHorizontal: Spacing.xl,
-      paddingVertical: Spacing.md,
+      flexGrow: 1,
       backgroundColor: color.foreground,
       justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: Spacing.xl,
+    },
+    contentWrapper: {
+      width: Math.min(contentWidth, maxContentWidth),
+      alignItems: 'center',
     },
     headerContainer: {
       marginBottom: Spacing.xl,
       alignItems: 'center',
+      width: '100%',
     },
     headerTitle: {
       textAlign: 'center',
@@ -37,7 +47,6 @@ export const authLayoutStyles = (theme: ThemeName) => {
       textAlign: 'center',
     },
     inputContainer: {
-      paddingHorizontal: Spacing.xl,
       marginBottom: Spacing.lg,
       width: '100%',
       justifyContent: 'center',

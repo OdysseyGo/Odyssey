@@ -7,6 +7,7 @@ export const authSubButtonStyles = (theme: ThemeName) => {
   return StyleSheet.create({
     button: {
       width: '100%',
+      maxWidth: 400,
       padding: 20,
       backgroundColor: color.secondary,
       paddingVertical: Spacing.sm,
