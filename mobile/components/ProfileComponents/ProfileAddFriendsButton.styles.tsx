@@ -14,31 +14,19 @@ export const profileAddFriendsButtonStyles = (theme: ThemeName) => {
       marginVertical: Spacing.md,
       minHeight: 48,
       flexDirection: 'row',
-    },
-    buttonActive: {
       backgroundColor: color.primary,
-    },
-    buttonInactive: {
-      backgroundColor: color.secondary,
-      borderWidth: 2,
-      borderColor: color.primary,
     },
     buttonText: {
       fontSize: 16,
       fontWeight: '600',
       marginLeft: Spacing.sm,
-    },
-    buttonActiveText: {
       color: 'white',
-    },
-    buttonInactiveText: {
-      color: color.primary,
     },
     icon: {
       marginRight: Spacing.xs,
     },
-    loadingContainer: {
-      opacity: 0.7,
+    buttonPressed: {
+      opacity: 0.6,
     },
   });
 };

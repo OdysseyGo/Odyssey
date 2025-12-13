@@ -12,7 +12,7 @@ export const profileBadgesContainerStyles = (theme: ThemeName) => {
       paddingHorizontal: Spacing.lg,
       marginTop: Spacing.lg,
       marginHorizontal: Spacing.lg,
-      width: 'auto',
+      width: '90%',
       maxWidth: 500,
       alignSelf: 'center',
 

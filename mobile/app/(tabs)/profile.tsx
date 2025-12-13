@@ -2,12 +2,14 @@ import React, { use, useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import ProfileHeaderComp from '@/components/ProfileComponents/ProfileHeaderComp';
 import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
-import { View, Text, Button } from 'react-native';
+import ProfileAddFriendsButton from '@/components/ProfileComponents/ProfileAddFriendsButton';
+import ProfileBadgesContainer from '@/components/ProfileComponents/ProfileBadgesContainer';
+import { View, Text, Button, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import AuthSubButton from '@/components/LoginComponents/AuthSubButton';
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import { getMe, User } from '@/api/users';
-import { getMyBadges, BadgesListResponse } from '@/api/profile';
+import { getMyBadges, BadgesListResponse, Badge } from '@/api/profile';
 import * as SecureStore from 'expo-secure-store';
 
 async function getAccessToken() {
@@ -17,6 +19,7 @@ async function getAccessToken() {
 export default function Profile() {
   const [curUser, setCurUser] = useState<User | null>(null);
   const [badgesCount, setBadgesCount] = useState(0);
+  const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasToken, setHasToken] = useState<boolean | null>(null);
 
@@ -37,11 +40,12 @@ export default function Profile() {
         //alert(token)
         try {
           const user = await getMe();
-          const badges = await getMyBadges();
+          const badgesResponse = await getMyBadges();
 
           if (isActive) {
             setCurUser(user);
-            setBadgesCount(badges.count);
+            setBadgesCount(badgesResponse.count);
+            setBadges(badgesResponse.results);
           }
         } catch (err) {
           console.error('Failed to load profile:', err);
@@ -91,10 +95,28 @@ export default function Profile() {
     following: curUser.follow_count,
   };
 
+  // Convert API badges to component format
+  const formattedBadges = badges.map((badge) => ({
+    id: badge.id.toString(),
+    name: badge.name,
+    icon: badge.icon,
+    description: badge.description,
+    unlocked: true,
+    earnedDate: badge.created_at,
+  }));
+
   return (
-    <View>
+    <ScrollView>
       <ProfileHeaderComp {...profileHeader} />
       <ProfileStatsComp {...profileStats} />
-    </View>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+        <ProfileAddFriendsButton />
+      </View>
+      <ProfileBadgesContainer
+        badges={formattedBadges}
+        title="Badges"
+        maxDisplay={3}
+      />
+    </ScrollView>
   );
 }

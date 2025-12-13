@@ -1,45 +1,30 @@
-import React from 'react';
-import { TouchableOpacity, Text, View, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { TouchableOpacity, Text } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { profileAddFriendsButtonStyles } from './ProfileAddFriendsButton.styles';
 import { ProfileAddFriendsButtonProps } from './ProfileAddFriendsButton.config';
-import Colors from '@/constants/Colors';
 
-export default function ProfileAddFriendsButton({
-  onPress,
-  isFriend = false,
-  isLoading = false,
-}: ProfileAddFriendsButtonProps) {
+export default function ProfileAddFriendsButton({ onPress }: ProfileAddFriendsButtonProps) {
+  const [isPressedFeedback, setIsPressedFeedback] = useState(false);
   const theme = useColorTheme();
   const styles = profileAddFriendsButtonStyles(theme);
-  const color = Colors[theme];
+
+  const handlePress = async () => {
+    setIsPressedFeedback(true);
+    await new Promise(resolve => setTimeout(resolve, 200));
+    setIsPressedFeedback(false);
+  };
 
   return (
     <TouchableOpacity
-      style={[
-        styles.button,
-        isFriend ? styles.buttonActive : styles.buttonInactive,
-        isLoading && styles.loadingContainer,
-      ]}
-      onPress={onPress}
-      disabled={isLoading}
-      activeOpacity={0.8}
+      style={[styles.button, isPressedFeedback && styles.buttonPressed]}
+      onPress={handlePress}
+      activeOpacity={1}
     >
-      {isLoading ? (
-        <ActivityIndicator color={isFriend ? 'white' : color.primary} size="small" />
-      ) : (
-        <>
-          <FontAwesome
-            name={isFriend ? 'check' : 'plus'}
-            size={18}
-            color={isFriend ? 'white' : color.primary}
-          />
-          <Text style={[styles.buttonText, isFriend ? styles.buttonActiveText : styles.buttonInactiveText]}>
-            {isFriend ? 'Friends' : 'Add Friend'}
-          </Text>
-        </>
-      )}
+      <FontAwesome name="plus" size={18} color="white" />
+      <Text style={styles.buttonText}>Add Friend</Text>
     </TouchableOpacity>
   );
 }
+
