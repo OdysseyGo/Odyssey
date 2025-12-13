@@ -6,9 +6,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { ThemeName } from '@/constants/Colors';
-import Colors from '@/constants/Colors';
-
-import { useColorScheme } from '@/components/useColorScheme';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 
