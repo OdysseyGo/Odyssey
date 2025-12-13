@@ -22,15 +22,14 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
-from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/token/", obtain_auth_token, name="api_token_auth"),
     # API routes
     path("api/", include("apps.users.api.urls")),
     path("api/", include("apps.tours.api.urls")),
     path("api/", include("apps.gamification.api.urls")),
+    path("api/ai/", include("apps.ai_content.urls")),
     # OpenAPI schema
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     # Swagger UI

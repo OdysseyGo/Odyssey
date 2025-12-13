@@ -87,3 +87,8 @@ npm run format
 npm run lint -- --fix
 ```
 
+#### Backend admin page
+1. Create superuser
+docker compose exec backend python manage.py createsuperuser
+2. Admin page
+http://localhost:8000/admin/

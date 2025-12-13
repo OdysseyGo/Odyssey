@@ -19,7 +19,7 @@ class User(AbstractUser):
     xp = models.IntegerField(default=0)
     follow_count = models.IntegerField(default=0)
     follower_count = models.IntegerField(default=0)
-    token = models.IntegerField(default=0)
+    credit = models.IntegerField(default=0)
     level = models.IntegerField(default=1)
     country = models.CharField(max_length=100, blank=True)
     user_type = models.PositiveSmallIntegerField(

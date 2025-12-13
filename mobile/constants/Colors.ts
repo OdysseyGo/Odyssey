@@ -1,8 +1,8 @@
 const primaryLight = '#50AA82';
-const primaryDark = '#FF9EC7';
+const primaryDark = '#ff6a00ff';
 
 const secondaryLight = '#03dac6';
-const secondaryDark = '#A3C7FF';
+const secondaryDark = '#452d2dff';
 
 const black = '#000000';
 const white = '#ffffff';
@@ -54,7 +54,7 @@ const Colors = {
     primary: primaryDark,
     secondary: secondaryDark,
     placeholderTextColor: '#6e6e6eff',
-    tabIconDefault: '#f70000ff',
+    tabIconDefault: '#452d2dff',
     tabIconSelected: primaryLight,
     border: white,
     textShadowColor: 'rgba(255, 255, 255, 0.4)',

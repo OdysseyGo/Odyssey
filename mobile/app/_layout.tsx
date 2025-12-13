@@ -9,6 +9,8 @@ import { ThemeName } from '@/constants/Colors';
 import Colors from '@/constants/Colors';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { useColorTheme } from '@/utils/useColorTheme';
+import Colors from '@/constants/Colors';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -47,14 +49,26 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-  const color = Colors[colorScheme as ThemeName] || Colors.light;
+  const colorTheme = useColorTheme();
+
+  const themeKey = colorTheme;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ title: '', headerShown: false }} />
+    <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
+      <Stack
+        screenOptions={{
+          headerTitle: '',
+          headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: Colors[themeKey].primary,
+          },
+        }}
+      >
+        <Stack.Screen name="(tabs)" />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="register" />
+        <Stack.Screen name="forgot-password" />
         <Stack.Screen
           name="tour/[id]"
           options={{

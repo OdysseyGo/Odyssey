@@ -18,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
             "xp",
             "follow_count",
             "follower_count",
-            "token",
+            "credit",
             "level",
             "country",
             "user_type",
