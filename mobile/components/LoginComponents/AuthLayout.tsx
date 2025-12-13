@@ -16,10 +16,7 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.contentWrapper}>{children}</View>
       </ScrollView>
     </KeyboardAvoidingView>
