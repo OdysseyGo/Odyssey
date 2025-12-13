@@ -11,15 +11,15 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
       paddingBottom: '10%',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: color.primary,
+      backgroundColor: color.background,
     },
     avatarWrapper: {
-      marginBottom: 16,
+      marginBottom: Spacing.lg,
     },
     avatarCircle: {
-      width: 120,
-      height: 120,
-      borderRadius: 60,
+      width: Spacing.xl * 6,
+      height: Spacing.xl * 6,
+      borderRadius: Spacing.xl * 3,
       backgroundColor: 'white',
       alignItems: 'center',
       justifyContent: 'center',
@@ -27,11 +27,11 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
     title: {
       fontSize: 28,
       fontWeight: '700',
-      color: color.text,
-      marginBottom: 4,
+      color: 'white',
+      marginBottom: Spacing.xs,
     },
     subtitle: {
-      fontSize: 18,
+      fontSize: 16,
       color: color.text,
       opacity: 0.9,
     },
@@ -43,7 +43,7 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
       borderRadius: Spacing.borderRadius,
       width: 'auto',
       backgroundColor: color.secondary,
-      marginBottom: 4,
+      marginBottom: Spacing.xs,
     },
   });
 };
