@@ -5,11 +5,7 @@ import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
 import ProfileAddFriendsButton from '@/components/ProfileComponents/ProfileAddFriendsButton';
 import ProfileBadgesContainer from '@/components/ProfileComponents/ProfileBadgesContainer';
 import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
-import {
-  View,
-  Text,
-  ScrollView,
-} from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import { getMe, User } from '@/api/users';

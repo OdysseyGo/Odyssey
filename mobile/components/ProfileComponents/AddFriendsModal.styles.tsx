@@ -13,7 +13,6 @@ export const addFriendsModalStyles = (theme: ThemeName) => {
       paddingHorizontal: Spacing.lg,
     },
     container: {
-        
       width: '100%',
       backgroundColor: color.foreground,
       borderRadius: Spacing.borderRadius * 1.5,

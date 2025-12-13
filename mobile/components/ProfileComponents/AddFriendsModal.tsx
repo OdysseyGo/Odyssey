@@ -62,7 +62,6 @@ export default function AddFriendsModal({
             <AddFriendsModalProTip />
             <AddFriendsModalActions onCancel={onClose} />
           </View>
-
         </Animated.View>
       </View>
     </Modal>
