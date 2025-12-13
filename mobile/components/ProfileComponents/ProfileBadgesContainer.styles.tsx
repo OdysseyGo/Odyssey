@@ -16,10 +16,10 @@ export const profileBadgesContainerStyles = (theme: ThemeName) => {
       maxWidth: 500,
       alignSelf: 'center',
 
-      shadowColor: '#000',
+      shadowColor: color.textShadowColor,
       shadowOpacity: 0.1,
-      shadowRadius: 8,
-      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: Spacing.lg,
+      shadowOffset: { width: 0, height: Spacing.sm },
       elevation: 4,
     },
     header: {

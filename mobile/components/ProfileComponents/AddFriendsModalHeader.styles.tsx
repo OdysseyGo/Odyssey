@@ -12,10 +12,10 @@ export const addFriendsModalHeaderStyles = (theme: ThemeName) => {
       alignItems: 'center',
     },
     iconContainer: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      width: Spacing.xl + Spacing.lg + Spacing.xs,
+      height: Spacing.xl + Spacing.lg + Spacing.xs,
+      borderRadius: (Spacing.xl + Spacing.lg + Spacing.xs) / 2,
+      backgroundColor: color.background,
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: Spacing.md,
@@ -23,12 +23,12 @@ export const addFriendsModalHeaderStyles = (theme: ThemeName) => {
     title: {
       fontSize: 24,
       fontWeight: '800',
-      color: '#fff',
+      color: 'white',
       marginBottom: Spacing.sm,
     },
     subtitle: {
       fontSize: 13,
-      color: 'rgba(255, 255, 255, 0.8)',
+      color: color.text,
       textAlign: 'center',
     },
   });

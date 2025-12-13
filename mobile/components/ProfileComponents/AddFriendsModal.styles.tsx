@@ -7,20 +7,20 @@ export const addFriendsModalStyles = (theme: ThemeName) => {
   return StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: color.background,
       justifyContent: 'center',
       alignItems: 'center',
       paddingHorizontal: Spacing.lg,
     },
     container: {
       width: '100%',
-      backgroundColor: color.foreground,
+      backgroundColor: color.background,
       borderRadius: Spacing.borderRadius * 1.5,
       overflow: 'hidden',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 10 },
+      shadowColor: color.textShadowColor,
+      shadowOffset: { width: 0, height: Spacing.lg },
       shadowOpacity: 0.3,
-      shadowRadius: 20,
+      shadowRadius: Spacing.xl,
       elevation: 10,
     },
     contentWrapper: {
