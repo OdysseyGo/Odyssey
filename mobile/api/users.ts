@@ -115,19 +115,13 @@ export const login = (payload: UserCredentials) =>
   });
 
 export const getMe = () =>
-  apiRequest<void>({
+  apiRequest<User>({
     method: 'get',
     url: `/api/users/me/`,
   });
 
-export const getMyBadges = () =>
-  apiRequest<void>({
-    method: 'get',
-    url: `/api/my-badges/`,
-  });
-
 export const getByUsername = (username: string) =>
-  apiRequest({
+  apiRequest<User>({
     method: 'get',
     url: `/api/users/get_by_username/`,
     params: { username },

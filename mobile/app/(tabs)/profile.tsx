@@ -6,7 +6,8 @@ import { View, Text, Button } from 'react-native';
 import { router } from 'expo-router';
 import AuthSubButton from '@/components/LoginComponents/AuthSubButton';
 import AuthButton from '@/components/LoginComponents/AuthButton';
-import { getMe, getMyBadges, User } from '@/api/users';
+import { getMe, User } from '@/api/users';
+import { getMyBadges, BadgesListResponse } from '@/api/profile';
 import * as SecureStore from 'expo-secure-store';
 
 async function getAccessToken() {
