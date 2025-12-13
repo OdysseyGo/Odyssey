@@ -13,20 +13,19 @@ def request(method, endpoint, data=None, token=None):
     url = f"{BASE_URL}{endpoint}"
     headers = {"Content-Type": "application/json"}
     if token:
-        headers["Authorization"] = f"Token {token}"
+        headers["Authorization"] = f"Bearer {token}"
 
     if data:
         data = json.dumps(data).encode("utf-8")
 
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(req, timeout=120) as response:
+        with urllib.request.urlopen(req) as response:
             if response.status == 204:
                 return None
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
-        print(f"HTTP Error {e.code}: {e.read().decode('utf-8')}")
-        raise
+        raise e
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
@@ -45,7 +44,7 @@ def run_test():
     print(f"   Created {user_creds['username']}")
 
     print("\n2. Getting Token...")
-    token = request("POST", "/token/", user_creds)["token"]
+    token = request("POST", "/users/login/", user_creds)["access"]
     print("   Token obtained")
 
     print("\n3. Generating AI Tour (HYBRID mode, Istanbul, Ottoman History)...")

@@ -1,18 +1,63 @@
-// app/(tabs)/profile/index.tsx
+import React, { use, useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import ProfileHeaderComp from '@/components/ProfileComponents/ProfileHeaderComp';
-import { exampleProfileHeader } from '@/components/ProfileComponents/ProfileHeaderComp.config';
 import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
-import { exampleProfileStats } from '@/components/ProfileComponents/ProfileStatsComp.config';
 import { View, Text, Button } from 'react-native';
 import { router } from 'expo-router';
 import AuthSubButton from '@/components/LoginComponents/AuthSubButton';
 import AuthButton from '@/components/LoginComponents/AuthButton';
+import { getMe, getMyBadges, User } from '@/api/users';
+import * as SecureStore from 'expo-secure-store';
 
-// temporary flag – later replace with real auth logic
-const IS_LOGGED_IN = false;
+async function getAccessToken() {
+  return await SecureStore.getItemAsync('userToken');
+}
 
 export default function Profile() {
-  if (!IS_LOGGED_IN) {
+  const [curUser, setCurUser] = useState<User | null>(null);
+  const [badgesCount, setBadgesCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [hasToken, setHasToken] = useState<boolean | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      const fetchProfile = async () => {
+        const token = await getAccessToken();
+
+        if (!token) {
+          setHasToken(false);
+          setLoading(false);
+          return;
+        }
+
+        setHasToken(true);
+        //alert(token)
+        try {
+          const user = await getMe();
+          const badges = await getMyBadges();
+
+          if (isActive) {
+            setCurUser(user);
+            setBadgesCount(badges.count);
+          }
+        } catch (err) {
+          console.error('Failed to load profile:', err);
+        } finally {
+          if (isActive) setLoading(false);
+        }
+      };
+
+      fetchProfile();
+
+      return () => {
+        isActive = false; // stop updates if screen unfocused
+      };
+    }, [])
+  );
+
+  if (!hasToken) {
     return (
       <View
         style={{
@@ -30,10 +75,25 @@ export default function Profile() {
     );
   }
 
+  if (loading || !curUser) return <View />;
+
+  const profileHeader = {
+    title: curUser.username,
+    subtitle: curUser.country,
+  };
+
+  const profileStats = {
+    xp: curUser.xp,
+    tours: curUser.tour_count,
+    badges: badgesCount,
+    followers: curUser.follower_count,
+    following: curUser.follow_count,
+  };
+
   return (
     <View>
-      <ProfileHeaderComp {...exampleProfileHeader} />
-      <ProfileStatsComp {...exampleProfileStats} />
+      <ProfileHeaderComp {...profileHeader} />
+      <ProfileStatsComp {...profileStats} />
     </View>
   );
 }
