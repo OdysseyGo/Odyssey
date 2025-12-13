@@ -11,7 +11,6 @@ import { router } from 'expo-router';
 
 import { getByUsername, resetPassword } from '@/api/users';
 
-
 export default function ForgotPasswordScreen() {
   const theme = useColorTheme();
   const layoutStyles = authLayoutStyles(theme);
@@ -21,7 +20,7 @@ export default function ForgotPasswordScreen() {
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
 
-  const [showResetModal, setShowResetModal] = useState(false); // popup 
+  const [showResetModal, setShowResetModal] = useState(false); // popup
   const [newPass, setNewPass] = useState('');
   const [confirmNewPass, setConfirmNewPass] = useState('');
   const [modalError, setModalError] = useState('');
@@ -44,7 +43,7 @@ export default function ForgotPasswordScreen() {
     setLoading(true);
     try {
       const resp = await getByUsername(username);
-      
+
       if (!resp) {
         setErrors({ general: 'User not found' });
         return;
@@ -60,7 +59,6 @@ export default function ForgotPasswordScreen() {
 
       // Open modal
       setShowResetModal(true);
-
     } catch (e) {
       console.error(e);
       setErrors({ general: 'Something went wrong' });
@@ -80,7 +78,7 @@ export default function ForgotPasswordScreen() {
     }
 
     try {
-      await resetPassword({username: username, email: email ,new_password: newPass });
+      await resetPassword({ username: username, email: email, new_password: newPass });
 
       setShowResetModal(false);
       router.replace('/login');
@@ -125,17 +123,21 @@ export default function ForgotPasswordScreen() {
 
       {/* RESET PASSWORD MODAL */}
       <Modal visible={showResetModal} transparent animationType="fade">
-        <View style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,0,7)',
-          justifyContent: 'center',
-          padding: 20
-        }}>
-          <View style={{
-            backgroundColor: 'rgba(14, 120, 101, 1)',
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0,7)',
+            justifyContent: 'center',
             padding: 20,
-            borderRadius: 12
-          }}>
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: 'rgba(14, 120, 101, 1)',
+              padding: 20,
+              borderRadius: 12,
+            }}
+          >
             <Text style={{ fontSize: 20, marginBottom: 10 }}>Reset Password</Text>
 
             {modalError ? <Text style={{ color: 'red' }}>{modalError}</Text> : null}

@@ -6,7 +6,7 @@ import AuthButton from '@/components/LoginComponents/AuthButton';
 import { authLayoutStyles } from '@/components/LoginComponents/AuthLayout.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { loginHeaderConfig } from '@/components/LoginComponents/AuthLayout.config';
-import  {login, UserCredentials} from '@/api/users'
+import { login, UserCredentials } from '@/api/users';
 import * as SecureStore from 'expo-secure-store';
 import AuthSubButton from '@/components/LoginComponents/AuthSubButton';
 import { router } from 'expo-router';
@@ -21,7 +21,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [errors, setErrors] = useState<{ username?: string; password?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{ username?: string; password?: string; general?: string }>(
+    {}
+  );
   const [loading, setLoading] = useState<boolean>(false);
 
   const validate = () => {
@@ -38,8 +40,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     setLoading(true);
     try {
       const credentials: UserCredentials = {
-      username: username,  // username as username bcs backend uses username/password
-      password: password,
+        username: username, // username as username bcs backend uses username/password
+        password: password,
       };
 
       //alert(`user creds is ${credentials.username}, ${credentials.password}`)
@@ -50,10 +52,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       // response contains: { access: string, refresh: string }
       const { access, refresh } = response;
 
-      await SecureStore.setItem("userToken",access);
-      await SecureStore.setItem("refreshToken",refresh);
+      await SecureStore.setItem('userToken', access);
+      await SecureStore.setItem('refreshToken', refresh);
 
-      router.push('/(tabs)/profile')
+      router.push('/(tabs)/profile');
     } catch (e) {
       console.error(e);
       setErrors({ general: 'Login failed' });
@@ -76,7 +78,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           value={username}
           onChangeText={setUsername}
           placeholder="Your username"
-          keyboardType="twitter" 
+          keyboardType="twitter"
           autoCapitalize="none"
           error={errors.username}
         />

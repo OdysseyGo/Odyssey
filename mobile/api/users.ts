@@ -44,7 +44,7 @@ export type UsersListResponse = {
 export type UserCredentials = {
   username: string;
   password: string;
-}
+};
 
 // API functions
 
@@ -134,11 +134,12 @@ export const getByUsername = (username: string) =>
     auth: false,
   });
 
-
-export const resetPassword = (payload: {username: string;email: string;new_password: string;}) =>  //This is only for the demo, it should be changed in the future
-    apiRequest<void>({
-      method: 'post',
-      url: '/api/users/reset_password/',
-      data: payload,
-      auth: false,
-    });
+export const resetPassword = (
+  payload: { username: string; email: string; new_password: string } //This is only for the demo, it should be changed in the future
+) =>
+  apiRequest<void>({
+    method: 'post',
+    url: '/api/users/reset_password/',
+    data: payload,
+    auth: false,
+  });
