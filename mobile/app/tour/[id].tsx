@@ -52,15 +52,9 @@ export default function TourDetailScreen() {
             difficulty={tour.difficulty}
           />
 
-          <TourDetailAuthor
-            authorAvatar={tour.authorAvatar}
-            authorName={tour.author}
-          />
+          <TourDetailAuthor authorAvatar={tour.authorAvatar} authorName={tour.author} />
 
-          <TourDetailDescription
-            description={tour.description}
-            tags={tour.tags}
-          />
+          <TourDetailDescription description={tour.description} tags={tour.tags} />
 
           <TourDetailMap stops={tour.stops} />
 

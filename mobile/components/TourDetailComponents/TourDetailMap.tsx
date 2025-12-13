@@ -15,9 +15,7 @@ export default function TourDetailMap({ stops }: TourDetailMapProps) {
       <View style={styles.mapContainer}>
         <View style={styles.mapPlaceholder}>
           <Text style={styles.mapPlaceholderText}>🗺️ Map Component</Text>
-          <Text style={styles.mapPlaceholderSubtext}>
-            {stops.length} stops to display
-          </Text>
+          <Text style={styles.mapPlaceholderSubtext}>{stops.length} stops to display</Text>
         </View>
       </View>
     </View>

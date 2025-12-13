@@ -4,19 +4,14 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { TourDetailBottomBarProps } from './TourDetailBottomBar.config';
 import { tourDetailBottomBarStyles } from './TourDetailBottomBar.styles';
 
-export default function TourDetailBottomBar({
-  onStartTour,
-}: TourDetailBottomBarProps) {
+export default function TourDetailBottomBar({ onStartTour }: TourDetailBottomBarProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailBottomBarStyles(theme), [theme]);
 
   return (
     <View style={styles.bottomBar}>
       <Pressable
-        style={({ pressed }) => [
-          styles.startButton,
-          pressed && styles.startButtonPressed,
-        ]}
+        style={({ pressed }) => [styles.startButton, pressed && styles.startButtonPressed]}
         onPress={onStartTour}
       >
         <Text style={styles.startButtonText}>Start Tour</Text>

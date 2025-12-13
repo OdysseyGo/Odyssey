@@ -4,10 +4,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { TourDetailDescriptionProps } from './TourDetailDescription.config';
 import { tourDetailDescriptionStyles } from './TourDetailDescription.styles';
 
-export default function TourDetailDescription({
-  description,
-  tags,
-}: TourDetailDescriptionProps) {
+export default function TourDetailDescription({ description, tags }: TourDetailDescriptionProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailDescriptionStyles(theme), [theme]);
 

@@ -4,10 +4,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { TourDetailAuthorProps } from './TourDetailAuthor.config';
 import { tourDetailAuthorStyles } from './TourDetailAuthor.styles';
 
-export default function TourDetailAuthor({
-  authorAvatar,
-  authorName,
-}: TourDetailAuthorProps) {
+export default function TourDetailAuthor({ authorAvatar, authorName }: TourDetailAuthorProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailAuthorStyles(theme), [theme]);
 

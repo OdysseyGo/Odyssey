@@ -5,11 +5,7 @@ import { TourDetailStatsProps } from './TourDetailStats.config';
 import { tourDetailStatsStyles } from './TourDetailStats.styles';
 import { getDifficultyColor } from './TourDetail.config';
 
-export default function TourDetailStats({
-  duration,
-  distance,
-  difficulty,
-}: TourDetailStatsProps) {
+export default function TourDetailStats({ duration, distance, difficulty }: TourDetailStatsProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailStatsStyles(theme), [theme]);
 
