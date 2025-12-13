@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate  # login direkt
-from django.db.models import QuerySet, F # F dbden çıkarmadan yazıyon 
+from django.db.models import F, QuerySet  # F dbden çıkarmadan yazıyon
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
@@ -16,7 +16,11 @@ class UserViewSet(ModelViewSet):
     queryset: QuerySet[User] = User.objects.all().order_by("id")
     serializer_class = UserSerializer
 
-    @action(detail=False, methods=["get"], url_path="get_by_username", )
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="get_by_username",
+    )
     def get_by_username(self, request):
         username = request.query_params.get("username")
         if not username:
@@ -27,11 +31,13 @@ class UserViewSet(ModelViewSet):
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
 
-        return Response({
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-        })
+        return Response(
+            {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+            }
+        )
 
     @action(detail=False, methods=["post"], url_path="login")
     def login(self, request):
@@ -92,15 +98,19 @@ class UserViewSet(ModelViewSet):
 
         serializer = self.get_serializer(followees_qs, many=True)
         return Response(serializer.data)
-    
-    @action(detail=False, methods=["post"], url_path="reset_password") # This is for the demo, no auth password changing!!!
+
+    @action(
+        detail=False, methods=["post"], url_path="reset_password"
+    )  # This is for the demo, no auth password changing!!!
     def reset_password(self, request):
         username = request.data.get("username")
         email = request.data.get("email")
         new_password = request.data.get("new_password")
 
         if not username or not email or not new_password:
-            return Response({"detail": "username, email and new_password required"}, status=400)
+            return Response(
+                {"detail": "username, email and new_password required"}, status=400
+            )
 
         try:
             user = User.objects.get(username=username)
@@ -125,24 +135,24 @@ class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
 
     def perform_create(self, serializer):
         follow = serializer.save(follower=self.request.user)
-        # increment counters 
+        # increment counters
         User.objects.filter(id=follow.followee_id).update(
-            follower_count=F('follower_count') + 1
+            follower_count=F("follower_count") + 1
         )
         User.objects.filter(id=follow.follower_id).update(
-            follow_count=F('follow_count') + 1
+            follow_count=F("follow_count") + 1
         )
 
     def perform_destroy(self, instance):
         # decrement counters safely on unfollow
         User.objects.filter(id=instance.followee_id).update(
-            follower_count=F('follower_count') - 1
+            follower_count=F("follower_count") - 1
         )
         User.objects.filter(id=instance.follower_id).update(
-            follow_count=F('follow_count') - 1
+            follow_count=F("follow_count") - 1
         )
 
-        instance.delete()    
+        instance.delete()
 
 
 class AdminViewSet(viewsets.ModelViewSet):

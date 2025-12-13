@@ -30,6 +30,7 @@ def request(method, endpoint, data=None, token=None):
         print(f"Error: {e}")
         sys.exit(1)
 
+
 def run_test():
     ts = int(time.time())
 

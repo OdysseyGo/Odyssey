@@ -52,13 +52,12 @@ def run_test():
 
     print("\n2. Getting Tokens...")
     creator_login = request("POST", "/users/login/", creator_creds)
-    player_login  = request("POST", "/users/login/", player_creds)
+    player_login = request("POST", "/users/login/", player_creds)
 
     creator_token = creator_login["access"]
     player_token = player_login["access"]
 
     print("   Tokens obtained")
-
 
     print("\n3. Creating Badge (as Creator)...")
     xp_badge_data = {
@@ -134,7 +133,6 @@ def run_test():
     progress_data = {"tour_id": tour_id}
     progress = request("POST", "/tour-progress/", progress_data, token=player_token)
     progress_id = progress["id"]
-    
 
     print("\n6. Completing Step 1 (as Player)...")
     # We send the ID of the step we just finished.
@@ -146,12 +144,14 @@ def run_test():
         token=player_token,
     )
     print(f"   Result: {result}")
-    
+
     # Check if we moved to step 2
     if result.get("new_step_id") == step2_id:
         print("   SUCCESS: Moved to Step 2 automatically.")
     else:
-        print(f"   FAILURE: Did not move to Step 2. New step: {result.get('new_step_id')}")
+        print(
+            f"   FAILURE: Did not move to Step 2. New step: {result.get('new_step_id')}"
+        )
 
     print("\n7. Completing Step 2 (as Player) - FINAL STEP...")
     complete_data2 = {"step_id": step2_id}
@@ -227,7 +227,9 @@ def run_test():
     paris_step_id = paris_step["id"]
 
     # Start Tour
-    paris_progress = request("POST", "/tour-progress/", {"tour_id": paris_tour_id}, token=player_token)
+    paris_progress = request(
+        "POST", "/tour-progress/", {"tour_id": paris_tour_id}, token=player_token
+    )
     paris_progress_id = paris_progress["id"]
 
     print("   Started Paris Tour. Completing final step...")
@@ -266,11 +268,16 @@ def run_test():
     if player_profile.get("tour_count") == 2:
         print("   SUCCESS: User tour_count incremented to 2.")
     elif "tour_count" not in player_profile:
-        print("   NOTE: 'tour_count' field not found in User response (add to serializer to verify).")
+        print(
+            "   NOTE: 'tour_count' field not found in User response (add to serializer to verify)."
+        )
     else:
-        print(f"   FAILURE: tour_count is {player_profile.get('tour_count')}, expected 2.")
+        print(
+            f"   FAILURE: tour_count is {player_profile.get('tour_count')}, expected 2."
+        )
 
     print("\n--- ALL TESTS PASSED ---")
+
 
 if __name__ == "__main__":
     run_test()
