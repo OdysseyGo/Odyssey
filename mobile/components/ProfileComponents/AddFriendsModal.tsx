@@ -7,7 +7,6 @@ import AddFriendsModalHeader from './AddFriendsModalHeader';
 import AddFriendsSearchBar from './AddFriendsSearchBar';
 import AddFriendsModalProTip from './AddFriendsModalProTip';
 import AddFriendsModalActions from './AddFriendsModalActions';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export default function AddFriendsModal({
   visible,
