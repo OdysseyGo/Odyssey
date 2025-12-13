@@ -2,7 +2,10 @@ import { StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
-export const profileBadgesStyles = (theme: ThemeName, size: 'small' | 'medium' | 'large' = 'medium') => {
+export const profileBadgesStyles = (
+  theme: ThemeName,
+  size: 'small' | 'medium' | 'large' = 'medium'
+) => {
   const color = Colors[theme];
 
   const sizeConfig = {

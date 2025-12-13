@@ -1,16 +1,23 @@
-import React, { use, useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import ProfileHeaderComp from '@/components/ProfileComponents/ProfileHeaderComp';
 import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
 import ProfileAddFriendsButton from '@/components/ProfileComponents/ProfileAddFriendsButton';
 import ProfileBadgesContainer from '@/components/ProfileComponents/ProfileBadgesContainer';
-import { View, Text, Button, ScrollView } from 'react-native';
+import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
+import {
+  View,
+  Text,
+  ScrollView,
+} from 'react-native';
 import { router } from 'expo-router';
-import AuthSubButton from '@/components/LoginComponents/AuthSubButton';
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import { getMe, User } from '@/api/users';
-import { getMyBadges, BadgesListResponse, Badge } from '@/api/profile';
+import { getMyBadges, Badge } from '@/api/profile';
 import * as SecureStore from 'expo-secure-store';
+import { useColorTheme } from '@/utils/useColorTheme';
+import Colors from '@/constants/Colors';
+import { Spacing } from '@/constants/Spacing';
 
 async function getAccessToken() {
   return await SecureStore.getItemAsync('userToken');
@@ -22,6 +29,12 @@ export default function Profile() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasToken, setHasToken] = useState<boolean | null>(null);
+  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  const theme = useColorTheme();
+  const color = Colors[theme];
 
   useFocusEffect(
     useCallback(() => {
@@ -62,6 +75,11 @@ export default function Profile() {
     }, [])
   );
 
+  // Move these hooks BEFORE any conditional returns
+  const handleOpenAddFriendModal = () => {
+    setShowAddFriendModal(true);
+  };
+
   if (!hasToken) {
     return (
       <View
@@ -69,10 +87,17 @@ export default function Profile() {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          padding: 24,
+          padding: Spacing.xl,
         }}
       >
-        <Text style={{ fontSize: 18, marginBottom: 16, textAlign: 'center', color: '#666' }}>
+        <Text
+          style={{
+            fontSize: 16,
+            marginBottom: Spacing.lg,
+            textAlign: 'center',
+            color: color.subText,
+          }}
+        >
           You need to be logged in to view your profile.
         </Text>
         <AuthButton title="Oooh I want to log in!" onPress={() => router.push('/login')} />
@@ -106,17 +131,24 @@ export default function Profile() {
   }));
 
   return (
-    <ScrollView>
-      <ProfileHeaderComp {...profileHeader} />
-      <ProfileStatsComp {...profileStats} />
-      <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-        <ProfileAddFriendsButton />
-      </View>
-      <ProfileBadgesContainer
-        badges={formattedBadges}
-        title="Badges"
-        maxDisplay={3}
+    <>
+      <ScrollView>
+        <ProfileHeaderComp {...profileHeader} />
+        <ProfileStatsComp {...profileStats} />
+        <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm }}>
+          <ProfileAddFriendsButton onPress={handleOpenAddFriendModal} />
+        </View>
+        <ProfileBadgesContainer badges={formattedBadges} title="Badges" maxDisplay={3} />
+      </ScrollView>
+
+      <AddFriendsModal
+        visible={showAddFriendModal}
+        onClose={() => setShowAddFriendModal(false)}
+        searchText={searchText}
+        onSearchChange={setSearchText}
+        searchFocused={searchFocused}
+        onSearchFocus={setSearchFocused}
       />
-    </ScrollView>
+    </>
   );
 }

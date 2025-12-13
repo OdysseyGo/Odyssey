@@ -18,6 +18,20 @@ export type User = {
   rating: number;
 };
 
+export type AddFriendUserDisplayDTO = {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+};
+
+export type AddFriendUserDisplayDTOListResponse = {
+  count: number;
+  next?: string;
+  previous?: string;
+  results: AddFriendUserDisplayDTO[];
+};
+
 export type CreateUserPayload = {
   username: string;
   email: string;
@@ -46,6 +60,14 @@ export type UserCredentials = {
   password: string;
 };
 
+// Mapping functions
+export const mapUserToAddFriendDTO = (user: User): AddFriendUserDisplayDTO => ({
+  id: user.id,
+  username: user.username,
+  first_name: user.first_name,
+  last_name: user.last_name,
+});
+
 // API functions
 
 /**
@@ -57,6 +79,22 @@ export const getUsers = (page?: number) =>
     url: '/api/users/',
     params: page ? { page } : undefined,
   });
+
+/**
+ * GET /api/users/ - List all users for add friend feature (mapped to DTO)
+ * @param page - Page number (optional)
+ */
+export const getAddFriendUsers = async (
+  page?: number
+): Promise<AddFriendUserDisplayDTOListResponse> => {
+  const response = await getUsers(page); // TODO: We should implement filtering api and integrate it - Can Kütükoğlu
+  return {
+    count: response.count,
+    next: response.next,
+    previous: response.previous,
+    results: response.results.map(mapUserToAddFriendDTO),
+  };
+};
 
 /**
  * POST /api/users/ - Create a new user

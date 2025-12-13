@@ -4,10 +4,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { profileBadgesStyles } from './ProfileBadges.styles';
 import { ProfileBadgesProps } from './ProfileBadges.config';
 
-export default function ProfileBadges({
-  badges = [],
-  size = 'medium',
-}: ProfileBadgesProps) {
+export default function ProfileBadges({ badges = [], size = 'medium' }: ProfileBadgesProps) {
   const theme = useColorTheme();
   const styles = profileBadgesStyles(theme, size);
 
@@ -29,9 +26,7 @@ export default function ProfileBadges({
               badge.unlocked ? styles.badgeContainerUnlocked : styles.badgeContainerLocked,
             ]}
           >
-            <Text style={[styles.badge, badge.unlocked && styles.unlockedBadge]}>
-              {badge.icon}
-            </Text>
+            <Text style={[styles.badge, badge.unlocked && styles.unlockedBadge]}>{badge.icon}</Text>
             {!badge.unlocked && (
               <View style={styles.lockedOverlay}>
                 <Text style={styles.lockIcon}>🔒</Text>
@@ -39,9 +34,7 @@ export default function ProfileBadges({
             )}
           </View>
           <Text style={styles.nameText}>{badge.name}</Text>
-          {badge.description && (
-            <Text style={styles.descriptionText}>{badge.description}</Text>
-          )}
+          {badge.description && <Text style={styles.descriptionText}>{badge.description}</Text>}
         </View>
       ))}
     </>

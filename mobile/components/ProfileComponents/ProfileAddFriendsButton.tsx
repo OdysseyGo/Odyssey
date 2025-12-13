@@ -12,8 +12,9 @@ export default function ProfileAddFriendsButton({ onPress }: ProfileAddFriendsBu
 
   const handlePress = async () => {
     setIsPressedFeedback(true);
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
     setIsPressedFeedback(false);
+    onPress?.();
   };
 
   return (
@@ -27,4 +28,3 @@ export default function ProfileAddFriendsButton({ onPress }: ProfileAddFriendsBu
     </TouchableOpacity>
   );
 }
-
