@@ -12,8 +12,8 @@ export default function MapMarker({
   coordinate,
   title,
   iconType,
-  circleSize = 40,
-  circleColor = '#FF6B6B',
+  circleSize,
+  circleColor,
 }: MapMarkerProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);

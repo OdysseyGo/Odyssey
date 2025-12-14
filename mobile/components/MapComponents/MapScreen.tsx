@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { useMemo, useState } from 'react';
 
-import { MapScreenStyle } from './MapScreen.styles';
+import getStyles from './MapScreen.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import BottomSlider from './BottomSlider';
 import { exampleBottomSlider } from './BottomSlider.config';
@@ -10,7 +10,7 @@ import { getVisibleMarkers, getVisibleRoute } from '../TourStepComponents/TourNa
 
 export default function MapScreen() {
   const theme = useColorTheme();
-  const styles = useMemo(() => MapScreenStyle(theme), [theme]);
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   const { tour } = exampleBottomSlider;
   const [currentStepIndex, setCurrentStepIndex] = useState(0);

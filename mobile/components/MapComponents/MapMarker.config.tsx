@@ -10,8 +10,8 @@ export interface MapMarkerProps {
   };
   title: string;
   iconType: IconType;
-  circleSize?: number;
-  circleColor?: string;
+  circleSize: number;
+  circleColor: string;
 }
 
 export const exampleMapMarkers: MapMarkerProps[] = [
