@@ -1,30 +1,66 @@
-import {
-  View,
-  Text,
-  Pressable,
-  Animated,
-  Image,
-  PanResponder,
-  useWindowDimensions,
-} from 'react-native';
-import { BottomSliderStyle } from './BottomSlider.styles';
+import { View, Pressable, Animated, PanResponder, useWindowDimensions } from 'react-native';
+import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
+
+import getStyles from './BottomSlider.styles';
+import { BottomSliderProps } from './BottomSlider.config';
 import { useColorTheme } from '@/utils/getColorTheme';
-import { useMemo, useState, useRef } from 'react';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Animations } from '../../constants/Animations';
-import { Spacing } from '@/constants/Spacing';
+import { Animations } from '@/constants/Animations';
+import TourNavigation from '../TourStepComponents/TourNavigation';
 
 const BOTTOM_SHEET_ANIMATION_DURATION = Animations.bottomSheet.animationDuration;
 
-interface BottomSliderProps {
-  isExpanded?: boolean;
-}
-
-export default function BottomSlider({ isExpanded = false }: BottomSliderProps) {
+export default function BottomSlider({
+  tour,
+  onCurrentStepChange,
+  onSolvedStepsChange,
+}: BottomSliderProps) {
   const theme = useColorTheme();
-  const styles = useMemo(() => BottomSliderStyle(theme), [theme]);
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   const { height: screenHeight } = useWindowDimensions();
+
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [solvedSteps, setSolvedSteps] = useState<Set<string>>(new Set());
+  const [locationConfirmedSteps, setLocationConfirmedSteps] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    onCurrentStepChange?.(currentStepIndex);
+  }, [currentStepIndex, onCurrentStepChange]);
+
+  useEffect(() => {
+    onSolvedStepsChange?.(solvedSteps);
+  }, [solvedSteps, onSolvedStepsChange]);
+
+  const handleNavigateNext = useCallback(() => {
+    if (currentStepIndex < tour.steps.length - 1) {
+      setCurrentStepIndex((prev) => prev + 1);
+    }
+  }, [currentStepIndex, tour.steps.length]);
+
+  const handleNavigatePrev = useCallback(() => {
+    if (currentStepIndex > 0) {
+      setCurrentStepIndex((prev) => prev - 1);
+    }
+  }, [currentStepIndex]);
+
+  const handleStepSolved = useCallback((stepId: string) => {
+    setSolvedSteps((prev) => new Set([...prev, stepId]));
+  }, []);
+
+  const handleLocationConfirm = useCallback(
+    async (stepId: string, latitude: number, longitude: number) => {
+      try {
+        // TODO: Make API call to backend to verify location
+        // For now, just mark as confirmed locally
+        setLocationConfirmedSteps((prev) => new Set([...prev, stepId]));
+        console.log(`Location confirmed for step ${stepId} at:`, { latitude, longitude });
+      } catch (error) {
+        console.error('Failed to confirm location:', error);
+        throw error;
+      }
+    },
+    []
+  );
 
   // Slider is anchored to bottom. translateY moves it:
   // - positive translateY = push DOWN (more off-screen)
@@ -44,7 +80,6 @@ export default function BottomSlider({ isExpanded = false }: BottomSliderProps) 
   const minTranslate = EXPANDED_TRANSLATE;
   const bottomSheetTranslateY = useRef(new Animated.Value(COLLAPSED_TRANSLATE)).current;
   const bottomSheetOffset = useRef(COLLAPSED_TRANSLATE);
-  const [isBottomSheetExpanded, setIsBottomSheetExpanded] = useState(false);
   const previousPosition = useRef(COLLAPSED_TRANSLATE);
 
   const animateBottomSheetTo = (toValue: number) => {
@@ -56,7 +91,6 @@ export default function BottomSlider({ isExpanded = false }: BottomSliderProps) 
       if (finished) {
         previousPosition.current = bottomSheetOffset.current;
         bottomSheetOffset.current = toValue;
-        setIsBottomSheetExpanded(toValue === EXPANDED_TRANSLATE);
       }
     });
   };
@@ -103,20 +137,17 @@ export default function BottomSlider({ isExpanded = false }: BottomSliderProps) 
           snapPoints[0]
         );
 
-
         if (
           bottomSheetOffset.current === COLLAPSED_TRANSLATE &&
           gestureState.vy < -Animations.bottomSheet.swipeVelocityThreshold
         ) {
           target = HALFWAY_TRANSLATE;
-        }
-        else if (
+        } else if (
           bottomSheetOffset.current === EXPANDED_TRANSLATE &&
           gestureState.vy > Animations.bottomSheet.swipeVelocityThreshold
         ) {
           target = HALFWAY_TRANSLATE;
-        }
-        else if (bottomSheetOffset.current === HALFWAY_TRANSLATE) {
+        } else if (bottomSheetOffset.current === HALFWAY_TRANSLATE) {
           if (gestureState.vy < -Animations.bottomSheet.swipeVelocityThreshold) {
             target = EXPANDED_TRANSLATE;
           } else if (gestureState.vy > Animations.bottomSheet.swipeVelocityThreshold) {
@@ -134,10 +165,6 @@ export default function BottomSlider({ isExpanded = false }: BottomSliderProps) 
       style={[
         styles.bottomOverlay,
         {
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
           maxHeight: screenHeight * Animations.bottomSheet.maxScreenMultiplier,
           transform: [
             {
@@ -148,35 +175,23 @@ export default function BottomSlider({ isExpanded = false }: BottomSliderProps) 
       ]}
       pointerEvents="box-none"
     >
-      <View
-        style={[styles.bottomPanel, { paddingTop: 2, paddingBottom: 12 }]}
-        {...bottomSheetPanResponder.panHandlers}
-      >
-        <Pressable
-          onPress={toggleBottomSheet}
-          style={{
-            width: '100%',
-            paddingVertical: 12,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <MaterialCommunityIcons
-            name={isBottomSheetExpanded ? 'chevron-down' : 'chevron-up'}
-            size={24}
-            color="#ffffff"
-          />
-          <Text style={[styles.panelTitle, { marginBottom: 2 }]}>Current stage of the tour</Text>
-          <Text style={styles.panelText} numberOfLines={1}>
-            Stage 1 · Welcome to the city tour.
-          </Text>
-        </Pressable>
+      <View style={styles.bottomPanel}>
+        <View {...bottomSheetPanResponder.panHandlers}>
+          <Pressable onPress={toggleBottomSheet} style={styles.pressable}>
+            <View style={styles.handleBar} />
+          </Pressable>
+        </View>
 
-        <View style={{ marginTop: Spacing.xs, borderRadius: 12, overflow: 'hidden' }}>
-          <Image
-            source={{ uri: 'https://placehold.co/600x400' }}
-            style={{ width: '100%', height: 160 }}
-            resizeMode="cover"
+        <View style={{ flex: 1 }}>
+          <TourNavigation
+            tour={tour}
+            currentStepIndex={currentStepIndex}
+            solvedSteps={solvedSteps}
+            locationConfirmedSteps={locationConfirmedSteps}
+            onNavigateNext={handleNavigateNext}
+            onNavigatePrev={handleNavigatePrev}
+            onStepSolved={handleStepSolved}
+            onLocationConfirm={handleLocationConfirm}
           />
         </View>
       </View>

@@ -19,6 +19,14 @@ const textGrayDark = '#d3d3d3ff';
 const pressLight = '#c7c7c7ff';
 const pressDark = '#343333ff';
 
+const successGreen = '#4CAF50';
+const errorRed = '#F44336';
+
+const gray666 = '#666666';
+const gray888 = '#888888';
+const gray999 = '#999999';
+const gray333 = '#333333';
+
 const Colors = {
   light: {
     text: black,
@@ -32,6 +40,12 @@ const Colors = {
     tabIconDefault: '#f60101ff',
     tabIconSelected: primaryLight,
     border: black,
+    success: successGreen,
+    error: errorRed,
+    icon: gray666,
+    iconDisabled: gray999,
+    iconActive: gray333,
+    placeholder: gray888,
   },
   dark: {
     text: white,
@@ -45,7 +59,16 @@ const Colors = {
     tabIconDefault: '#f70000ff',
     tabIconSelected: primaryLight,
     border: black,
+    success: successGreen,
+    error: errorRed,
+    icon: gray666,
+    iconDisabled: gray999,
+    iconActive: gray333,
+    placeholder: gray888,
   },
 };
+
+export const markerColors = ['#FF6B6B', '#4ECDC4', '#FFB347', '#95E1D3', '#F38181', '#AA96DA'];
+
 export default Colors;
 export type ThemeName = keyof typeof Colors;

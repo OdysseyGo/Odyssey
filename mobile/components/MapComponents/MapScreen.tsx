@@ -1,84 +1,64 @@
 import { View } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import { useMemo, useState, useCallback } from 'react';
+
 import { MapScreenStyle } from './MapScreen.styles';
 import { useColorTheme } from '@/utils/getColorTheme';
-import { useMemo, useState, useEffect, useRef } from 'react';
-import * as Location from 'expo-location';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import BottomSlider from './BottomSlider';
-
-const defaultRegion = {
-  latitude: 41.0082,
-  longitude: 28.9784,
-  latitudeDelta: 0.05,
-  longitudeDelta: 0.05,
-};
-
-const sampleRoute = [
-  { latitude: 41.0082, longitude: 28.9784 },
-  { latitude: 41.0151, longitude: 28.9795 },
-];
+import { exampleBottomSlider } from './BottomSlider.config';
+import TourMap from './TourMap';
+import { getVisibleMarkers, getVisibleRoute } from '../TourStepComponents/TourNavigation.config';
 
 export default function MapScreen() {
   const theme = useColorTheme();
   const styles = useMemo(() => MapScreenStyle(theme), [theme]);
-  const mapRef = useRef<MapView>(null);
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setErrorMsg('Permission to access location was denied');
-        return;
-      }
+  const { tour } = exampleBottomSlider;
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [solvedSteps, setSolvedSteps] = useState<Set<string>>(new Set());
 
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
+  const visibleMarkers = useMemo(
+    () => getVisibleMarkers(tour, currentStepIndex, solvedSteps),
+    [tour, currentStepIndex, solvedSteps]
+  );
 
-      if (mapRef.current) {
-        mapRef.current.animateToRegion(
-          {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
-          },
-          1000
-        );
-      }
-    })();
-  }, []);
+  const visibleRoute = useMemo(
+    () => getVisibleRoute(tour, currentStepIndex, solvedSteps),
+    [tour, currentStepIndex, solvedSteps]
+  );
 
-  const currentRegion = location
-    ? {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      }
-    : defaultRegion;
+  const initialRegion = useMemo(
+    () => ({
+      latitude: tour.steps[0].coordinate.latitude,
+      longitude: tour.steps[0].coordinate.longitude,
+      latitudeDelta: 0.05,
+      longitudeDelta: 0.05,
+    }),
+    [tour]
+  );
+
+  const handleCurrentStepChange = (stepIndex: number) => {
+    setCurrentStepIndex(stepIndex);
+  };
+
+  const handleSolvedStepsChange = (newSolvedSteps: Set<string>) => {
+    setSolvedSteps(newSolvedSteps);
+  };
 
   return (
     <View style={styles.container}>
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={defaultRegion}
-        showsUserLocation={true}
-        showsMyLocationButton={true}
-        followsUserLocation={false}
-      >
-        <Marker coordinate={currentRegion} title="Waypoint 1">
-          <View style={{ alignItems: 'center' }}>
-            <MaterialCommunityIcons name="map-marker-star" size={48} color="#FF6B6B" />
-          </View>
-        </Marker>
-        <Polyline coordinates={sampleRoute} strokeWidth={4} />
-      </MapView>
+      <TourMap
+        markers={visibleMarkers}
+        route={visibleRoute}
+        initialRegion={initialRegion}
+        currentStepIndex={currentStepIndex}
+        tour={tour}
+      />
 
-      <BottomSlider />
+      <BottomSlider
+        tour={tour}
+        onCurrentStepChange={handleCurrentStepChange}
+        onSolvedStepsChange={handleSolvedStepsChange}
+      />
     </View>
   );
 }
