@@ -20,7 +20,7 @@ export const addFriendsModalProTipStyles = (theme: ThemeName) => {
     },
     iconContainer: {
       marginRight: Spacing.md,
-      marginTop: 2,
+      marginTop: Spacing.xs,
     },
     textContainer: {
       flex: 1,

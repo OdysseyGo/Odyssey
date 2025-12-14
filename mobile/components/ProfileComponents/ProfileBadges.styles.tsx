@@ -41,8 +41,8 @@ export const profileBadgesStyles = (
     },
     unlockedBadge: {
       textShadowColor: color.primary,
-      textShadowOffset: { width: 0, height: 2 },
-      textShadowRadius: 4,
+      textShadowOffset: { width: 0, height: Spacing.xs },
+      textShadowRadius: Spacing.md,
     },
     nameText: {
       fontSize: 12,
@@ -64,7 +64,7 @@ export const profileBadgesStyles = (
       width: '100%',
       height: '100%',
       borderRadius: Spacing.borderRadius,
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      backgroundColor: color.textBackground,
       alignItems: 'center',
       justifyContent: 'center',
     },
