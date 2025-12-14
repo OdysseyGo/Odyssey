@@ -11,7 +11,7 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
       paddingBottom: '10%',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: color.background,
+      backgroundColor: color.primary,
     },
     avatarWrapper: {
       marginBottom: Spacing.lg,
