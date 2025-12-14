@@ -8,11 +8,10 @@ export const MapScreenStyle = (theme: ThemeName) =>
     container: { flex: 1 },
     map: { ...StyleSheet.absoluteFillObject },
     topOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'flex-start' },
-    bottomOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'flex-end' },
     topBar: {
       margin: Spacing.md,
       padding: Spacing.md,
-      borderRadius: 12, //TODO
+      borderRadius: Spacing.borderRadius,
       backgroundColor: Colors[theme].foreground,
       flexDirection: 'row',
       alignItems: 'center',
@@ -26,12 +25,4 @@ export const MapScreenStyle = (theme: ThemeName) =>
       backgroundColor: Colors[theme].foregroundSecondary,
     },
     buttonText: { fontWeight: '500' },
-    bottomPanel: {
-      margin: Spacing.md,
-      padding: Spacing.md,
-      borderRadius: Spacing.md,
-      backgroundColor: Colors[theme].foreground,
-    },
-    panelTitle: { color: Colors[theme].text, fontWeight: '600', marginBottom: Spacing.xs },
-    panelText: { color: Colors[theme].text, fontSize: 16 },
   });

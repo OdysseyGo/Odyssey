@@ -23,7 +23,7 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[colorTheme ?? 'light'].primary,
         tabBarInactiveTintColor: Colors[colorTheme ?? 'light'].tabIconDefault,
-        headerShown: useClientOnlyValue(false, false),
+        headerShown: true,
         headerTitle: '',
         headerStyle: {
           backgroundColor: Colors[colorTheme ?? 'light'].primary,
@@ -78,7 +78,6 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />

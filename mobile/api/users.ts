@@ -60,6 +60,11 @@ export type UserCredentials = {
   password: string;
 };
 
+export type LoginResponse = {
+  access: string;
+  refresh: string;
+};
+
 // Mapping functions
 export const mapUserToAddFriendDTO = (user: User): AddFriendUserDisplayDTO => ({
   id: user.id,
@@ -145,7 +150,7 @@ export const deleteUser = (id: string) =>
   });
 
 export const login = (payload: UserCredentials) =>
-  apiRequest<void>({
+  apiRequest<LoginResponse>({
     method: 'post',
     url: `/api/users/login/`,
     data: payload,
