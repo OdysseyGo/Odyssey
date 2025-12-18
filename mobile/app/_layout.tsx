@@ -70,7 +70,7 @@ function RootLayoutNav() {
           name="tour/[id]"
           options={{
             title: 'Tour',
-            headerStyle: { backgroundColor: color.primary },
+            headerStyle: { backgroundColor: Colors[themeKey].primary },
             headerTransparent: true,
           }}
         />
