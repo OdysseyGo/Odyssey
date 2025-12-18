@@ -1,8 +1,8 @@
 const primaryLight = '#50AA82';
-const primaryDark = '#FF9EC7';
+const primaryDark = '#ff6a00ff';
 
 const secondaryLight = '#03dac6';
-const secondaryDark = '#A3C7FF';
+const secondaryDark = '#452d2dff';
 
 const black = '#000000';
 const white = '#ffffff';
@@ -21,6 +21,14 @@ const textGrayDark = '#d3d3d3ff';
 const pressLight = '#c7c7c7ff';
 const pressDark = '#343333ff';
 
+const successGreen = '#4CAF50';
+const errorRed = '#F44336';
+
+const gray666 = '#666666';
+const gray888 = '#888888';
+const gray999 = '#999999';
+const gray333 = '#333333';
+
 const yellow = '#FFD700';
 
 const Colors = {
@@ -35,13 +43,18 @@ const Colors = {
     press: pressLight,
     primary: primaryLight,
     secondary: secondaryLight,
-    textBackground: white,
-    placeholderTextColor: '#a9a9a9',
     tabIconDefault: '#f60101ff',
     tabIconSelected: primaryLight,
+    textBackground: white,
+    placeholderTextColor: '#a9a9a9',
     border: black,
+    success: successGreen,
+    error: errorRed,
+    icon: gray666,
+    iconDisabled: gray999,
+    iconActive: gray333,
+    placeholder: gray888,
     textShadowColor: 'rgba(0,0,0,0.4)',
-    error: '#ff4d4f',
     star: yellow,
     easy: '#4CAF50',
     medium: '#FF9800',
@@ -56,20 +69,28 @@ const Colors = {
     foreground: grayDark,
     foregroundSecondary: foregroundSecondaryDark,
     press: pressDark,
-    textBackground: white,
     primary: primaryDark,
     secondary: secondaryDark,
+    textBackground: white,
     placeholderTextColor: '#6e6e6eff',
     tabIconDefault: '#f70000ff',
     tabIconSelected: primaryLight,
-    border: white,
+    border: black,
+    success: successGreen,
+    error: errorRed,
+    icon: gray666,
+    iconDisabled: gray999,
+    iconActive: gray333,
+    placeholder: gray888,
     textShadowColor: 'rgba(255, 255, 255, 0.4)',
-    error: '#ff4d4f',
     star: yellow,
     easy: '#4CAF50',
     medium: '#FF9800',
     hard: '#F44336',
   },
 };
+
+export const markerColors = ['#FF6B6B', '#4ECDC4', '#FFB347', '#95E1D3', '#F38181', '#AA96DA'];
+
 export default Colors;
 export type ThemeName = keyof typeof Colors;

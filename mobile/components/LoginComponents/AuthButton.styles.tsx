@@ -12,6 +12,7 @@ export const authButtonStyles = (theme: ThemeName) => {
       alignItems: 'center',
       marginTop: Spacing.sm,
       width: '100%',
+      maxWidth: 400,
     },
     buttonDisabled: {
       opacity: 0.6,
