@@ -13,6 +13,8 @@ const foregroundSecondaryDark = '#222222';
 const grayLight = '#f6f6f6';
 const grayDark = '#121212';
 
+const blackPale = 'rgba(0, 0, 0, 0.6)';
+
 const textGrayLight = '#2c2c2cff';
 const textGrayDark = '#d3d3d3ff';
 
@@ -27,11 +29,15 @@ const gray888 = '#888888';
 const gray999 = '#999999';
 const gray333 = '#333333';
 
+const yellow = '#FFD700';
+
 const Colors = {
   light: {
+    white: white,
     text: black,
     subText: textGrayLight,
     background: white,
+    backgroundBlack: blackPale,
     foreground: grayLight,
     foregroundSecondary: foregroundSecondaryLight,
     press: pressLight,
@@ -49,11 +55,17 @@ const Colors = {
     iconActive: gray333,
     placeholder: gray888,
     textShadowColor: 'rgba(0,0,0,0.4)',
+    star: yellow,
+    easy: '#4CAF50',
+    medium: '#FF9800',
+    hard: '#F44336',
   },
   dark: {
+    white: white,
     text: white,
     subText: textGrayDark,
     background: black,
+    backgroundBlack: blackPale,
     foreground: grayDark,
     foregroundSecondary: foregroundSecondaryDark,
     press: pressDark,
@@ -71,6 +83,10 @@ const Colors = {
     iconActive: gray333,
     placeholder: gray888,
     textShadowColor: 'rgba(255, 255, 255, 0.4)',
+    star: yellow,
+    easy: '#4CAF50',
+    medium: '#FF9800',
+    hard: '#F44336',
   },
 };
 

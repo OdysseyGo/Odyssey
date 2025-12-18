@@ -1,4 +1,5 @@
 export interface TourDisplayProps {
+  id: string;
   image: string;
   title: string;
   author: string;
@@ -9,6 +10,7 @@ export interface TourDisplayProps {
 }
 
 export const exampleTour: TourDisplayProps = {
+  id: '1',
   image: 'https://picsum.photos/400/300',
   title: 'Istanbul City Tour',
   author: 'Odyssey Travel',

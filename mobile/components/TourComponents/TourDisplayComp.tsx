@@ -5,8 +5,10 @@ import { tourDisplayCompStyles } from './TourDisplayComp.styles';
 import { STAR } from '@/constants/Symbols';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { useMemo } from 'react';
+import { router } from 'expo-router';
 
 export default function TourDisplayComp({
+  id,
   image,
   title,
   author,
@@ -18,20 +20,31 @@ export default function TourDisplayComp({
   const theme = useColorTheme();
   const styles = useMemo(() => tourDisplayCompStyles(theme), [theme]);
 
+  const handlePress = () => {
+    router.push({
+      pathname: '/tour/[id]',
+      params: { id: 1 },
+    });
+  };
+
   return (
     <Pressable
-      onPress={() => {}}
+      onPress={handlePress}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.3 }]}
     >
-      <Image source={{ uri: image }} style={styles.image} />
+      <View style={styles.imageWrapper}>
+        <Image source={{ uri: image }} style={styles.image} />
+
+        <View style={styles.ratingBadge}>
+          <Text style={styles.ratingBadgeText}>
+            <Text style={styles.star}>{STAR}</Text> {rating}
+          </Text>
+        </View>
+      </View>
       <View style={styles.infoContainer}>
         <View style={styles.header}>
           <Text style={styles.title} numberOfLines={2}>
             {title}
-          </Text>
-          <Text style={styles.rating}>
-            {STAR}
-            {rating}/5
           </Text>
         </View>
 
