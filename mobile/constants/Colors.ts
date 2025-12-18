@@ -21,6 +21,8 @@ const textGrayDark = '#d3d3d3ff';
 const pressLight = '#c7c7c7ff';
 const pressDark = '#343333ff';
 
+const yellow = '#FFD700';
+
 const Colors = {
   light: {
     white: white,
@@ -40,6 +42,10 @@ const Colors = {
     border: black,
     textShadowColor: 'rgba(0,0,0,0.4)',
     error: '#ff4d4f',
+    star: yellow,
+    easy: '#4CAF50',
+    medium: '#FF9800',
+    hard: '#F44336',
   },
   dark: {
     white: white,
@@ -59,6 +65,10 @@ const Colors = {
     border: white,
     textShadowColor: 'rgba(255, 255, 255, 0.4)',
     error: '#ff4d4f',
+    star: yellow,
+    easy: '#4CAF50',
+    medium: '#FF9800',
+    hard: '#F44336',
   },
 };
 export default Colors;

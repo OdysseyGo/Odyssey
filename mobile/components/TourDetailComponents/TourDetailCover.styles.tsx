@@ -17,7 +17,7 @@ export const tourDetailCoverStyles = (theme: ThemeName, headerHeight: number = 0
     },
     coverOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0,0,0,0.4)',
+      backgroundColor: color.backgroundBlack,
     },
     coverContent: {
       position: 'absolute',
@@ -30,7 +30,7 @@ export const tourDetailCoverStyles = (theme: ThemeName, headerHeight: number = 0
       fontSize: 24,
       fontWeight: '700',
       marginBottom: Spacing.sm,
-      textShadowColor: 'rgba(0,0,0,0.5)',
+      textShadowColor: color.textShadowColor,
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 3,
     },
@@ -40,11 +40,11 @@ export const tourDetailCoverStyles = (theme: ThemeName, headerHeight: number = 0
       gap: Spacing.xs,
     },
     star: {
-      color: '#FFD700',
+      color: color.star,
       fontSize: 16,
     },
     ratingText: {
-      color: '#fff',
+      color: color.white,
       fontSize: 14,
     },
   });

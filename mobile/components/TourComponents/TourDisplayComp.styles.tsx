@@ -37,10 +37,10 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
     },
 
     star: {
-      color: '#FFD700',
+      color: color.star,
     },
     ratingBadgeText: {
-      color: '#FFFFFF',
+      color: color.white,
       fontWeight: '600',
       fontSize: 12,
     },

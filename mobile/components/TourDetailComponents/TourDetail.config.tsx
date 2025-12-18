@@ -1,5 +1,7 @@
 // Shared types and mock data for Tour Detail components
 
+import Colors, { ThemeName } from '@/constants/Colors';
+
 export interface TourStop {
   id: string;
   title: string;
@@ -75,13 +77,17 @@ export const MOCK_TOUR: TourDetail = {
   tags: ['History', 'Architecture', 'Walking', 'Culture'],
 };
 
-export const getDifficultyColor = (difficulty: TourDetail['difficulty']) => {
+export const getDifficultyColor = (difficulty: TourDetail['difficulty'], theme: ThemeName) => {
+  const color = Colors[theme];
+
   switch (difficulty) {
     case 'Easy':
-      return '#4CAF50';
+      return color.easy;
     case 'Medium':
-      return '#FF9800';
+      return color.medium;
     case 'Hard':
-      return '#F44336';
+      return color.hard;
+    default:
+      return color.text;
   }
 };

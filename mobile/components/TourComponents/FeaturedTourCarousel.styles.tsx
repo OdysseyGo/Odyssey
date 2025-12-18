@@ -77,7 +77,7 @@ export const featuredTourCarouselStyles = (theme: ThemeName) => {
       borderRadius: Spacing.sm,
     },
     star: {
-      color: '#FFD700',
+      color: color.star,
     },
     ratingText: {
       color: color.white,
@@ -100,7 +100,7 @@ export const featuredTourCarouselStyles = (theme: ThemeName) => {
       marginBottom: Spacing.xs,
     },
     author: {
-      color: 'rgba(255, 255, 255, 0.8)',
+      color: color.white,
       fontSize: 14,
       marginBottom: Spacing.sm,
     },
@@ -110,7 +110,7 @@ export const featuredTourCarouselStyles = (theme: ThemeName) => {
       gap: Spacing.sm,
     },
     metaText: {
-      color: 'rgba(255, 255, 255, 0.7)',
+      color: color.white,
       fontSize: 13,
     },
     pagination: {
