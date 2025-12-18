@@ -121,7 +121,7 @@ export default function getStyles(theme: ThemeName) {
       justifyContent: 'center',
     },
     locationButtonConfirmed: {
-      backgroundColor: color.success,
+      backgroundColor: color.primary,
     },
   });
 }

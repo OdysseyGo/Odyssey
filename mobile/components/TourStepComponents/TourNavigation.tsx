@@ -93,7 +93,7 @@ function NavigationArrows({
           <MaterialCommunityIcons
             name={isLocationConfirmed ? 'map-marker-check' : 'map-marker-radius'}
             size={20}
-            color={isLocationConfirmed ? Colors[theme].success : Colors[theme].icon}
+            color={isLocationConfirmed ? Colors[theme].background : Colors[theme].icon}
           />
         </Pressable>
       ) : (

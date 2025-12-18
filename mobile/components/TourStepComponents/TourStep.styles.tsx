@@ -126,7 +126,7 @@ export default function getStyles(theme: ThemeName) {
       borderColor: 'transparent',
     },
     triviaInputCorrect: {
-      borderColor: color.success,
+      borderColor: color.primary,
     },
     triviaInputIncorrect: {
       borderColor: color.error,

@@ -220,7 +220,7 @@ function PuzzleStepView({ step, isSolved, onSolve }: PuzzleStepViewProps) {
       <View style={styles.puzzleTitleContainer}>
         <Text style={styles.puzzleTitle}>{step.title}</Text>
         {isSolved && (
-          <MaterialCommunityIcons name="check-circle" size={20} color={Colors[theme].success} />
+          <MaterialCommunityIcons name="check-circle" size={20} color={Colors[theme].primary} />
         )}
       </View>
 

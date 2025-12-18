@@ -13,7 +13,7 @@ export const tourScrollerCompStyles = (theme: ThemeName) => {
     headerTitle: {
       width: '100%',
       backgroundColor: 'transparent',
-      height: 40,
+      height: 50,
       justifyContent: 'center',
       padding: Spacing.md,
     },
