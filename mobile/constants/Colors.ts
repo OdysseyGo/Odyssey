@@ -1,7 +1,7 @@
 const primaryLight = '#50AA82';
 const primaryDark = '#ff6a00ff';
 
-const secondaryLight = '#03dac6';
+const secondaryLight = '#648e5b';
 const secondaryDark = '#452d2dff';
 
 const black = '#000000';
@@ -21,7 +21,6 @@ const textGrayDark = '#d3d3d3ff';
 const pressLight = '#c7c7c7ff';
 const pressDark = '#343333ff';
 
-const successGreen = '#4CAF50';
 const errorRed = '#F44336';
 
 const gray666 = '#666666';
@@ -48,7 +47,6 @@ const Colors = {
     textBackground: white,
     placeholderTextColor: '#a9a9a9',
     border: black,
-    success: successGreen,
     error: errorRed,
     icon: gray666,
     iconDisabled: gray999,
@@ -76,7 +74,6 @@ const Colors = {
     tabIconDefault: '#f70000ff',
     tabIconSelected: primaryLight,
     border: black,
-    success: successGreen,
     error: errorRed,
     icon: gray666,
     iconDisabled: gray999,
