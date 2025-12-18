@@ -14,10 +14,10 @@ export const profileStatsCompStyles = (theme: ThemeName) => {
       width: '90%',
       alignSelf: 'center',
 
-      shadowColor: '#000',
+      shadowColor: color.textShadowColor,
       shadowOpacity: 0.1,
-      shadowRadius: 8,
-      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: Spacing.lg,
+      shadowOffset: { width: 0, height: Spacing.sm },
       elevation: 4,
       maxWidth: 500,
     },
@@ -45,7 +45,7 @@ export const profileStatsCompStyles = (theme: ThemeName) => {
 
     divider: {
       height: 1,
-      backgroundColor: '#E5E5E5',
+      backgroundColor: color.foregroundSecondary,
       marginVertical: Spacing.md,
     },
 
@@ -73,7 +73,7 @@ export const profileStatsCompStyles = (theme: ThemeName) => {
     bottomDivider: {
       width: 1,
       height: '80%',
-      backgroundColor: '#E0E0E0',
+      backgroundColor: color.foregroundSecondary,
     },
   });
 };
