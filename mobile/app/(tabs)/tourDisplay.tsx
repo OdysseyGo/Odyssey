@@ -1,4 +1,11 @@
-import { View, ScrollView, ActivityIndicator, Text, RefreshControl, StyleSheet } from 'react-native';
+import {
+  View,
+  ScrollView,
+  ActivityIndicator,
+  Text,
+  RefreshControl,
+  StyleSheet,
+} from 'react-native';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import TourScrollerComp from '@/components/TourComponents/TourScrollerComp';
 import FeaturedTourCarousel from '@/components/TourComponents/FeaturedTourCarousel';
