@@ -2,6 +2,8 @@ import { StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
+const SearchStyles = () => null;
+
 export const searchScreenStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
@@ -66,3 +68,5 @@ export const searchScreenStyles = (theme: ThemeName) => {
     },
   });
 };
+
+export default SearchStyles;
