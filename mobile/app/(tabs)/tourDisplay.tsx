@@ -150,6 +150,13 @@ export default function TourDisplay() {
           <TourScrollerComp key={city} title={city} data={tours} />
         ))}
       </ScrollView>
+      <CreateTourButton />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
