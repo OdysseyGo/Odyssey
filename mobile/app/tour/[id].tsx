@@ -45,9 +45,10 @@ function mapApiTourToDetail(tour: Tour): TourDetail {
     authorAvatar: `https://picsum.photos/100/100?random=${tour.creator?.id || tour.id}`,
     coverImage: tour.steps?.[0]?.image || `https://picsum.photos/800/400?random=${tour.id}`,
     duration: `${tour.duration_minutes} min`,
-    distance: tour.total_distance != null && tour.total_distance > 0 
-      ? `${(tour.total_distance / 1000).toFixed(1)} km` 
-      : 'N/A',
+    distance:
+      tour.total_distance != null && tour.total_distance > 0
+        ? `${(tour.total_distance / 1000).toFixed(1)} km`
+        : 'N/A',
     rating: tour.average_rating || 0.0,
     reviewCount: tour.reviews?.length || 0,
     difficulty: difficultyMap[tour.difficulty] || 'Medium',
@@ -108,7 +109,9 @@ export default function TourDetailScreen() {
         <Stack.Screen options={{ title: 'Error' }} />
         <View style={[styles.container, styles.centered]}>
           <Ionicons name="alert-circle-outline" size={48} color={colors.icon} />
-          <Text style={[styles.errorText, { color: colors.text }]}>{error || 'Tour not found'}</Text>
+          <Text style={[styles.errorText, { color: colors.text }]}>
+            {error || 'Tour not found'}
+          </Text>
           <Text style={[styles.retryText, { color: colors.primary }]} onPress={fetchTour}>
             Tap to retry
           </Text>
