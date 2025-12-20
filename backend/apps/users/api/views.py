@@ -121,20 +121,25 @@ class UserViewSet(ModelViewSet):
 
         return Response({"detail": "Password updated successfully"}, status=200)
 
-    @action(detail=False, methods=["get"], url_path="get-filtered-users")  # filter by username
+    @action(
+        detail=False, methods=["get"], url_path="get-filtered-users"
+    )  # filter by username
     def get_filtered_users(self, request):
         filter = request.query_params.get("filter")
         if not filter:
             return Response({"error": "filter is required"}, status=400)
-        
+
         current_user = request.user
 
-        following_ids = Follow.objects.filter(
-            follower=current_user
-        ).values_list("followee_id", flat=True)
+        following_ids = Follow.objects.filter(follower=current_user).values_list(
+            "followee_id", flat=True
+        )
 
-        users = User.objects.filter(username__icontains=filter).exclude(id=current_user.id).exclude(id__in=following_ids)
-        
+        users = (
+            User.objects.filter(username__icontains=filter)
+            .exclude(id=current_user.id)
+            .exclude(id__in=following_ids)
+        )
 
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data)

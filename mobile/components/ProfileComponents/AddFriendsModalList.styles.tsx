@@ -2,9 +2,8 @@ import { StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
-
-export const addFriendsModalListStyles =(theme:ThemeName) => {  
-    const color = Colors[theme];
+export const addFriendsModalListStyles = (theme: ThemeName) => {
+  const color = Colors[theme];
 
   return StyleSheet.create({
     listContainer: {

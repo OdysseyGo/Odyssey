@@ -9,9 +9,7 @@ import type { AddFriendsModalListProps } from './AddFriendsModalList.config';
 import type { User } from '@/api/users';
 import { followUser, FollowPayload, getFilteredUsers } from '@/api/users';
 
-export default function AddFriendsModalList({
-  searchTextVal = '',
-}: AddFriendsModalListProps) {
+export default function AddFriendsModalList({ searchTextVal = '' }: AddFriendsModalListProps) {
   const theme = useColorTheme();
   const styles = addFriendsModalListStyles(theme);
   const color = Colors[theme];
@@ -19,37 +17,35 @@ export default function AddFriendsModalList({
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-  const query = searchTextVal.trim();
+    const query = searchTextVal.trim();
 
-  if (!query) {
-    setUsers([]);
-    return;
-  }
+    if (!query) {
+      setUsers([]);
+      return;
+    }
 
-  const fetchData = async () => {
+    const fetchData = async () => {
+      try {
+        const data = await getFilteredUsers(query);
+        setUsers(data);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    fetchData();
+  }, [searchTextVal]);
+
+  async function followHandler(user_id: number) {
     try {
-      const data = await getFilteredUsers(query);
-      setUsers(data);
+      const payload: FollowPayload = {
+        followee: user_id,
+      };
+      const response = await followUser(payload);
     } catch (e) {
       console.error(e);
     }
-  };
-
-
-  fetchData();
-}, [searchTextVal]);
-
-  async function followHandler(user_id:number) {
-      try {
-        const payload: FollowPayload = {
-          followee: user_id
-        }
-        const response = await followUser(payload)
-      } catch (e){
-        console.error(e);
-      }
-    } 
-
+  }
 
   const renderItem = ({ item }: { item: User }) => (
     <View style={styles.userRow}>
@@ -75,9 +71,7 @@ export default function AddFriendsModalList({
       keyboardShouldPersistTaps="handled"
       ListEmptyComponent={
         <Text style={styles.emptyText}>
-          {searchTextVal
-            ? 'No users found'
-            : 'Start typing to search'}
+          {searchTextVal ? 'No users found' : 'Start typing to search'}
         </Text>
       }
       contentContainerStyle={styles.listContainer}
