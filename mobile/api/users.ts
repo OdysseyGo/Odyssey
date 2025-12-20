@@ -170,7 +170,7 @@ export const getMe = () =>
 export const getByUsername = (username: string) =>
   apiRequest<User>({
     method: 'get',
-    url: `/api/users/get_by_username/`,
+    url: `/api/users/get-by-username/`,
     params: { username },
     auth: false,
   });
@@ -180,7 +180,7 @@ export const resetPassword = (
 ) =>
   apiRequest<void>({
     method: 'post',
-    url: '/api/users/reset_password/',
+    url: '/api/users/reset-password/',
     data: payload,
     auth: false,
   });
@@ -206,5 +206,5 @@ export const unfollowUser = (payload: FollowPayload) =>
 export const getFilteredUsers = (filter: string) =>
   apiRequest<void>({
     method: 'get',
-    url: `api/users/get_filtered_users/?filter=${filter}`,
+    url: `api/users/get-filtered-users/?filter=${filter}`,
   });
