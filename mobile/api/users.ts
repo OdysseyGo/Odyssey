@@ -73,6 +73,10 @@ export const mapUserToAddFriendDTO = (user: User): AddFriendUserDisplayDTO => ({
   last_name: user.last_name,
 });
 
+export type FollowPayload = {
+  follow: number; //id of the target
+};
+
 // API functions
 
 /**
@@ -166,7 +170,7 @@ export const getMe = () =>
 export const getByUsername = (username: string) =>
   apiRequest<User>({
     method: 'get',
-    url: `/api/users/get_by_username/`,
+    url: `/api/users/get-by-username/`,
     params: { username },
     auth: false,
   });
@@ -176,7 +180,31 @@ export const resetPassword = (
 ) =>
   apiRequest<void>({
     method: 'post',
-    url: '/api/users/reset_password/',
+    url: '/api/users/reset-password/',
     data: payload,
     auth: false,
+  });
+
+export const followUser = (payload: FollowPayload) =>
+  apiRequest<void>({
+    method: 'post',
+    url: '/api/follows/',
+    data: payload,
+  });
+
+export const unfollowUser = (payload: FollowPayload) =>
+  apiRequest<void>({
+    method: 'delete',
+    url: `/api/follows/${payload.follow}/`,
+  });
+
+/**
+ * Gets the ussers filtered by username
+ * @param filter - checks if username contains the filter (same with sql LIKE %patern%)
+ * @returns array of users
+ */
+export const getFilteredUsers = (filter: string) =>
+  apiRequest<void>({
+    method: 'get',
+    url: `api/users/get-filtered-users/?filter=${filter}`,
   });
