@@ -1,12 +1,18 @@
-import { View, ScrollView } from 'react-native';
+import { View, ScrollView, StyleSheet } from 'react-native';
 import { exampleTour } from '@/components/TourComponents/TourDisplayComp.config';
 import TourScrollerComp from '@/components/TourComponents/TourScrollerComp';
 import FeaturedTourCarousel from '@/components/TourComponents/FeaturedTourCarousel';
 import { exampleFeaturedTours } from '@/components/TourComponents/FeaturedTourCarousel.config';
+import CreateTourButton from '@/components/TourCreation/CreateTourButton';
+import { useColorTheme } from '@/utils/useColorTheme';
+import Colors from '@/constants/Colors';
 
-export default function tourDisplay() {
+export default function TourDisplay() {
+  const theme = useColorTheme();
+  const color = Colors[theme];
+
   return (
-    <View>
+    <View style={[styles.container, { backgroundColor: color.foreground }]}>
       <ScrollView>
         <FeaturedTourCarousel tours={exampleFeaturedTours} autoPlayInterval={5000} />
         <TourScrollerComp
@@ -62,6 +68,13 @@ export default function tourDisplay() {
           ]}
         />
       </ScrollView>
+      <CreateTourButton />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

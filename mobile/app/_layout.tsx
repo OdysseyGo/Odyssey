@@ -3,9 +3,8 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import 'react-native-reanimated';
-import { ThemeName } from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 
@@ -47,7 +46,6 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorTheme = useColorTheme();
-
   const themeKey = colorTheme;
 
   return (
@@ -66,6 +64,7 @@ function RootLayoutNav() {
         <Stack.Screen name="login" />
         <Stack.Screen name="register" />
         <Stack.Screen name="forgot-password" />
+        <Stack.Screen name="(tour)" options={{ headerShown: false }} />
         <Stack.Screen
           name="tour/[id]"
           options={{

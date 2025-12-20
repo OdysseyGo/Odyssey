@@ -30,6 +30,10 @@ const gray333 = '#333333';
 
 const yellow = '#FFD700';
 
+const easy = '#4CAF50';
+const medium = '#FF9800';
+const hard = '#F44336';
+
 const Colors = {
   light: {
     white: white,
@@ -47,6 +51,7 @@ const Colors = {
     textBackground: white,
     placeholderTextColor: '#a9a9a9',
     border: black,
+    borderLight: '#0000001a',
     error: errorRed,
     icon: gray666,
     iconDisabled: gray999,
@@ -54,9 +59,9 @@ const Colors = {
     placeholder: gray888,
     textShadowColor: 'rgba(0,0,0,0.4)',
     star: yellow,
-    easy: '#4CAF50',
-    medium: '#FF9800',
-    hard: '#F44336',
+    easy: easy,
+    medium: medium,
+    hard: hard,
   },
   dark: {
     white: white,
@@ -72,8 +77,9 @@ const Colors = {
     textBackground: white,
     placeholderTextColor: '#6e6e6eff',
     tabIconDefault: '#f70000ff',
-    tabIconSelected: primaryLight,
-    border: black,
+    tabIconSelected: primaryDark,
+    borderLight: '#ffffff1a',
+    border: white,
     error: errorRed,
     icon: gray666,
     iconDisabled: gray999,
@@ -81,9 +87,9 @@ const Colors = {
     placeholder: gray888,
     textShadowColor: 'rgba(255, 255, 255, 0.4)',
     star: yellow,
-    easy: '#4CAF50',
-    medium: '#FF9800',
-    hard: '#F44336',
+    easy: easy,
+    medium: medium,
+    hard: hard,
   },
 };
 
