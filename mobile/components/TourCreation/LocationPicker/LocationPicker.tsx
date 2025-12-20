@@ -8,18 +8,12 @@ import { TourLocation, createNewLocation } from '../TourCreation.types';
 import MapContainer from './MapContainer';
 import InstructionBanner from './InstructionBanner';
 import LocationsList from './LocationsList';
+import { DEFAULT_REGION } from './LocationPicker.config';
 
 type LocationPickerProps = {
   locations: TourLocation[];
   onLocationsChange: (locations: TourLocation[]) => void;
   onLocationSelect: (location: TourLocation) => void;
-};
-
-const DEFAULT_REGION: Region = {
-  latitude: 41.0082,
-  longitude: 28.9784,
-  latitudeDelta: 0.05,
-  longitudeDelta: 0.05,
 };
 
 export default function LocationPicker({
