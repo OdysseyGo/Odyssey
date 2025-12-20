@@ -12,11 +12,7 @@ interface SearchHeaderProps {
   onClear: () => void;
 }
 
-export default function SearchHeader({
-  searchQuery,
-  onSearchChange,
-  onClear,
-}: SearchHeaderProps) {
+export default function SearchHeader({ searchQuery, onSearchChange, onClear }: SearchHeaderProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => searchHeaderStyles(theme), [theme]);
   const colors = Colors[theme];
@@ -24,12 +20,7 @@ export default function SearchHeader({
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
-        <FontAwesome
-          name="search"
-          size={18}
-          color={colors.placeholder}
-          style={styles.searchIcon}
-        />
+        <FontAwesome name="search" size={18} color={colors.placeholder} style={styles.searchIcon} />
         <TextInput
           style={styles.input}
           placeholder="Search tours, destinations..."

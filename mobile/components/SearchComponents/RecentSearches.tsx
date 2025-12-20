@@ -34,17 +34,8 @@ export default function RecentSearches({
         </Pressable>
       </View>
       {searches.map((search, index) => (
-        <Pressable
-          key={index}
-          style={styles.searchItem}
-          onPress={() => onSearchPress(search)}
-        >
-          <FontAwesome
-            name="clock-o"
-            size={18}
-            color={colors.subText}
-            style={styles.searchIcon}
-          />
+        <Pressable key={index} style={styles.searchItem} onPress={() => onSearchPress(search)}>
+          <FontAwesome name="clock-o" size={18} color={colors.subText} style={styles.searchIcon} />
           <Text style={styles.searchText}>{search}</Text>
           <FontAwesome
             name="arrow-right"

@@ -78,7 +78,14 @@ export default function TabLayout() {
                   name="search"
                   size={15}
                   color={Colors[colorTheme ?? 'light'].white}
-                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1, backgroundColor: Colors[colorTheme ?? 'light'].backgroundBlack, padding: 10, borderRadius: 20, marginBottom: 5 }}
+                  style={{
+                    marginRight: 15,
+                    opacity: pressed ? 0.5 : 1,
+                    backgroundColor: Colors[colorTheme ?? 'light'].backgroundBlack,
+                    padding: 10,
+                    borderRadius: 20,
+                    marginBottom: 5,
+                  }}
                 />
               )}
             </Pressable>

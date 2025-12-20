@@ -58,12 +58,7 @@ export default function SearchScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <FontAwesome
-        name="search"
-        size={48}
-        color={colors.subText}
-        style={styles.emptyIcon}
-      />
+      <FontAwesome name="search" size={48} color={colors.subText} style={styles.emptyIcon} />
       <Text style={styles.emptyText}>No tours found</Text>
       <Text style={styles.emptySubText}>
         Try searching for a different destination, tour name, or guide
