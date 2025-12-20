@@ -1,4 +1,4 @@
-import { View, ScrollView, ActivityIndicator, Text, RefreshControl } from 'react-native';
+import { View, ScrollView, ActivityIndicator, Text, RefreshControl, StyleSheet } from 'react-native';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import TourScrollerComp from '@/components/TourComponents/TourScrollerComp';
 import FeaturedTourCarousel from '@/components/TourComponents/FeaturedTourCarousel';
@@ -8,6 +8,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Spacing } from '@/constants/Spacing';
 import Colors from '@/constants/Colors';
+import CreateTourButton from '@/components/TourCreation/CreateTourButton';
 
 // Convert API Tour to TourDisplayProps for components
 function mapTourToDisplayProps(tour: Tour): TourDisplayProps {
