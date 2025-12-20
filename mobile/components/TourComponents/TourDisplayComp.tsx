@@ -48,7 +48,7 @@ export default function TourDisplayComp({
           </Text>
         </View>
 
-        <Text style={styles.author}>by {author}</Text>
+        <Text style={styles.author} numberOfLines={1}>by {author}</Text>
 
         <View style={styles.metaRow}>
           <Text style={styles.metaText}>{duration}</Text>

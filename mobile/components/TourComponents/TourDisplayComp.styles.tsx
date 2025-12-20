@@ -8,6 +8,7 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
     card: {
       marginHorizontal: Spacing.sm,
       width: 200,
+      height: 200,
       backgroundColor: color.foreground,
       borderRadius: Spacing.borderRadius,
       overflow: 'hidden',
@@ -21,7 +22,7 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
 
     image: {
       width: '100%',
-      height: 140,
+      height: 120,
     },
 
     ratingBadge: {
