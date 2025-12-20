@@ -44,6 +44,7 @@ export type Tour = {
   category: string;
   difficulty: Difficulty;
   duration_minutes: number;
+  total_distance?: number;
   is_premium: boolean;
   city: string;
   status: TourStatus;
