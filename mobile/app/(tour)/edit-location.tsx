@@ -50,7 +50,17 @@ export default function EditLocationScreen() {
       setSelectedLocation(null);
       router.back();
     }
-  }, [selectedLocation, title, address, story, image, puzzle, updateLocation, setSelectedLocation, isPuzzleMode]);
+  }, [
+    selectedLocation,
+    title,
+    address,
+    story,
+    image,
+    puzzle,
+    updateLocation,
+    setSelectedLocation,
+    isPuzzleMode,
+  ]);
 
   const handleNavigateLocation = useCallback(
     (direction: 'prev' | 'next') => {
