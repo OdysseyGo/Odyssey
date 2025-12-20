@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { TourDetailMapProps } from './TourDetailMap.config';
 import { tourDetailMapStyles } from './TourDetailMap.styles';
+import RouteMap from './RouteMap';
 
-// TODO: Replace MapPlaceholder with actual map implementation
 export default function TourDetailMap({ stops }: TourDetailMapProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailMapStyles(theme), [theme]);
@@ -13,10 +13,7 @@ export default function TourDetailMap({ stops }: TourDetailMapProps) {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Route Map</Text>
       <View style={styles.mapContainer}>
-        <View style={styles.mapPlaceholder}>
-          <Text style={styles.mapPlaceholderText}>🗺️ Map Component</Text>
-          <Text style={styles.mapPlaceholderSubtext}>{stops.length} stops to display</Text>
-        </View>
+        <RouteMap stops={stops} />
       </View>
     </View>
   );

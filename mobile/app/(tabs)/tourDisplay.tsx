@@ -27,7 +27,7 @@ function mapTourToDisplayProps(tour: Tour): TourDisplayProps {
     duration: `${tour.duration_minutes} min`,
     length: tour.steps?.length ? `${tour.steps.length} stops` : 'N/A',
     reviewCount: `${tour.reviews?.length || 0} reviews`,
-    rating: tour.average_rating?.toFixed(1) || 'N/A',
+    rating: tour.average_rating?.toFixed(1) || '0',
   };
 }
 
