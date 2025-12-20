@@ -18,7 +18,14 @@ class GeminiService:
         self.model = genai.GenerativeModel("gemini-2.0-flash")
 
     def generate_tour(
-        self, city: str, theme: str, mode: str, duration: int, language: str, creator
+        self,
+        city: str,
+        theme: str,
+        mode: str,
+        duration: int,
+        language: str,
+        creator,
+        custom_prompt: str = "",
     ) -> Tour:
         """
         Generate a complete tour with steps and puzzles.
@@ -30,11 +37,11 @@ class GeminiService:
             duration: Approximate duration in minutes
             language: Language for content (e.g., "en", "tr")
             creator: User object who will own the tour
-
-        Returns:
-            Tour object (saved to database)
+            custom_prompt: Optional user instructions
         """
-        prompt = self._build_prompt(city, theme, mode, duration, language)
+        prompt = self._build_prompt(
+            city, theme, mode, duration, language, custom_prompt
+        )
 
         response = self.model.generate_content(prompt)
         tour_data = self._parse_response(response.text)
@@ -109,7 +116,13 @@ class GeminiService:
         return tour
 
     def _build_prompt(
-        self, city: str, theme: str, mode: str, duration: int, language: str
+        self,
+        city: str,
+        theme: str,
+        mode: str,
+        duration: int,
+        language: str,
+        custom_prompt: str = "",
     ) -> str:
         """Structured prompt for Gemini"""
 
@@ -138,8 +151,12 @@ class GeminiService:
             else ""
         )
 
-        prompt = f"""You are a tour guide AI. Generate a {mode} tour in {city} with the theme "{theme}".
+        user_instruction = (
+            f"\nADDITIONAL USER INSTRUCTIONS: {custom_prompt}\n" if custom_prompt else ""
+        )
 
+        prompt = f"""You are a tour guide AI. Generate a {mode} tour in {city} with the theme "{theme}".
+{user_instruction}
 LANGUAGE: Generate all content in {language}.
 DURATION: {duration} minutes (approximately {num_steps} locations).
 MODE: {mode} - {mode_instructions.get(mode, mode_instructions["HYBRID"])}

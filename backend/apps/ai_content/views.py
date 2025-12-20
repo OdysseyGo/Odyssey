@@ -30,6 +30,7 @@ class GenerateTourView(APIView):
                 mode=serializer.validated_data["mode"],
                 duration=serializer.validated_data["duration"],
                 language=serializer.validated_data["language"],
+                custom_prompt=serializer.validated_data.get("custom_prompt", ""),
                 creator=request.user,
             )
 
