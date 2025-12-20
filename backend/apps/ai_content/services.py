@@ -152,7 +152,9 @@ class GeminiService:
         )
 
         user_instruction = (
-            f"\nADDITIONAL USER INSTRUCTIONS: {custom_prompt}\n" if custom_prompt else ""
+            f"\nADDITIONAL USER INSTRUCTIONS: {custom_prompt}\n"
+            if custom_prompt
+            else ""
         )
 
         prompt = f"""You are a tour guide AI. Generate a {mode} tour in {city} with the theme "{theme}".
