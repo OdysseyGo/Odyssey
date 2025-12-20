@@ -7,7 +7,7 @@ import { exampleFeaturedTours } from '@/components/TourComponents/FeaturedTourCa
 export default function tourDisplay() {
   return (
     <View>
-      <ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <FeaturedTourCarousel tours={exampleFeaturedTours} autoPlayInterval={5000} />
         <TourScrollerComp
           title="Popular Tours"

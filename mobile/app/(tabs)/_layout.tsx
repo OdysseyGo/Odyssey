@@ -1,6 +1,6 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
+import { Link, Tabs, router } from 'expo-router';
 import { Pressable } from 'react-native';
 
 import Colors from '@/constants/Colors';
@@ -42,7 +42,7 @@ export default function TabLayout() {
                   <FontAwesome
                     name="info-circle"
                     size={25}
-                    color={Colors[colorTheme ?? 'light'].primary}
+                    color={Colors[colorTheme ?? 'light'].white}
                     style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
                   />
                 )}
@@ -71,6 +71,18 @@ export default function TabLayout() {
         options={{
           title: 'Demo Tour',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          headerRight: () => (
+            <Pressable onPress={() => router.push('/search')}>
+              {({ pressed }) => (
+                <FontAwesome
+                  name="search"
+                  size={15}
+                  color={Colors[colorTheme ?? 'light'].white}
+                  style={{ marginRight: 15, opacity: pressed ? 0.5 : 1, backgroundColor: Colors[colorTheme ?? 'light'].backgroundBlack, padding: 10, borderRadius: 20, marginBottom: 5 }}
+                />
+              )}
+            </Pressable>
+          ),
         }}
       />
       <Tabs.Screen
