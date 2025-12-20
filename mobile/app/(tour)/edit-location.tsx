@@ -106,7 +106,11 @@ export default function EditLocationScreen() {
   const isValid =
     title.trim().length > 0 &&
     story.trim().length > 0 &&
-    (tourData.tourType !== 'PUZZLE' || (!!puzzle?.question && !!puzzle?.answer));
+    (tourData.tourType !== 'PUZZLE' ||
+      (!!puzzle?.question &&
+        !!puzzle?.correctAnswer &&
+        (puzzle?.options?.length ?? 0) >= 2 &&
+        puzzle!.options.every((opt) => opt.trim().length > 0)));
 
   const currentIndex = selectedLocation
     ? tourData.locations.findIndex((loc) => loc.id === selectedLocation.id)
