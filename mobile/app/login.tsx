@@ -55,6 +55,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       await SecureStore.setItem('userToken', access);
       await SecureStore.setItem('refreshToken', refresh);
 
+      router.dismissAll()
       router.push('/(tabs)/profile');
     } catch (e) {
       console.error(e);
