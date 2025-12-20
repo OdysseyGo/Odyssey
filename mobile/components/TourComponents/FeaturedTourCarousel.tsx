@@ -9,11 +9,13 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
 import { FeaturedTourCarouselProps } from './FeaturedTourCarousel.config';
 import { featuredTourCarouselStyles } from './FeaturedTourCarousel.styles';
 import { STAR } from '@/constants/Symbols';
+import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -24,6 +26,7 @@ export default function FeaturedTourCarousel({
 }: FeaturedTourCarouselProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => featuredTourCarouselStyles(theme), [theme]);
+  const color = Colors[theme];
 
   const scrollViewRef = useRef<ScrollView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -113,31 +116,51 @@ export default function FeaturedTourCarousel({
             <View key={tour.id || index} style={styles.slide}>
               <Pressable
                 onPress={() => handleTourPress(tour.id || String(index))}
-                style={({ pressed }) => [styles.card, pressed && { opacity: 0.9 }]}
+                style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
               >
                 <View style={styles.imageWrapper}>
                   <Image source={{ uri: tour.image }} style={styles.image} />
 
+                  {/* Dark overlay for better text readability */}
+                  <View style={styles.imageOverlay} />
+
+                  {/* Featured Badge with icon */}
                   <View style={styles.featuredBadge}>
+                    <Ionicons name="flame" size={14} color={color.white} />
                     <Text style={styles.featuredBadgeText}>Featured</Text>
                   </View>
 
+                  {/* Rating Badge */}
                   <View style={styles.ratingBadge}>
                     <Text style={styles.star}>{STAR}</Text>
                     <Text style={styles.ratingText}>{tour.rating}</Text>
                   </View>
 
+                  {/* Info Container with gradient */}
                   <View style={styles.infoContainer}>
-                    <Text style={styles.title} numberOfLines={2}>
-                      {tour.title}
-                    </Text>
-                    <Text style={styles.author}>by {tour.author}</Text>
-                    <View style={styles.metaRow}>
-                      <Text style={styles.metaText}>{tour.duration}</Text>
-                      <Text style={styles.metaText}>•</Text>
-                      <Text style={styles.metaText}>{tour.length}</Text>
-                      <Text style={styles.metaText}>•</Text>
-                      <Text style={styles.metaText}>{tour.reviewCount}</Text>
+                    <View style={styles.infoGradient} />
+                    <View style={styles.infoContent}>
+                      <Text style={styles.title} numberOfLines={2}>
+                        {tour.title}
+                      </Text>
+                      <View style={styles.authorRow}>
+                        <Ionicons name="person-circle" size={16} color="rgba(255,255,255,0.8)" />
+                        <Text style={styles.author}>{tour.author}</Text>
+                      </View>
+                      <View style={styles.metaRow}>
+                        <View style={styles.metaItem}>
+                          <Ionicons name="time-outline" size={14} color={color.white} />
+                          <Text style={styles.metaText}>{tour.duration}</Text>
+                        </View>
+                        <View style={styles.metaItem}>
+                          <Ionicons name="walk-outline" size={14} color={color.white} />
+                          <Text style={styles.metaText}>{tour.length}</Text>
+                        </View>
+                        <View style={styles.metaItem}>
+                          <Ionicons name="chatbubbles-outline" size={14} color={color.white} />
+                          <Text style={styles.metaText}>{tour.reviewCount}</Text>
+                        </View>
+                      </View>
                     </View>
                   </View>
                 </View>
