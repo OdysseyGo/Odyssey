@@ -76,7 +76,6 @@ const Colors = {
     tabIconSelected: primaryLight,
     borderLight: '#ffffff1a',
     border: white,
-    border: black,
     error: errorRed,
     icon: gray666,
     iconDisabled: gray999,
