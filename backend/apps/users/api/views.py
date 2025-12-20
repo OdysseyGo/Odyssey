@@ -16,7 +16,7 @@ class UserViewSet(ModelViewSet):
     queryset: QuerySet[User] = User.objects.all().order_by("id")
     serializer_class = UserSerializer
 
-    @action(detail=False, methods=["get"],url_path="get_by_username")
+    @action(detail=False, methods=["get"], url_path="get_by_username")
     def get_by_username(self, request):
         username = request.query_params.get("username")
         if not username:
@@ -95,7 +95,9 @@ class UserViewSet(ModelViewSet):
         serializer = self.get_serializer(followees_qs, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=["post"], url_path="reset_password")  # This is for the demo, no auth password changing!!!
+    @action(
+        detail=False, methods=["post"], url_path="reset_password"
+    )  # This is for the demo, no auth password changing!!!
     def reset_password(self, request):
         username = request.data.get("username")
         email = request.data.get("email")
@@ -118,8 +120,10 @@ class UserViewSet(ModelViewSet):
         user.save()
 
         return Response({"detail": "Password updated successfully"}, status=200)
-    
-    @action(detail=False,methods=["get"],url_path="get_filtered_users") # filter by username
+
+    @action(
+        detail=False, methods=["get"], url_path="get_filtered_users"
+    )  # filter by username
     def get_filtered_users(self, request):
         filter = request.query_params.get("filter")
         if not filter:
@@ -128,16 +132,17 @@ class UserViewSet(ModelViewSet):
         users = User.objects.filter(username__icontains=filter)
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data)
-        
 
 
-class FollowViewSet(CreateModelMixin, DestroyModelMixin,GenericViewSet):
+class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = FollowSerializer
-    
+
     lookup_field = "followee_id"
 
     def get_queryset(self):
-        return Follow.objects.filter(follower=self.request.user).select_related("followee")
+        return Follow.objects.filter(follower=self.request.user).select_related(
+            "followee"
+        )
 
     def perform_create(self, serializer):
         follow = serializer.save(follower=self.request.user)

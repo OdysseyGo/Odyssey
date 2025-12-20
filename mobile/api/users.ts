@@ -75,7 +75,7 @@ export const mapUserToAddFriendDTO = (user: User): AddFriendUserDisplayDTO => ({
 
 export type FollowPayload = {
   follow: number; //id of the target
-}
+};
 
 // API functions
 
@@ -190,21 +190,21 @@ export const followUser = (payload: FollowPayload) =>
     method: 'post',
     url: '/api/follows/',
     data: payload,
-    })
+  });
 
-export const unfollowUser = (payload: FollowPayload) => 
+export const unfollowUser = (payload: FollowPayload) =>
   apiRequest<void>({
     method: 'delete',
     url: `/api/follows/${payload.follow}/`,
-  })
-   
-  /**
-   * Gets the ussers filtered by username
-   * @param filter - checks if username contains the filter (same with sql LIKE %patern%)
-   * @returns array of users
-   */
-export const getFilteredUsers = (filter : string) =>
+  });
+
+/**
+ * Gets the ussers filtered by username
+ * @param filter - checks if username contains the filter (same with sql LIKE %patern%)
+ * @returns array of users
+ */
+export const getFilteredUsers = (filter: string) =>
   apiRequest<void>({
-    method:'get',
-    url: `api/users/get_filtered_users/?filter=${filter}`
-  })
+    method: 'get',
+    url: `api/users/get_filtered_users/?filter=${filter}`,
+  });
