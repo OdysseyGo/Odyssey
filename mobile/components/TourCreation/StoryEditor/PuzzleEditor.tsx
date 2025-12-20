@@ -9,9 +9,10 @@ import { Ionicons } from '@expo/vector-icons';
 interface PuzzleEditorProps {
   puzzle?: Puzzle;
   onChange: (puzzle: Puzzle) => void;
+  isRequired?: boolean;
 }
 
-export default function PuzzleEditor({ puzzle, onChange }: PuzzleEditorProps) {
+export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: PuzzleEditorProps) {
   const theme = useColorTheme();
   const color = Colors[theme];
 
@@ -78,7 +79,7 @@ export default function PuzzleEditor({ puzzle, onChange }: PuzzleEditorProps) {
       <Text style={[styles.sectionTitle, { color: color.text }]}>Puzzle Challenge</Text>
 
       <StoryInputField
-        label="Question / Challenge *"
+        label={`Question / Challenge${isRequired ? ' *' : ''}`}
         value={puzzle?.question || ''}
         onChangeText={(text) => handleChange('question', text)}
         placeholder="e.g., What year was the tower built?"
@@ -88,7 +89,7 @@ export default function PuzzleEditor({ puzzle, onChange }: PuzzleEditorProps) {
 
       <View style={styles.optionsSection}>
         <Text style={[styles.label, { color: color.text }]}>
-          Options (Mark the correct answer) *
+          {`Options (Mark the correct answer)${isRequired ? ' *' : ''}`}
         </Text>
 
         {options.map((option, index) => (

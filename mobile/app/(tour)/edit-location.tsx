@@ -160,7 +160,13 @@ export default function EditLocationScreen() {
             showCharacterCount
           />
 
-          {isPuzzleMode && <PuzzleEditor puzzle={puzzle} onChange={setPuzzle} />}
+          {isPuzzleMode && (
+            <PuzzleEditor
+              puzzle={puzzle}
+              onChange={setPuzzle}
+              isRequired={tourData.tourType === 'PUZZLE'}
+            />
+          )}
 
           <WritingTips />
         </ScrollView>
