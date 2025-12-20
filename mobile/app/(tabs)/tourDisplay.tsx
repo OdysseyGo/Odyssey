@@ -91,7 +91,14 @@ export default function TourDisplay() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: theme.background,
+        }}
+      >
         <ActivityIndicator size="large" color={theme.primary} />
         <Text style={{ marginTop: Spacing.md, color: theme.text }}>Loading tours...</Text>
       </View>
@@ -100,9 +107,19 @@ export default function TourDisplay() {
 
   if (error) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background, padding: Spacing.xl }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: theme.background,
+          padding: Spacing.xl,
+        }}
+      >
         <Ionicons name="alert-circle-outline" size={48} color={theme.icon} />
-        <Text style={{ marginTop: Spacing.md, color: theme.text, textAlign: 'center' }}>{error}</Text>
+        <Text style={{ marginTop: Spacing.md, color: theme.text, textAlign: 'center' }}>
+          {error}
+        </Text>
         <Text
           style={{ marginTop: Spacing.md, color: theme.primary, fontWeight: '600' }}
           onPress={() => fetchTours()}

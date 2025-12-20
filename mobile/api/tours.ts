@@ -83,7 +83,10 @@ export type TourFilters = {
 /**
  * Fetch all tours with optional filters and search
  */
-export async function getTours(filters?: TourFilters, signal?: AbortSignal): Promise<ToursResponse> {
+export async function getTours(
+  filters?: TourFilters,
+  signal?: AbortSignal
+): Promise<ToursResponse> {
   const params: Record<string, any> = {};
 
   if (filters) {
@@ -224,10 +227,7 @@ export async function deleteTour(tourId: number, signal?: AbortSignal): Promise<
 /**
  * Fetch tour steps for a specific tour
  */
-export async function getTourSteps(
-  tourId: number,
-  signal?: AbortSignal
-): Promise<TourStep[]> {
+export async function getTourSteps(tourId: number, signal?: AbortSignal): Promise<TourStep[]> {
   return apiRequest<TourStep[]>({
     method: 'GET',
     url: `/api/tours/${tourId}/steps/`,
@@ -239,10 +239,7 @@ export async function getTourSteps(
 /**
  * Fetch reviews for a specific tour
  */
-export async function getTourReviews(
-  tourId: number,
-  signal?: AbortSignal
-): Promise<Review[]> {
+export async function getTourReviews(tourId: number, signal?: AbortSignal): Promise<Review[]> {
   return apiRequest<Review[]>({
     method: 'GET',
     url: `/api/tours/${tourId}/reviews/`,
