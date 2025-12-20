@@ -5,7 +5,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import 'react-native-reanimated';
-
+import { ThemeName } from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 
@@ -66,6 +66,14 @@ function RootLayoutNav() {
         <Stack.Screen name="register" />
         <Stack.Screen name="forgot-password" />
         <Stack.Screen name="(tour)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="tour/[id]"
+          options={{
+            title: 'Tour',
+            headerStyle: { backgroundColor: Colors[themeKey].primary },
+            headerTransparent: true,
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );

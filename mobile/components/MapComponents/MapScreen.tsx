@@ -1,48 +1,64 @@
-import { View, Text, Pressable } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapScreenStyle } from './MapScreen.styles';
+import { View } from 'react-native';
+import { useMemo, useState } from 'react';
+
+import getStyles from './MapScreen.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
-import { useMemo } from 'react';
-
-const initialRegion = {
-  latitude: 41.0082,
-  longitude: 28.9784,
-  latitudeDelta: 0.05,
-  longitudeDelta: 0.05,
-};
-
-const sampleRoute = [
-  { latitude: 41.0082, longitude: 28.9784 },
-  { latitude: 41.0151, longitude: 28.9795 },
-];
+import BottomSlider from './BottomSlider';
+import { exampleBottomSlider } from './BottomSlider.config';
+import TourMap from './TourMap';
+import { getVisibleMarkers, getVisibleRoute } from '../TourStepComponents/TourNavigation.config';
 
 export default function MapScreen() {
   const theme = useColorTheme();
-  const styles = useMemo(() => MapScreenStyle(theme), [theme]);
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
+  const { tour } = exampleBottomSlider;
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [solvedSteps, setSolvedSteps] = useState<Set<string>>(new Set());
+
+  const visibleMarkers = useMemo(
+    () => getVisibleMarkers(tour, currentStepIndex, solvedSteps),
+    [tour, currentStepIndex, solvedSteps]
+  );
+
+  const visibleRoute = useMemo(
+    () => getVisibleRoute(tour, currentStepIndex, solvedSteps),
+    [tour, currentStepIndex, solvedSteps]
+  );
+
+  const initialRegion = useMemo(
+    () => ({
+      latitude: tour.steps[0].coordinate.latitude,
+      longitude: tour.steps[0].coordinate.longitude,
+      latitudeDelta: 0.05,
+      longitudeDelta: 0.05,
+    }),
+    [tour]
+  );
+
+  const handleCurrentStepChange = (stepIndex: number) => {
+    setCurrentStepIndex(stepIndex);
+  };
+
+  const handleSolvedStepsChange = (newSolvedSteps: Set<string>) => {
+    setSolvedSteps(newSolvedSteps);
+  };
 
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} initialRegion={initialRegion}>
-        <Marker coordinate={initialRegion} title="Waypoint 1" />
-        <Polyline coordinates={sampleRoute} strokeWidth={4} />
-      </MapView>
+      <TourMap
+        markers={visibleMarkers}
+        route={visibleRoute}
+        initialRegion={initialRegion}
+        currentStepIndex={currentStepIndex}
+        tour={tour}
+      />
 
-      <SafeAreaView style={styles.topOverlay} pointerEvents="box-none">
-        <View style={styles.topBar}>
-          <Text style={styles.title}>Map</Text>
-          <Pressable style={styles.button} onPress={() => {}}>
-            <Text style={styles.buttonText}>Add waypoint</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-
-      <SafeAreaView style={styles.bottomOverlay} pointerEvents="box-none">
-        <View style={styles.bottomPanel}>
-          <Text style={styles.panelTitle}>Route details</Text>
-          <Text style={styles.panelText}>Route / waypoint UI goes here.</Text>
-        </View>
-      </SafeAreaView>
+      <BottomSlider
+        tour={tour}
+        onCurrentStepChange={handleCurrentStepChange}
+        onSolvedStepsChange={handleSolvedStepsChange}
+      />
     </View>
   );
 }

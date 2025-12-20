@@ -1,7 +1,7 @@
 const primaryLight = '#50AA82';
 const primaryDark = '#ff6a00ff';
 
-const secondaryLight = '#03dac6';
+const secondaryLight = '#648e5b';
 const secondaryDark = '#452d2dff';
 
 const black = '#000000';
@@ -13,49 +13,84 @@ const foregroundSecondaryDark = '#222222';
 const grayLight = '#f6f6f6';
 const grayDark = '#121212';
 
+const blackPale = 'rgba(0, 0, 0, 0.6)';
+
 const textGrayLight = '#2c2c2cff';
 const textGrayDark = '#d3d3d3ff';
 
 const pressLight = '#c7c7c7ff';
 const pressDark = '#343333ff';
 
+const errorRed = '#F44336';
+
+const gray666 = '#666666';
+const gray888 = '#888888';
+const gray999 = '#999999';
+const gray333 = '#333333';
+
+const yellow = '#FFD700';
+
 const Colors = {
   light: {
+    white: white,
     text: black,
     subText: textGrayLight,
     background: white,
+    backgroundBlack: blackPale,
     foreground: grayLight,
     foregroundSecondary: foregroundSecondaryLight,
     press: pressLight,
     primary: primaryLight,
     secondary: secondaryLight,
-    textBackground: white,
-    placeholderTextColor: '#a9a9a9',
     tabIconDefault: '#f60101ff',
     tabIconSelected: primaryLight,
+    textBackground: white,
+    placeholderTextColor: '#a9a9a9',
     border: black,
     borderLight: '#0000001a',
+    error: errorRed,
+    icon: gray666,
+    iconDisabled: gray999,
+    iconActive: gray333,
+    placeholder: gray888,
     textShadowColor: 'rgba(0,0,0,0.4)',
-    error: '#ff4d4f',
+    star: yellow,
+    easy: '#4CAF50',
+    medium: '#FF9800',
+    hard: '#F44336',
   },
   dark: {
+    white: white,
     text: white,
     subText: textGrayDark,
     background: black,
+    backgroundBlack: blackPale,
     foreground: grayDark,
     foregroundSecondary: foregroundSecondaryDark,
     press: pressDark,
-    textBackground: white,
     primary: primaryDark,
     secondary: secondaryDark,
+    textBackground: white,
     placeholderTextColor: '#6e6e6eff',
-    tabIconDefault: '#452d2dff',
+    tabIconDefault: '#f70000ff',
     tabIconSelected: primaryLight,
     borderLight: '#ffffff1a',
     border: white,
+    border: black,
+    error: errorRed,
+    icon: gray666,
+    iconDisabled: gray999,
+    iconActive: gray333,
+    placeholder: gray888,
     textShadowColor: 'rgba(255, 255, 255, 0.4)',
-    error: '#ff4d4f',
+    star: yellow,
+    easy: '#4CAF50',
+    medium: '#FF9800',
+    hard: '#F44336',
   },
 };
+
+export const markerColors = ['#FF6B6B', '#4ECDC4', '#FFB347', '#95E1D3', '#F38181', '#AA96DA'];
+
 export default Colors;
 export type ThemeName = keyof typeof Colors;

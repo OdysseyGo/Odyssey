@@ -24,7 +24,6 @@ export const authSubButtonStyles = (theme: ThemeName) => {
       color: color.text,
       fontSize: 16,
       fontWeight: '500',
-      textDecorationLine: 'underline',
     },
   });
 };

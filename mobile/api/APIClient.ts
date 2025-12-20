@@ -66,6 +66,12 @@ export async function apiRequest<TResponse = unknown, TBody = Record<string, unk
       // Server responded with error status
       const statusCode = error.response.status;
       const errorData = error.response.data;
+
+      if (statusCode === 401 && errorData?.code === 'token_not_valid') {
+        await SecureStore.deleteItemAsync('userToken');
+        throw new ApiError('Your session has expired. Please log in again.', statusCode, error);
+      }
+
       const message =
         errorData?.detail ||
         errorData?.message ||

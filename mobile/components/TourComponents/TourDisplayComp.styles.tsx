@@ -6,58 +6,78 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     card: {
-      width: '90%',
-
-      backgroundColor: color.background,
+      marginHorizontal: Spacing.sm,
+      width: 200,
+      backgroundColor: color.foreground,
       borderRadius: Spacing.borderRadius,
       overflow: 'hidden',
       alignSelf: 'center',
       marginTop: Spacing.lg,
-      borderColor: color.secondary,
-      borderWidth: 1,
     },
+    imageWrapper: {
+      position: 'relative',
+      overflow: 'hidden',
+    },
+
     image: {
       width: '100%',
-      height: 200,
+      height: 140,
     },
-    header: {
-      marginTop: Spacing.xs,
-      width: '100%',
+
+    ratingBadge: {
+      position: 'absolute',
+      top: Spacing.sm,
+      right: Spacing.sm,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs,
+      backgroundColor: color.backgroundBlack,
+      borderRadius: Spacing.sm,
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
     },
 
+    star: {
+      color: color.star,
+    },
+    ratingBadgeText: {
+      color: color.white,
+      fontWeight: '600',
+      fontSize: 12,
+    },
+
+    header: {
+      width: '100%',
+    },
+
     infoContainer: {
-      padding: Spacing.lg,
+      padding: Spacing.md,
     },
     title: {
       color: color.primary,
-      fontSize: 22,
-      fontWeight: '700',
+      fontSize: 16,
+      fontWeight: '600',
       marginBottom: Spacing.xs,
+      lineHeight: 20,
     },
     author: {
-      fontSize: 16,
+      fontSize: 13,
       color: color.subText,
       marginBottom: Spacing.sm,
     },
     rating: {
-      fontSize: 16,
+      fontSize: 14,
       color: color.subText,
       marginBottom: Spacing.sm,
       fontStyle: 'italic',
     },
     metaRow: {
       marginTop: Spacing.xs,
-      width: '60%',
-      maxWidth: 200,
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
+      gap: Spacing.xs,
     },
     metaText: {
-      fontSize: 14,
+      fontSize: 12,
       color: color.subText,
     },
   });
