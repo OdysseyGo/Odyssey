@@ -48,7 +48,7 @@ function mapApiTourToDetail(tour: Tour): TourDetail {
     distance: tour.total_distance != null && tour.total_distance > 0 
       ? `${(tour.total_distance / 1000).toFixed(1)} km` 
       : 'N/A',
-    rating: tour.average_rating || 0,
+    rating: tour.average_rating || 0.0,
     reviewCount: tour.reviews?.length || 0,
     difficulty: difficultyMap[tour.difficulty] || 'Medium',
     stops,
