@@ -19,25 +19,5 @@ export const tourDetailMapStyles = (theme: ThemeName) => {
       borderRadius: Spacing.borderRadius,
       overflow: 'hidden',
     },
-    mapPlaceholder: {
-      height: 200,
-      backgroundColor: color.foreground,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderRadius: Spacing.borderRadius,
-      borderWidth: 2,
-      borderColor: color.primary + '40',
-      borderStyle: 'dashed',
-    },
-    mapPlaceholderText: {
-      color: color.text,
-      fontSize: 18,
-      fontWeight: '600',
-      marginBottom: Spacing.xs,
-    },
-    mapPlaceholderSubtext: {
-      color: color.subText,
-      fontSize: 14,
-    },
   });
 };
