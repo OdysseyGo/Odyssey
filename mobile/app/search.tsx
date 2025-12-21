@@ -100,7 +100,12 @@ export default function SearchScreen() {
 
   const renderError = () => (
     <View style={styles.emptyContainer}>
-      <FontAwesome name="exclamation-circle" size={48} color={colors.error} style={styles.emptyIcon} />
+      <FontAwesome
+        name="exclamation-circle"
+        size={48}
+        color={colors.error}
+        style={styles.emptyIcon}
+      />
       <Text style={styles.emptyText}>Search failed</Text>
       <Text style={styles.emptySubText}>{error}</Text>
     </View>
