@@ -25,7 +25,9 @@ export default function TourMap({
   const styles = useMemo(() => getStyles(theme), [theme]);
   const mapRef = useRef<MapView>(null);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const hasAnimatedToTour = useRef(false);
 
+  // Get user location on mount (but don't animate if there's an active tour)
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -36,7 +38,8 @@ export default function TourMap({
       let currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      if (mapRef.current) {
+      // Only animate to user location if there's no active tour
+      if (mapRef.current && !tour) {
         mapRef.current.animateToRegion(
           {
             latitude: currentLocation.coords.latitude,
@@ -48,8 +51,9 @@ export default function TourMap({
         );
       }
     })();
-  }, []);
+  }, [tour]);
 
+  // Animate to current step when it changes (for active tours)
   useEffect(() => {
     if (mapRef.current && tour && currentStepIndex !== undefined) {
       const currentStep = tour.steps[currentStepIndex];
@@ -58,10 +62,10 @@ export default function TourMap({
           {
             latitude: currentStep.coordinate.latitude,
             longitude: currentStep.coordinate.longitude,
-            latitudeDelta: 0.02,
-            longitudeDelta: 0.02,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
           },
-          1000
+          500
         );
       }
     }
@@ -85,6 +89,7 @@ export default function TourMap({
           iconType={marker.iconType}
           circleSize={marker.circleSize}
           circleColor={marker.circleColor}
+          opacity={marker.opacity}
         />
       ))}
       <Polyline coordinates={route} strokeWidth={4} />

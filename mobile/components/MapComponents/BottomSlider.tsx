@@ -13,6 +13,7 @@ export default function BottomSlider({
   tour,
   onCurrentStepChange,
   onSolvedStepsChange,
+  onEndTour,
 }: BottomSliderProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -192,6 +193,7 @@ export default function BottomSlider({
             onNavigatePrev={handleNavigatePrev}
             onStepSolved={handleStepSolved}
             onLocationConfirm={handleLocationConfirm}
+            onEndTour={onEndTour}
           />
         </View>
       </View>

@@ -14,6 +14,7 @@ export default function MapMarker({
   iconType,
   circleSize,
   circleColor,
+  opacity = 1,
 }: MapMarkerProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -22,7 +23,7 @@ export default function MapMarker({
 
   return (
     <Marker coordinate={coordinate} title={title}>
-      <View style={styles.container}>
+      <View style={[styles.container, { opacity }]}>
         <View
           style={[
             styles.circle,
