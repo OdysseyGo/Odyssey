@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { Stack, router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -7,12 +7,26 @@ import {
   SearchHeader,
   SearchResult,
   RecentSearches,
-  mockSearchResults,
+  SearchResultItemProps,
   recentSearches as initialRecentSearches,
 } from '@/components/SearchComponents';
 import { searchScreenStyles } from './search.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
+import { searchTours, Tour } from '@/api/tours';
+
+// Convert API Tour to SearchResultItemProps
+function mapTourToSearchResult(tour: Tour): SearchResultItemProps {
+  return {
+    id: tour.id.toString(),
+    image: tour.steps?.[0]?.image || `https://picsum.photos/400/320?random=${tour.id}`,
+    title: tour.title,
+    author: tour.creator?.username || 'Unknown',
+    duration: `${tour.duration_minutes} min`,
+    rating: tour.average_rating?.toFixed(1) || 'N/A',
+    location: tour.city || 'Unknown location',
+  };
+}
 
 export default function SearchScreen() {
   const theme = useColorTheme();
@@ -22,30 +36,48 @@ export default function SearchScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [recentSearches, setRecentSearches] = useState(initialRecentSearches);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchResultItemProps[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Filter mock results based on search query - will be replaced by API
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return [];
+  // Search with debounce
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setError(null);
+      return;
+    }
 
-    return mockSearchResults.filter(
-      (tour) =>
-        tour.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tour.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tour.author.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const abortController = new AbortController();
+    const timer = setTimeout(async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await searchTours(searchQuery, { page_size: 20 }, abortController.signal);
+        setSearchResults(response.results.map(mapTourToSearchResult));
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          setError(err.message || 'Search failed');
+          setSearchResults([]);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      abortController.abort();
+    };
   }, [searchQuery]);
 
   const handleSearchChange = useCallback((query: string) => {
     setSearchQuery(query);
-    // Simulate API loading - remove when real API is connected
-    if (query.trim()) {
-      setIsLoading(true);
-      setTimeout(() => setIsLoading(false), 300);
-    }
   }, []);
 
   const handleClearSearch = useCallback(() => {
     setSearchQuery('');
+    setSearchResults([]);
+    setError(null);
   }, []);
 
   const handleRecentSearchPress = useCallback((query: string) => {
@@ -63,6 +95,14 @@ export default function SearchScreen() {
       <Text style={styles.emptySubText}>
         Try searching for a different destination, tour name, or guide
       </Text>
+    </View>
+  );
+
+  const renderError = () => (
+    <View style={styles.emptyContainer}>
+      <FontAwesome name="exclamation-circle" size={48} color={colors.error} style={styles.emptyIcon} />
+      <Text style={styles.emptyText}>Search failed</Text>
+      <Text style={styles.emptySubText}>{error}</Text>
     </View>
   );
 
@@ -86,8 +126,9 @@ export default function SearchScreen() {
   );
 
   const showRecentSearches = !searchQuery.trim() && recentSearches.length > 0;
-  const showEmptyState = searchQuery.trim() && !isLoading && searchResults.length === 0;
-  const showResults = searchQuery.trim() && !isLoading && searchResults.length > 0;
+  const showEmptyState = searchQuery.trim() && !isLoading && !error && searchResults.length === 0;
+  const showResults = searchQuery.trim() && !isLoading && !error && searchResults.length > 0;
+  const showError = searchQuery.trim() && !isLoading && error !== null;
 
   return (
     <View style={styles.container}>
@@ -113,6 +154,7 @@ export default function SearchScreen() {
         )}
 
         {isLoading && renderLoading()}
+        {showError && renderError()}
         {showEmptyState && renderEmptyState()}
         {showResults && renderResults()}
       </ScrollView>
