@@ -140,6 +140,7 @@ export default function TourNavigation({
   onNavigatePrev,
   onStepSolved,
   onLocationConfirm,
+  onEndTour,
 }: TourNavigationProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -178,12 +179,23 @@ export default function TourNavigation({
 
   return (
     <View style={styles.container}>
-      <ProgressBar
-        totalSteps={tour.steps.length}
-        currentStep={currentStepIndex}
-        solvedSteps={solvedSteps}
-        stepIds={tour.steps.map((s) => s.id)}
-      />
+      <View style={styles.headerRow}>
+        <ProgressBar
+          totalSteps={tour.steps.length}
+          currentStep={currentStepIndex}
+          solvedSteps={solvedSteps}
+          stepIds={tour.steps.map((s) => s.id)}
+        />
+        {onEndTour && (
+          <Pressable style={styles.endTourButton} onPress={onEndTour}>
+            <MaterialCommunityIcons
+              name="close-circle-outline"
+              size={20}
+              color={Colors[theme].error}
+            />
+          </Pressable>
+        )}
+      </View>
 
       <View style={styles.stepContentContainer}>
         <TourStepComponent step={currentStep} isSolved={isSolved} onSolve={handleSolve} />

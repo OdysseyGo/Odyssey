@@ -99,9 +99,11 @@ class TourStep(models.Model):
     tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name="steps")
     order = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
-    description = models.TextField(help_text="Story content or location description")
-    latitude = models.DecimalField(max_digits=9, decimal_places=6)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    description = models.TextField(
+        help_text="Story content or location description", blank=True
+    )
+    latitude = models.DecimalField(max_digits=18, decimal_places=9)
+    longitude = models.DecimalField(max_digits=18, decimal_places=9)
     image = models.ImageField(upload_to="tour_steps/", blank=True, null=True)
     audio = models.FileField(upload_to="tour_audio/", blank=True, null=True)
 

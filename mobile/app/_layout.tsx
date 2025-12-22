@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 import 'react-native-reanimated';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
+import { ActiveTourProvider } from '@/contexts/ActiveTourContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -49,38 +50,40 @@ function RootLayoutNav() {
   const themeKey = colorTheme;
 
   return (
-    <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack
-        screenOptions={{
-          headerTitle: '',
-          headerShadowVisible: false,
-          headerStyle: {
-            backgroundColor: Colors[themeKey].primary,
-          },
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="login" />
-        <Stack.Screen name="register" />
-        <Stack.Screen name="forgot-password" />
-        <Stack.Screen name="(tour)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="tour/[id]"
-          options={{
-            title: 'Tour',
-            headerStyle: { backgroundColor: Colors[themeKey].primary },
-            headerTransparent: true,
+    <ActiveTourProvider>
+      <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack
+          screenOptions={{
+            headerTitle: '',
+            headerShadowVisible: false,
+            headerStyle: {
+              backgroundColor: Colors[themeKey].primary,
+            },
           }}
-        />
-        <Stack.Screen
-          name="search"
-          options={{
-            headerShown: false,
-            presentation: 'modal',
-          }}
-        />
-      </Stack>
-    </ThemeProvider>
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
+          <Stack.Screen name="forgot-password" />
+          <Stack.Screen name="(tour)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="tour/[id]"
+            options={{
+              title: 'Tour',
+              headerStyle: { backgroundColor: Colors[themeKey].primary },
+              headerTransparent: true,
+            }}
+          />
+          <Stack.Screen
+            name="search"
+            options={{
+              headerShown: false,
+              presentation: 'modal',
+            }}
+          />
+        </Stack>
+      </ThemeProvider>
+    </ActiveTourProvider>
   );
 }

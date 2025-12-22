@@ -138,9 +138,10 @@ export function TourDetailScreenContent({ tour, onStartTour }: TourDetailScreenC
 export default function TourDetailScreen({ tourId }: TourDetailScreenProps) {
   const { tour, loading, error, fetchTour } = useTourDetailScreen(tourId);
 
-  const handleStartTour = () => {
+  const handleStartTour = async () => {
     console.log('Starting tour:', tourId);
-    // TODO: Navigate to tour navigation mode
+    // Note: This component is kept for backwards compatibility
+    // The main handleStartTour logic is in app/tour/[id].tsx
   };
 
   if (loading) {

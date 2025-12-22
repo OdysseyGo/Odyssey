@@ -11,6 +11,7 @@ export interface TourNavigationProps {
   onNavigatePrev: () => void;
   onStepSolved: (stepId: string) => void;
   onLocationConfirm: (stepId: string, latitude: number, longitude: number) => Promise<void>;
+  onEndTour?: () => void;
 }
 
 export interface ProgressBarProps {
@@ -36,29 +37,23 @@ export function getVisibleMarkers(
   currentStepIndex: number,
   solvedSteps: Set<string>
 ): MapMarkerProps[] {
-  const markers: MapMarkerProps[] = [];
-
-  for (let i = 0; i <= currentStepIndex; i++) {
-    const step = tour.steps[i];
-    const isPuzzle = step.type === 'puzzle';
-    const isSolved = solvedSteps.has(step.id);
+  // Show all markers immediately for better UX - no progressive reveal
+  return tour.steps.map((step, i) => {
     const isCurrent = i === currentStepIndex;
+    const isSolved = solvedSteps.has(step.id);
+    const isPast = i < currentStepIndex;
 
-    // For puzzle steps, only show if solved OR if it's the current step
-    // For story steps, always show if we've reached that point
-    if (!isPuzzle || isSolved || isCurrent) {
-      markers.push({
-        id: step.id,
-        coordinate: step.coordinate,
-        title: step.title,
-        iconType: step.type === 'puzzle' ? 'puzzle' : 'story',
-        circleSize: isCurrent ? 48 : 40,
-        circleColor: markerColors[i % markerColors.length],
-      });
-    }
-  }
-
-  return markers;
+    return {
+      id: step.id,
+      coordinate: step.coordinate,
+      title: step.title,
+      iconType: step.type === 'puzzle' ? 'puzzle' : 'story',
+      circleSize: isCurrent ? 48 : 40,
+      circleColor: markerColors[i % markerColors.length],
+      // Dim future unsolved steps slightly
+      opacity: isPast || isCurrent || isSolved ? 1 : 0.6,
+    };
+  });
 }
 
 export function getVisibleRoute(

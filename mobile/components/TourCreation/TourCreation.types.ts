@@ -1,3 +1,10 @@
+export interface Puzzle {
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  hint: string;
+}
+
 export interface TourLocation {
   id: string;
   latitude: number;
@@ -7,6 +14,7 @@ export interface TourLocation {
   story: string;
   order: number;
   image?: string;
+  puzzle?: Puzzle;
 }
 
 export interface TourCreationData {

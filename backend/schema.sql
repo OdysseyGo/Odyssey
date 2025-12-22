@@ -361,3 +361,238 @@ CROSS JOIN (VALUES
     (4, 'Porto Cathedral', 'Romanesque cathedral', 41.143080, -8.611180)
 ) AS s(order_num, title, description, lat, lon)
 WHERE t.title = 'Porto Wine Cellars';
+
+-- Insert Puzzles for Tour Steps
+-- Historic Istanbul Walking Tour Puzzles
+INSERT INTO tours_puzzle (step_id, puzzle_type, question, options, correct_answer, hint, xp_reward)
+SELECT ts.id, 'TRIVIA', p.question, p.options::jsonb, p.correct_answer, p.hint, p.xp
+FROM tours_tourstep ts
+JOIN tours_tour t ON ts.tour_id = t.id
+CROSS JOIN (VALUES
+    (1, 'When was the Hagia Sophia originally built as a church?', 
+     '{"choices": [{"text": "325 AD", "is_correct": false}, {"text": "537 AD", "is_correct": true}, {"text": "1453 AD", "is_correct": false}, {"text": "1935 AD", "is_correct": false}]}',
+     '537 AD', 'It was commissioned by Emperor Justinian I.', 20),
+    (2, 'How many minarets does the Blue Mosque have?', 
+     '{"choices": [{"text": "4", "is_correct": false}, {"text": "5", "is_correct": false}, {"text": "6", "is_correct": true}, {"text": "7", "is_correct": false}]}',
+     '6', 'It is unique among mosques for having this many minarets.', 15),
+    (3, 'Which Ottoman Sultan built the Topkapi Palace?', 
+     '{"choices": [{"text": "Suleiman the Magnificent", "is_correct": false}, {"text": "Mehmed II", "is_correct": true}, {"text": "Selim I", "is_correct": false}, {"text": "Murad III", "is_correct": false}]}',
+     'Mehmed II', 'He conquered Constantinople in 1453.', 20),
+    (4, 'How many covered streets does the Grand Bazaar have?', 
+     '{"choices": [{"text": "41", "is_correct": false}, {"text": "51", "is_correct": false}, {"text": "61", "is_correct": true}, {"text": "71", "is_correct": false}]}',
+     '61', 'It is one of the largest and oldest covered markets in the world.', 15)
+) AS p(order_num, question, options, correct_answer, hint, xp)
+WHERE t.title = 'Historic Istanbul Walking Tour' AND ts."order" = p.order_num;
+
+-- Eiffel Tower to Louvre Puzzles
+INSERT INTO tours_puzzle (step_id, puzzle_type, question, options, correct_answer, hint, xp_reward)
+SELECT ts.id, 'TRIVIA', p.question, p.options::jsonb, p.correct_answer, p.hint, p.xp
+FROM tours_tourstep ts
+JOIN tours_tour t ON ts.tour_id = t.id
+CROSS JOIN (VALUES
+    (1, 'In what year was the Eiffel Tower completed?', 
+     '{"choices": [{"text": "1879", "is_correct": false}, {"text": "1889", "is_correct": true}, {"text": "1899", "is_correct": false}, {"text": "1909", "is_correct": false}]}',
+     '1889', 'It was built for a World''s Fair celebrating a famous revolution.', 20),
+    (2, 'What architectural style is the Trocadero Gardens known for?', 
+     '{"choices": [{"text": "Art Deco", "is_correct": true}, {"text": "Gothic", "is_correct": false}, {"text": "Baroque", "is_correct": false}, {"text": "Renaissance", "is_correct": false}]}',
+     'Art Deco', 'The gardens were redesigned for the 1937 World Fair.', 15),
+    (3, 'How tall is the Arc de Triomphe?', 
+     '{"choices": [{"text": "30 meters", "is_correct": false}, {"text": "50 meters", "is_correct": true}, {"text": "70 meters", "is_correct": false}, {"text": "90 meters", "is_correct": false}]}',
+     '50 meters', 'It is one of the tallest triumphal arches in the world.', 15),
+    (4, 'Which painting is the most famous artwork in the Louvre?', 
+     '{"choices": [{"text": "The Starry Night", "is_correct": false}, {"text": "The Scream", "is_correct": false}, {"text": "Mona Lisa", "is_correct": true}, {"text": "The Last Supper", "is_correct": false}]}',
+     'Mona Lisa', 'It was painted by Leonardo da Vinci.', 20)
+) AS p(order_num, question, options, correct_answer, hint, xp)
+WHERE t.title = 'Eiffel Tower to Louvre' AND ts."order" = p.order_num;
+
+-- Colosseum Mystery Hunt Puzzles
+INSERT INTO tours_puzzle (step_id, puzzle_type, question, options, correct_answer, hint, xp_reward)
+SELECT ts.id, 'TRIVIA', p.question, p.options::jsonb, p.correct_answer, p.hint, p.xp
+FROM tours_tourstep ts
+JOIN tours_tour t ON ts.tour_id = t.id
+CROSS JOIN (VALUES
+    (1, 'What was the original name of the Colosseum?', 
+     '{"choices": [{"text": "Flavian Amphitheatre", "is_correct": true}, {"text": "Caesar Stadium", "is_correct": false}, {"text": "Roman Arena", "is_correct": false}, {"text": "Imperial Theater", "is_correct": false}]}',
+     'Flavian Amphitheatre', 'It was built by the Flavian dynasty.', 25),
+    (2, 'How many spectators could the Roman Forum accommodate?', 
+     '{"choices": [{"text": "It was not a stadium", "is_correct": true}, {"text": "10,000", "is_correct": false}, {"text": "50,000", "is_correct": false}, {"text": "100,000", "is_correct": false}]}',
+     'It was not a stadium', 'The Forum was a marketplace and civic center.', 20),
+    (3, 'According to legend, who founded Rome on Palatine Hill?', 
+     '{"choices": [{"text": "Julius Caesar", "is_correct": false}, {"text": "Augustus", "is_correct": false}, {"text": "Romulus", "is_correct": true}, {"text": "Nero", "is_correct": false}]}',
+     'Romulus', 'He and his twin brother were raised by a wolf.', 25),
+    (4, 'What happens if you throw a coin into the Trevi Fountain?', 
+     '{"choices": [{"text": "Good luck for a year", "is_correct": false}, {"text": "Return to Rome", "is_correct": true}, {"text": "Find true love", "is_correct": false}, {"text": "Win money", "is_correct": false}]}',
+     'Return to Rome', 'Throw it with your right hand over your left shoulder.', 15)
+) AS p(order_num, question, options, correct_answer, hint, xp)
+WHERE t.title = 'Colosseum Mystery Hunt' AND ts."order" = p.order_num;
+
+-- Barcelona Gothic Quarter Puzzles
+INSERT INTO tours_puzzle (step_id, puzzle_type, question, options, correct_answer, hint, xp_reward)
+SELECT ts.id, 'TRIVIA', p.question, p.options::jsonb, p.correct_answer, p.hint, p.xp
+FROM tours_tourstep ts
+JOIN tours_tour t ON ts.tour_id = t.id
+CROSS JOIN (VALUES
+    (1, 'In which century was Barcelona Cathedral construction started?', 
+     '{"choices": [{"text": "11th century", "is_correct": false}, {"text": "13th century", "is_correct": true}, {"text": "15th century", "is_correct": false}, {"text": "17th century", "is_correct": false}]}',
+     '13th century', 'It was built on the site of an earlier Romanesque cathedral.', 15),
+    (2, 'What government buildings are located in Placa Sant Jaume?', 
+     '{"choices": [{"text": "City Hall and Generalitat", "is_correct": true}, {"text": "Cathedral and Palace", "is_correct": false}, {"text": "Museum and Library", "is_correct": false}, {"text": "Parliament and Court", "is_correct": false}]}',
+     'City Hall and Generalitat', 'Both Catalan and Barcelona governments meet here.', 20),
+    (3, 'What is the famous bridge on Carrer del Bisbe called?', 
+     '{"choices": [{"text": "Pont dels Suspirs", "is_correct": true}, {"text": "Pont Vell", "is_correct": false}, {"text": "Pont Nou", "is_correct": false}, {"text": "Pont Gothic", "is_correct": false}]}',
+     'Pont dels Suspirs', 'It means Bridge of Sighs in Catalan.', 15),
+    (4, 'Who designed the lampposts in Placa Reial?', 
+     '{"choices": [{"text": "Pablo Picasso", "is_correct": false}, {"text": "Antoni Gaudi", "is_correct": true}, {"text": "Salvador Dali", "is_correct": false}, {"text": "Joan Miro", "is_correct": false}]}',
+     'Antoni Gaudi', 'This was one of his first public works in Barcelona.', 20)
+) AS p(order_num, question, options, correct_answer, hint, xp)
+WHERE t.title = 'Barcelona Gothic Quarter' AND ts."order" = p.order_num;
+
+-- Amsterdam Canal Ring Puzzles
+INSERT INTO tours_puzzle (step_id, puzzle_type, question, options, correct_answer, hint, xp_reward)
+SELECT ts.id, 'TRIVIA', p.question, p.options::jsonb, p.correct_answer, p.hint, p.xp
+FROM tours_tourstep ts
+JOIN tours_tour t ON ts.tour_id = t.id
+CROSS JOIN (VALUES
+    (1, 'How many years did Anne Frank hide in the Secret Annex?', 
+     '{"choices": [{"text": "1 year", "is_correct": false}, {"text": "2 years", "is_correct": true}, {"text": "3 years", "is_correct": false}, {"text": "4 years", "is_correct": false}]}',
+     '2 years', 'She was hiding from July 1942 until August 1944.', 20),
+    (2, 'How tall is the Westerkerk tower?', 
+     '{"choices": [{"text": "65 meters", "is_correct": false}, {"text": "75 meters", "is_correct": false}, {"text": "85 meters", "is_correct": true}, {"text": "95 meters", "is_correct": false}]}',
+     '85 meters', 'It is the highest church tower in Amsterdam.', 15),
+    (3, 'What are the Nine Streets famous for?', 
+     '{"choices": [{"text": "Museums", "is_correct": false}, {"text": "Boutique shopping", "is_correct": true}, {"text": "Restaurants only", "is_correct": false}, {"text": "Historic monuments", "is_correct": false}]}',
+     'Boutique shopping', 'It features unique independent shops and cafes.', 15),
+    (4, 'Why is the Bloemenmarkt called a floating market?', 
+     '{"choices": [{"text": "It floats on boats", "is_correct": true}, {"text": "Flowers float in water", "is_correct": false}, {"text": "It moves around", "is_correct": false}, {"text": "Its a nickname", "is_correct": false}]}',
+     'It floats on boats', 'The stalls are on houseboats moored on the canal.', 15)
+) AS p(order_num, question, options, correct_answer, hint, xp)
+WHERE t.title = 'Amsterdam Canal Ring' AND ts."order" = p.order_num;
+
+-- London Royal Trail Puzzles
+INSERT INTO tours_puzzle (step_id, puzzle_type, question, options, correct_answer, hint, xp_reward)
+SELECT ts.id, 'TRIVIA', p.question, p.options::jsonb, p.correct_answer, p.hint, p.xp
+FROM tours_tourstep ts
+JOIN tours_tour t ON ts.tour_id = t.id
+CROSS JOIN (VALUES
+    (1, 'How many rooms does Buckingham Palace have?', 
+     '{"choices": [{"text": "375", "is_correct": false}, {"text": "575", "is_correct": false}, {"text": "775", "is_correct": true}, {"text": "975", "is_correct": false}]}',
+     '775', 'It includes 52 royal and guest bedrooms.', 20),
+    (2, 'How many coronations have taken place at Westminster Abbey?', 
+     '{"choices": [{"text": "20", "is_correct": false}, {"text": "30", "is_correct": false}, {"text": "38", "is_correct": false}, {"text": "40+", "is_correct": true}]}',
+     '40+', 'Starting with William the Conqueror in 1066.', 20),
+    (3, 'Is Big Ben the name of the tower or the bell?', 
+     '{"choices": [{"text": "The tower", "is_correct": false}, {"text": "The bell", "is_correct": true}, {"text": "Both", "is_correct": false}, {"text": "Neither", "is_correct": false}]}',
+     'The bell', 'The tower is officially called Elizabeth Tower.', 15),
+    (4, 'How old is Tower Bridge?', 
+     '{"choices": [{"text": "About 130 years", "is_correct": true}, {"text": "About 200 years", "is_correct": false}, {"text": "About 300 years", "is_correct": false}, {"text": "About 500 years", "is_correct": false}]}',
+     'About 130 years', 'It was completed in 1894.', 15),
+    (5, 'What birds are kept at the Tower of London by tradition?', 
+     '{"choices": [{"text": "Eagles", "is_correct": false}, {"text": "Ravens", "is_correct": true}, {"text": "Owls", "is_correct": false}, {"text": "Falcons", "is_correct": false}]}',
+     'Ravens', 'Legend says if the ravens leave, the kingdom will fall.', 20)
+) AS p(order_num, question, options, correct_answer, hint, xp)
+WHERE t.title = 'London Royal Trail' AND ts."order" = p.order_num;
+
+-- Venice Hidden Gems Puzzles
+INSERT INTO tours_puzzle (step_id, puzzle_type, question, options, correct_answer, hint, xp_reward)
+SELECT ts.id, 'TRIVIA', p.question, p.options::jsonb, p.correct_answer, p.hint, p.xp
+FROM tours_tourstep ts
+JOIN tours_tour t ON ts.tour_id = t.id
+CROSS JOIN (VALUES
+    (1, 'When was the Rialto Bridge built?', 
+     '{"choices": [{"text": "1391", "is_correct": false}, {"text": "1491", "is_correct": false}, {"text": "1591", "is_correct": true}, {"text": "1691", "is_correct": false}]}',
+     '1591', 'It was the first permanent bridge across the Grand Canal.', 20),
+    (2, 'What is Campo Santa Maria Formosa famous for?', 
+     '{"choices": [{"text": "Its unusual shape", "is_correct": true}, {"text": "A famous painting", "is_correct": false}, {"text": "A royal palace", "is_correct": false}, {"text": "A historic battle", "is_correct": false}]}',
+     'Its unusual shape', 'It is one of the largest campos in Venice.', 15),
+    (3, 'Why does Libreria Acqua Alta store books in bathtubs?', 
+     '{"choices": [{"text": "For decoration", "is_correct": false}, {"text": "To protect from floods", "is_correct": true}, {"text": "To save space", "is_correct": false}, {"text": "For photography", "is_correct": false}]}',
+     'To protect from floods', 'Venice experiences frequent high water events called acqua alta.', 20),
+    (4, 'How many bronze horses are on St. Marks Basilica?', 
+     '{"choices": [{"text": "2", "is_correct": false}, {"text": "4", "is_correct": true}, {"text": "6", "is_correct": false}, {"text": "8", "is_correct": false}]}',
+     '4', 'They are replicas; the originals are inside the basilica.', 15)
+) AS p(order_num, question, options, correct_answer, hint, xp)
+WHERE t.title = 'Venice Hidden Gems' AND ts."order" = p.order_num;
+
+-- Prague Castle Adventure Puzzles
+INSERT INTO tours_puzzle (step_id, puzzle_type, question, options, correct_answer, hint, xp_reward)
+SELECT ts.id, 'TRIVIA', p.question, p.options::jsonb, p.correct_answer, p.hint, p.xp
+FROM tours_tourstep ts
+JOIN tours_tour t ON ts.tour_id = t.id
+CROSS JOIN (VALUES
+    (1, 'How many statues are on the Charles Bridge?', 
+     '{"choices": [{"text": "20", "is_correct": false}, {"text": "30", "is_correct": true}, {"text": "40", "is_correct": false}, {"text": "50", "is_correct": false}]}',
+     '30', 'Most were installed between 1683 and 1714.', 20),
+    (2, 'What is the name of the famous church in Lesser Town?', 
+     '{"choices": [{"text": "St. Nicholas Church", "is_correct": true}, {"text": "St. Peter Church", "is_correct": false}, {"text": "St. Paul Church", "is_correct": false}, {"text": "St. John Church", "is_correct": false}]}',
+     'St. Nicholas Church', 'It is one of the finest Baroque churches in Europe.', 15),
+    (3, 'How large is Prague Castle according to Guinness World Records?', 
+     '{"choices": [{"text": "Largest medieval castle", "is_correct": false}, {"text": "Largest ancient castle", "is_correct": true}, {"text": "Tallest castle", "is_correct": false}, {"text": "Oldest castle", "is_correct": false}]}',
+     'Largest ancient castle', 'It covers nearly 70,000 square meters.', 25),
+    (4, 'When was St. Vitus Cathedral finally completed?', 
+     '{"choices": [{"text": "1429", "is_correct": false}, {"text": "1729", "is_correct": false}, {"text": "1929", "is_correct": true}, {"text": "It is still incomplete", "is_correct": false}]}',
+     '1929', 'Construction started in 1344 and took nearly 600 years!', 20)
+) AS p(order_num, question, options, correct_answer, hint, xp)
+WHERE t.title = 'Prague Castle Adventure' AND ts."order" = p.order_num;
+
+-- Berlin Wall Memorial Tour Puzzles
+INSERT INTO tours_puzzle (step_id, puzzle_type, question, options, correct_answer, hint, xp_reward)
+SELECT ts.id, 'TRIVIA', p.question, p.options::jsonb, p.correct_answer, p.hint, p.xp
+FROM tours_tourstep ts
+JOIN tours_tour t ON ts.tour_id = t.id
+CROSS JOIN (VALUES
+    (1, 'How long is the East Side Gallery?', 
+     '{"choices": [{"text": "0.5 km", "is_correct": false}, {"text": "1.3 km", "is_correct": true}, {"text": "2.5 km", "is_correct": false}, {"text": "5 km", "is_correct": false}]}',
+     '1.3 km', 'It is the longest remaining section of the Berlin Wall.', 15),
+    (2, 'In what year did the Berlin Wall fall?', 
+     '{"choices": [{"text": "1987", "is_correct": false}, {"text": "1988", "is_correct": false}, {"text": "1989", "is_correct": true}, {"text": "1990", "is_correct": false}]}',
+     '1989', 'It fell on November 9th.', 20),
+    (3, 'What style is the Brandenburg Gate?', 
+     '{"choices": [{"text": "Baroque", "is_correct": false}, {"text": "Neoclassical", "is_correct": true}, {"text": "Gothic", "is_correct": false}, {"text": "Art Nouveau", "is_correct": false}]}',
+     'Neoclassical', 'It was inspired by the gateway to the Acropolis in Athens.', 15),
+    (4, 'What was Checkpoint Charlie?', 
+     '{"choices": [{"text": "A museum", "is_correct": false}, {"text": "A border crossing", "is_correct": true}, {"text": "A restaurant", "is_correct": false}, {"text": "A prison", "is_correct": false}]}',
+     'A border crossing', 'It was the best-known crossing point between East and West Berlin.', 20)
+) AS p(order_num, question, options, correct_answer, hint, xp)
+WHERE t.title = 'Berlin Wall Memorial Tour' AND ts."order" = p.order_num;
+
+-- Vienna Classical Music Tour Puzzles
+INSERT INTO tours_puzzle (step_id, puzzle_type, question, options, correct_answer, hint, xp_reward)
+SELECT ts.id, 'TRIVIA', p.question, p.options::jsonb, p.correct_answer, p.hint, p.xp
+FROM tours_tourstep ts
+JOIN tours_tour t ON ts.tour_id = t.id
+CROSS JOIN (VALUES
+    (1, 'What opera did Mozart compose while living at Mozarts House?', 
+     '{"choices": [{"text": "Don Giovanni", "is_correct": false}, {"text": "The Magic Flute", "is_correct": false}, {"text": "The Marriage of Figaro", "is_correct": true}, {"text": "Cosi fan tutte", "is_correct": false}]}',
+     'The Marriage of Figaro', 'He lived here from 1784 to 1787.', 20),
+    (2, 'What year did Mozart marry Constanze at St. Stephens?', 
+     '{"choices": [{"text": "1780", "is_correct": false}, {"text": "1782", "is_correct": true}, {"text": "1784", "is_correct": false}, {"text": "1786", "is_correct": false}]}',
+     '1782', 'The wedding took place at the cathedral on August 4th.', 15),
+    (3, 'How many operas premiere at the Vienna State Opera each season?', 
+     '{"choices": [{"text": "About 20", "is_correct": false}, {"text": "About 35", "is_correct": false}, {"text": "About 50", "is_correct": true}, {"text": "About 75", "is_correct": false}]}',
+     'About 50', 'It is one of the busiest opera houses in the world.', 15),
+    (4, 'Where was Beethoven born?', 
+     '{"choices": [{"text": "Vienna", "is_correct": false}, {"text": "Salzburg", "is_correct": false}, {"text": "Bonn", "is_correct": true}, {"text": "Munich", "is_correct": false}]}',
+     'Bonn', 'He moved to Vienna in 1792 to study with Haydn.', 20)
+) AS p(order_num, question, options, correct_answer, hint, xp)
+WHERE t.title = 'Vienna Classical Music Tour' AND ts."order" = p.order_num;
+
+-- Athens Acropolis Walk Puzzles
+INSERT INTO tours_puzzle (step_id, puzzle_type, question, options, correct_answer, hint, xp_reward)
+SELECT ts.id, 'TRIVIA', p.question, p.options::jsonb, p.correct_answer, p.hint, p.xp
+FROM tours_tourstep ts
+JOIN tours_tour t ON ts.tour_id = t.id
+CROSS JOIN (VALUES
+    (1, 'What does Acropolis mean?', 
+     '{"choices": [{"text": "Ancient city", "is_correct": false}, {"text": "High city", "is_correct": true}, {"text": "Holy city", "is_correct": false}, {"text": "Sacred temple", "is_correct": false}]}',
+     'High city', 'It comes from the Greek words akron (highest point) and polis (city).', 15),
+    (2, 'Who was the Parthenon dedicated to?', 
+     '{"choices": [{"text": "Zeus", "is_correct": false}, {"text": "Apollo", "is_correct": false}, {"text": "Athena", "is_correct": true}, {"text": "Poseidon", "is_correct": false}]}',
+     'Athena', 'She was the goddess of wisdom and the patron of Athens.', 20),
+    (3, 'What are the female statues on the Erechtheion called?', 
+     '{"choices": [{"text": "Maidens", "is_correct": false}, {"text": "Caryatids", "is_correct": true}, {"text": "Nymphs", "is_correct": false}, {"text": "Muses", "is_correct": false}]}',
+     'Caryatids', 'They serve as architectural support columns.', 20),
+    (4, 'What philosophical school was founded at the Ancient Agora?', 
+     '{"choices": [{"text": "Epicureanism", "is_correct": false}, {"text": "Cynicism", "is_correct": false}, {"text": "Stoicism", "is_correct": true}, {"text": "Platonism", "is_correct": false}]}',
+     'Stoicism', 'It was named after the Stoa Poikile (Painted Porch) there.', 25)
+) AS p(order_num, question, options, correct_answer, hint, xp)
+WHERE t.title = 'Athens Acropolis Walk' AND ts."order" = p.order_num;
