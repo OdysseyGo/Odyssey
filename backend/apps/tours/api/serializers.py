@@ -91,6 +91,7 @@ class TourSerializer(serializers.ModelSerializer):
             "category",
             "difficulty",
             "duration_minutes",
+            "total_distance",
             "is_premium",
             "city",
             "status",

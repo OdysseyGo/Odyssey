@@ -23,7 +23,7 @@ export default function TourDisplayComp({
   const handlePress = () => {
     router.push({
       pathname: '/tour/[id]',
-      params: { id: 1 },
+      params: { id },
     });
   };
 
