@@ -118,13 +118,9 @@ export default function MapScreen() {
     const totalPuzzles = tour.steps.filter((s) => s.type === 'puzzle').length;
     const solvedPuzzles = mergedSolvedSteps.size;
 
-    // Check if on last step and all puzzles solved
-    if (
-      currentStepIndex === tour.steps.length - 1 &&
-      solvedPuzzles >= totalPuzzles &&
-      totalPuzzles > 0
-    ) {
-      // All puzzles solved and on last step - show completion modal after a short delay
+    // Check if on last step and all puzzles solved (or no puzzles for story tours)
+    if (currentStepIndex === tour.steps.length - 1 && solvedPuzzles >= totalPuzzles) {
+      // All puzzles solved (or no puzzles) and on last step - show completion modal after a short delay
       const timer = setTimeout(() => {
         setShowCompleteModal(true);
       }, 800);
