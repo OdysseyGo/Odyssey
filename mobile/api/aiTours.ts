@@ -15,7 +15,6 @@ export type AITourGenerationResponse = {
   message: string;
 };
 
-
 export async function generateAITour(
   data: AITourGenerationRequest,
   signal?: AbortSignal
