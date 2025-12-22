@@ -1,41 +1,41 @@
 // 🌅 Sunset Adventure Palette - Premium, Exciting, Wanderlust
 // Inspired by award-winning travel apps (Airbnb, Hopper, Wanderlog)
 
-const primaryLight = '#FF6B6B';  // Living Coral - Pantone Color of the Year inspired
-const primaryDark = '#FF8E72';   // Soft coral for dark mode visibility
+const primaryLight = '#FF6B6B'; // Living Coral - Pantone Color of the Year inspired
+const primaryDark = '#FF8E72'; // Soft coral for dark mode visibility
 
 const secondaryLight = '#4ECDC4'; // Tropical Teal - adventure & exploration
-const secondaryDark = '#72F2EB';  // Bright teal for dark mode
+const secondaryDark = '#72F2EB'; // Bright teal for dark mode
 
-const black = '#1A1A2E';  // Rich navy-black (depth & sophistication)
-const white = '#FEFEFE';  // Pure white with warmth
+const black = '#1A1A2E'; // Rich navy-black (depth & sophistication)
+const white = '#FEFEFE'; // Pure white with warmth
 
-const foregroundSecondaryLight = '#F7F7F8';  // Soft gray
-const foregroundSecondaryDark = '#252542';   // Deep purple-navy
+const foregroundSecondaryLight = '#ecececff'; // Soft gray
+const foregroundSecondaryDark = '#252542'; // Deep purple-navy
 
-const grayLight = '#FAFAFA';  // Clean light background
-const grayDark = '#16162A';   // Deep space navy
+const grayLight = '#FAFAFA'; // Clean light background
+const grayDark = '#16162A'; // Deep space navy
 
 const blackPale = 'rgba(26, 26, 46, 0.65)';
 
-const textGrayLight = '#4A4A68';  // Muted purple-gray for readability
-const textGrayDark = '#B8B8D1';   // Light purple-gray
+const textGrayLight = '#4A4A68'; // Muted purple-gray for readability
+const textGrayDark = '#B8B8D1'; // Light purple-gray
 
-const pressLight = '#FFE5E5';  // Coral tint on press
-const pressDark = '#2D2D4A';   // Pressed state dark
+const pressLight = '#FFE5E5'; // Coral tint on press
+const pressDark = '#2D2D4A'; // Pressed state dark
 
-const errorRed = '#FF4757';  // Vibrant but not harsh
+const errorRed = '#FF4757'; // Vibrant but not harsh
 
-const gray666 = '#6C6C8A';  // Muted purple-gray
-const gray888 = '#9090A7';  // Medium gray
-const gray999 = '#B8B8CA';  // Light gray
-const gray333 = '#3D3D5C';  // Dark gray
+const gray666 = '#6C6C8A'; // Muted purple-gray
+const gray888 = '#9090A7'; // Medium gray
+const gray999 = '#B8B8CA'; // Light gray
+const gray333 = '#3D3D5C'; // Dark gray
 
-const yellow = '#FFD93D';  // Warm golden yellow - sunshine vibes
+const yellow = '#FFD93D'; // Warm golden yellow - sunshine vibes
 
-const easy = '#2ECC71';     // Fresh mint green
-const medium = '#F39C12';   // Warm amber
-const hard = '#E74C3C';     // Bold red
+const easy = '#2ECC71'; // Fresh mint green
+const medium = '#F39C12'; // Warm amber
+const hard = '#E74C3C'; // Bold red
 
 const Colors = {
   light: {

@@ -21,7 +21,7 @@ export default function TourDisplayComp({
   const theme = useColorTheme();
   const styles = useMemo(() => tourDisplayCompStyles(theme), [theme]);
   const color = Colors[theme];
-  
+
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const displayRating = typeof rating === 'number' ? 0 : '0.0';
@@ -62,18 +62,15 @@ export default function TourDisplayComp({
         <View style={styles.imageContainer}>
           <Image source={{ uri: image }} style={styles.image} />
 
-
           <View style={styles.ratingBadge}>
             <Ionicons name="star" size={14} color="#FFD93D" />
             <Text style={styles.ratingText}>{displayRating}</Text>
           </View>
 
-
           <View style={styles.durationChip}>
             <Ionicons name="time" size={14} color="#FFFFFF" />
             <Text style={styles.durationText}>{duration}</Text>
           </View>
-
 
           <View style={styles.distanceChip}>
             <Ionicons name="footsteps" size={14} color="#FFFFFF" />

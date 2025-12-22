@@ -11,7 +11,7 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
   const isDark = theme === 'dark';
 
   return StyleSheet.create({
-   cardWrapper: {
+    cardWrapper: {
       width: CARD_WIDTH,
       marginBottom: Spacing.md,
     },
@@ -19,13 +19,13 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
     card: {
       width: '100%',
       height: CARD_HEIGHT,
-      backgroundColor: isDark ? '#1A1A1D' : '#FFFFFF',
+      backgroundColor: isDark ? color.foreground : color.white,
       borderRadius: 28,
       overflow: 'hidden',
       position: 'relative',
       ...Platform.select({
         ios: {
-          shadowColor: isDark ? '#000000' : color.primary,
+          shadowColor: isDark ? color.background : color.primary,
           shadowOffset: { width: 0, height: 16 },
           shadowOpacity: isDark ? 0.6 : 0.15,
           shadowRadius: 32,
@@ -36,7 +36,7 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
       }),
     },
 
-   imageContainer: {
+    imageContainer: {
       position: 'relative',
       width: '100%',
       height: 160,
@@ -47,14 +47,14 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
       height: '100%',
       resizeMode: 'cover',
     },
-    
+
     imageGradientTop: {
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
       height: 60,
-      backgroundColor: 'rgba(0,0,0,0.25)',
+      backgroundColor: color.textShadowColor,
     },
     imageGradientBottom: {
       position: 'absolute',
@@ -62,27 +62,27 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
       left: 0,
       right: 0,
       height: 80,
-      backgroundColor: 'rgba(0,0,0,0.4)',
+      backgroundColor: color.backgroundBlack,
     },
-bookmarkButton: {
+    bookmarkButton: {
       position: 'absolute',
       top: 12,
       left: 12,
       width: 36,
       height: 36,
       borderRadius: 18,
-      backgroundColor: 'rgba(0,0,0,0.35)',
+      backgroundColor: color.backgroundBlack,
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 1.5,
-      borderColor: 'rgba(255,255,255,0.2)',
+      borderColor: color.borderLight,
     },
     bookmarkButtonActive: {
-      backgroundColor: 'rgba(255,107,107,0.25)',
-      borderColor: '#FF6B6B',
+      backgroundColor: `${color.primary}40`,
+      borderColor: color.primary,
       ...Platform.select({
         ios: {
-          shadowColor: '#FF6B6B',
+          shadowColor: color.primary,
           shadowOffset: { width: 0, height: 0 },
           shadowOpacity: 0.6,
           shadowRadius: 10,
@@ -99,13 +99,13 @@ bookmarkButton: {
       gap: 4,
       paddingHorizontal: 10,
       paddingVertical: 6,
-      backgroundColor: 'rgba(0,0,0,0.5)',
+      backgroundColor: color.backgroundBlack,
       borderRadius: 14,
       borderWidth: 1,
-      borderColor: 'rgba(255,215,61,0.3)',
+      borderColor: `${color.star}4D`,
     },
     ratingText: {
-      color: '#FFFFFF',
+      color: color.white,
       fontSize: 13,
       fontWeight: '800',
       letterSpacing: 0.3,
@@ -135,7 +135,7 @@ bookmarkButton: {
       }),
     },
     durationText: {
-      color: '#FFFFFF',
+      color: color.white,
       fontSize: 12,
       fontWeight: '700',
       letterSpacing: 0.2,
@@ -150,13 +150,13 @@ bookmarkButton: {
       gap: 5,
       paddingHorizontal: 10,
       paddingVertical: 6,
-      backgroundColor: 'rgba(0,0,0,0.55)',
+      backgroundColor: color.backgroundBlack,
       borderRadius: 20,
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
+      borderColor: color.borderLight,
     },
     distanceText: {
-      color: '#FFFFFF',
+      color: color.white,
       fontSize: 11,
       fontWeight: '600',
     },
@@ -166,7 +166,7 @@ bookmarkButton: {
       padding: 14,
       paddingTop: 14,
       justifyContent: 'space-between',
-      backgroundColor: isDark ? '#252528' : '#F5F5F7',
+      backgroundColor: isDark ? color.foregroundSecondary : color.foreground,
     },
 
     titleContainer: {
@@ -175,7 +175,7 @@ bookmarkButton: {
     },
     title: {
       flex: 1,
-      color: isDark ? '#FFFFFF' : '#0A0A0A',
+      color: color.text,
       fontSize: 17,
       fontWeight: '500',
       lineHeight: 22,
@@ -188,7 +188,6 @@ bookmarkButton: {
       justifyContent: 'space-between',
       marginTop: 8,
     },
-    
 
     authorContainer: {
       flexDirection: 'row',
@@ -214,11 +213,10 @@ bookmarkButton: {
     },
     authorText: {
       flex: 1,
-      color: isDark ? '#B0B0B5' : '#4A4A4A',
+      color: color.subText,
       fontSize: 12,
       fontWeight: '600',
     },
-
 
     reviewsContainer: {
       flexDirection: 'row',
@@ -226,7 +224,7 @@ bookmarkButton: {
       gap: 4,
       paddingHorizontal: 10,
       paddingVertical: 5,
-      backgroundColor: isDark ? 'rgba(255,107,107,0.12)' : 'rgba(255,107,107,0.08)',
+      backgroundColor: isDark ? `${color.primary}1F` : `${color.primary}14`,
       borderRadius: 12,
     },
     reviewsText: {
