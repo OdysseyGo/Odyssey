@@ -22,13 +22,13 @@ INSERT INTO tours_tour (
 ) VALUES
 ('Historic Istanbul Walking Tour', 
  'Explore the rich history of Istanbul through its most iconic landmarks. This walking tour takes you through centuries of Byzantine and Ottoman heritage.',
- 'STORY', 'History', 'MEDIUM', 240, false, 'Istanbul',
+ 'PUZZLE', 'History', 'MEDIUM', 240, false, 'Istanbul',
  2156.0, 0.0, 0.0, 0.0, 0.0, false, false, true, NULL, 'PUBLISHED', NOW(), NOW(),
  (SELECT id FROM "user" WHERE username = 'seed_creator')),
 
 ('Eiffel Tower to Louvre',
  'A romantic walk through Paris, from the Eiffel Tower to the world-famous Louvre Museum.',
- 'STORY', 'Culture', 'EASY', 180, false, 'Paris',
+ 'PUZZLE', 'Culture', 'EASY', 180, false, 'Paris',
  7854.0, 0.0, 0.0, 0.0, 0.0, false, false, true, NULL, 'PUBLISHED', NOW(), NOW(),
  (SELECT id FROM "user" WHERE username = 'seed_creator')),
 
@@ -40,43 +40,43 @@ INSERT INTO tours_tour (
 
 ('Barcelona Gothic Quarter',
  'Wander through medieval streets and discover Gothic architecture in Barcelona''s oldest neighborhood.',
- 'STORY', 'Architecture', 'EASY', 150, false, 'Barcelona',
+ 'PUZZLE', 'Architecture', 'EASY', 150, false, 'Barcelona',
  512.0, 0.0, 0.0, 0.0, 0.0, false, false, true, NULL, 'PUBLISHED', NOW(), NOW(),
  (SELECT id FROM "user" WHERE username = 'seed_creator')),
 
 ('Amsterdam Canal Ring',
  'Cruise the famous canals and explore the UNESCO World Heritage canal district.',
- 'HYBRID', 'Culture', 'EASY', 120, false, 'Amsterdam',
+ 'PUZZLE', 'Culture', 'EASY', 120, false, 'Amsterdam',
  1456.0, 0.0, 0.0, 0.0, 0.0, false, false, true, NULL, 'PUBLISHED', NOW(), NOW(),
  (SELECT id FROM "user" WHERE username = 'seed_creator')),
 
 ('London Royal Trail',
  'Visit the most iconic royal landmarks in London, from Buckingham Palace to the Tower of London.',
- 'STORY', 'History', 'MEDIUM', 270, false, 'London',
+ 'PUZZLE', 'History', 'MEDIUM', 270, false, 'London',
  4521.0, 0.0, 0.0, 0.0, 0.0, false, false, true, NULL, 'PUBLISHED', NOW(), NOW(),
  (SELECT id FROM "user" WHERE username = 'seed_creator')),
 
 ('Venice Hidden Gems',
  'Explore secret corners of Venice away from the tourist crowds.',
- 'STORY', 'Culture', 'MEDIUM', 180, false, 'Venice',
+ 'PUZZLE', 'Culture', 'MEDIUM', 180, false, 'Venice',
  1123.0, 0.0, 0.0, 0.0, 0.0, false, false, true, NULL, 'PUBLISHED', NOW(), NOW(),
  (SELECT id FROM "user" WHERE username = 'seed_creator')),
 
 ('Prague Castle Adventure',
  'Climb to Prague Castle and discover the heart of Czech history.',
- 'HYBRID', 'History', 'HARD', 200, false, 'Prague',
+ 'PUZZLE', 'History', 'HARD', 200, false, 'Prague',
  987.0, 0.0, 0.0, 0.0, 0.0, false, false, true, NULL, 'PUBLISHED', NOW(), NOW(),
  (SELECT id FROM "user" WHERE username = 'seed_creator')),
 
 ('Berlin Wall Memorial Tour',
  'Follow the path of the Berlin Wall and learn about Germany''s divided past.',
- 'STORY', 'History', 'EASY', 150, false, 'Berlin',
+ 'PUZZLE', 'History', 'EASY', 150, false, 'Berlin',
  5678.0, 0.0, 0.0, 0.0, 0.0, false, false, true, NULL, 'PUBLISHED', NOW(), NOW(),
  (SELECT id FROM "user" WHERE username = 'seed_creator')),
 
 ('Vienna Classical Music Tour',
  'Experience Vienna through the lives and works of great composers.',
- 'STORY', 'Music', 'EASY', 165, false, 'Vienna',
+ 'PUZZLE', 'Music', 'EASY', 165, false, 'Vienna',
  1234.0, 0.0, 0.0, 0.0, 0.0, false, false, true, NULL, 'PUBLISHED', NOW(), NOW(),
  (SELECT id FROM "user" WHERE username = 'seed_creator')),
 
@@ -88,7 +88,7 @@ INSERT INTO tours_tour (
 
 ('Athens Acropolis Walk',
  'Climb to the Acropolis and explore ancient Greek civilization.',
- 'STORY', 'History', 'HARD', 180, false, 'Athens',
+ 'PUZZLE', 'History', 'HARD', 180, false, 'Athens',
  876.0, 0.0, 0.0, 0.0, 0.0, false, false, true, NULL, 'PUBLISHED', NOW(), NOW(),
  (SELECT id FROM "user" WHERE username = 'seed_creator')),
 
