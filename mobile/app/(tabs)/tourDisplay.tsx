@@ -130,7 +130,15 @@ export default function TourDisplay() {
     });
 
     // Sort continents in a logical order
-    const continentOrder = ['Europe', 'Asia', 'North America', 'South America', 'Africa', 'Oceania', 'Other'];
+    const continentOrder = [
+      'Europe',
+      'Asia',
+      'North America',
+      'South America',
+      'Africa',
+      'Oceania',
+      'Other',
+    ];
     const sortedContinents = Object.entries(byContinent).sort(([a], [b]) => {
       return continentOrder.indexOf(a) - continentOrder.indexOf(b);
     });

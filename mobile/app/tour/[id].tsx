@@ -19,7 +19,7 @@ export default function TourDetailPage() {
 
   const handleStartTour = async () => {
     console.log('Starting tour:', id);
-    
+
     // Check if user is logged in
     const loggedIn = await isLoggedIn();
     if (!loggedIn) {
@@ -33,7 +33,7 @@ export default function TourDetailPage() {
       );
       return;
     }
-    
+
     try {
       // Fetch fresh tour data with steps and puzzles
       if (id) {

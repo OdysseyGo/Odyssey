@@ -31,17 +31,13 @@ export default function ActiveTourHeader({
           <Text style={styles.tourTitle} numberOfLines={1}>
             {tour.title}
           </Text>
-          
+
           <View style={styles.progressContainer}>
-            <MaterialCommunityIcons
-              name="map-marker-path"
-              size={14}
-              color={colors.subText}
-            />
+            <MaterialCommunityIcons name="map-marker-path" size={14} color={colors.subText} />
             <Text style={styles.progressText}>
               Step {currentStepIndex + 1} of {totalSteps}
             </Text>
-            
+
             {config.showXPBadge && earnedXP > 0 && (
               <View style={styles.xpBadge}>
                 <MaterialCommunityIcons name="star" size={12} color="#000" />
@@ -53,20 +49,15 @@ export default function ActiveTourHeader({
           {config.showProgressBar && (
             <View style={styles.progressBarContainer}>
               <View style={styles.progressBarBackground}>
-                <View 
-                  style={[
-                    styles.progressBarFill, 
-                    { width: `${progressPercent}%` }
-                  ]} 
-                />
+                <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
               </View>
-              
+
               {config.showStepDots && (
                 <View style={styles.stepIndicatorsContainer}>
                   {tour.steps.map((step, index) => {
                     const isCurrent = index === currentStepIndex;
                     const isCompleted = solvedSteps.has(step.id) || index < currentStepIndex;
-                    
+
                     return (
                       <View
                         key={step.id}
@@ -85,8 +76,8 @@ export default function ActiveTourHeader({
         </View>
 
         {/* End Tour Button */}
-        <Pressable 
-          style={styles.endButton} 
+        <Pressable
+          style={styles.endButton}
           onPress={onEndTour}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >

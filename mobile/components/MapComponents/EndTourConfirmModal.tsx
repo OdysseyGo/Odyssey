@@ -22,27 +22,19 @@ export default function EndTourConfirmModal({
   const remainingSteps = totalSteps - completedSteps;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onCancel}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           {/* Icon */}
           <View style={styles.iconContainer}>
-            <MaterialCommunityIcons
-              name="exit-run"
-              size={40}
-              color={colors.error}
-            />
+            <MaterialCommunityIcons name="exit-run" size={40} color={colors.error} />
           </View>
 
           {/* Title */}
           <Text style={styles.title}>Exit Tour?</Text>
           <Text style={styles.message}>
-            Are you sure you want to exit? You will return to the map and this tour will not be marked as completed.
+            Are you sure you want to exit? You will return to the map and this tour will not be
+            marked as completed.
           </Text>
 
           {/* Progress Info */}
@@ -64,11 +56,7 @@ export default function EndTourConfirmModal({
           {/* Warning */}
           {remainingSteps > 0 && (
             <View style={styles.warningContainer}>
-              <MaterialCommunityIcons
-                name="alert-circle"
-                size={18}
-                color={colors.star}
-              />
+              <MaterialCommunityIcons name="alert-circle" size={18} color={colors.star} />
               <Text style={styles.warningText}>
                 You still have {remainingSteps} step{remainingSteps > 1 ? 's' : ''} to explore!
               </Text>
@@ -82,11 +70,7 @@ export default function EndTourConfirmModal({
             </Pressable>
 
             <Pressable style={styles.confirmButton} onPress={onConfirm}>
-              <MaterialCommunityIcons
-                name="exit-run"
-                size={18}
-                color={colors.white}
-              />
+              <MaterialCommunityIcons name="exit-run" size={18} color={colors.white} />
               <Text style={styles.confirmButtonText}>Exit Tour</Text>
             </Pressable>
           </View>

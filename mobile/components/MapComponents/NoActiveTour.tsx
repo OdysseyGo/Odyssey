@@ -49,17 +49,8 @@ export default function NoActiveTour({ onBrowseTours }: NoActiveTourProps) {
   return (
     <View style={styles.container}>
       {/* Animated Icon */}
-      <Animated.View 
-        style={[
-          styles.iconContainer,
-          { transform: [{ translateY: floatAnim }] }
-        ]}
-      >
-        <MaterialCommunityIcons
-          name="map-marker-question"
-          size={56}
-          color={colors.primary}
-        />
+      <Animated.View style={[styles.iconContainer, { transform: [{ translateY: floatAnim }] }]}>
+        <MaterialCommunityIcons name="map-marker-question" size={56} color={colors.primary} />
       </Animated.View>
 
       {/* Title */}
@@ -67,20 +58,17 @@ export default function NoActiveTour({ onBrowseTours }: NoActiveTourProps) {
 
       {/* Subtitle */}
       <Text style={styles.subtitle}>
-        Start a tour to see interactive map navigation with stops, puzzles, and exciting discoveries along the way!
+        Start a tour to see interactive map navigation with stops, puzzles, and exciting discoveries
+        along the way!
       </Text>
 
       {/* Browse Tours Button */}
-      <Pressable 
-        style={styles.browseButton} 
+      <Pressable
+        style={styles.browseButton}
         onPress={handleBrowseTours}
         android_ripple={{ color: 'rgba(255, 255, 255, 0.2)' }}
       >
-        <MaterialCommunityIcons
-          name="compass"
-          size={20}
-          color={colors.white}
-        />
+        <MaterialCommunityIcons name="compass" size={20} color={colors.white} />
         <Text style={styles.browseButtonText}>Browse Tours</Text>
       </Pressable>
 

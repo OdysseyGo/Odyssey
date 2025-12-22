@@ -1,12 +1,5 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  Modal,
-  Animated,
-  Easing,
-} from 'react-native';
+import { View, Text, Pressable, Modal, Animated, Easing } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -78,43 +71,24 @@ export default function TourCompleteModal({
   const completionRate = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <Animated.View
           style={[
             styles.modalContainer,
             {
-              transform: [
-                { scale: scaleAnim },
-                { translateY: bounceAnim },
-              ],
+              transform: [{ scale: scaleAnim }, { translateY: bounceAnim }],
             },
           ]}
         >
           {/* Trophy Icon */}
-          <Animated.View
-            style={[
-              styles.trophyContainer,
-              { transform: [{ rotate }] },
-            ]}
-          >
-            <MaterialCommunityIcons
-              name="trophy"
-              size={50}
-              color="#000"
-            />
+          <Animated.View style={[styles.trophyContainer, { transform: [{ rotate }] }]}>
+            <MaterialCommunityIcons name="trophy" size={50} color="#000" />
           </Animated.View>
 
           {/* Title */}
           <Text style={styles.title}>Tour Complete!</Text>
-          <Text style={styles.subtitle}>
-            You've finished {tour.title}
-          </Text>
+          <Text style={styles.subtitle}>You've finished {tour.title}</Text>
 
           {/* Stats */}
           <View style={styles.statsContainer}>
@@ -137,11 +111,7 @@ export default function TourCompleteModal({
           {/* Buttons */}
           <View style={styles.buttonsContainer}>
             <Pressable style={styles.primaryButton} onPress={onClose}>
-              <MaterialCommunityIcons
-                name="check-circle"
-                size={20}
-                color={colors.white}
-              />
+              <MaterialCommunityIcons name="check-circle" size={20} color={colors.white} />
               <Text style={styles.primaryButtonText}>Done</Text>
             </Pressable>
           </View>

@@ -21,7 +21,7 @@ export async function getCurrentUser(): Promise<User | null> {
   try {
     const token = await SecureStore.getItemAsync('userToken');
     if (!token) return null;
-    
+
     const user = await getMe();
     return user;
   } catch {

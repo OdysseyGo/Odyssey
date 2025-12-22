@@ -42,7 +42,7 @@ export function getVisibleMarkers(
     const isCurrent = i === currentStepIndex;
     const isSolved = solvedSteps.has(step.id);
     const isPast = i < currentStepIndex;
-    
+
     return {
       id: step.id,
       coordinate: step.coordinate,
@@ -51,7 +51,7 @@ export function getVisibleMarkers(
       circleSize: isCurrent ? 48 : 40,
       circleColor: markerColors[i % markerColors.length],
       // Dim future unsolved steps slightly
-      opacity: (isPast || isCurrent || isSolved) ? 1 : 0.6,
+      opacity: isPast || isCurrent || isSolved ? 1 : 0.6,
     };
   });
 }
