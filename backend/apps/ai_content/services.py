@@ -66,7 +66,7 @@ class GeminiService:
             difficulty=tour_data.get("difficulty", "MEDIUM"),
             duration_minutes=duration,
             city=city,
-            status=Tour.DRAFT,  # Start as draft so creator can review
+            status=Tour.ARCHIVED,  # Start as draft so creator can review
         )
 
         # Create Steps and Puzzles
