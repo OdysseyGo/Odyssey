@@ -105,12 +105,6 @@ export default function MapScreen() {
     endTour();
   }, [endTour]);
 
-  const handleRestartTour = useCallback(() => {
-    setShowCompleteModal(false);
-    setLocalSolvedSteps(new Set());
-    resetProgress();
-  }, [resetProgress]);
-
   // Effect to check for tour completion when all puzzles are solved and on last step
   useEffect(() => {
     if (!tour || showCompleteModal) return;
@@ -187,7 +181,6 @@ export default function MapScreen() {
         completedSteps={mergedSolvedSteps.size}
         totalSteps={tour.steps.length}
         onClose={handleCloseCompleteModal}
-        onRestart={handleRestartTour}
       />
     </View>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs, router, usePathname } from 'expo-router';
+import { Tabs, router, usePathname } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
 import Colors from '@/constants/Colors';
@@ -39,31 +39,10 @@ export default function TabLayout() {
         }}
       >
         <Tabs.Screen
-          name="index"
-          options={{
-            title: 'Tab One',
-            tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-            headerRight: () => (
-              <Link href="/modal" asChild>
-                <Pressable>
-                  {({ pressed }) => (
-                    <FontAwesome
-                      name="info-circle"
-                      size={25}
-                      color={Colors[colorTheme ?? 'light'].white}
-                      style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                    />
-                  )}
-                </Pressable>
-              </Link>
-            ),
-          }}
-        />
-        <Tabs.Screen
           name="two"
           options={{
-            title: 'Tab Two',
-            tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+            title: 'Settings',
+            tabBarIcon: ({ color }) => <TabBarIcon name="gear" color={color} />,
           }}
         />
         <Tabs.Screen
@@ -77,8 +56,8 @@ export default function TabLayout() {
         <Tabs.Screen
           name="tourDisplay"
           options={{
-            title: 'Demo Tour',
-            tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+            title: 'Tours',
+            tabBarIcon: ({ color }) => <TabBarIcon name="compass" color={color} />,
             headerRight: () => (
               <Pressable onPress={() => router.push('/search')}>
                 {({ pressed }) => (
@@ -104,7 +83,7 @@ export default function TabLayout() {
           name="profile"
           options={{
             title: 'Profile',
-            tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+            tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
           }}
         />
       </Tabs>
