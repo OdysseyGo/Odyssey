@@ -145,7 +145,13 @@ export default function Profile() {
         </View>
         <ProfileBadgesContainer badges={formattedBadges} title="Badges" maxDisplay={3} />
         <ProfileToursContainer />
-        <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.xl }}>
+        <View
+          style={{
+            paddingHorizontal: Spacing.lg,
+            paddingTop: Spacing.lg,
+            paddingBottom: Spacing.xl,
+          }}
+        >
           <AuthButton title="Logout" onPress={handleLogout} />
         </View>
       </ScrollView>
