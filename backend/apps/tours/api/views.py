@@ -8,15 +8,8 @@ from apps.tours.models import Review, Tour, TourStep
 
 from ..permissions import IsCreatorOrReadOnly
 from .filters import TourFilter
+from .pagination import TourPagination
 from .serializers import ReviewSerializer, TourSerializer, TourStepSerializer
-
-
-class TourPagination(PageNumberPagination):
-    """Custom pagination that allows clients to set page_size."""
-
-    page_size = 10
-    page_size_query_param = "page_size"
-    max_page_size = 100
 
 
 class TourViewSet(viewsets.ModelViewSet):
