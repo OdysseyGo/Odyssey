@@ -6,33 +6,47 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tours', '0003_tour_accessibility_rating_tour_metrics_calculated_and_more'),
+        ("tours", "0003_tour_accessibility_rating_tour_metrics_calculated_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tour',
-            name='elevation_gain',
-            field=models.FloatField(default=0.0, help_text='Cumulative elevation gain in meters'),
+            model_name="tour",
+            name="elevation_gain",
+            field=models.FloatField(
+                default=0.0, help_text="Cumulative elevation gain in meters"
+            ),
         ),
         migrations.AddField(
-            model_name='tour',
-            name='is_circular',
-            field=models.BooleanField(default=False, help_text='True if route ends near the start point (< 200m)'),
+            model_name="tour",
+            name="is_circular",
+            field=models.BooleanField(
+                default=False,
+                help_text="True if route ends near the start point (< 200m)",
+            ),
         ),
         migrations.AddField(
-            model_name='tour',
-            name='max_leg_distance',
-            field=models.FloatField(default=0.0, help_text='Longest single walking segment in meters'),
+            model_name="tour",
+            name="max_leg_distance",
+            field=models.FloatField(
+                default=0.0, help_text="Longest single walking segment in meters"
+            ),
         ),
         migrations.AddField(
-            model_name='tour',
-            name='requires_transport',
-            field=models.BooleanField(default=False, help_text='True if any segment requires public transport (heuristic > 2km)'),
+            model_name="tour",
+            name="requires_transport",
+            field=models.BooleanField(
+                default=False,
+                help_text="True if any segment requires public transport (heuristic > 2km)",
+            ),
         ),
         migrations.AlterField(
-            model_name='tour',
-            name='accessibility_rating',
-            field=models.PositiveSmallIntegerField(blank=True, help_text='1-10 rating. 10=Most Accessible (Flat, Short). 1=Least (Steep, Long, Complex)', null=True),
+            model_name="tour",
+            name="accessibility_rating",
+            field=models.PositiveSmallIntegerField(
+                blank=True,
+                help_text="1-10 rating. 10=Most Accessible (Flat, Short). 1=Least (Steep, Long, Complex)",
+                null=True,
+            ),
         ),
     ]
