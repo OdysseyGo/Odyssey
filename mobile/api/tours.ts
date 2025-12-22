@@ -265,3 +265,46 @@ export async function addTourReview(
     signal,
   });
 }
+
+/**
+ * Add a step to a tour (requires authentication)
+ */
+export async function createTourStep(
+  tourId: number,
+  stepData: Partial<TourStep>,
+  signal?: AbortSignal
+): Promise<TourStep> {
+  let data: Partial<TourStep> | FormData = stepData;
+
+  if (stepData.image && stepData.image.startsWith('file://')) {
+    const formData = new FormData();
+    Object.keys(stepData).forEach((key) => {
+      const k = key as keyof TourStep;
+      if (stepData[k] !== undefined && stepData[k] !== null) {
+        if (k === 'image') {
+          formData.append('image', {
+            uri: stepData.image,
+            name: 'step_image.jpg',
+            type: 'image/jpeg',
+          } as any);
+        } else {
+          formData.append(k, String(stepData[k]));
+        }
+      }
+    });
+    data = formData;
+  } else if (!stepData.image) {
+    // If image is empty string or undefined/null, ensure we don't send it to avoid backend validation error (400)
+    // because Django ImageField doesn't like empty strings.
+    const { image, ...rest } = stepData;
+    data = rest;
+  }
+
+  return apiRequest<TourStep, typeof data>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/`,
+    data,
+    auth: true,
+    signal,
+  });
+}
