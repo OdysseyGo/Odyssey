@@ -1,38 +1,41 @@
-const primaryLight = '#50AA82';
-const primaryDark = '#ff6a00ff';
+// 🌅 Sunset Adventure Palette - Premium, Exciting, Wanderlust
+// Inspired by award-winning travel apps (Airbnb, Hopper, Wanderlog)
 
-const secondaryLight = '#648e5b';
-const secondaryDark = '#452d2dff';
+const primaryLight = '#FF6B6B';  // Living Coral - Pantone Color of the Year inspired
+const primaryDark = '#FF8E72';   // Soft coral for dark mode visibility
 
-const black = '#000000';
-const white = '#ffffff';
+const secondaryLight = '#4ECDC4'; // Tropical Teal - adventure & exploration
+const secondaryDark = '#72F2EB';  // Bright teal for dark mode
 
-const foregroundSecondaryLight = '#e0e0e0';
-const foregroundSecondaryDark = '#222222';
+const black = '#1A1A2E';  // Rich navy-black (depth & sophistication)
+const white = '#FEFEFE';  // Pure white with warmth
 
-const grayLight = '#f6f6f6';
-const grayDark = '#121212';
+const foregroundSecondaryLight = '#F7F7F8';  // Soft gray
+const foregroundSecondaryDark = '#252542';   // Deep purple-navy
 
-const blackPale = 'rgba(0, 0, 0, 0.6)';
+const grayLight = '#FAFAFA';  // Clean light background
+const grayDark = '#16162A';   // Deep space navy
 
-const textGrayLight = '#2c2c2cff';
-const textGrayDark = '#d3d3d3ff';
+const blackPale = 'rgba(26, 26, 46, 0.65)';
 
-const pressLight = '#c7c7c7ff';
-const pressDark = '#343333ff';
+const textGrayLight = '#4A4A68';  // Muted purple-gray for readability
+const textGrayDark = '#B8B8D1';   // Light purple-gray
 
-const errorRed = '#F44336';
+const pressLight = '#FFE5E5';  // Coral tint on press
+const pressDark = '#2D2D4A';   // Pressed state dark
 
-const gray666 = '#666666';
-const gray888 = '#888888';
-const gray999 = '#999999';
-const gray333 = '#333333';
+const errorRed = '#FF4757';  // Vibrant but not harsh
 
-const yellow = '#FFD700';
+const gray666 = '#6C6C8A';  // Muted purple-gray
+const gray888 = '#9090A7';  // Medium gray
+const gray999 = '#B8B8CA';  // Light gray
+const gray333 = '#3D3D5C';  // Dark gray
 
-const easy = '#4CAF50';
-const medium = '#FF9800';
-const hard = '#F44336';
+const yellow = '#FFD93D';  // Warm golden yellow - sunshine vibes
+
+const easy = '#2ECC71';     // Fresh mint green
+const medium = '#F39C12';   // Warm amber
+const hard = '#E74C3C';     // Bold red
 
 const Colors = {
   light: {
@@ -46,10 +49,10 @@ const Colors = {
     press: pressLight,
     primary: primaryLight,
     secondary: secondaryLight,
-    tabIconDefault: '#f60101ff',
+    tabIconDefault: '#B8B8CA',
     tabIconSelected: primaryLight,
     textBackground: white,
-    placeholderTextColor: '#a9a9a9',
+    placeholderTextColor: '#9090A7',
     border: black,
     borderLight: '#0000001a',
     error: errorRed,
@@ -75,8 +78,8 @@ const Colors = {
     primary: primaryDark,
     secondary: secondaryDark,
     textBackground: white,
-    placeholderTextColor: '#6e6e6eff',
-    tabIconDefault: '#f70000ff',
+    placeholderTextColor: '#6C6C8A',
+    tabIconDefault: '#6C6C8A',
     tabIconSelected: primaryDark,
     borderLight: '#ffffff1a',
     border: white,
@@ -93,7 +96,8 @@ const Colors = {
   },
 };
 
-export const markerColors = ['#FF6B6B', '#4ECDC4', '#FFB347', '#95E1D3', '#F38181', '#AA96DA'];
+// Adventure marker palette - Vibrant & Memorable
+export const markerColors = ['#FF6B6B', '#4ECDC4', '#FFD93D', '#A29BFE', '#6C5CE7', '#00CEC9'];
 
 export default Colors;
 export type ThemeName = keyof typeof Colors;
