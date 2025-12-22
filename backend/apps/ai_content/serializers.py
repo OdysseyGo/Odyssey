@@ -23,7 +23,10 @@ class GenerateTourRequestSerializer(serializers.Serializer):
         max_length=10, default="en", help_text="Language code (e.g., en, tr)"
     )
     additional_details = serializers.CharField(
-        max_length=500, required=False, allow_blank=True, help_text="Additional details for tour generation"
+        max_length=500,
+        required=False,
+        allow_blank=True,
+        help_text="Additional details for tour generation",
     )
 
 
