@@ -9,6 +9,8 @@ import StoryInputField from '@/components/TourCreation/StoryEditor/StoryInputFie
 import ImageUploadSection from '@/components/TourCreation/StoryEditor/ImageUploadSection';
 import WritingTips from '@/components/TourCreation/StoryEditor/WritingTips';
 import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditorFooter';
+import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
+import { Puzzle } from '@/components/TourCreation/TourCreation.types';
 
 export default function EditLocationScreen() {
   const theme = useColorTheme();
@@ -20,6 +22,9 @@ export default function EditLocationScreen() {
   const [address, setAddress] = useState('');
   const [story, setStory] = useState('');
   const [image, setImage] = useState<string | undefined>(undefined);
+  const [puzzle, setPuzzle] = useState<Puzzle | undefined>(undefined);
+
+  const isPuzzleMode = tourData.tourType === 'PUZZLE' || tourData.tourType === 'HYBRID';
 
   // Initialize form with selected location data
   useEffect(() => {
@@ -28,6 +33,7 @@ export default function EditLocationScreen() {
       setAddress(selectedLocation.address || '');
       setStory(selectedLocation.story);
       setImage(selectedLocation.image);
+      setPuzzle(selectedLocation.puzzle);
     }
   }, [selectedLocation]);
 
@@ -39,11 +45,22 @@ export default function EditLocationScreen() {
         address,
         story,
         image,
+        puzzle: isPuzzleMode ? puzzle : undefined,
       });
       setSelectedLocation(null);
       router.back();
     }
-  }, [selectedLocation, title, address, story, image, updateLocation, setSelectedLocation]);
+  }, [
+    selectedLocation,
+    title,
+    address,
+    story,
+    image,
+    puzzle,
+    updateLocation,
+    setSelectedLocation,
+    isPuzzleMode,
+  ]);
 
   const handleNavigateLocation = useCallback(
     (direction: 'prev' | 'next') => {
@@ -56,6 +73,7 @@ export default function EditLocationScreen() {
         address,
         story,
         image,
+        puzzle: isPuzzleMode ? puzzle : undefined,
       });
 
       const currentIndex = tourData.locations.findIndex((loc) => loc.id === selectedLocation.id);
@@ -72,6 +90,7 @@ export default function EditLocationScreen() {
       address,
       story,
       image,
+      puzzle,
       updateLocation,
       setSelectedLocation,
     ]
@@ -84,7 +103,14 @@ export default function EditLocationScreen() {
     });
   }, [navigation]);
 
-  const isValid = title.trim().length > 0 && story.trim().length > 0;
+  const isValid =
+    title.trim().length > 0 &&
+    story.trim().length > 0 &&
+    (tourData.tourType !== 'PUZZLE' ||
+      (!!puzzle?.question &&
+        !!puzzle?.correctAnswer &&
+        (puzzle?.options?.length ?? 0) >= 2 &&
+        puzzle!.options.every((opt) => opt.trim().length > 0)));
 
   const currentIndex = selectedLocation
     ? tourData.locations.findIndex((loc) => loc.id === selectedLocation.id)
@@ -133,6 +159,14 @@ export default function EditLocationScreen() {
             multiline
             showCharacterCount
           />
+
+          {isPuzzleMode && (
+            <PuzzleEditor
+              puzzle={puzzle}
+              onChange={setPuzzle}
+              isRequired={tourData.tourType === 'PUZZLE'}
+            />
+          )}
 
           <WritingTips />
         </ScrollView>

@@ -22,10 +22,11 @@ class GenerateTourRequestSerializer(serializers.Serializer):
     language = serializers.CharField(
         max_length=10, default="en", help_text="Language code (e.g., en, tr)"
     )
-    custom_prompt = serializers.CharField(
+    additional_details = serializers.CharField(
+        max_length=500,
         required=False,
         allow_blank=True,
-        help_text="Optional additional instructions for the AI",
+        help_text="Additional details for tour generation",
     )
 
 

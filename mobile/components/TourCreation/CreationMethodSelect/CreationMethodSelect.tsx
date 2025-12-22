@@ -51,8 +51,7 @@ export default function CreationMethodSelect() {
   };
 
   const handleAICreate = () => {
-    // AI creation - to be implemented later
-    // router.push('/create-tour/ai');
+    router.push('/ai-tour-creation');
   };
 
   const handleSkip = () => {
@@ -78,8 +77,6 @@ export default function CreationMethodSelect() {
             title="AI-Powered Creation"
             description="Let AI help you generate tour content, stories, and suggestions based on your preferences"
             onPress={handleAICreate}
-            disabled
-            comingSoon
           />
         </View>
 

@@ -53,10 +53,18 @@ export async function apiRequest<TResponse = unknown, TBody = Record<string, unk
     url,
     params,
     data,
-    headers,
+    headers: { ...headers }, // Copy headers to avoid mutating original
     signal,
     skipAuth: !auth,
   };
+
+  // Automatically set Content-Type for FormData
+  if (data instanceof FormData) {
+    requestConfig.headers = {
+      ...requestConfig.headers,
+      'Content-Type': 'multipart/form-data',
+    };
+  }
 
   try {
     const response = await apiClient.request<TResponse>(requestConfig);
@@ -66,6 +74,7 @@ export async function apiRequest<TResponse = unknown, TBody = Record<string, unk
       // Server responded with error status
       const statusCode = error.response.status;
       const errorData = error.response.data;
+      console.log('API Error Data:', JSON.stringify(errorData, null, 2)); // Debug logging
 
       if (statusCode === 401 && errorData?.code === 'token_not_valid') {
         await SecureStore.deleteItemAsync('userToken');
