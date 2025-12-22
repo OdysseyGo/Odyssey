@@ -11,6 +11,7 @@ import { router } from 'expo-router';
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import { getMe, User } from '@/api/users';
 import { getMyBadges, Badge } from '@/api/profile';
+import { removeAuthToken } from '@/api/auth';
 import * as SecureStore from 'expo-secure-store';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -77,6 +78,13 @@ export default function Profile() {
     setShowAddFriendModal(true);
   };
 
+  const handleLogout = async () => {
+    await removeAuthToken();
+    setHasToken(false);
+    setCurUser(null);
+    router.push('/login');
+  };
+
   if (!hasToken) {
     return (
       <View
@@ -137,6 +145,9 @@ export default function Profile() {
         </View>
         <ProfileBadgesContainer badges={formattedBadges} title="Badges" maxDisplay={3} />
         <ProfileToursContainer />
+        <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.xl }}>
+          <AuthButton title="Logout" onPress={handleLogout} />
+        </View>
       </ScrollView>
 
       <AddFriendsModal
