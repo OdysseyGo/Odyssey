@@ -91,13 +91,10 @@ export default function MapScreen() {
 
   const handleConfirmEndTour = useCallback(() => {
     setShowEndConfirmModal(false);
-    // Check if tour is complete
-    if (tour && mergedSolvedSteps.size >= tour.steps.filter(s => s.type === 'puzzle').length) {
-      setShowCompleteModal(true);
-    } else {
-      endTour();
-    }
-  }, [tour, mergedSolvedSteps, endTour]);
+    // User confirmed they want to exit - just end the tour without completion modal
+    // Tour is NOT completed, user is just exiting early
+    endTour();
+  }, [endTour]);
 
   const handleCancelEndTour = useCallback(() => {
     setShowEndConfirmModal(false);
@@ -148,7 +145,6 @@ export default function MapScreen() {
           route={[]}
           initialRegion={defaultRegion}
           currentStepIndex={0}
-          tour={null}
         />
       </View>
     );

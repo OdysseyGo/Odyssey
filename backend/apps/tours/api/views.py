@@ -3,12 +3,20 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 
 from apps.tours.models import Review, Tour, TourStep
 
 from ..permissions import IsCreatorOrReadOnly
 from .filters import TourFilter
 from .serializers import ReviewSerializer, TourSerializer, TourStepSerializer
+
+
+class TourPagination(PageNumberPagination):
+    """Custom pagination that allows clients to set page_size."""
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 class TourViewSet(viewsets.ModelViewSet):
@@ -19,6 +27,7 @@ class TourViewSet(viewsets.ModelViewSet):
     )
     serializer_class = TourSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsCreatorOrReadOnly]
+    pagination_class = TourPagination
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,

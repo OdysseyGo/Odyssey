@@ -40,9 +40,9 @@ export default function EndTourConfirmModal({
           </View>
 
           {/* Title */}
-          <Text style={styles.title}>End Tour?</Text>
+          <Text style={styles.title}>Exit Tour?</Text>
           <Text style={styles.message}>
-            Are you sure you want to end this tour? Your progress will be saved but you'll leave the active tour mode.
+            Are you sure you want to exit? You will return to the map and this tour will not be marked as completed.
           </Text>
 
           {/* Progress Info */}
@@ -83,11 +83,11 @@ export default function EndTourConfirmModal({
 
             <Pressable style={styles.confirmButton} onPress={onConfirm}>
               <MaterialCommunityIcons
-                name="check"
+                name="exit-run"
                 size={18}
                 color={colors.white}
               />
-              <Text style={styles.confirmButtonText}>End Tour</Text>
+              <Text style={styles.confirmButtonText}>Exit Tour</Text>
             </Pressable>
           </View>
         </View>
