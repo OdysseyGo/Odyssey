@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tours', '0006_alter_tourstep_description'),
+        ("tours", "0006_alter_tourstep_description"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='tourstep',
-            name='latitude',
+            model_name="tourstep",
+            name="latitude",
             field=models.DecimalField(decimal_places=9, max_digits=18),
         ),
         migrations.AlterField(
-            model_name='tourstep',
-            name='longitude',
+            model_name="tourstep",
+            name="longitude",
             field=models.DecimalField(decimal_places=9, max_digits=18),
         ),
     ]
