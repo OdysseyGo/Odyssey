@@ -29,11 +29,11 @@ services:
     command: >
       sh -c "python manage.py migrate &&
              TOUR_COUNT=$$(PGPASSWORD=$$POSTGRES_PASSWORD psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -t -c 'SELECT COUNT(*) FROM tours_tour;' 2>/dev/null || echo 0) &&
-             if [ \"$$TOUR_COUNT\" -lt 5 ]; then
-               echo 'Seeding database...' &&
+             if [ \"$$TOUR_COUNT\" -eq 0 ]; then
+               echo 'Database is empty, seeding...' &&
                PGPASSWORD=$$POSTGRES_PASSWORD psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -f /app/schema.sql;
              else
-               echo 'Database already seeded, skipping...';
+               echo 'Database already has data, skipping seed...';
              fi &&
              python manage.py runserver 0.0.0.0:8000"
     env_file:
