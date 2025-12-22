@@ -1,6 +1,8 @@
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from apps.tours.models import Review, Tour, TourStep
 
@@ -46,6 +48,32 @@ class TourViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="my-tours",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def my_tours(self, request):
+        """Return tours created by the current user, optionally filtered by status."""
+        queryset = Tour.objects.filter(creator=request.user)
+
+        status = request.query_params.get("status")
+        if status:
+            queryset = queryset.filter(status=status)
+
+        queryset = queryset.annotate(average_rating=Avg("reviews__rating")).order_by(
+            "-updated_at"
+        )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class TourStepViewSet(viewsets.ModelViewSet):

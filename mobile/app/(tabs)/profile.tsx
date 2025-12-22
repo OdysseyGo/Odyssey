@@ -4,6 +4,7 @@ import ProfileHeaderComp from '@/components/ProfileComponents/ProfileHeaderComp'
 import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
 import ProfileAddFriendsButton from '@/components/ProfileComponents/ProfileAddFriendsButton';
 import ProfileBadgesContainer from '@/components/ProfileComponents/ProfileBadgesContainer';
+import ProfileToursContainer from '@/components/ProfileComponents/ProfileToursContainer';
 import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
 import { View, Text, ScrollView } from 'react-native';
 import { router } from 'expo-router';
@@ -135,6 +136,7 @@ export default function Profile() {
           <ProfileAddFriendsButton onPress={handleOpenAddFriendModal} />
         </View>
         <ProfileBadgesContainer badges={formattedBadges} title="Badges" maxDisplay={3} />
+        <ProfileToursContainer />
       </ScrollView>
 
       <AddFriendsModal
