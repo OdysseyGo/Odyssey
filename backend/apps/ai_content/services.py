@@ -10,12 +10,14 @@ from apps.tours.utils import GoogleMapsFacade
 class GeminiService:
     """Generating tours w/ Google Gemini AI."""
 
+    GEMINI_MODEL = "gemini-2.5-flash"  # Upgrade to "gemini-1.5-pro" for better reasoning, but slower speed.
+
     def __init__(self):
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY environment variable is not set")
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("gemini-2.0-flash")
+        self.model = genai.GenerativeModel(self.GEMINI_MODEL)
 
     def generate_tour(
         self,
@@ -43,8 +45,14 @@ class GeminiService:
             city, theme, mode, duration, language, custom_prompt
         )
 
-        response = self.model.generate_content(prompt)
-        tour_data = self._parse_response(response.text)
+        try:
+            # Set a generous timeout (e.g., 600 seconds) to avoid premature termination
+            response = self.model.generate_content(prompt, request_options={"timeout": 600})
+            tour_data = self._parse_response(response.text)
+        except Exception as e:
+            # Handle API errors or timeouts gracefully
+            print(f"AI Generation failed: {e}")
+            raise e
 
         # Create Tour
         tour = Tour.objects.create(
