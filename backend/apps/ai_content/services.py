@@ -47,7 +47,9 @@ class GeminiService:
 
         try:
             # Set a generous timeout (e.g., 600 seconds) to avoid premature termination
-            response = self.model.generate_content(prompt, request_options={"timeout": 600})
+            response = self.model.generate_content(
+                prompt, request_options={"timeout": 600}
+            )
             tour_data = self._parse_response(response.text)
         except Exception as e:
             # Handle API errors or timeouts gracefully
