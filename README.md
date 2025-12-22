@@ -92,3 +92,12 @@ npm run lint -- --fix
 docker compose exec backend python manage.py createsuperuser
 2. Admin page
 http://localhost:8000/admin/
+
+#### API Key for Gemini and Google Maps
+
+Add the following keys to the .env file:
+
+GEMINI_API_KEY=your_gemini_api_key
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+
+Note: Enable Places API, Elevation API and Directions API in the Google Cloud Console
