@@ -21,7 +21,6 @@ export default function TourCompleteModal({
   completedSteps,
   totalSteps,
   onClose,
-  onRestart,
 }: TourCompleteModalProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -144,15 +143,6 @@ export default function TourCompleteModal({
                 color={colors.white}
               />
               <Text style={styles.primaryButtonText}>Done</Text>
-            </Pressable>
-
-            <Pressable style={styles.secondaryButton} onPress={onRestart}>
-              <MaterialCommunityIcons
-                name="restart"
-                size={20}
-                color={colors.primary}
-              />
-              <Text style={styles.secondaryButtonText}>Restart Tour</Text>
             </Pressable>
           </View>
         </Animated.View>

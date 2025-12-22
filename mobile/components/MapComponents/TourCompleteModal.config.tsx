@@ -7,7 +7,6 @@ export interface TourCompleteModalProps {
   completedSteps: number;
   totalSteps: number;
   onClose: () => void;
-  onRestart: () => void;
 }
 
 export interface TourCompletionStats {
