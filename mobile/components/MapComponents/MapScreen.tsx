@@ -38,7 +38,7 @@ export default function MapScreen() {
   // Merge context solved steps with local for UI updates
   const mergedSolvedSteps = useMemo(() => {
     const merged = new Set(solvedSteps);
-    localSolvedSteps.forEach(id => merged.add(id));
+    localSolvedSteps.forEach((id) => merged.add(id));
     return merged;
   }, [solvedSteps, localSolvedSteps]);
 
@@ -71,19 +71,25 @@ export default function MapScreen() {
     };
   }, [tour, isActive]);
 
-  const handleCurrentStepChange = useCallback((stepIndex: number) => {
-    setCurrentStepIndex(stepIndex);
-  }, [setCurrentStepIndex]);
+  const handleCurrentStepChange = useCallback(
+    (stepIndex: number) => {
+      setCurrentStepIndex(stepIndex);
+    },
+    [setCurrentStepIndex]
+  );
 
-  const handleSolvedStepsChange = useCallback((newSolvedSteps: Set<string>) => {
-    setLocalSolvedSteps(newSolvedSteps);
-    // Sync with context - find newly solved steps and add XP
-    newSolvedSteps.forEach(stepId => {
-      if (!solvedSteps.has(stepId)) {
-        solveStep(stepId, 15); // Award 15 XP per solved puzzle
-      }
-    });
-  }, [solvedSteps, solveStep]);
+  const handleSolvedStepsChange = useCallback(
+    (newSolvedSteps: Set<string>) => {
+      setLocalSolvedSteps(newSolvedSteps);
+      // Sync with context - find newly solved steps and add XP
+      newSolvedSteps.forEach((stepId) => {
+        if (!solvedSteps.has(stepId)) {
+          solveStep(stepId, 15); // Award 15 XP per solved puzzle
+        }
+      });
+    },
+    [solvedSteps, solveStep]
+  );
 
   const handleEndTourPress = useCallback(() => {
     setShowEndConfirmModal(true);
@@ -108,12 +114,16 @@ export default function MapScreen() {
   // Effect to check for tour completion when all puzzles are solved and on last step
   useEffect(() => {
     if (!tour || showCompleteModal) return;
-    
-    const totalPuzzles = tour.steps.filter(s => s.type === 'puzzle').length;
+
+    const totalPuzzles = tour.steps.filter((s) => s.type === 'puzzle').length;
     const solvedPuzzles = mergedSolvedSteps.size;
-    
+
     // Check if on last step and all puzzles solved
-    if (currentStepIndex === tour.steps.length - 1 && solvedPuzzles >= totalPuzzles && totalPuzzles > 0) {
+    if (
+      currentStepIndex === tour.steps.length - 1 &&
+      solvedPuzzles >= totalPuzzles &&
+      totalPuzzles > 0
+    ) {
       // All puzzles solved and on last step - show completion modal after a short delay
       const timer = setTimeout(() => {
         setShowCompleteModal(true);
@@ -123,23 +133,21 @@ export default function MapScreen() {
   }, [tour, currentStepIndex, mergedSolvedSteps, showCompleteModal]);
 
   // Default region (e.g., Istanbul)
-  const defaultRegion = useMemo(() => ({
-    latitude: 41.0082,
-    longitude: 28.9784,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
-  }), []);
+  const defaultRegion = useMemo(
+    () => ({
+      latitude: 41.0082,
+      longitude: 28.9784,
+      latitudeDelta: 0.05,
+      longitudeDelta: 0.05,
+    }),
+    []
+  );
 
   // No active tour - show just the map
   if (!isActive || !tour) {
     return (
       <View style={styles.container}>
-        <TourMap
-          markers={[]}
-          route={[]}
-          initialRegion={defaultRegion}
-          currentStepIndex={0}
-        />
+        <TourMap markers={[]} route={[]} initialRegion={defaultRegion} currentStepIndex={0} />
       </View>
     );
   }

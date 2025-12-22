@@ -225,21 +225,16 @@ function PuzzleStepView({ step, isSolved, onSolve }: PuzzleStepViewProps) {
       </View>
 
       {step.puzzle.type === 'multiple-choice' && (
-        <MultipleChoiceView 
-          key={step.id} 
-          puzzle={step.puzzle} 
-          isSolved={isSolved} 
-          onSolve={onSolve} 
+        <MultipleChoiceView
+          key={step.id}
+          puzzle={step.puzzle}
+          isSolved={isSolved}
+          onSolve={onSolve}
         />
       )}
 
       {step.puzzle.type === 'trivia' && (
-        <TriviaView 
-          key={step.id} 
-          puzzle={step.puzzle} 
-          isSolved={isSolved} 
-          onSolve={onSolve} 
-        />
+        <TriviaView key={step.id} puzzle={step.puzzle} isSolved={isSolved} onSolve={onSolve} />
       )}
     </ScrollView>
   );

@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { Tour as ApiTour, TourStep as ApiTourStep } from '@/api/tours';
-import { Tour, TourStep, StoryStep, PuzzleStep, Puzzle } from '@/components/TourStepComponents/TourStep.config';
+import {
+  Tour,
+  TourStep,
+  StoryStep,
+  PuzzleStep,
+  Puzzle,
+} from '@/components/TourStepComponents/TourStep.config';
 
 interface ActiveTourState {
   tour: Tour | null;
@@ -71,7 +77,8 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
     id: apiTour.id.toString(),
     title: apiTour.title,
     description: apiTour.description,
-    coverImageUri: apiTour.steps?.[0]?.image || `https://picsum.photos/800/400?random=${apiTour.id}`,
+    coverImageUri:
+      apiTour.steps?.[0]?.image || `https://picsum.photos/800/400?random=${apiTour.id}`,
     steps,
   };
 }

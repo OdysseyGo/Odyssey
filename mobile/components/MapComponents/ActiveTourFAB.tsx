@@ -42,24 +42,18 @@ export default function ActiveTourFAB({
   }, []);
 
   // Truncate tour title if too long
-  const displayTitle = tourTitle.length > 20 
-    ? tourTitle.substring(0, 18) + '...' 
-    : tourTitle;
+  const displayTitle = tourTitle.length > 20 ? tourTitle.substring(0, 18) + '...' : tourTitle;
 
   return (
     <View style={styles.container}>
-      <Pressable 
-        style={styles.button} 
+      <Pressable
+        style={styles.button}
         onPress={onPress}
         android_ripple={{ color: 'rgba(255, 255, 255, 0.2)' }}
       >
         {/* Icon */}
         <View style={styles.iconContainer}>
-          <MaterialCommunityIcons
-            name="map-marker-path"
-            size={18}
-            color={colors.white}
-          />
+          <MaterialCommunityIcons name="map-marker-path" size={18} color={colors.white} />
         </View>
 
         {/* Text */}
@@ -79,12 +73,7 @@ export default function ActiveTourFAB({
         />
 
         {/* Pulse indicator */}
-        <Animated.View 
-          style={[
-            styles.pulseCircle,
-            { transform: [{ scale: pulseAnim }] }
-          ]} 
-        />
+        <Animated.View style={[styles.pulseCircle, { transform: [{ scale: pulseAnim }] }]} />
       </Pressable>
     </View>
   );

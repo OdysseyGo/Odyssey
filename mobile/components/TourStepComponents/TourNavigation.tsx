@@ -188,7 +188,11 @@ export default function TourNavigation({
         />
         {onEndTour && (
           <Pressable style={styles.endTourButton} onPress={onEndTour}>
-            <MaterialCommunityIcons name="close-circle-outline" size={20} color={Colors[theme].error} />
+            <MaterialCommunityIcons
+              name="close-circle-outline"
+              size={20}
+              color={Colors[theme].error}
+            />
           </Pressable>
         )}
       </View>
