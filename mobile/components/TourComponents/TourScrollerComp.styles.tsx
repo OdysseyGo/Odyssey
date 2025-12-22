@@ -8,7 +8,6 @@ export const tourScrollerCompStyles = (theme: ThemeName) => {
     container: {
       marginTop: Spacing.md,
       backgroundColor: 'transparent',
-      alignItems: 'center',
     },
     headerTitle: {
       width: '100%',

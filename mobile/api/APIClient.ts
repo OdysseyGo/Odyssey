@@ -18,7 +18,7 @@ type ApiRequestOptions<TBody = Record<string, unknown>> = {
 
 const apiClient = axios.create({
   baseURL: getApiBaseUrl(),
-  timeout: 10000,
+  timeout: 300000, // 5 minutes
   headers: {
     'Content-Type': 'application/json',
   },

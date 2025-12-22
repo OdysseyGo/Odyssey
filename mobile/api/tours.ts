@@ -267,6 +267,26 @@ export async function addTourReview(
 }
 
 /**
+ * Fetch the current user's tours (requires authentication)
+ * @param status - Optional filter by tour status (DRAFT, PUBLISHED, ARCHIVED)
+ */
+export async function getMyTours(
+  status?: TourStatus,
+  signal?: AbortSignal
+): Promise<ToursResponse> {
+  const params: Record<string, any> = {};
+  if (status) params.status = status;
+
+  return apiRequest<ToursResponse>({
+    method: 'GET',
+    url: '/api/tours/my-tours/',
+    params,
+    auth: true,
+    signal,
+  });
+}
+
+/**
  * Add a step to a tour (requires authentication)
  */
 export async function createTourStep(
