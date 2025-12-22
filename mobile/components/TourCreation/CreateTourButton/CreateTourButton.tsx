@@ -17,7 +17,7 @@ export default function CreateTourButton() {
 
   return (
     <TouchableOpacity style={styles.floatingButton} onPress={handlePress} activeOpacity={0.8}>
-      <Ionicons name="add" size={32} color={color.secondary} />
+      <Ionicons name="add" size={32} color={color.white} />
     </TouchableOpacity>
   );
 }
