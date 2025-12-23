@@ -1,9 +1,28 @@
+export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE';
+
 export interface Puzzle {
+  puzzle_type: PuzzleType;
   question: string;
   options: string[];
   correctAnswer: string;
   hint: string;
+  xp_reward: number;
 }
+
+export const PUZZLE_TYPE_OPTIONS = [
+  { value: 'TRIVIA', label: 'Trivia', description: 'Multiple choice question' },
+  { value: 'AR', label: 'AR Challenge', description: 'Augmented reality experience' },
+  { value: 'GYROSCOPE', label: 'Gyroscope', description: 'Motion-based challenge' },
+] as const;
+
+export const createEmptyPuzzle = (): Puzzle => ({
+  puzzle_type: 'TRIVIA',
+  question: '',
+  options: ['', ''],
+  correctAnswer: '',
+  hint: '',
+  xp_reward: 10,
+});
 
 export interface TourLocation {
   id: string;
