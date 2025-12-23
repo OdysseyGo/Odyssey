@@ -135,6 +135,8 @@ function PuzzleStepView({ step, isSolved, onSolve }: PuzzleStepViewProps) {
         )}
       </View>
 
+      {step.description && <Text style={styles.puzzleDescription}>{step.description}</Text>}
+
       <MultipleChoiceView
         key={step.id}
         puzzle={step.puzzle}
@@ -148,7 +150,6 @@ function PuzzleStepView({ step, isSolved, onSolve }: PuzzleStepViewProps) {
 export default function TourStepComponent({ step, isSolved, onSolve }: TourStepProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
-
   return (
     <View style={styles.container}>
       {step.type === 'story' && <StoryStepView step={step} />}

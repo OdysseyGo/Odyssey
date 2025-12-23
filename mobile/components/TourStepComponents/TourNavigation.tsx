@@ -144,7 +144,7 @@ export default function TourNavigation({
 }: TourNavigationProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
-
+  console.log('Rendering TourNavigation - currentStepIndex:', tour);
   const currentStep = tour.steps[currentStepIndex];
   const isSolved = solvedSteps.has(currentStep.id);
   const isLocationConfirmed = locationConfirmedSteps.has(currentStep.id);

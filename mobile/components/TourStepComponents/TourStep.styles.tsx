@@ -51,6 +51,12 @@ export default function getStyles(theme: ThemeName) {
       color: color.text,
       flex: 1,
     },
+    puzzleDescription: {
+      fontSize: 14,
+      color: color.subText,
+      lineHeight: 20,
+      marginBottom: Spacing.md,
+    },
     puzzleIcon: {
       fontSize: 18,
       fontWeight: '700',
@@ -87,7 +93,7 @@ export default function getStyles(theme: ThemeName) {
     },
     optionButtonCorrect: {
       borderColor: color.secondary,
-      backgroundColor: color.correctOptionBackground
+      backgroundColor: color.correctOptionBackground,
     },
     optionButtonIncorrect: {
       borderColor: color.error,

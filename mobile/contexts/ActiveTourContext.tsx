@@ -50,7 +50,6 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
         longitude: parseFloat(apiStep.longitude),
       },
     };
-
     // If the step has a puzzle from the API, convert it
     if (apiStep.puzzle) {
       const puzzle = mapApiPuzzleToInternal(apiStep.puzzle);
@@ -59,6 +58,7 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
           ...baseStep,
           type: 'puzzle' as const,
           puzzle,
+          description: apiStep.description,
           requiresLocationConfirmation: true, // All puzzle steps require location confirmation
         } as PuzzleStep;
       }

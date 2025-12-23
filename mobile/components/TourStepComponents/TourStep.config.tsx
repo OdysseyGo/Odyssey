@@ -38,6 +38,7 @@ export interface StoryStep extends BaseStep {
 export interface PuzzleStep extends BaseStep {
   type: 'puzzle';
   puzzle: Puzzle;
+  description?: string;
 }
 
 export type TourStep = StoryStep | PuzzleStep;
