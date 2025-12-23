@@ -158,9 +158,37 @@ class GoogleMapsFacade:
                 "success": True,
             }
 
-        except Exception as e:
             print(f"Error calculating route metrics: {e}")
             return {"success": False}
+
+    def search_places(self, query: str) -> List[Dict[str, Any]]:
+        """
+        Search for places using Google Places API.
+        Returns a list of simplified place objects.
+        """
+        if not self.client:
+            return []
+
+        try:
+            # text_search is versatile for "Best coffee in Paris" etc.
+            # We limit to top 3 results to save tokens and focus AI
+            response = self.client.places(query=query)
+            
+            results = []
+            if response.get("status") == "OK":
+                for place in response.get("results", [])[:3]:
+                     results.append({
+                        "name": place.get("name"),
+                        "address": place.get("formatted_address"),
+                        "location": place.get("geometry", {}).get("location"),  # {lat: ..., lng: ...}
+                        "place_id": place.get("place_id"),
+                        "rating": place.get("rating"),
+                        "types": place.get("types"),
+                     })
+            return results
+        except Exception as e:
+            print(f"Places search failed: {e}")
+            return []
 
     def estimate_accessibility(self, data: Dict[str, Any]) -> int:
         """

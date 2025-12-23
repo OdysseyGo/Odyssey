@@ -7,6 +7,17 @@ from apps.tours.models import Puzzle, Tour, TourStep
 from apps.tours.utils import GoogleMapsFacade
 
 
+def search_google_maps(query: str):
+    """
+    Search for places on Google Maps to get real coordinates and details.
+    Use this to verify locations exist and get their authentic latitude/longitude.
+    """
+    facade = GoogleMapsFacade()
+    # The tool returns a list of dicts.
+    return facade.search_places(query)
+
+
+
 class GeminiService:
     """Generating tours w/ Google Gemini AI."""
 
@@ -17,7 +28,10 @@ class GeminiService:
         if not api_key:
             raise ValueError("GEMINI_API_KEY environment variable is not set")
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(self.GEMINI_MODEL)
+        # Register the tool
+        self.model = genai.GenerativeModel(
+            self.GEMINI_MODEL, tools=[search_google_maps]
+        )
 
     def generate_tour(
         self,
@@ -46,8 +60,13 @@ class GeminiService:
         )
 
         try:
+            # automatic_function_calling requires a chat session or tool_config
+            # We use start_chat to enable the ReAct loop (Model -> Tool -> Model)
+            chat = self.model.start_chat(enable_automatic_function_calling=True)
+            
             # Set a generous timeout (e.g., 600 seconds) to avoid premature termination
-            response = self.model.generate_content(
+            # The tool calls might add time.
+            response = chat.send_message(
                 prompt, request_options={"timeout": 600}
             )
             tour_data = self._parse_response(response.text)
@@ -174,9 +193,10 @@ DURATION: {duration} minutes (approximately {num_steps} locations).
 MODE: {mode} - {mode_instructions.get(mode, mode_instructions["HYBRID"])}
 
 IMPORTANT REQUIREMENTS:
-1. Use REAL locations with accurate GPS coordinates in {city}.
-2. Create a logical walking route between locations.
-3. Make the narrative engaging and connected to the theme.
+1. You MUST use the `search_google_maps` tool to verify EVERY proposed location.
+2. Use the latitude and longitude from the tool output, do NOT guess.
+3. Create a logical walking route between locations.
+4. Make the narrative engaging and connected to the theme.
 
 OUTPUT FORMAT (strict JSON):
 {{
