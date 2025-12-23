@@ -16,9 +16,6 @@ class PuzzleSerializer(serializers.ModelSerializer):
             "hint",
             "xp_reward",
         ]
-        extra_kwargs = {
-            "correct_answer": {"write_only": True}  # Hide correct answer in responses
-        }
 
 
 class TourStepSerializer(serializers.ModelSerializer):

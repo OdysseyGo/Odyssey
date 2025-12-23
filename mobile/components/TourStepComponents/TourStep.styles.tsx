@@ -51,6 +51,12 @@ export default function getStyles(theme: ThemeName) {
       color: color.text,
       flex: 1,
     },
+    puzzleDescription: {
+      fontSize: 14,
+      color: color.subText,
+      lineHeight: 20,
+      marginBottom: Spacing.md,
+    },
     puzzleIcon: {
       fontSize: 18,
       fontWeight: '700',
@@ -87,7 +93,7 @@ export default function getStyles(theme: ThemeName) {
     },
     optionButtonCorrect: {
       borderColor: color.secondary,
-      backgroundColor: color.primary,
+      backgroundColor: color.correctOptionBackground,
     },
     optionButtonIncorrect: {
       borderColor: color.error,
@@ -111,40 +117,6 @@ export default function getStyles(theme: ThemeName) {
     optionIndicatorSelected: {
       borderColor: color.primary,
       backgroundColor: color.primary,
-    },
-
-    triviaInputContainer: {
-      marginTop: Spacing.sm,
-    },
-    triviaInput: {
-      backgroundColor: color.foregroundSecondary,
-      borderRadius: Spacing.borderRadius,
-      padding: Spacing.md,
-      fontSize: 16,
-      color: color.text,
-      borderWidth: 2,
-      borderColor: 'transparent',
-    },
-    triviaInputCorrect: {
-      borderColor: color.primary,
-    },
-    triviaInputIncorrect: {
-      borderColor: color.error,
-    },
-    triviaSubmitButton: {
-      marginTop: Spacing.md,
-      backgroundColor: color.primary,
-      borderRadius: Spacing.borderRadius,
-      padding: Spacing.md,
-      alignItems: 'center',
-    },
-    triviaSubmitButtonDisabled: {
-      opacity: 0.5,
-    },
-    triviaSubmitText: {
-      color: color.background,
-      fontWeight: '600',
-      fontSize: 16,
     },
   });
 }

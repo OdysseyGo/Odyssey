@@ -9,7 +9,19 @@ export default function getStyles(theme: ThemeName) {
       flex: 1,
     },
 
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+    },
+
+    endTourButton: {
+      padding: Spacing.sm,
+      marginTop: Spacing.sm,
+      marginRight: Spacing.sm,
+    },
+
     progressContainer: {
+      flex: 1,
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.sm,
     },

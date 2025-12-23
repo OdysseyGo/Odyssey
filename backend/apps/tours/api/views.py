@@ -8,6 +8,7 @@ from apps.tours.models import Review, Tour, TourStep
 
 from ..permissions import IsCreatorOrReadOnly
 from .filters import TourFilter
+from .pagination import TourPagination
 from .serializers import ReviewSerializer, TourSerializer, TourStepSerializer
 
 
@@ -19,6 +20,7 @@ class TourViewSet(viewsets.ModelViewSet):
     )
     serializer_class = TourSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsCreatorOrReadOnly]
+    pagination_class = TourPagination
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,

@@ -47,3 +47,5 @@ docker-data/
 
 *.log
 logs/
+
+vscode/

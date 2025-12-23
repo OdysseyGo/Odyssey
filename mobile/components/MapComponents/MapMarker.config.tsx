@@ -12,6 +12,7 @@ export interface MapMarkerProps {
   iconType: IconType;
   circleSize: number;
   circleColor: string;
+  opacity?: number;
 }
 
 export const exampleMapMarkers: MapMarkerProps[] = [

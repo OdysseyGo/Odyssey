@@ -61,8 +61,54 @@ export default function TourDisplay() {
     fetchTours();
   }, [fetchTours]);
 
+  // Determine continent from coordinates (latitude, longitude)
+  const getContinentFromCoordinates = (lat: number, lon: number): string => {
+    // Africa
+    if (lat >= -35 && lat <= 37 && lon >= -18 && lon <= 51) {
+      return 'Africa';
+    }
+    // Europe
+    if (lat >= 36 && lat <= 71 && lon >= -25 && lon <= 40) {
+      return 'Europe';
+    }
+    // Asia
+    if (lat >= -10 && lat <= 77 && lon >= 40 && lon <= 180) {
+      return 'Asia';
+    }
+    // North America
+    if (lat >= 15 && lat <= 72 && lon >= -168 && lon <= -52) {
+      return 'North America';
+    }
+    // South America
+    if (lat >= -56 && lat <= 13 && lon >= -82 && lon <= -34) {
+      return 'South America';
+    }
+    // Oceania
+    if (lat >= -47 && lat <= -10 && lon >= 110 && lon <= 180) {
+      return 'Oceania';
+    }
+    // Antarctica
+    if (lat < -60) {
+      return 'Antarctica';
+    }
+    return 'Other';
+  };
+
+  const getContinent = (tour: Tour): string => {
+    // Use the first step's coordinates to determine continent
+    if (tour.steps && tour.steps.length > 0) {
+      const firstStep = tour.steps[0];
+      const lat = parseFloat(firstStep.latitude);
+      const lon = parseFloat(firstStep.longitude);
+      if (!isNaN(lat) && !isNaN(lon)) {
+        return getContinentFromCoordinates(lat, lon);
+      }
+    }
+    return 'Other';
+  };
+
   // Organize tours by categories
-  const { featuredTours, popularTours, toursByCity } = useMemo(() => {
+  const { featuredTours, popularTours, toursByContinent } = useMemo(() => {
     const tours = allTours;
 
     // Featured: top-rated tours
@@ -75,20 +121,34 @@ export default function TourDisplay() {
       .sort((a, b) => (b.reviews?.length || 0) - (a.reviews?.length || 0))
       .slice(0, 10);
 
-    // Group by city
-    const byCity: Record<string, Tour[]> = {};
+    // Group by continent
+    const byContinent: Record<string, Tour[]> = {};
     tours.forEach((tour) => {
-      const city = tour.city || 'Other';
-      if (!byCity[city]) byCity[city] = [];
-      byCity[city].push(tour);
+      const continent = getContinent(tour);
+      if (!byContinent[continent]) byContinent[continent] = [];
+      byContinent[continent].push(tour);
+    });
+
+    // Sort continents in a logical order
+    const continentOrder = [
+      'Europe',
+      'Asia',
+      'North America',
+      'South America',
+      'Africa',
+      'Oceania',
+      'Other',
+    ];
+    const sortedContinents = Object.entries(byContinent).sort(([a], [b]) => {
+      return continentOrder.indexOf(a) - continentOrder.indexOf(b);
     });
 
     return {
       featuredTours: featured.map(mapTourToDisplayProps),
       popularTours: popular.map(mapTourToDisplayProps),
-      toursByCity: Object.entries(byCity).map(([city, cityTours]) => ({
-        city,
-        tours: cityTours.map(mapTourToDisplayProps),
+      toursByContinent: sortedContinents.map(([continent, continentTours]) => ({
+        continent,
+        tours: continentTours.map(mapTourToDisplayProps),
       })),
     };
   }, [allTours]);
@@ -153,9 +213,9 @@ export default function TourDisplay() {
         {/* Popular Tours */}
         {popularTours.length > 0 && <TourScrollerComp title="Popular Tours" data={popularTours} />}
 
-        {/* Tours by City */}
-        {toursByCity.map(({ city, tours }) => (
-          <TourScrollerComp key={city} title={city} data={tours} />
+        {/* Tours by Continent */}
+        {toursByContinent.map(({ continent, tours }) => (
+          <TourScrollerComp key={continent} title={continent} data={tours} />
         ))}
       </ScrollView>
       <CreateTourButton />
