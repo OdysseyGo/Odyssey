@@ -3,84 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Logbooks</title>
+    <title>Odyssey</title>
     <style>
-        /* Simple, modern styling */
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            max-width: 900px;
+            background-color: #121212; /* Dark background for thriller vibe */
+            color: #e0e0e0; /* Light text */
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
             margin: 0 auto;
             padding: 40px 20px;
         }
-        h1 { text-align: center; margin-bottom: 40px; }
+
+        /* --- HERO SECTION (Icon + Intro) --- */
+        .hero {
+            text-align: center;
+            padding-bottom: 60px;
+            border-bottom: 1px solid #333;
+        }
+
+        .app-icon {
+            width: 150px;
+            height: 150px;
+            border-radius: 20px; /* Rounded corners for app icon look */
+            margin-bottom: 20px;
+            object-fit: cover;
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.2); /* Subtle glow */
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            background: -webkit-linear-gradient(#fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .intro-text {
+            font-size: 1.1rem;
+            color: #b0b0b0;
+            text-align: left; /* Easier to read blocks of text */
+            background: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        .highlight {
+            color: #4da3ff; /* Blue accent for key phrases */
+            font-weight: bold;
+        }
+
+        /* --- LOGBOOKS SECTION --- */
+        .logbooks-section {
+            padding-top: 40px;
+        }
         
-        /* Grid Layout */
-        .logbook-grid {
+        .section-title {
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
         }
 
-        /* Card Styling */
         .card {
-            background: white;
+            background: #1e1e1e;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
+            border: 1px solid #333;
+            transition: transform 0.2s, border-color 0.2s;
         }
+
         .card:hover {
             transform: translateY(-5px);
+            border-color: #4da3ff;
         }
-        .card h3 { margin-top: 0; }
-        .card p { color: #666; font-size: 0.9em; }
-        
+
+        .card h3 { margin-top: 0; color: #fff; }
+        .card p { font-size: 0.9em; color: #888; }
+
         .btn {
             display: inline-block;
-            margin-top: 10px;
+            margin-top: 15px;
             text-decoration: none;
-            background-color: #007bff;
+            background-color: #333;
             color: white;
             padding: 8px 15px;
             border-radius: 4px;
-            font-size: 0.9em;
+            font-size: 0.85em;
+            transition: background 0.2s;
         }
-        .btn:hover { background-color: #0056b3; }
+        
+        .btn:hover { background-color: #4da3ff; color: #000; }
+
     </style>
 </head>
 <body>
+
+    <div class="container">
+        
+        <div class="hero">
+            <img src="icon.png" alt="App Icon" class="app-icon">
+            
+            <h1>Are you lost or seeking adventure?</h1>
+            
+            <div class="intro-text">
+                <p>
+                    Our app is for your needs. We are generating a story for each country which makes it so unique. 
+                    The boring city tours are our main source, but we make them become a <span class="highlight">thriller</span>.
+                </p>
+                <p>
+                    As you are wandering around a city of unknowns, you will find clues, find puzzles, and find your way out. 
+                    These clues will guide you to the soul of the city with its real stories. 
+                    AI is used to create once-in-a-lifetime stories, which will make your tour an unforgettable experience.
+                </p>
+                <p>
+                    Moreover, our goal is to create a community that will create and share tours. 
+                    This community will be a source for generating new knowledge and new experiences. 
+                    We are developing a new form of exploration and guidance. Creating a new form of excitement and fun for everyone.
+                </p>
+            </div>
+        </div>
 
     <h1>Project Logbooks</h1>
 
     <div class="logbook-grid">
 
         <div class="card">
-            <h3>Cem Tarkan Tekcan/h3>
-            <p>Initial brainstorming and requirement gathering.</p>
+            <h3>Cem Tarkan Tekcan>
             <a href="https://docs.google.com/document/d/e/2PACX-1vRmTFPUNB5G4rQAH3C_pDiPgRTgZtddu_ubVj7JhcHj55Qmx8XzMnbYA1Y0iFvo-45qNjcpT9nCKZxx/pub" target="_blank" class="btn">Read Log</a>
         </div>
 
         <div class="card">
             <h3>Sami Bora Akoğuz</h3>
-            <p>Setting up the environment and initial coding.</p>
             <a href="#" target="_blank" class="btn">Read Log</a>
         </div>
 
         <div class="card">
-            <h3>Week 3: Testing</h3>
-            <p>Unit tests and debugging the backend.</p>
+            <h3>Mehmet Rodi Aydoğdu</h3>
             <a href="#" target="_blank" class="btn">Read Log</a>
         </div>
          <div class="card">
-            <h3>Week 2: Development</h3>
-            <p>Setting up the environment and initial coding.</p>
+            <h3>Ege Ertem</h3>
             <a href="#" target="_blank" class="btn">Read Log</a>
         </div>
          <div class="card">
-            <h3>Week 2: Development</h3>
-            <p>Setting up the environment and initial coding.</p>
+            <h3>Can Kütükoğlu</h3>
             <a href="#" target="_blank" class="btn">Read Log</a>
         </div>
 
