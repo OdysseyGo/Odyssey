@@ -7,10 +7,11 @@ export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type TourStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
 export type Puzzle = {
-  id: number;
+  id?: number;
   puzzle_type: 'TRIVIA' | 'AR' | 'GYROSCOPE';
   question: string;
-  options?: any;
+  options?: string[];
+  correct_answer?: string; // Used when creating/updating, hidden in response
   hint: string;
   xp_reward: number;
 };

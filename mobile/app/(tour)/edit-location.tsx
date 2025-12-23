@@ -10,7 +10,7 @@ import ImageUploadSection from '@/components/TourCreation/StoryEditor/ImageUploa
 import WritingTips from '@/components/TourCreation/StoryEditor/WritingTips';
 import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditorFooter';
 import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
-import { Puzzle } from '@/components/TourCreation/TourCreation.types';
+import { Puzzle } from '@/components/TourCreation';
 
 export default function EditLocationScreen() {
   const theme = useColorTheme();

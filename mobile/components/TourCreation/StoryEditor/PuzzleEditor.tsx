@@ -1,10 +1,12 @@
 import React from 'react';
-import { View } from 'react-native';
-import { Puzzle } from '../TourCreation.types';
+import { View, Text, TouchableOpacity, TextInput } from 'react-native';
+import { Puzzle, PuzzleType, PUZZLE_TYPE_OPTIONS, createEmptyPuzzle } from '../TourCreation.types';
 import PuzzleQuestion from './PuzzleQuestion';
 import PuzzleOptions from './PuzzleOptions';
 import PuzzleHint from './PuzzleHint';
 import { puzzleEditorStyles } from './PuzzleEditor.styles';
+import { useColorTheme } from '@/utils/useColorTheme';
+import Colors from '@/constants/Colors';
 
 interface PuzzleEditorProps {
   puzzle?: Puzzle;
@@ -13,17 +15,17 @@ interface PuzzleEditorProps {
 }
 
 export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: PuzzleEditorProps) {
+  const theme = useColorTheme();
+  const color = Colors[theme];
   const styles = puzzleEditorStyles();
 
-  const options = puzzle?.options || ['', ''];
-  const correctAnswer = puzzle?.correctAnswer || '';
+  const currentPuzzle = puzzle || createEmptyPuzzle();
+  const options = currentPuzzle.options;
+  const correctAnswer = currentPuzzle.correctAnswer;
 
   const handleChange = (field: keyof Puzzle, value: any) => {
     onChange({
-      question: puzzle?.question || '',
-      options: puzzle?.options || ['', ''],
-      correctAnswer: puzzle?.correctAnswer || '',
-      hint: puzzle?.hint || '',
+      ...currentPuzzle,
       [field]: value,
     });
   };
@@ -40,10 +42,9 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
     }
 
     onChange({
-      question: puzzle?.question || '',
+      ...currentPuzzle,
       options: newOptions,
       correctAnswer: newCorrectAnswer,
-      hint: puzzle?.hint || '',
     });
   };
 
@@ -62,10 +63,9 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
     }
 
     onChange({
-      question: puzzle?.question || '',
+      ...currentPuzzle,
       options: newOptions,
       correctAnswer: newCorrectAnswer,
-      hint: puzzle?.hint || '',
     });
   };
 
@@ -75,8 +75,38 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
 
   return (
     <View style={styles.container}>
+      {/* Puzzle Type Selector */}
+      <View style={styles.section}>
+        <Text style={[styles.label, { color: color.text }]}>Puzzle Type *</Text>
+        <View style={styles.typeContainer}>
+          {PUZZLE_TYPE_OPTIONS.map((type) => (
+            <TouchableOpacity
+              key={type.value}
+              style={[
+                styles.typeButton,
+                { borderColor: color.borderLight },
+                currentPuzzle.puzzle_type === type.value && {
+                  backgroundColor: color.primary,
+                  borderColor: color.primary,
+                },
+              ]}
+              onPress={() => handleChange('puzzle_type', type.value as PuzzleType)}
+            >
+              <Text
+                style={[
+                  styles.typeButtonText,
+                  { color: currentPuzzle.puzzle_type === type.value ? color.white : color.text },
+                ]}
+              >
+                {type.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
       <PuzzleQuestion
-        question={puzzle?.question || ''}
+        question={currentPuzzle.question}
         onChange={(text) => handleChange('question', text)}
         isRequired={isRequired}
       />
@@ -91,7 +121,27 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
         isRequired={isRequired}
       />
 
-      <PuzzleHint hint={puzzle?.hint || ''} onChange={(text) => handleChange('hint', text)} />
+      <PuzzleHint hint={currentPuzzle.hint} onChange={(text) => handleChange('hint', text)} />
+
+      {/* XP Reward Input */}
+      <View style={styles.section}>
+        <Text style={[styles.label, { color: color.text }]}>XP Reward</Text>
+        <TextInput
+          style={[styles.xpInput, { color: color.text, borderColor: color.borderLight }]}
+          value={String(currentPuzzle.xp_reward)}
+          onChangeText={(text) => {
+            const num = parseInt(text, 10);
+            if (!isNaN(num) && num >= 0) {
+              handleChange('xp_reward', num);
+            } else if (text === '') {
+              handleChange('xp_reward', 0);
+            }
+          }}
+          keyboardType="number-pad"
+          placeholder="10"
+          placeholderTextColor={color.placeholder}
+        />
+      </View>
     </View>
   );
 }
