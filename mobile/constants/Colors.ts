@@ -37,6 +37,8 @@ const easy = '#2ECC71'; // Fresh mint green
 const medium = '#F39C12'; // Warm amber
 const hard = '#E74C3C'; // Bold red
 
+const correctOptionBackground = '#2ECC71'
+
 const Colors = {
   light: {
     white: white,
@@ -65,6 +67,7 @@ const Colors = {
     easy: easy,
     medium: medium,
     hard: hard,
+    correctOptionBackground: correctOptionBackground,
   },
   dark: {
     white: white,
@@ -93,6 +96,7 @@ const Colors = {
     easy: easy,
     medium: medium,
     hard: hard,
+    correctOptionBackground: correctOptionBackground,
   },
 };
 

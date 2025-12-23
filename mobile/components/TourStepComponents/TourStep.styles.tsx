@@ -87,7 +87,7 @@ export default function getStyles(theme: ThemeName) {
     },
     optionButtonCorrect: {
       borderColor: color.secondary,
-      backgroundColor: color.primary,
+      backgroundColor: color.correctOptionBackground
     },
     optionButtonIncorrect: {
       borderColor: color.error,
