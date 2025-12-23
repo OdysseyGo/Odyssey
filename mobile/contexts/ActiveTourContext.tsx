@@ -53,7 +53,6 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
 
     // If the step has a puzzle from the API, convert it
     if (apiStep.puzzle) {
-      
       const puzzle = mapApiPuzzleToInternal(apiStep.puzzle);
       if (puzzle) {
         return {
@@ -90,10 +89,14 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
 function mapApiPuzzleToInternal(apiPuzzle: ApiTour['steps'][0]['puzzle']): Puzzle | null {
   if (!apiPuzzle) return null;
 
-
   // Only TRIVIA puzzles with multiple choice options are supported
 
-  if (apiPuzzle.puzzle_type === 'TRIVIA' && apiPuzzle.options && Array.isArray(apiPuzzle.options) && apiPuzzle.options.length > 0) {
+  if (
+    apiPuzzle.puzzle_type === 'TRIVIA' &&
+    apiPuzzle.options &&
+    Array.isArray(apiPuzzle.options) &&
+    apiPuzzle.options.length > 0
+  ) {
     return {
       type: 'multiple-choice',
       question: apiPuzzle.question,

@@ -3,12 +3,7 @@ import { useMemo, useState } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import getStyles from './TourStep.styles';
-import {
-  TourStepProps,
-  StoryStep,
-  PuzzleStep,
-  MultipleChoicePuzzle,
-} from './TourStep.config';
+import { TourStepProps, StoryStep, PuzzleStep, MultipleChoicePuzzle } from './TourStep.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 
