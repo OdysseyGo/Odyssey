@@ -38,6 +38,8 @@ export default function TourDetailPage() {
       // Fetch fresh tour data with steps and puzzles
       if (id) {
         const tourData = await getTour(parseInt(id, 10));
+        console.log('Tour data:', tourData);
+        
         // Start the tour in context (this will map API data to internal format)
         startTour(tourData);
         // Navigate to the map tab

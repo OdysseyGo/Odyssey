@@ -53,6 +53,7 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
 
     // If the step has a puzzle from the API, convert it
     if (apiStep.puzzle) {
+      
       const puzzle = mapApiPuzzleToInternal(apiStep.puzzle);
       if (puzzle) {
         return {
@@ -84,37 +85,27 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
 }
 
 /**
- * Maps an API puzzle to the internal Puzzle format
+ * Maps an API puzzle to the internal Puzzle format (only multiple-choice supported)
  */
 function mapApiPuzzleToInternal(apiPuzzle: ApiTour['steps'][0]['puzzle']): Puzzle | null {
   if (!apiPuzzle) return null;
 
-  switch (apiPuzzle.puzzle_type) {
-    case 'TRIVIA':
-      // Check if options exist for multiple choice, otherwise it's a text trivia
-      if (apiPuzzle.options?.choices && Array.isArray(apiPuzzle.options.choices)) {
-        return {
-          type: 'multiple-choice',
-          question: apiPuzzle.question,
-          options: apiPuzzle.options.choices.map((choice: any, idx: number) => ({
-            id: String.fromCharCode(97 + idx), // a, b, c, d
-            text: choice.text,
-            isCorrect: choice.is_correct,
-          })),
-          imageUri: apiPuzzle.options?.image_uri,
-        };
-      } else {
-        return {
-          type: 'trivia',
-          question: apiPuzzle.question,
-          correctAnswer: apiPuzzle.options?.answer || '',
-          caseSensitive: false,
-          imageUri: apiPuzzle.options?.image_uri,
-        };
-      }
-    default:
-      return null;
+
+  // Only TRIVIA puzzles with multiple choice options are supported
+
+  if (apiPuzzle.puzzle_type === 'TRIVIA' && apiPuzzle.options && Array.isArray(apiPuzzle.options) && apiPuzzle.options.length > 0) {
+    return {
+      type: 'multiple-choice',
+      question: apiPuzzle.question,
+      options: apiPuzzle.options.map((option: string, idx: number) => ({
+        id: String.fromCharCode(97 + idx), // a, b, c, d
+        text: option,
+        isCorrect: option === apiPuzzle.correct_answer,
+      })),
+    };
   }
+
+  return null;
 }
 
 export function ActiveTourProvider({ children }: { children: ReactNode }) {

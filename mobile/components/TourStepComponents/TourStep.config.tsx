@@ -1,6 +1,6 @@
 import { markerColors } from '@/constants/Colors';
 
-export type PuzzleType = 'multiple-choice' | 'trivia';
+export type PuzzleType = 'multiple-choice';
 
 export interface MultipleChoiceOption {
   id: string;
@@ -15,15 +15,7 @@ export interface MultipleChoicePuzzle {
   imageUri?: string;
 }
 
-export interface TriviaPuzzle {
-  type: 'trivia';
-  question: string;
-  correctAnswer: string;
-  caseSensitive?: boolean;
-  imageUri?: string;
-}
-
-export type Puzzle = MultipleChoicePuzzle | TriviaPuzzle;
+export type Puzzle = MultipleChoicePuzzle;
 
 export type TourStepType = 'story' | 'puzzle';
 
@@ -101,21 +93,6 @@ export const exampleTour: Tour = {
           { id: 'c', text: '1453 AD', isCorrect: false },
           { id: 'd', text: '1935 AD', isCorrect: false },
         ],
-      },
-    },
-    {
-      id: 'step-3',
-      type: 'puzzle',
-      title: 'Blue Mosque Trivia',
-      coordinate: {
-        latitude: 41.0054,
-        longitude: 28.9768,
-      },
-      puzzle: {
-        type: 'trivia',
-        question: 'How many minarets does the Blue Mosque have?',
-        correctAnswer: '6',
-        imageUri: 'https://picsum.photos/400/306',
       },
     },
     {

@@ -16,6 +16,7 @@ export async function isLoggedIn(): Promise<boolean> {
 /**
  * Get the current user if logged in
  * Returns null if not logged in or if the request fails
+ * Clears token on auth failure
  */
 export async function getCurrentUser(): Promise<User | null> {
   try {
@@ -24,7 +25,11 @@ export async function getCurrentUser(): Promise<User | null> {
 
     const user = await getMe();
     return user;
-  } catch {
+  } catch (error: any) {
+    // If getCurrentUser fails, clear the invalid token
+    if (error.statusCode === 401) {
+      await removeAuthToken();
+    }
     return null;
   }
 }
@@ -48,8 +53,21 @@ export async function setAuthToken(token: string): Promise<void> {
 }
 
 /**
- * Remove auth token on logout
+ * Remove auth token on logout or when login fails
  */
 export async function removeAuthToken(): Promise<void> {
-  await SecureStore.deleteItemAsync('userToken');
+  try {
+    await SecureStore.deleteItemAsync('userToken');
+  } catch (error) {
+    console.error('Failed to remove auth token:', error);
+  }
+}
+
+/**
+ * Logout and clear all auth data
+ * Call this when login fails or user explicitly logs out
+ */
+export async function logout(): Promise<void> {
+  await removeAuthToken();
+  // You can add additional cleanup here (clear cache, etc.)
 }

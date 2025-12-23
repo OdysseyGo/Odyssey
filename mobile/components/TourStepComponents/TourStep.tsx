@@ -1,4 +1,4 @@
-import { View, Text, Image, Pressable, TextInput, ScrollView } from 'react-native';
+import { View, Text, Image, Pressable, ScrollView } from 'react-native';
 import { useMemo, useState } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -8,7 +8,6 @@ import {
   StoryStep,
   PuzzleStep,
   MultipleChoicePuzzle,
-  TriviaPuzzle,
 } from './TourStep.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -122,89 +121,6 @@ function MultipleChoiceView({ puzzle, isSolved, onSolve }: MultipleChoiceViewPro
   );
 }
 
-interface TriviaViewProps {
-  puzzle: TriviaPuzzle;
-  isSolved: boolean;
-  onSolve: () => void;
-}
-
-function TriviaView({ puzzle, isSolved, onSolve }: TriviaViewProps) {
-  const theme = useColorTheme();
-  const styles = useMemo(() => getStyles(theme), [theme]);
-
-  const [answer, setAnswer] = useState('');
-  const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-
-  const handleSubmit = () => {
-    if (isSolved || !answer.trim()) return;
-
-    setHasSubmitted(true);
-
-    const userAnswer = answer.trim();
-    const correct = puzzle.correctAnswer.trim();
-
-    const isMatch = puzzle.caseSensitive
-      ? userAnswer === correct
-      : userAnswer.toLowerCase() === correct.toLowerCase();
-
-    if (isMatch) {
-      setIsCorrect(true);
-      onSolve();
-    } else {
-      setIsCorrect(false);
-    }
-  };
-
-  const getInputStyle = () => {
-    const baseStyle: object[] = [styles.triviaInput];
-
-    if (hasSubmitted) {
-      if (isCorrect || isSolved) {
-        baseStyle.push(styles.triviaInputCorrect);
-      } else {
-        baseStyle.push(styles.triviaInputIncorrect);
-      }
-    }
-
-    return baseStyle;
-  };
-
-  return (
-    <View>
-      <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
-
-      {puzzle.imageUri && (
-        <Image source={{ uri: puzzle.imageUri }} style={styles.puzzleImage} resizeMode="cover" />
-      )}
-
-      <View style={styles.triviaInputContainer}>
-        <TextInput
-          style={getInputStyle()}
-          value={answer}
-          onChangeText={setAnswer}
-          placeholder="Enter your answer..."
-          placeholderTextColor={Colors[theme].placeholder}
-          editable={!isSolved}
-          onSubmitEditing={handleSubmit}
-          returnKeyType="done"
-        />
-
-        <Pressable
-          style={[
-            styles.triviaSubmitButton,
-            (!answer.trim() || isSolved) && styles.triviaSubmitButtonDisabled,
-          ]}
-          onPress={handleSubmit}
-          disabled={!answer.trim() || isSolved}
-        >
-          <Text style={styles.triviaSubmitText}>Submit</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
 interface PuzzleStepViewProps {
   step: PuzzleStep;
   isSolved: boolean;
@@ -224,14 +140,12 @@ function PuzzleStepView({ step, isSolved, onSolve }: PuzzleStepViewProps) {
         )}
       </View>
 
-      {step.puzzle.type === 'multiple-choice' && (
-        <MultipleChoiceView
-          key={step.id}
-          puzzle={step.puzzle}
-          isSolved={isSolved}
-          onSolve={onSolve}
-        />
-      )}
+      <MultipleChoiceView
+        key={step.id}
+        puzzle={step.puzzle}
+        isSolved={isSolved}
+        onSolve={onSolve}
+      />
     </ScrollView>
   );
 }

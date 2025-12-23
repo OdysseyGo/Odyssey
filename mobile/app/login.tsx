@@ -10,6 +10,7 @@ import { login, UserCredentials } from '@/api/users';
 import * as SecureStore from 'expo-secure-store';
 import AuthSubButton from '@/components/LoginComponents/AuthSubButton';
 import { router } from 'expo-router';
+import { logout } from '@/api/auth';
 
 type LoginScreenProps = {
   navigation?: any;
@@ -58,7 +59,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       router.push('/(tabs)/profile');
     } catch (e) {
       console.error(e);
-      setErrors({ general: 'Login failed' });
+      // Clear token on login failure
+      await logout();
+      setErrors({ general: 'Login failed. Please try again.' });
     } finally {
       setLoading(false);
     }

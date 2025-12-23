@@ -112,39 +112,5 @@ export default function getStyles(theme: ThemeName) {
       borderColor: color.primary,
       backgroundColor: color.primary,
     },
-
-    triviaInputContainer: {
-      marginTop: Spacing.sm,
-    },
-    triviaInput: {
-      backgroundColor: color.foregroundSecondary,
-      borderRadius: Spacing.borderRadius,
-      padding: Spacing.md,
-      fontSize: 16,
-      color: color.text,
-      borderWidth: 2,
-      borderColor: 'transparent',
-    },
-    triviaInputCorrect: {
-      borderColor: color.primary,
-    },
-    triviaInputIncorrect: {
-      borderColor: color.error,
-    },
-    triviaSubmitButton: {
-      marginTop: Spacing.md,
-      backgroundColor: color.primary,
-      borderRadius: Spacing.borderRadius,
-      padding: Spacing.md,
-      alignItems: 'center',
-    },
-    triviaSubmitButtonDisabled: {
-      opacity: 0.5,
-    },
-    triviaSubmitText: {
-      color: color.background,
-      fontWeight: '600',
-      fontSize: 16,
-    },
   });
 }
