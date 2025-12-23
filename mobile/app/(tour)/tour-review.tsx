@@ -51,6 +51,17 @@ export default function TourReviewScreen() {
                 longitude: Number(loc.longitude).toFixed(8),
                 order: loc.order,
                 image: loc.image,
+                // Include puzzle data if available (for PUZZLE or HYBRID tours)
+                puzzle: loc.puzzle
+                  ? {
+                      puzzle_type: loc.puzzle.puzzle_type,
+                      question: loc.puzzle.question,
+                      options: loc.puzzle.options,
+                      correct_answer: loc.puzzle.correctAnswer,
+                      hint: loc.puzzle.hint,
+                      xp_reward: loc.puzzle.xp_reward,
+                    }
+                  : undefined,
               })
             );
 
