@@ -232,10 +232,6 @@ function PuzzleStepView({ step, isSolved, onSolve }: PuzzleStepViewProps) {
           onSolve={onSolve}
         />
       )}
-
-      {step.puzzle.type === 'trivia' && (
-        <TriviaView key={step.id} puzzle={step.puzzle} isSolved={isSolved} onSolve={onSolve} />
-      )}
     </ScrollView>
   );
 }
