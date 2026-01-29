@@ -74,7 +74,7 @@ export const mapUserToAddFriendDTO = (user: User): AddFriendUserDisplayDTO => ({
 });
 
 export type FollowPayload = {
-  follow: number; //id of the target
+  followee: number; //id of the target
 };
 
 // API functions
@@ -195,7 +195,7 @@ export const followUser = (payload: FollowPayload) =>
 export const unfollowUser = (payload: FollowPayload) =>
   apiRequest<void>({
     method: 'delete',
-    url: `/api/follows/${payload.follow}/`,
+    url: `/api/follows/${payload.followee}/`,
   });
 
 /**

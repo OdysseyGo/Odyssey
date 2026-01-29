@@ -129,7 +129,18 @@ class UserViewSet(ModelViewSet):
         if not filter:
             return Response({"error": "filter is required"}, status=400)
 
-        users = User.objects.filter(username__icontains=filter)
+        current_user = request.user
+
+        following_ids = Follow.objects.filter(follower=current_user).values_list(
+            "followee_id", flat=True
+        )
+
+        users = (
+            User.objects.filter(username__icontains=filter)
+            .exclude(id=current_user.id)
+            .exclude(id__in=following_ids)
+        )
+
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data)
 
