@@ -122,9 +122,9 @@ class UserViewSet(ModelViewSet):
         return Response({"detail": "Password updated successfully"}, status=200)
 
     @action(
-        detail=False, methods=["get"], url_path="get-filtered-users"
-    )  # filter by username
-    def get_filtered_users(self, request):
+        detail=False, methods=["get"], url_path="get-filtered-users-add-friend"
+    )  # filter by username to add friend (excludes itself and already following)
+    def get_filtered_users_add_friend(self, request):
         filter = request.query_params.get("filter")
         if not filter:
             return Response({"error": "filter is required"}, status=400)

@@ -65,14 +65,6 @@ export type LoginResponse = {
   refresh: string;
 };
 
-// Mapping functions
-export const mapUserToAddFriendDTO = (user: User): AddFriendUserDisplayDTO => ({
-  id: user.id,
-  username: user.username,
-  first_name: user.first_name,
-  last_name: user.last_name,
-});
-
 export type FollowPayload = {
   followee: number; //id of the target
 };
@@ -89,21 +81,6 @@ export const getUsers = (page?: number) =>
     params: page ? { page } : undefined,
   });
 
-/**
- * GET /api/users/ - List all users for add friend feature (mapped to DTO)
- * @param page - Page number (optional)
- */
-export const getAddFriendUsers = async (
-  page?: number
-): Promise<AddFriendUserDisplayDTOListResponse> => {
-  const response = await getUsers(page); // TODO: We should implement filtering api and integrate it - Can Kütükoğlu
-  return {
-    count: response.count,
-    next: response.next,
-    previous: response.previous,
-    results: response.results.map(mapUserToAddFriendDTO),
-  };
-};
 
 /**
  * POST /api/users/ - Create a new user
@@ -199,12 +176,12 @@ export const unfollowUser = (payload: FollowPayload) =>
   });
 
 /**
- * Gets the ussers filtered by username
+ * Gets the users filtered by username for add friend list (includes filter, excludes itself and already following)
  * @param filter - checks if username contains the filter (same with sql LIKE %patern%)
  * @returns array of users
  */
-export const getFilteredUsers = (filter: string) =>
+export const getFilteredUsersAddFriend = (filter: string) =>
   apiRequest<void>({
     method: 'get',
-    url: `api/users/get-filtered-users/?filter=${filter}`,
+    url: `api/users/get-filtered-users-add-friend/?filter=${filter}`,
   });

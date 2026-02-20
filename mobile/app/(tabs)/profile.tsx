@@ -135,11 +135,29 @@ export default function Profile() {
     earnedDate: badge.created_at,
   }));
 
+  const handleFollowersPress = () => {
+  //router.push('/profile/followers'); // yani böyle biyere gitmesi lazım da bakalım
+  };
+
+  const handleFollowingPress = () => {
+    //router.push('/profile/following');
+  };
+
+  const handleBadgesPress = () => {
+    //router.push({pathname: '/profile/badges'});
+    alert("deneme")
+  };
+
   return (
     <>
       <ScrollView>
         <ProfileHeaderComp {...profileHeader} />
-        <ProfileStatsComp {...profileStats} />
+        <ProfileStatsComp 
+        {...profileStats} 
+        onFollowersPress={handleFollowersPress}
+        onFollowingPress={handleFollowingPress}
+        onBadgesPress={handleBadgesPress}
+        />
         <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm }}>
           <ProfileAddFriendsButton onPress={handleOpenAddFriendModal} />
         </View>

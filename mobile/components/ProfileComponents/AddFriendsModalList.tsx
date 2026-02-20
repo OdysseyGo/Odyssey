@@ -7,7 +7,7 @@ import Colors from '@/constants/Colors';
 import { addFriendsModalListStyles } from './AddFriendsModalList.styles';
 import type { AddFriendsModalListProps } from './AddFriendsModalList.config';
 import type { User } from '@/api/users';
-import { followUser, FollowPayload, getFilteredUsers } from '@/api/users';
+import { followUser, FollowPayload, getFilteredUsersAddFriend } from '@/api/users';
 
 export default function AddFriendsModalList({ searchTextVal = '' }: AddFriendsModalListProps) {
   const theme = useColorTheme();
@@ -26,7 +26,7 @@ export default function AddFriendsModalList({ searchTextVal = '' }: AddFriendsMo
 
     const fetchData = async () => {
       try {
-        const data = await getFilteredUsers(query);
+        const data = await getFilteredUsersAddFriend(query);
         setUsers(data);
       } catch (e) {
         console.error(e);
@@ -41,7 +41,7 @@ export default function AddFriendsModalList({ searchTextVal = '' }: AddFriendsMo
       const payload: FollowPayload = {
         followee: user_id,
       };
-      const response = await followUser(payload);
+      const response = await followUser(payload); // TODO: give alert to notify user that the follow is done
     } catch (e) {
       console.error(e);
     }
