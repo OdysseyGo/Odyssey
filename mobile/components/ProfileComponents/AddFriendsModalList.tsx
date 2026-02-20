@@ -39,7 +39,7 @@ export default function AddFriendsModalList({ searchTextVal = '' }: AddFriendsMo
   async function followHandler(user_id: number) {
     try {
       const payload: FollowPayload = {
-        followee: user_id,
+        following: user_id,
       };
       const response = await followUser(payload); // TODO: give alert to notify user that the follow is done
     } catch (e) {

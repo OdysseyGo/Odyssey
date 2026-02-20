@@ -8,7 +8,7 @@ export type User = {
   last_name: string;
   email: string;
   xp: number;
-  follow_count: number;
+  following_count: number;
   follower_count: number;
   token: number;
   level: number;
@@ -66,7 +66,7 @@ export type LoginResponse = {
 };
 
 export type FollowPayload = {
-  followee: number; //id of the target
+  following: number; //id of the target
 };
 
 // API functions
@@ -172,7 +172,7 @@ export const followUser = (payload: FollowPayload) =>
 export const unfollowUser = (payload: FollowPayload) =>
   apiRequest<void>({
     method: 'delete',
-    url: `/api/follows/${payload.followee}/`,
+    url: `/api/follows/${payload.following}/`,
   });
 
 /**

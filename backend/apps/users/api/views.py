@@ -79,20 +79,20 @@ class UserViewSet(ModelViewSet):
     def followers(self, request, pk=None):
         user = self.get_object()
         followers_qs = User.objects.filter(
-            followees__followee=user,
+            followings__following=user,
         ).distinct()
 
         serializer = self.get_serializer(followers_qs, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["get"], url_path="followees")
-    def followees(self, request, pk=None):
+    @action(detail=True, methods=["get"], url_path="followings")
+    def followings(self, request, pk=None):
         user = self.get_object()
-        followees_qs = User.objects.filter(
+        followings_qs = User.objects.filter(
             followers__follower=user,
         ).distinct()
 
-        serializer = self.get_serializer(followees_qs, many=True)
+        serializer = self.get_serializer(followings_qs, many=True)
         return Response(serializer.data)
 
     @action(
@@ -132,7 +132,7 @@ class UserViewSet(ModelViewSet):
         current_user = request.user
 
         following_ids = Follow.objects.filter(follower=current_user).values_list(
-            "followee_id", flat=True
+            "following_id", flat=True
         )
 
         users = (
@@ -148,30 +148,30 @@ class UserViewSet(ModelViewSet):
 class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = FollowSerializer
 
-    lookup_field = "followee_id"
+    lookup_field = "following_id"
 
     def get_queryset(self):
         return Follow.objects.filter(follower=self.request.user).select_related(
-            "followee"
+            "following"
         )
 
     def perform_create(self, serializer):
         follow = serializer.save(follower=self.request.user)
         # increment counters
-        User.objects.filter(id=follow.followee_id).update(
+        User.objects.filter(id=follow.following_id).update(
             follower_count=F("follower_count") + 1
         )
         User.objects.filter(id=follow.follower_id).update(
-            follow_count=F("follow_count") + 1
+            following_count=F("following_count") + 1
         )
 
     def perform_destroy(self, instance):
         # decrement counters safely on unfollow
-        User.objects.filter(id=instance.followee_id).update(
+        User.objects.filter(id=instance.following_id).update(
             follower_count=F("follower_count") - 1
         )
         User.objects.filter(id=instance.follower_id).update(
-            follow_count=F("follow_count") - 1
+            following_count=F("following_count") - 1
         )
 
         instance.delete()

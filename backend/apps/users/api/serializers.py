@@ -16,7 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "password",
             "xp",
-            "follow_count",
+            "following_count",
             "follower_count",
             "credit",
             "level",

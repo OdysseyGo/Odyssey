@@ -122,7 +122,7 @@ export default function Profile() {
     tours: curUser.tour_count,
     badges: badgesCount,
     followers: curUser.follower_count,
-    following: curUser.follow_count,
+    following: curUser.following_count,
   };
 
   // Convert API badges to component format
