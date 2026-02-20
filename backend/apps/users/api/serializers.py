@@ -41,15 +41,15 @@ class UserSerializer(serializers.ModelSerializer):
 class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow
-        fields = ["follow_id", "follower", "followee"]
+        fields = ["follow_id", "follower", "following"]
         read_only_fields = ["follower"]
 
     def validate(self, attrs):
         follower = self.context["request"].user
-        followee = attrs.get("followee")
-        if follower == followee:
+        following = attrs.get("following")
+        if follower == following:
             raise serializers.ValidationError("A user cannot self follow.")
-        if Follow.objects.filter(follower=follower, followee=followee).exists():
+        if Follow.objects.filter(follower=follower, following=following).exists():
             raise serializers.ValidationError("Already following this user.")
         return attrs
 
@@ -63,5 +63,5 @@ class AdminSerializer(serializers.ModelSerializer):
             "hashed_password",
         ]
         extra_kwargs = {
-            "hashed_password": {"write_only": True},
+            "hashed_password": {"write_only": True},  
         }

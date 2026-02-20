@@ -132,7 +132,7 @@ class UserViewSet(ModelViewSet):
         current_user = request.user
 
         following_ids = Follow.objects.filter(follower=current_user).values_list(
-            "following_id", flat=True
+            "follow_id", flat=True
         )
 
         users = (
@@ -148,7 +148,7 @@ class UserViewSet(ModelViewSet):
 class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = FollowSerializer
 
-    lookup_field = "following_id"
+    lookup_field = "follow_id"
 
     def get_queryset(self):
         return Follow.objects.filter(follower=self.request.user).select_related(
@@ -158,7 +158,7 @@ class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     def perform_create(self, serializer):
         follow = serializer.save(follower=self.request.user)
         # increment counters
-        User.objects.filter(id=follow.following_id).update(
+        User.objects.filter(id=follow.follow_id).update(
             follower_count=F("follower_count") + 1
         )
         User.objects.filter(id=follow.follower_id).update(
@@ -167,7 +167,7 @@ class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
 
     def perform_destroy(self, instance):
         # decrement counters safely on unfollow
-        User.objects.filter(id=instance.following_id).update(
+        User.objects.filter(id=instance.follow_id).update(
             follower_count=F("follower_count") - 1
         )
         User.objects.filter(id=instance.follower_id).update(
