@@ -1,16 +1,24 @@
 import json
+import logging
 import os
+import re
 
 import google.generativeai as genai
+from django.db import transaction
 
 from apps.tours.models import Puzzle, Tour, TourStep
 from apps.tours.utils import GoogleMapsFacade
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiService:
     """Generating tours w/ Google Gemini AI."""
 
     GEMINI_MODEL = "gemini-2.5-flash"  # Upgrade to "gemini-1.5-pro" for better reasoning, but slower speed.
+
+    # Estimated time a user spends at each stop (reading, exploring, solving puzzles)
+    MINUTES_PER_STEP = 5
 
     def __init__(self):
         api_key = os.getenv("GEMINI_API_KEY")
@@ -52,48 +60,113 @@ class GeminiService:
             )
             tour_data = self._parse_response(response.text)
         except Exception as e:
-            # Handle API errors or timeouts gracefully
-            print(f"AI Generation failed: {e}")
-            raise e
+            logger.error("AI Generation failed: %s", e)
+            raise
 
-        # Create Tour
-        tour = Tour.objects.create(
-            title=tour_data["title"],
-            description=tour_data["description"],
-            creator=creator,
-            tour_type=mode,
-            category=theme,
-            difficulty=tour_data.get("difficulty", "MEDIUM"),
-            duration_minutes=duration,
-            city=city,
-            status=Tour.ARCHIVED,  # Start as draft so creator can review
-        )
+        # Validate required keys before touching the database
+        self._validate_tour_data(tour_data, mode)
 
-        # Create Steps and Puzzles
-        for idx, step_data in enumerate(tour_data["steps"], start=1):
-            step = TourStep.objects.create(
-                tour=tour,
-                order=idx,
-                title=step_data["title"],
-                description=step_data["description"],
-                latitude=step_data["latitude"],
-                longitude=step_data["longitude"],
+        # Wrap all DB writes in an atomic transaction so a mid-way failure
+        # doesn't leave orphaned Tour / TourStep rows in the database.
+        with transaction.atomic():
+            # Create Tour
+            tour = Tour.objects.create(
+                title=tour_data["title"],
+                description=tour_data["description"],
+                creator=creator,
+                tour_type=mode,
+                category=theme,
+                difficulty=tour_data.get("difficulty", "MEDIUM"),
+                duration_minutes=duration,
+                city=city,
+                status=Tour.ARCHIVED,  # Start as draft so creator can review
             )
 
-            # Create puzzle if present (for PUZZLE and HYBRID modes)
-            if "puzzle" in step_data and step_data["puzzle"]:
-                puzzle_data = step_data["puzzle"]
-                Puzzle.objects.create(
-                    step=step,
-                    puzzle_type=puzzle_data.get("type", "TRIVIA"),
-                    question=puzzle_data["question"],
-                    options=puzzle_data.get("options"),
-                    correct_answer=puzzle_data["answer"],
-                    hint=puzzle_data.get("hint", ""),
-                    xp_reward=puzzle_data.get("xp", 25),
+            # Create Steps and Puzzles
+            for idx, step_data in enumerate(tour_data["steps"], start=1):
+                step = TourStep.objects.create(
+                    tour=tour,
+                    order=idx,
+                    title=step_data["title"],
+                    description=step_data.get("description", ""),
+                    latitude=step_data["latitude"],
+                    longitude=step_data["longitude"],
                 )
 
-        # Calculate real-world metrics (Distance & Duration)
+                # Create puzzle if present (for PUZZLE and HYBRID modes)
+                puzzle_data = step_data.get("puzzle")
+                if puzzle_data:
+                    Puzzle.objects.create(
+                        step=step,
+                        puzzle_type=puzzle_data.get("type", "TRIVIA"),
+                        question=puzzle_data["question"],
+                        options=puzzle_data.get("options"),
+                        correct_answer=puzzle_data["answer"],
+                        hint=puzzle_data.get("hint", ""),
+                        xp_reward=puzzle_data.get("xp", 25),
+                    )
+                elif mode in ("PUZZLE", "HYBRID"):
+                    # AI omitted the puzzle — create a fallback so every step
+                    # in puzzle-requiring modes has something to interact with.
+                    Puzzle.objects.create(
+                        step=step,
+                        puzzle_type="TRIVIA",
+                        question="What is the name of this location?",
+                        options=[
+                            step_data["title"],
+                            "Unknown Place",
+                            "Central Park",
+                            "The Grand Palace",
+                        ],
+                        correct_answer=step_data["title"],
+                        hint="Look at the sign or landmark nearby.",
+                        xp_reward=10,
+                    )
+
+        # Calculate real-world metrics (Distance & Duration) — outside the
+        # atomic block because a Maps API failure shouldn't roll back the tour.
+        self._calculate_metrics(tour)
+
+        return tour
+
+    # ------------------------------------------------------------------
+    # Validation
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _validate_tour_data(tour_data: dict, mode: str) -> None:
+        """
+        Validate that the parsed AI response has all required keys and
+        sane structure before attempting database writes.
+
+        Raises ValueError with a human-readable message on failure.
+        """
+        missing = [
+            key for key in ("title", "description", "steps") if key not in tour_data
+        ]
+        if missing:
+            raise ValueError(
+                f"AI response is missing required keys: {', '.join(missing)}"
+            )
+
+        steps = tour_data["steps"]
+        if not isinstance(steps, list) or len(steps) == 0:
+            raise ValueError(
+                "AI response 'steps' must be a non-empty list, "
+                f"got {type(steps).__name__}"
+            )
+
+        for i, step in enumerate(steps):
+            for key in ("title", "latitude", "longitude"):
+                if key not in step:
+                    raise ValueError(f"Step {i + 1} is missing required key '{key}'")
+
+    # ------------------------------------------------------------------
+    # Metrics
+    # ------------------------------------------------------------------
+
+    def _calculate_metrics(self, tour: Tour) -> None:
+        """Calculate real-world route metrics and update the tour in-place."""
         try:
             maps_facade = GoogleMapsFacade()
             steps_list = list(tour.steps.all())
@@ -107,11 +180,13 @@ class GeminiService:
                 tour.requires_transport = metrics.get("requires_transport", False)
                 tour.is_circular = metrics.get("is_circular", False)
 
-                # If calculated duration differs significantly, we update it.
-                # Or just overwrite AI's guess. Let's overwrite for accuracy.
-                calc_duration = metrics.get("duration_minutes", 0)
-                if calc_duration > 0:
-                    tour.duration_minutes = calc_duration
+                # Combine walking time with per-step exploration time so the
+                # estimate reflects the full experience, not just transit.
+                walking_minutes = metrics.get("duration_minutes", 0)
+                exploration_minutes = len(steps_list) * self.MINUTES_PER_STEP
+                total_duration = walking_minutes + exploration_minutes
+                if total_duration > 0:
+                    tour.duration_minutes = total_duration
 
                 tour.metrics_calculated = True
 
@@ -120,10 +195,12 @@ class GeminiService:
 
                 tour.save()
         except Exception as e:
-            # Fallback: keep AI generated values and log error (or print for now)
-            print(f"Failed to calculate route metrics: {e}")
+            # Fallback: keep AI generated values and log the error
+            logger.warning("Failed to calculate route metrics: %s", e)
 
-        return tour
+    # ------------------------------------------------------------------
+    # Prompt
+    # ------------------------------------------------------------------
 
     def _build_prompt(
         self,
@@ -199,11 +276,20 @@ Generate the tour now:"""
 
         return prompt
 
+    # ------------------------------------------------------------------
+    # Parsing
+    # ------------------------------------------------------------------
+
     def _parse_response(self, response_text: str) -> dict:
-        """Parse Gemini's response (JSON)."""
-        # this is to clean up response
-        # Gemini sometimes wraps JSON in markdown
+        """Parse Gemini's response (JSON).
+
+        Handles common LLM quirks:
+        - Markdown code fences (```json ... ```)
+        - Leading prose before the JSON object
+        """
         text = response_text.strip()
+
+        # Strip markdown code fences
         if text.startswith("```json"):
             text = text[7:]
         if text.startswith("```"):
@@ -211,7 +297,24 @@ Generate the tour now:"""
         if text.endswith("```"):
             text = text[:-3]
 
+        text = text.strip()
+
+        # First try a direct parse (fast path)
         try:
-            return json.loads(text.strip())
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse AI response as JSON: {e}")
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+
+        # Fallback: extract the first top-level JSON object from the text.
+        # This handles cases where the LLM adds prose before/after the JSON.
+        match = re.search(r"\{[\s\S]*\}", text)
+        if match:
+            try:
+                return json.loads(match.group())
+            except json.JSONDecodeError:
+                pass
+
+        raise ValueError(
+            "Failed to parse AI response as JSON. "
+            "The model did not return valid JSON."
+        )
