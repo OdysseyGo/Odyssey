@@ -19,6 +19,33 @@ class GoogleMapsFacade:
         if self.api_key:
             self.client = googlemaps.Client(key=self.api_key)
 
+    def geocode_location(
+        self,
+        name: str,
+        city: str,
+        fallback_lat: float,
+        fallback_lng: float,
+    ) -> tuple[float, float]:
+        """
+        Look up a location by name and city via Google Geocoding API.
+
+        Returns verified (latitude, longitude) from Google's database.
+        Falls back to the provided AI-generated coordinates if geocoding
+        fails or returns no results.
+        """
+        if not self.client:
+            return (fallback_lat, fallback_lng)
+
+        try:
+            results = self.client.geocode(f"{name}, {city}")
+            if results:
+                location = results[0]["geometry"]["location"]
+                return (location["lat"], location["lng"])
+        except Exception as e:
+            print(f"Geocoding failed for '{name}, {city}': {e}")
+
+        return (fallback_lat, fallback_lng)
+
     def calculate_route_metrics(self, steps: List[TourStep]) -> Dict[str, Any]:
         """
         Calculate distance, duration, elevation, and path features.

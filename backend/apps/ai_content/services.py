@@ -82,6 +82,20 @@ class GeminiService:
                 status=Tour.ARCHIVED,  # Start as draft so creator can review
             )
 
+            # Verify AI-generated coordinates via Google Geocoding API.
+            # LLMs often hallucinate GPS coordinates; this replaces them
+            # with Google-verified ones based on the location name.
+            maps_facade = GoogleMapsFacade()
+            for step_data in tour_data["steps"]:
+                verified_lat, verified_lng = maps_facade.geocode_location(
+                    name=step_data["title"],
+                    city=city,
+                    fallback_lat=step_data["latitude"],
+                    fallback_lng=step_data["longitude"],
+                )
+                step_data["latitude"] = verified_lat
+                step_data["longitude"] = verified_lng
+
             # Create Steps and Puzzles
             for idx, step_data in enumerate(tour_data["steps"], start=1):
                 step = TourStep.objects.create(

@@ -304,6 +304,78 @@ class TestGenerateTour(TestCase):
         # 30 min walking + 2 steps * 5 min = 40 min total
         assert tour.duration_minutes == 40
 
+    # ---- Geocoding verification ------------------------------------------
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
+    def test_geocoding_replaces_ai_coordinates(self, mock_genai, mock_maps_cls):
+        """Verified Google coordinates should replace AI-generated ones."""
+        tour_data = _valid_tour_json(include_puzzles=False)
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        # Geocode returns different (verified) coordinates
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.geocode_location.side_effect = [
+            (41.00860, 28.98020),  # Verified Hagia Sophia
+            (41.00550, 28.97690),  # Verified Blue Mosque
+        ]
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+
+        creator = self._make_creator()
+        service = GeminiService()
+        tour = service.generate_tour(
+            city="Istanbul",
+            theme="History",
+            mode="STORY",
+            duration=60,
+            language="en",
+            creator=creator,
+        )
+
+        steps = list(tour.steps.order_by("order"))
+        assert float(steps[0].latitude) == pytest.approx(41.00860, abs=1e-5)
+        assert float(steps[0].longitude) == pytest.approx(28.98020, abs=1e-5)
+        assert float(steps[1].latitude) == pytest.approx(41.00550, abs=1e-5)
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
+    def test_geocoding_fallback_preserves_ai_coordinates(
+        self, mock_genai, mock_maps_cls
+    ):
+        """When geocoding fails, original AI coordinates should be kept."""
+        tour_data = _valid_tour_json(include_puzzles=False)
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        # Geocode returns the fallback (same as AI coords)
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.geocode_location.side_effect = lambda name, city, fallback_lat, fallback_lng: (
+            fallback_lat,
+            fallback_lng,
+        )
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+
+        creator = self._make_creator()
+        service = GeminiService()
+        tour = service.generate_tour(
+            city="Istanbul",
+            theme="History",
+            mode="STORY",
+            duration=60,
+            language="en",
+            creator=creator,
+        )
+
+        steps = list(tour.steps.order_by("order"))
+        # Should match original AI coordinates from _valid_tour_json
+        assert float(steps[0].latitude) == pytest.approx(41.00858, abs=1e-5)
+        assert float(steps[0].longitude) == pytest.approx(28.98018, abs=1e-5)
+
 
 # ---------------------------------------------------------------------------
 # Parsing Tests
