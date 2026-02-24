@@ -103,11 +103,9 @@ class GoogleMapsFacade:
             _extract(response.get("results", []))
 
             # Paginate if we have a next_page_token and need more results
-            while (
-                len(places) < max_results
-                and response.get("next_page_token")
-            ):
+            while len(places) < max_results and response.get("next_page_token"):
                 import time
+
                 time.sleep(2)  # Google requires a short delay before using page tokens
                 response = self.client.places(
                     query=query,

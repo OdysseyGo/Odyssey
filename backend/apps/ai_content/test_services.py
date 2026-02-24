@@ -515,7 +515,9 @@ class TestFuzzyMatchPlace(TestCase):
 
     def test_no_match(self):
         candidates = _candidate_places()
-        result = GeminiService._fuzzy_match_place("Completely Unknown Place", candidates)
+        result = GeminiService._fuzzy_match_place(
+            "Completely Unknown Place", candidates
+        )
         assert result is None
 
     def test_empty_name(self):

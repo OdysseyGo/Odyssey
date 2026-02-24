@@ -78,8 +78,14 @@ class GeminiService:
 
         # ---- Step 2: Build RAG prompt with verified places ----
         prompt = self._build_prompt(
-            city, theme, mode, duration, language, custom_prompt,
-            candidate_places, num_steps,
+            city,
+            theme,
+            mode,
+            duration,
+            language,
+            custom_prompt,
+            candidate_places,
+            num_steps,
         )
 
         # ---- Step 3: Generate creative content via Gemini (with retries) ----
@@ -108,7 +114,9 @@ class GeminiService:
                 last_error = e
                 logger.warning(
                     "AI response parse failed (attempt %d/%d): %s",
-                    attempt, max_retries, e,
+                    attempt,
+                    max_retries,
+                    e,
                 )
             except Exception as e:
                 # Non-retryable error (network, timeout, etc.)
@@ -128,9 +136,7 @@ class GeminiService:
         self._validate_tour_data(tour_data, mode)
 
         # Build a lookup of verified places by name (case-insensitive)
-        places_lookup = {
-            p["name"].strip().lower(): p for p in candidate_places
-        }
+        places_lookup = {p["name"].strip().lower(): p for p in candidate_places}
 
         # Replace AI coordinates with verified Google Maps coordinates
         for step_data in tour_data["steps"]:
@@ -227,9 +233,7 @@ class GeminiService:
     # Place Discovery (RAG — Retrieval Step)
     # ------------------------------------------------------------------
 
-    def _discover_places(
-        self, city: str, theme: str, num_steps: int
-    ) -> list[dict]:
+    def _discover_places(self, city: str, theme: str, num_steps: int) -> list[dict]:
         """
         Retrieve real, verified places from Google Maps.
 
