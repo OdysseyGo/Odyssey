@@ -82,15 +82,47 @@ class GeminiService:
             candidate_places, num_steps,
         )
 
-        # ---- Step 3: Generate creative content via Gemini ----
-        try:
-            response = self.model.generate_content(
-                prompt, request_options={"timeout": 600}
+        # ---- Step 3: Generate creative content via Gemini (with retries) ----
+        max_retries = 3
+        last_error = None
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                current_prompt = prompt
+                if attempt > 1:
+                    # On retries, prepend a stricter instruction
+                    current_prompt = (
+                        "IMPORTANT: Your previous response was not valid JSON. "
+                        "You MUST respond with ONLY a valid JSON object. "
+                        "No prose, no markdown, no explanation — just the JSON.\n\n"
+                        + prompt
+                    )
+
+                response = self.model.generate_content(
+                    current_prompt, request_options={"timeout": 600}
+                )
+                tour_data = self._parse_response(response.text)
+                break  # Success — exit retry loop
+            except ValueError as e:
+                # JSON parse failure — retry
+                last_error = e
+                logger.warning(
+                    "AI response parse failed (attempt %d/%d): %s",
+                    attempt, max_retries, e,
+                )
+            except Exception as e:
+                # Non-retryable error (network, timeout, etc.)
+                logger.error("AI Generation failed: %s", e)
+                raise
+        else:
+            # All retries exhausted
+            logger.error(
+                "AI failed to return valid JSON after %d attempts", max_retries
             )
-            tour_data = self._parse_response(response.text)
-        except Exception as e:
-            logger.error("AI Generation failed: %s", e)
-            raise
+            raise ValueError(
+                "AI failed to return a valid tour after multiple attempts. "
+                "Please try again."
+            ) from last_error
 
         # ---- Step 4: Validate and enrich with verified coordinates ----
         self._validate_tour_data(tour_data, mode)
