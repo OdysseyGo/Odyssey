@@ -113,11 +113,20 @@ Note: Enable Places API, Elevation API and Directions API in the Google Cloud Co
 
 #### AWS S3 Storage Setup
 
+Tour cover images (and any future media uploads) are stored on **Amazon S3** instead of the local filesystem. The Django backend uses the `django-storages` library with `boto3` to upload files directly to S3. A `USE_S3` environment variable lets you toggle between S3 (production/staging) and local file storage (development).
+
+Follow the steps below to configure S3 for your environment:
+
 1. **Create an S3 Bucket**
-   - Go to AWS console -> S3 -> Create bucket (e.g., `odyssey-tours-media`).
-   - Uncheck "Block all public access" to allow the mobile app to read images.
-2. **Configure CORS**
-   - Go to Bucket -> Permissions -> CORS and add:
+   - Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and navigate to **S3**.
+   - Click **Create bucket** and choose a unique name (e.g., `odyssey-tours-media`).
+   - Select a region close to your users (e.g., `eu-central-1`). Remember this — you'll need it for `AWS_S3_REGION_NAME`.
+   - **Uncheck** "Block *all* public access" so the mobile app can load images directly via URL. Acknowledge the warning.
+   - Leave all other options as default and create the bucket.
+
+2. **Configure CORS on the Bucket**
+   CORS (Cross-Origin Resource Sharing) is required so that the mobile app and website can fetch images from the bucket's domain. Without this the browser/app will block the requests.
+   - Open your bucket → **Permissions** tab → scroll to **CORS configuration** → click **Edit** and paste:
 
      ```json
      [
@@ -130,9 +139,35 @@ Note: Enable Places API, Elevation API and Directions API in the Google Cloud Co
      ]
      ```
 
-3. **Create an IAM User**
-   - Go to AWS console -> IAM -> Users -> Create user.
-   - Attach policy: `AmazonS3FullAccess`.
-   - Create an Access Key to obtain your `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
-4. **Update `.env`**
-   - Set `USE_S3=True` and fill out the AWS variables in your `.env` file.
+   - Save the changes.
+
+3. **Create an IAM User (programmatic access)**
+   The backend needs credentials to upload files to S3. An IAM user provides a scoped access key for this purpose.
+   - Go to **IAM** → **Users** → **Create user**.
+   - Give it a descriptive name (e.g., `odyssey-backend-s3`).
+   - On the permissions step, attach the managed policy **`AmazonS3FullAccess`** (or create a custom policy scoped to your bucket for tighter security).
+   - After the user is created, go to **Security credentials** → **Create access key** and choose the "Application running outside AWS" use case.
+   - Copy the **Access Key ID** and **Secret Access Key** — you will need them in the next step.
+
+4. **Update your `.env` file**
+   Add or update the following variables in your `.env` (see `.env.example` for reference):
+
+   ```dotenv
+   USE_S3=True
+   AWS_ACCESS_KEY_ID=your-access-key-id
+   AWS_SECRET_ACCESS_KEY=your-secret-access-key
+   AWS_STORAGE_BUCKET_NAME=odyssey-tours-media
+   AWS_S3_REGION_NAME=eu-central-1
+   ```
+
+   - **`USE_S3`** — Set to `True` to enable S3 storage. When set to `False` (or omitted), Django falls back to saving files in a local `media/` directory, which is useful for offline development.
+   - **`AWS_STORAGE_BUCKET_NAME`** — Must match the bucket name you created in step 1.
+   - **`AWS_S3_REGION_NAME`** — Must match the region you selected when creating the bucket.
+
+5. **Rebuild & Verify**
+
+   ```bash
+   docker compose up --build
+   ```
+
+   The `boto3` and `django-storages` packages (listed in `backend/requirements/base.txt`) will be installed automatically during the Docker build. Once running, any image uploaded through the API (e.g., tour cover images) will be stored in your S3 bucket and served via `https://<bucket>.s3.amazonaws.com/`.
