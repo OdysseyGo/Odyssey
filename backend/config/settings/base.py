@@ -172,7 +172,9 @@ if USE_S3:
     AWS_DEFAULT_ACL = None
     AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
     AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
-    AWS_QUERYSTRING_AUTH = False  # Generate clean public URLs (requires public bucket policy)
+    AWS_QUERYSTRING_AUTH = (
+        False  # Generate clean public URLs (requires public bucket policy)
+    )
 
     # Define standard Media storage class location (Django 5.1+ requires STORAGES dict)
     STORAGES = {
