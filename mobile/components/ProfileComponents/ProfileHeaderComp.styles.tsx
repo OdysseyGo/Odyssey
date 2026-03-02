@@ -20,14 +20,20 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
       width: Spacing.xl * 6,
       height: Spacing.xl * 6,
       borderRadius: Spacing.xl * 3,
-      backgroundColor: 'white',
+      backgroundColor: color.white,
       alignItems: 'center',
       justifyContent: 'center',
+      overflow: 'hidden',
+    },
+    avatarImage: {
+      width: '100%',
+      height: '100%',
+      borderRadius: Spacing.borderRadiusFull,
     },
     title: {
       fontSize: 28,
       fontWeight: '700',
-      color: 'white',
+      color: color.white,
       marginBottom: Spacing.xs,
     },
     subtitle: {

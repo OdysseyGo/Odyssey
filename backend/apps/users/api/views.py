@@ -75,6 +75,14 @@ class UserViewSet(ModelViewSet):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
+    @action(detail=False, methods=["patch"], url_path="me/avatar")
+    def update_avatar(self, request):
+        user = request.user
+        avatar_url = request.data.get("avatar_url", "")
+        user.avatar_url = avatar_url
+        user.save(update_fields=["avatar_url"])
+        return Response({"avatar_url": user.avatar_url})
+
     @action(detail=True, methods=["get"], url_path="followers")
     def followers(self, request, pk=None):
         user = self.get_object()

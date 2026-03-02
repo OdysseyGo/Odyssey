@@ -1,6 +1,8 @@
 export type ProfileHeaderProps = {
   title?: string;
   subtitle?: string;
+  avatarUrl?: string;
+  onAvatarPress?: () => void;
 };
 
 export const exampleProfileHeader: ProfileHeaderProps = {

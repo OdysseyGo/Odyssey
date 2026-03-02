@@ -6,6 +6,7 @@ import ProfileAddFriendsButton from '@/components/ProfileComponents/ProfileAddFr
 import ProfileBadgesContainer from '@/components/ProfileComponents/ProfileBadgesContainer';
 import ProfileToursContainer from '@/components/ProfileComponents/ProfileToursContainer';
 import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
+import AvatarSelectionModal from '@/components/ProfileComponents/AvatarSelectionModal';
 import { View, Text, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import AuthButton from '@/components/LoginComponents/AuthButton';
@@ -28,6 +29,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [hasToken, setHasToken] = useState<boolean | null>(null);
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -115,6 +117,8 @@ export default function Profile() {
   const profileHeader = {
     title: curUser.username,
     subtitle: curUser.country,
+    avatarUrl: curUser.avatar_url || undefined,
+    onAvatarPress: () => setShowAvatarModal(true),
   };
 
   const profileStats = {
@@ -163,6 +167,13 @@ export default function Profile() {
         onSearchChange={setSearchText}
         searchFocused={searchFocused}
         onSearchFocus={setSearchFocused}
+      />
+
+      <AvatarSelectionModal
+        visible={showAvatarModal}
+        onClose={() => setShowAvatarModal(false)}
+        currentAvatarUrl={curUser.avatar_url || undefined}
+        onAvatarSaved={(url) => setCurUser((prev) => (prev ? { ...prev, avatar_url: url } : prev))}
       />
     </>
   );

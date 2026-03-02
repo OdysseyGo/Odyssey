@@ -28,6 +28,12 @@ class User(AbstractUser):
     )
     tour_count = models.IntegerField(default=0)
     rating = models.FloatField(default=0.0)
+    avatar_url = models.URLField(
+        max_length=500,
+        blank=True,
+        default="",
+        help_text="DiceBear avatar URL",
+    )
 
     class Meta:
         db_table = "user"
