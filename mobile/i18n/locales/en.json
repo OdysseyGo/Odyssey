@@ -1,0 +1,100 @@
+{
+  "auth": {
+    "welcomeTitle": "Welcome, adventurer!",
+    "welcomeSubtitle": "Log in to start your journey.",
+    "registerTitle": "Join the adventure!",
+    "registerSubtitle": "Create an account to begin your quest.",
+    "resetTitle": "Forgot your way?",
+    "resetSubtitle": "Reset your password to continue your quest.",
+    "username": "Username",
+    "password": "Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "confirmPassword": "Confirm Password",
+    "newPassword": "New Password",
+    "usernamePlaceholder": "Your username",
+    "passwordPlaceholder": "Your password",
+    "firstNamePlaceholder": "Your first name",
+    "lastNamePlaceholder": "Your last name",
+    "emailPlaceholder": "you@example.com",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "newPasswordPlaceholder": "New password",
+    "confirmNewPasswordPlaceholder": "Confirm password",
+    "login": "Log In",
+    "createAccount": "Create Account",
+    "noAccount": "No Account? Create One",
+    "forgotPassword": "Forgot Password?",
+    "remembered": "Ooh, I remembered!",
+    "alreadyHaveAccount": "Already have an account? Log In",
+    "verify": "Verify",
+    "resetPassword": "Reset Password",
+    "updatePassword": "Update Password",
+    "cancel": "Cancel",
+    "errors": {
+      "usernameRequired": "Username is required",
+      "passwordRequired": "Password is required",
+      "firstNameRequired": "First name is required",
+      "lastNameRequired": "Last name is required",
+      "emailRequired": "Email is required",
+      "emailFormat": "Email format is wrong. TLD should be at least 2 chars long (.com, .tr etc)",
+      "confirmPasswordRequired": "Confirm password is required",
+      "passwordsMismatch": "Passwords do not match",
+      "loginFailed": "Login failed. Please try again.",
+      "registrationFailed": "Registration failed",
+      "userNotFound": "User not found",
+      "usernameEmailMismatch": "Username and email do not match",
+      "somethingWentWrong": "Something went wrong",
+      "bothFieldsRequired": "Both fields are required",
+      "couldNotUpdate": "Could not update password"
+    },
+    "userCreated": "User has been created!"
+  },
+  "profile": {
+    "notLoggedIn": "You need to be logged in to view your profile.",
+    "loginButton": "Oooh I want to log in!",
+    "logout": "Logout"
+  },
+  "tour": {
+    "loading": "Loading tours...",
+    "retry": "Tap to retry",
+    "popular": "Popular Tours",
+    "by": "by",
+    "ratingOf": "/5",
+    "continents": {
+      "europe": "Europe",
+      "asia": "Asia",
+      "northAmerica": "North America",
+      "southAmerica": "South America",
+      "africa": "Africa",
+      "oceania": "Oceania",
+      "antarctica": "Antarctica",
+      "other": "Other"
+    }
+  },
+  "search": {
+    "noToursFound": "No tours found",
+    "noToursFoundSub": "Try searching for a different destination, tour name, or guide",
+    "searchFailed": "Search failed",
+    "searching": "Searching tours...",
+    "results": "Search Results",
+    "toursCount": "{{count}} tours"
+  },
+  "tourDetail": {
+    "loading": "Loading tour...",
+    "retry": "Tap to retry",
+    "startTour": "Start Tour",
+    "duration": "Duration",
+    "distance": "Distance",
+    "difficulty": "Difficulty",
+    "notFound": "Tour not found"
+  },
+  "settings": {
+    "language": "Language",
+    "selectLanguage": "Select Language",
+    "languages": {
+      "en": "English",
+      "tr": "Turkish"
+    }
+  }
+}

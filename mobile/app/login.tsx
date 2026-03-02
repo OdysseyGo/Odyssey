@@ -5,12 +5,12 @@ import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import { authLayoutStyles } from '@/components/LoginComponents/AuthLayout.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
-import { loginHeaderConfig } from '@/components/LoginComponents/AuthLayout.config';
 import { login, UserCredentials } from '@/api/users';
 import * as SecureStore from 'expo-secure-store';
 import AuthSubButton from '@/components/LoginComponents/AuthSubButton';
 import { router } from 'expo-router';
 import { logout } from '@/api/auth';
+import { useTranslation } from 'react-i18next';
 
 type LoginScreenProps = {
   navigation?: any;
@@ -19,6 +19,7 @@ type LoginScreenProps = {
 export default function LoginScreen({ navigation }: LoginScreenProps) {
   const theme = useColorTheme();
   const layoutStyles = authLayoutStyles(theme);
+  const { t } = useTranslation();
 
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -29,8 +30,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   const validate = () => {
     const newErrors: typeof errors = {};
-    if (!username) newErrors.username = 'username is required';
-    if (!password) newErrors.password = 'Password is required';
+    if (!username) newErrors.username = t('auth.errors.usernameRequired');
+    if (!password) newErrors.password = t('auth.errors.passwordRequired');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -41,27 +42,21 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     setLoading(true);
     try {
       const credentials: UserCredentials = {
-        username: username, // username as username bcs backend uses username/password
+        username: username,
         password: password,
       };
 
-      //alert(`user creds is ${credentials.username}, ${credentials.password}`)
-
       const response = await login(credentials);
-      //alert(response)
 
-      // response contains: { access: string, refresh: string }
       const { access, refresh } = response;
 
       await SecureStore.setItem('userToken', access);
       await SecureStore.setItem('refreshToken', refresh);
-      // Do not push but clear the route and then push
       router.push('/(tabs)/profile');
     } catch (e) {
       console.error(e);
-      // Clear token on login failure
       await logout();
-      setErrors({ general: 'Login failed. Please try again.' });
+      setErrors({ general: t('auth.errors.loginFailed') });
     } finally {
       setLoading(false);
     }
@@ -70,40 +65,40 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   return (
     <AuthLayout>
       <View style={layoutStyles.headerContainer}>
-        <Text style={layoutStyles.headerTitle}>{loginHeaderConfig.title}</Text>
-        <Text style={layoutStyles.headerSubtitle}>{loginHeaderConfig.subtitle}</Text>
+        <Text style={layoutStyles.headerTitle}>{t('auth.welcomeTitle')}</Text>
+        <Text style={layoutStyles.headerSubtitle}>{t('auth.welcomeSubtitle')}</Text>
       </View>
 
       {errors.general && <Text style={layoutStyles.errorText}>{errors.general}</Text>}
       <View style={layoutStyles.inputContainer}>
         <AuthTextInput
-          label="Username"
+          label={t('auth.username')}
           value={username}
           onChangeText={setUsername}
-          placeholder="Your username"
+          placeholder={t('auth.usernamePlaceholder')}
           keyboardType="twitter"
           autoCapitalize="none"
           error={errors.username}
         />
 
         <AuthTextInput
-          label="Password"
+          label={t('auth.password')}
           value={password}
           onChangeText={setPassword}
-          placeholder="Your password"
+          placeholder={t('auth.passwordPlaceholder')}
           secureTextEntry
           autoCapitalize="none"
           error={errors.password}
         />
 
-        <AuthButton title="Log In" onPress={handleLogin} loading={loading} />
+        <AuthButton title={t('auth.login')} onPress={handleLogin} loading={loading} />
         <AuthSubButton
-          title="No Account? Create One"
+          title={t('auth.noAccount')}
           onPress={() => router.push('/register')}
           loading={loading}
         />
         <AuthSubButton
-          title="Forgot Password?"
+          title={t('auth.forgotPassword')}
           onPress={() => router.push('/forgot-password')}
           loading={loading}
         />

@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import ProfileHeaderComp from '@/components/ProfileComponents/ProfileHeaderComp';
 import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
 import ProfileAddFriendsButton from '@/components/ProfileComponents/ProfileAddFriendsButton';
@@ -33,6 +34,7 @@ export default function Profile() {
 
   const theme = useColorTheme();
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   useFocusEffect(
     useCallback(() => {
@@ -103,9 +105,9 @@ export default function Profile() {
             color: color.subText,
           }}
         >
-          You need to be logged in to view your profile.
+          {t('profile.notLoggedIn')}
         </Text>
-        <AuthButton title="Oooh I want to log in!" onPress={() => router.push('/login')} />
+        <AuthButton title={t('profile.loginButton')} onPress={() => router.push('/login')} />
       </View>
     );
   }
@@ -152,7 +154,7 @@ export default function Profile() {
             paddingBottom: Spacing.xl,
           }}
         >
-          <AuthButton title="Logout" onPress={handleLogout} />
+          <AuthButton title={t('profile.logout')} onPress={handleLogout} />
         </View>
       </ScrollView>
 

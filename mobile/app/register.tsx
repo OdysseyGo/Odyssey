@@ -6,9 +6,9 @@ import AuthButton from '@/components/LoginComponents/AuthButton';
 import AuthSubButton from '@/components/LoginComponents/AuthSubButton';
 import { authLayoutStyles } from '@/components/LoginComponents/AuthLayout.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
-import { registerHeaderConfig } from '@/components/LoginComponents/AuthLayout.config';
 import { createUser, CreateUserPayload } from '@/api/users';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 type RegisterScreenProps = {
   navigation?: any;
@@ -17,6 +17,7 @@ type RegisterScreenProps = {
 export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   const theme = useColorTheme();
   const layoutStyles = authLayoutStyles(theme);
+  const { t } = useTranslation();
 
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
@@ -40,17 +41,15 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   const validate = () => {
     const newErrors: typeof errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
-    if (!firstName) newErrors.firstName = 'First name is required';
-    if (!lastName) newErrors.lastName = 'Last name is required';
-    if (!username) newErrors.username = 'Username is required';
-    if (!email) newErrors.email = 'Email is required';
-    if (!emailRegex.test(email))
-      newErrors.email =
-        'Email format is wrong. TLD should be at least 2 chars long (.com, .tr etc)';
-    if (!password) newErrors.password = 'Password is required';
-    if (!confirmPassword) newErrors.confirmPassword = 'Confirm password is required';
+    if (!firstName) newErrors.firstName = t('auth.errors.firstNameRequired');
+    if (!lastName) newErrors.lastName = t('auth.errors.lastNameRequired');
+    if (!username) newErrors.username = t('auth.errors.usernameRequired');
+    if (!email) newErrors.email = t('auth.errors.emailRequired');
+    if (!emailRegex.test(email)) newErrors.email = t('auth.errors.emailFormat');
+    if (!password) newErrors.password = t('auth.errors.passwordRequired');
+    if (!confirmPassword) newErrors.confirmPassword = t('auth.errors.confirmPasswordRequired');
     if (password && confirmPassword && password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('auth.errors.passwordsMismatch');
     }
 
     setErrors(newErrors);
@@ -68,12 +67,12 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
         first_name: firstName,
         last_name: lastName,
       };
-      const response = await createUser(user);
+      await createUser(user);
       router.back();
-      alert('User has been created!');
+      alert(t('auth.userCreated'));
     } catch (e) {
       console.error(e);
-      setErrors({ general: 'Registration failed' });
+      setErrors({ general: t('auth.errors.registrationFailed') });
     } finally {
       setLoading(false);
     }
@@ -82,72 +81,72 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   return (
     <AuthLayout>
       <View style={layoutStyles.headerContainer}>
-        <Text style={layoutStyles.headerTitle}>{registerHeaderConfig.title}</Text>
-        <Text style={layoutStyles.headerSubtitle}>{registerHeaderConfig.subtitle}</Text>
+        <Text style={layoutStyles.headerTitle}>{t('auth.registerTitle')}</Text>
+        <Text style={layoutStyles.headerSubtitle}>{t('auth.registerSubtitle')}</Text>
       </View>
 
       {errors.general && <Text style={layoutStyles.errorText}>{errors.general}</Text>}
 
       <View style={layoutStyles.inputContainer}>
         <AuthTextInput
-          label="First Name"
+          label={t('auth.firstName')}
           value={firstName}
           onChangeText={setFirstName}
-          placeholder="Your first name"
+          placeholder={t('auth.firstNamePlaceholder')}
           autoCapitalize="words"
           error={errors.firstName}
         />
         <AuthTextInput
-          label="Last Name"
+          label={t('auth.lastName')}
           value={lastName}
           onChangeText={setLastName}
-          placeholder="Your last name"
+          placeholder={t('auth.lastNamePlaceholder')}
           autoCapitalize="words"
           error={errors.lastName}
         />
         <AuthTextInput
-          label="Username"
+          label={t('auth.username')}
           value={username}
           onChangeText={setUsername}
-          placeholder="Your username"
+          placeholder={t('auth.usernamePlaceholder')}
           autoCapitalize="none"
           error={errors.username}
         />
 
         <AuthTextInput
-          label="Email"
+          label={t('auth.email')}
           value={email}
           onChangeText={setEmail}
-          placeholder="you@example.com"
+          placeholder={t('auth.emailPlaceholder')}
           keyboardType="email-address"
           autoCapitalize="none"
           error={errors.email}
         />
 
         <AuthTextInput
-          label="Password"
+          label={t('auth.password')}
           value={password}
           onChangeText={setPassword}
-          placeholder="Your password"
+          placeholder={t('auth.passwordPlaceholder')}
           secureTextEntry
           autoCapitalize="none"
           error={errors.password}
         />
 
         <AuthTextInput
-          label="Confirm Password"
+          label={t('auth.confirmPassword')}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
-          placeholder="Confirm your password"
+          placeholder={t('auth.confirmPasswordPlaceholder')}
           secureTextEntry
           autoCapitalize="none"
           error={errors.confirmPassword}
         />
 
-        <AuthButton title="Create Account" onPress={handleRegister} loading={loading} />
+        <AuthButton title={t('auth.createAccount')} onPress={handleRegister} loading={loading} />
 
         <AuthSubButton
-          title="Already have an account? Log In"
+          title={t('auth.alreadyHaveAccount')}
           onPress={() => router.back()}
           loading={loading}
         />

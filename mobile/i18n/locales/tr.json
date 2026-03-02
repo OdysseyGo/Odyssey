@@ -1,0 +1,100 @@
+{
+  "auth": {
+    "welcomeTitle": "Hoş geldin, kaşif!",
+    "welcomeSubtitle": "Yolculuğuna başlamak için giriş yap.",
+    "registerTitle": "Maceraya katıl!",
+    "registerSubtitle": "Keşfine başlamak için hesap oluştur.",
+    "resetTitle": "Yolunu mu unuttun?",
+    "resetSubtitle": "Keşfine devam etmek için şifreni sıfırla.",
+    "username": "Kullanıcı Adı",
+    "password": "Şifre",
+    "firstName": "Ad",
+    "lastName": "Soyad",
+    "email": "E-posta",
+    "confirmPassword": "Şifre Tekrar",
+    "newPassword": "Yeni Şifre",
+    "usernamePlaceholder": "Kullanıcı adınız",
+    "passwordPlaceholder": "Şifreniz",
+    "firstNamePlaceholder": "Adınız",
+    "lastNamePlaceholder": "Soyadınız",
+    "emailPlaceholder": "siz@ornek.com",
+    "confirmPasswordPlaceholder": "Şifrenizi onaylayın",
+    "newPasswordPlaceholder": "Yeni şifre",
+    "confirmNewPasswordPlaceholder": "Şifreyi onaylayın",
+    "login": "Giriş Yap",
+    "createAccount": "Hesap Oluştur",
+    "noAccount": "Hesabın yok mu? Oluştur",
+    "forgotPassword": "Şifreni mi unuttun?",
+    "remembered": "Aah, hatırladım!",
+    "alreadyHaveAccount": "Zaten hesabın var mı? Giriş Yap",
+    "verify": "Doğrula",
+    "resetPassword": "Şifre Sıfırla",
+    "updatePassword": "Şifreyi Güncelle",
+    "cancel": "İptal",
+    "errors": {
+      "usernameRequired": "Kullanıcı adı gereklidir",
+      "passwordRequired": "Şifre gereklidir",
+      "firstNameRequired": "Ad gereklidir",
+      "lastNameRequired": "Soyad gereklidir",
+      "emailRequired": "E-posta gereklidir",
+      "emailFormat": "E-posta formatı hatalı. Uzantı en az 2 karakter olmalıdır (.com, .tr vb)",
+      "confirmPasswordRequired": "Şifre tekrarı gereklidir",
+      "passwordsMismatch": "Şifreler eşleşmiyor",
+      "loginFailed": "Giriş başarısız. Lütfen tekrar deneyin.",
+      "registrationFailed": "Kayıt başarısız",
+      "userNotFound": "Kullanıcı bulunamadı",
+      "usernameEmailMismatch": "Kullanıcı adı ve e-posta eşleşmiyor",
+      "somethingWentWrong": "Bir şeyler ters gitti",
+      "bothFieldsRequired": "Her iki alan da gereklidir",
+      "couldNotUpdate": "Şifre güncellenemedi"
+    },
+    "userCreated": "Kullanıcı oluşturuldu!"
+  },
+  "profile": {
+    "notLoggedIn": "Profilini görüntülemek için giriş yapman gerekiyor.",
+    "loginButton": "Giriş yapmak istiyorum!",
+    "logout": "Çıkış Yap"
+  },
+  "tour": {
+    "loading": "Turlar yükleniyor...",
+    "retry": "Tekrar denemek için dokun",
+    "popular": "Popüler Turlar",
+    "by": "tarafından",
+    "ratingOf": "/5",
+    "continents": {
+      "europe": "Avrupa",
+      "asia": "Asya",
+      "northAmerica": "Kuzey Amerika",
+      "southAmerica": "Güney Amerika",
+      "africa": "Afrika",
+      "oceania": "Okyanusya",
+      "antarctica": "Antarktika",
+      "other": "Diğer"
+    }
+  },
+  "search": {
+    "noToursFound": "Tur bulunamadı",
+    "noToursFoundSub": "Farklı bir destinasyon, tur adı veya rehber aramayı deneyin",
+    "searchFailed": "Arama başarısız",
+    "searching": "Turlar aranıyor...",
+    "results": "Arama Sonuçları",
+    "toursCount": "{{count}} tur"
+  },
+  "tourDetail": {
+    "loading": "Tur yükleniyor...",
+    "retry": "Tekrar denemek için dokun",
+    "startTour": "Tura Başla",
+    "duration": "Süre",
+    "distance": "Mesafe",
+    "difficulty": "Zorluk",
+    "notFound": "Tur bulunamadı"
+  },
+  "settings": {
+    "language": "Dil",
+    "selectLanguage": "Dil Seç",
+    "languages": {
+      "en": "İngilizce",
+      "tr": "Türkçe"
+    }
+  }
+}

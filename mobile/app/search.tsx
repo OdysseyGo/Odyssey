@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { Stack, router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useTranslation } from 'react-i18next';
 
 import {
   SearchHeader,
@@ -32,6 +33,7 @@ export default function SearchScreen() {
   const theme = useColorTheme();
   const styles = useMemo(() => searchScreenStyles(theme), [theme]);
   const colors = Colors[theme];
+  const { t } = useTranslation();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [recentSearches, setRecentSearches] = useState(initialRecentSearches);
@@ -91,10 +93,8 @@ export default function SearchScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <FontAwesome name="search" size={48} color={colors.subText} style={styles.emptyIcon} />
-      <Text style={styles.emptyText}>No tours found</Text>
-      <Text style={styles.emptySubText}>
-        Try searching for a different destination, tour name, or guide
-      </Text>
+      <Text style={styles.emptyText}>{t('search.noToursFound')}</Text>
+      <Text style={styles.emptySubText}>{t('search.noToursFoundSub')}</Text>
     </View>
   );
 
@@ -106,7 +106,7 @@ export default function SearchScreen() {
         color={colors.error}
         style={styles.emptyIcon}
       />
-      <Text style={styles.emptyText}>Search failed</Text>
+      <Text style={styles.emptyText}>{t('search.searchFailed')}</Text>
       <Text style={styles.emptySubText}>{error}</Text>
     </View>
   );
@@ -114,15 +114,15 @@ export default function SearchScreen() {
   const renderLoading = () => (
     <View style={styles.loadingContainer}>
       <ActivityIndicator size="large" color={colors.primary} />
-      <Text style={styles.loadingText}>Searching tours...</Text>
+      <Text style={styles.loadingText}>{t('search.searching')}</Text>
     </View>
   );
 
   const renderResults = () => (
     <View style={styles.resultsContainer}>
       <View style={styles.resultsHeader}>
-        <Text style={styles.resultsTitle}>Search Results</Text>
-        <Text style={styles.resultsCount}>{searchResults.length} tours</Text>
+        <Text style={styles.resultsTitle}>{t('search.results')}</Text>
+        <Text style={styles.resultsCount}>{t('search.toursCount', { count: searchResults.length })}</Text>
       </View>
       {searchResults.map((tour) => (
         <SearchResult key={tour.id} {...tour} />

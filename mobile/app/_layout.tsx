@@ -8,6 +8,8 @@ import 'react-native-reanimated';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { ActiveTourProvider } from '@/contexts/ActiveTourContext';
+import { LanguageProvider } from '@/contexts/LanguageContext';
+import '@/i18n/i18n';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -50,8 +52,9 @@ function RootLayoutNav() {
   const themeKey = colorTheme;
 
   return (
-    <ActiveTourProvider>
-      <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
+    <LanguageProvider>
+      <ActiveTourProvider>
+        <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack
           screenOptions={{
             headerTitle: '',
@@ -83,7 +86,8 @@ function RootLayoutNav() {
             }}
           />
         </Stack>
-      </ThemeProvider>
-    </ActiveTourProvider>
+        </ThemeProvider>
+      </ActiveTourProvider>
+    </LanguageProvider>
   );
 }

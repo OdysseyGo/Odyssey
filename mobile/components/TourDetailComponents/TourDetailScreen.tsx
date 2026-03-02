@@ -1,6 +1,7 @@
 import { View, ScrollView, ActivityIndicator, Text } from 'react-native';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { getTour } from '@/api/tours';
@@ -57,16 +58,17 @@ export interface TourDetailScreenLoadingProps {
 }
 
 export function TourDetailScreenLoading({
-  message = 'Loading tour...',
+  message,
 }: TourDetailScreenLoadingProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailScreenStyles(theme), [theme]);
   const colors = Colors[theme];
+  const { t } = useTranslation();
 
   return (
     <View style={[styles.container, styles.centered]}>
       <ActivityIndicator size="large" color={colors.primary} />
-      <Text style={[styles.loadingText, { color: colors.text }]}>{message}</Text>
+      <Text style={[styles.loadingText, { color: colors.text }]}>{message ?? t('tourDetail.loading')}</Text>
     </View>
   );
 }
@@ -80,13 +82,14 @@ export function TourDetailScreenError({ error, onRetry }: TourDetailScreenErrorP
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailScreenStyles(theme), [theme]);
   const colors = Colors[theme];
+  const { t } = useTranslation();
 
   return (
     <View style={[styles.container, styles.centered]}>
       <Ionicons name="alert-circle-outline" size={48} color={colors.icon} />
       <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
       <Text style={[styles.retryText, { color: colors.primary }]} onPress={onRetry}>
-        Tap to retry
+        {t('tourDetail.retry')}
       </Text>
     </View>
   );
@@ -137,6 +140,7 @@ export function TourDetailScreenContent({ tour, onStartTour }: TourDetailScreenC
 
 export default function TourDetailScreen({ tourId }: TourDetailScreenProps) {
   const { tour, loading, error, fetchTour } = useTourDetailScreen(tourId);
+  const { t } = useTranslation();
 
   const handleStartTour = async () => {
     console.log('Starting tour:', tourId);
@@ -149,7 +153,7 @@ export default function TourDetailScreen({ tourId }: TourDetailScreenProps) {
   }
 
   if (error || !tour) {
-    return <TourDetailScreenError error={error || 'Tour not found'} onRetry={fetchTour} />;
+    return <TourDetailScreenError error={error || t('tourDetail.notFound')} onRetry={fetchTour} />;
   }
 
   return <TourDetailScreenContent tour={tour} onStartTour={handleStartTour} />;
