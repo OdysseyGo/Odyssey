@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, Pressable, Animated } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -18,6 +19,7 @@ export default function ActiveTourHeader({
   const styles = useMemo(() => getStyles(theme), [theme]);
   const colors = Colors[theme];
   const config = defaultConfig;
+  const { t } = useTranslation();
 
   const totalSteps = tour.steps.length;
   const completedSteps = solvedSteps.size;
@@ -35,7 +37,7 @@ export default function ActiveTourHeader({
           <View style={styles.progressContainer}>
             <MaterialCommunityIcons name="map-marker-path" size={14} color={colors.subText} />
             <Text style={styles.progressText}>
-              Step {currentStepIndex + 1} of {totalSteps}
+              {t('map.activeTour.stepOf', { current: currentStepIndex + 1, total: totalSteps })}
             </Text>
 
             {config.showXPBadge && earnedXP > 0 && (
@@ -82,7 +84,7 @@ export default function ActiveTourHeader({
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <MaterialCommunityIcons name="close" size={16} color={colors.white} />
-          <Text style={styles.endButtonText}>End</Text>
+          <Text style={styles.endButtonText}>{t('map.activeTour.end')}</Text>
         </Pressable>
       </View>
     </View>

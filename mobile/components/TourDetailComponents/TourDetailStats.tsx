@@ -25,7 +25,7 @@ export default function TourDetailStats({ duration, distance, difficulty }: Tour
       <View style={styles.statDivider} />
       <View style={styles.statItem}>
         <Text style={[styles.statValue, { color: getDifficultyColor(difficulty, theme) }]}>
-          {difficulty}
+          {t(`tourDetail.${difficulty.toLowerCase()}`)}
         </Text>
         <Text style={styles.statLabel}>{t('tourDetail.difficulty')}</Text>
       </View>

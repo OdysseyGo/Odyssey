@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { imageUploadSectionStyles } from './ImageUploadSection.styles';
 import Colors from '@/constants/Colors';
+import { useTranslation } from 'react-i18next';
 
 type ImageUploadSectionProps = {
   image?: string;
@@ -14,13 +15,14 @@ export default function ImageUploadSection({ image, onImageChange }: ImageUpload
   const theme = useColorTheme();
   const styles = imageUploadSectionStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   const handlePickImage = async () => {
     // TODO: Install expo-image-picker and implement proper image selection
     Alert.alert(
-      'Image Picker',
-      'Image picker functionality requires expo-image-picker to be installed.',
-      [{ text: 'OK' }]
+      t('creation.story.imagePickerTitle'),
+      t('creation.story.imagePickerMessage'),
+      [{ text: t('creation.story.ok') }]
     );
   };
 
@@ -30,7 +32,7 @@ export default function ImageUploadSection({ image, onImageChange }: ImageUpload
 
   return (
     <View style={styles.imageSection}>
-      <Text style={styles.label}>Cover Image (Optional)</Text>
+      <Text style={styles.label}>{t('creation.story.coverImage')}</Text>
       {image ? (
         <View>
           <Image source={{ uri: image }} style={styles.imagePreview} />
@@ -41,7 +43,7 @@ export default function ImageUploadSection({ image, onImageChange }: ImageUpload
       ) : (
         <TouchableOpacity style={styles.imagePlaceholder} onPress={handlePickImage}>
           <Ionicons name="image-outline" size={48} color={color.subText} />
-          <Text style={styles.imagePlaceholderText}>Tap to add an image</Text>
+          <Text style={styles.imagePlaceholderText}>{t('creation.story.tapToAddImage')}</Text>
         </TouchableOpacity>
       )}
     </View>

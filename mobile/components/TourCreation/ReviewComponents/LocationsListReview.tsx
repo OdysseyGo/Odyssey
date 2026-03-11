@@ -3,6 +3,7 @@ import { View, Text } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { locationsListReviewStyles } from './LocationsListReview.styles';
 import { TourLocation } from '../TourCreation.types';
+import { useTranslation } from 'react-i18next';
 
 type LocationsListReviewProps = {
   locations: TourLocation[];
@@ -11,10 +12,11 @@ type LocationsListReviewProps = {
 export default function LocationsListReview({ locations }: LocationsListReviewProps) {
   const theme = useColorTheme();
   const styles = locationsListReviewStyles(theme);
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tour Stops ({locations.length})</Text>
+      <Text style={styles.title}>{t('creation.review.tourStopsTitle', { count: locations.length })}</Text>
 
       {locations.map((location) => (
         <View key={location.id} style={styles.locationCard}>

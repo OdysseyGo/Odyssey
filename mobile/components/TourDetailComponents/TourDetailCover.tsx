@@ -5,6 +5,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { STAR } from '@/constants/Symbols';
 import { TourDetailCoverProps } from './TourDetailCover.config';
 import { tourDetailCoverStyles } from './TourDetailCover.styles';
+import { useTranslation } from 'react-i18next';
 
 export default function TourDetailCover({
   coverImage,
@@ -15,6 +16,7 @@ export default function TourDetailCover({
   const theme = useColorTheme();
   const headerHeight = useHeaderHeight();
   const styles = useMemo(() => tourDetailCoverStyles(theme, headerHeight), [theme, headerHeight]);
+  const { t } = useTranslation();
 
   return (
     <View style={styles.coverContainer}>
@@ -25,7 +27,7 @@ export default function TourDetailCover({
         <View style={styles.ratingContainer}>
           <Text style={styles.star}>{STAR}</Text>
           <Text style={styles.ratingText}>
-            {rating} ({reviewCount} reviews)
+            {rating} ({reviewCount} {t('tourDetail.reviews')})
           </Text>
         </View>
       </View>

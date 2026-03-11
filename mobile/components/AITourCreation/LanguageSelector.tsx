@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { languageSelectorStyles } from './LanguageSelector.styles';
 import { LANGUAGE_OPTIONS } from './AITourCreation.types';
+import { useTranslation } from 'react-i18next';
 
 type LanguageSelectorProps = {
   selectedLanguage: string;
@@ -14,16 +15,17 @@ type LanguageSelectorProps = {
 export default function LanguageSelector({
   selectedLanguage,
   onSelect,
-  title = 'Content Language',
-  subtitle = 'Select the language for tour content',
+  title,
+  subtitle,
 }: LanguageSelectorProps) {
   const theme = useColorTheme();
   const styles = languageSelectorStyles(theme);
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      <Text style={styles.title}>{title ?? t('aiTour.languageSelector.title')}</Text>
+      <Text style={styles.subtitle}>{subtitle ?? t('aiTour.languageSelector.subtitle')}</Text>
       <View style={styles.chipContainer}>
         {LANGUAGE_OPTIONS.map((lang) => (
           <TouchableOpacity

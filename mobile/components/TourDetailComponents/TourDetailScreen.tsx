@@ -30,6 +30,7 @@ export function useTourDetailScreen(tourId: string): TourDetailScreenResult {
   const [tour, setTour] = useState<TourDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const fetchTour = useCallback(async () => {
     if (!tourId) return;
@@ -38,13 +39,13 @@ export function useTourDetailScreen(tourId: string): TourDetailScreenResult {
       setLoading(true);
       setError(null);
       const tourData = await getTour(parseInt(tourId, 10));
-      setTour(mapApiTourToDetail(tourData));
+      setTour(mapApiTourToDetail(tourData, t));
     } catch (err: any) {
       setError(err.message || 'Failed to load tour');
     } finally {
       setLoading(false);
     }
-  }, [tourId]);
+  }, [tourId, t]);
 
   useEffect(() => {
     fetchTour();

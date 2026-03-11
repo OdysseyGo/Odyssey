@@ -19,15 +19,15 @@ import CreateTourButton from '@/components/TourCreation/CreateTourButton';
 import { useTranslation } from 'react-i18next';
 
 // Convert API Tour to TourDisplayProps for components
-function mapTourToDisplayProps(tour: Tour): TourDisplayProps {
+function mapTourToDisplayProps(tour: Tour, t: (key: string) => string): TourDisplayProps {
   return {
     id: tour.id.toString(),
     image: tour.steps?.[0]?.image || `https://picsum.photos/400/320?random=${tour.id}`,
     title: tour.title,
     author: tour.creator?.username || 'Unknown',
-    duration: `${tour.duration_minutes} min`,
-    length: tour.steps?.length ? `${tour.steps.length} stops` : 'N/A',
-    reviewCount: `${tour.reviews?.length || 0} reviews`,
+    duration: `${tour.duration_minutes} ${t('tourId.min')}`,
+    length: tour.steps?.length ? `${tour.steps.length} ${t('tourId.stops')}` : 'N/A',
+    reviewCount: `${tour.reviews?.length || 0} ${t('tourId.review')}`,
     rating: tour.average_rating?.toFixed(1) || '0',
   };
 }
@@ -157,14 +157,14 @@ export default function TourDisplay() {
     });
 
     return {
-      featuredTours: featured.map(mapTourToDisplayProps),
-      popularTours: popular.map(mapTourToDisplayProps),
+      featuredTours: featured.map((tour) => mapTourToDisplayProps(tour, t)),
+      popularTours: popular.map((tour) => mapTourToDisplayProps(tour, t)),
       toursByContinent: sortedContinents.map(([continent, continentTours]) => ({
         continent,
-        tours: continentTours.map(mapTourToDisplayProps),
+        tours: continentTours.map((tour) => mapTourToDisplayProps(tour, t)),
       })),
     };
-  }, [allTours]);
+  }, [allTours, t]);
 
   const onRefresh = useCallback(() => {
     fetchTours(true);

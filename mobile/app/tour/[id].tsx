@@ -11,11 +11,13 @@ import {
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { getTour } from '@/api/tours';
 import { isLoggedIn } from '@/api/auth';
+import { useTranslation } from 'react-i18next';
 
 export default function TourDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { tour, loading, error, fetchTour } = useTourDetailScreen(id || '');
   const { startTour } = useActiveTour();
+  const { t } = useTranslation();
 
   const handleStartTour = async () => {
     console.log('Starting tour:', id);
@@ -24,11 +26,11 @@ export default function TourDetailPage() {
     const loggedIn = await isLoggedIn();
     if (!loggedIn) {
       Alert.alert(
-        'Login Required',
-        'You need to be logged in to start a tour. Please log in and try again.',
+        t('tourId.loginRequired'),
+        t('tourId.loginRequiredMessage'),
         [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Login', onPress: () => router.push('/login') },
+          { text: t('tourId.cancel'), style: 'cancel' },
+          { text: t('tourId.login'), onPress: () => router.push('/login') },
         ]
       );
       return;
@@ -53,7 +55,7 @@ export default function TourDetailPage() {
   if (loading) {
     return (
       <>
-        <Stack.Screen options={{ title: 'Loading...' }} />
+        <Stack.Screen options={{ title: t('tourId.loading') }} />
         <TourDetailScreenLoading />
       </>
     );
@@ -62,7 +64,7 @@ export default function TourDetailPage() {
   if (error || !tour) {
     return (
       <>
-        <Stack.Screen options={{ title: 'Error' }} />
+        <Stack.Screen options={{ title: t('tourId.error') }} />
         <TourDetailScreenError error={error || 'Tour not found'} onRetry={fetchTour} />
       </>
     );

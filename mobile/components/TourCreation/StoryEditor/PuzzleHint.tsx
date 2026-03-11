@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import StoryInputField from './StoryInputField';
 
 interface PuzzleHintProps {
@@ -7,13 +8,14 @@ interface PuzzleHintProps {
 }
 
 export default function PuzzleHint({ hint, onChange }: PuzzleHintProps) {
+  const { t } = useTranslation();
   return (
     <StoryInputField
-      label="Hint (Optional)"
+      label={t('creation.puzzle.hintLabel')}
       value={hint}
       onChangeText={onChange}
-      placeholder="e.g., Look at the plaque above the door."
-      hint="A helpful clue if the user gets stuck."
+      placeholder={t('creation.puzzle.hintPlaceholder')}
+      hint={t('creation.puzzle.hintText')}
     />
   );
 }

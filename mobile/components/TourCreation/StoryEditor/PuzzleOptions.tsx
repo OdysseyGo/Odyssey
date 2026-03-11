@@ -4,6 +4,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { puzzleOptionsStyles } from './PuzzleOptions.styles';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
+import { useTranslation } from 'react-i18next';
 
 interface PuzzleOptionsProps {
   options: string[];
@@ -27,11 +28,12 @@ export default function PuzzleOptions({
   const theme = useColorTheme();
   const styles = puzzleOptionsStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   return (
     <View style={styles.optionsSection}>
       <Text style={styles.label}>
-        {`Options (Mark the correct answer)${isRequired ? ' *' : ''}`}
+        {`${t('creation.puzzle.options')}${isRequired ? ' *' : ''}`}
       </Text>
 
       {options.map((option, index) => (
@@ -57,7 +59,7 @@ export default function PuzzleOptions({
               style={styles.optionInput}
               value={option}
               onChangeText={(text) => onOptionChange(text, index)}
-              placeholder={`Option ${index + 1}`}
+              placeholder={t('creation.puzzle.optionPlaceholder', { number: index + 1 })}
               placeholderTextColor={color.placeholder}
             />
           </View>
@@ -72,7 +74,7 @@ export default function PuzzleOptions({
 
       <TouchableOpacity onPress={onAddOption} style={styles.addButton}>
         <Ionicons name="add-circle-outline" size={20} color={color.primary} />
-        <Text style={styles.addButtonText}>Add Option</Text>
+        <Text style={styles.addButtonText}>{t('creation.puzzle.addOption')}</Text>
       </TouchableOpacity>
     </View>
   );
