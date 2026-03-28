@@ -19,6 +19,113 @@ class GoogleMapsFacade:
         if self.api_key:
             self.client = googlemaps.Client(key=self.api_key)
 
+    def geocode_location(
+        self,
+        name: str,
+        city: str,
+        fallback_lat: float,
+        fallback_lng: float,
+    ) -> tuple[float, float]:
+        """
+        Look up a location by name and city via Google Geocoding API.
+
+        Returns verified (latitude, longitude) from Google's database.
+        Falls back to the provided AI-generated coordinates if geocoding
+        fails or returns no results.
+        """
+        if not self.client:
+            return (fallback_lat, fallback_lng)
+
+        try:
+            results = self.client.geocode(f"{name}, {city}")
+            if results:
+                location = results[0]["geometry"]["location"]
+                return (location["lat"], location["lng"])
+        except Exception as e:
+            print(f"Geocoding failed for '{name}, {city}': {e}")
+
+        return (fallback_lat, fallback_lng)
+
+    def search_places(
+        self,
+        city: str,
+        theme: str,
+        max_results: int = 20,
+    ) -> List[Dict[str, Any]]:
+        """
+        Search for real places in a city matching a theme via Google Maps
+        Text Search API.
+
+        Returns a list of dicts, each containing:
+            - name: str (official place name)
+            - place_id: str (Google Place ID)
+            - latitude: float
+            - longitude: float
+            - address: str (formatted address)
+            - types: list[str] (Google place types)
+
+        Falls back to generic "points of interest" if the themed search
+        returns fewer than 5 results.
+        """
+        if not self.client:
+            return []
+
+        places: List[Dict[str, Any]] = []
+        seen_place_ids: set = set()
+
+        def _extract(results: list) -> None:
+            """Parse raw Google API results into our standardised format."""
+            for r in results:
+                pid = r.get("place_id")
+                if not pid or pid in seen_place_ids:
+                    continue
+                geo = r.get("geometry", {}).get("location", {})
+                lat = geo.get("lat")
+                lng = geo.get("lng")
+                if lat is None or lng is None:
+                    continue
+                seen_place_ids.add(pid)
+                places.append(
+                    {
+                        "name": r.get("name", "Unknown"),
+                        "place_id": pid,
+                        "latitude": lat,
+                        "longitude": lng,
+                        "address": r.get("formatted_address", ""),
+                        "types": r.get("types", []),
+                    }
+                )
+
+        # --- Primary themed search ---
+        try:
+            query = f"{theme} in {city}"
+            response = self.client.places(query=query)
+            _extract(response.get("results", []))
+
+            # Paginate if we have a next_page_token and need more results
+            while len(places) < max_results and response.get("next_page_token"):
+                import time
+
+                time.sleep(2)  # Google requires a short delay before using page tokens
+                response = self.client.places(
+                    query=query,
+                    page_token=response["next_page_token"],
+                )
+                _extract(response.get("results", []))
+        except Exception as e:
+            print(f"Places search failed for '{theme} in {city}': {e}")
+
+        # --- Fallback: generic search if themed search returned too few ---
+        if len(places) < 5:
+            try:
+                fallback_query = f"popular landmarks and points of interest in {city}"
+                response = self.client.places(query=fallback_query)
+                _extract(response.get("results", []))
+            except Exception as e:
+                print(f"Fallback places search failed for '{city}': {e}")
+
+        return places[:max_results]
+
     def calculate_route_metrics(self, steps: List[TourStep]) -> Dict[str, Any]:
         """
         Calculate distance, duration, elevation, and path features.

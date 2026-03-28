@@ -100,4 +100,4 @@ Add the following keys to the .env file:
 GEMINI_API_KEY=your_gemini_api_key
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 
-Note: Enable Places API, Elevation API and Directions API in the Google Cloud Console
+Note: Enable Places API, Elevation API, Geocoding API, and Directions API in the Google Cloud Console
