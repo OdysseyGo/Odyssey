@@ -67,7 +67,9 @@ export default function ProfileBadgesContainer({
           activeOpacity={0.8}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={[styles.viewAllButtonText, { color: color.text }]}>{t('profile.showLess')}</Text>
+            <Text style={[styles.viewAllButtonText, { color: color.text }]}>
+              {t('profile.showLess')}
+            </Text>
             <FontAwesome name="arrow-up" size={14} color={color.text} style={{ marginLeft: 8 }} />
           </View>
         </TouchableOpacity>

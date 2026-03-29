@@ -31,11 +31,22 @@ export default function AITourCreation() {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<AITourFormData>(createEmptyFormData());
 
-  const tourModeOptions = useMemo(() => [
-    { value: 'STORY', label: t('aiTour.modes.story'), description: t('aiTour.modes.storyDesc') },
-    { value: 'PUZZLE', label: t('aiTour.modes.puzzle'), description: t('aiTour.modes.puzzleDesc') },
-    { value: 'HYBRID', label: t('aiTour.modes.hybrid'), description: t('aiTour.modes.hybridDesc') },
-  ], [t]);
+  const tourModeOptions = useMemo(
+    () => [
+      { value: 'STORY', label: t('aiTour.modes.story'), description: t('aiTour.modes.storyDesc') },
+      {
+        value: 'PUZZLE',
+        label: t('aiTour.modes.puzzle'),
+        description: t('aiTour.modes.puzzleDesc'),
+      },
+      {
+        value: 'HYBRID',
+        label: t('aiTour.modes.hybrid'),
+        description: t('aiTour.modes.hybridDesc'),
+      },
+    ],
+    [t]
+  );
 
   const updateFormData = (updates: Partial<AITourFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -72,10 +83,7 @@ export default function AITourCreation() {
         },
       ]);
     } catch (error: any) {
-      Alert.alert(
-        t('aiTour.failedTitle'),
-        error?.message || t('aiTour.failedMessage')
-      );
+      Alert.alert(t('aiTour.failedTitle'), error?.message || t('aiTour.failedMessage'));
     } finally {
       setIsLoading(false);
     }

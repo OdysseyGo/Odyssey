@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 import { recentSearchesStyles } from './RecentSearches.styles';
+import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 
@@ -20,6 +21,7 @@ export default function RecentSearches({
   const theme = useColorTheme();
   const styles = useMemo(() => recentSearchesStyles(theme), [theme]);
   const colors = Colors[theme];
+  const { t } = useTranslation();
 
   if (searches.length === 0) {
     return null;
@@ -28,9 +30,9 @@ export default function RecentSearches({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Recent Searches</Text>
+        <Text style={styles.title}>{t('search.recentSearch')}</Text>
         <Pressable onPress={onClearAll}>
-          <Text style={styles.clearAllText}>Clear All</Text>
+          <Text style={styles.clearAllText}>{t('search.clearAll')}</Text>
         </Pressable>
       </View>
       {searches.map((search, index) => (

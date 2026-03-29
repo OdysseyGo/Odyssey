@@ -224,13 +224,17 @@ export default function TourDisplay() {
         )}
 
         {/* Popular Tours */}
-        {popularTours.length > 0 && <TourScrollerComp title={t('tour.popular')} data={popularTours} />}
+        {popularTours.length > 0 && (
+          <TourScrollerComp title={t('tour.popular')} data={popularTours} />
+        )}
 
         {/* Tours by Continent */}
         {toursByContinent.map(({ continent, tours }) => (
           <TourScrollerComp
             key={continent}
-            title={t(continentKeyMap[continent] ?? 'tour.continents.other', { defaultValue: continent })}
+            title={t(continentKeyMap[continent] ?? 'tour.continents.other', {
+              defaultValue: continent,
+            })}
             data={tours}
           />
         ))}

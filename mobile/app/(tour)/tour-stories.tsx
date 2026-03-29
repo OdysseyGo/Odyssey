@@ -37,7 +37,11 @@ export default function TourStoriesScreen() {
     <View style={[styles.container, { backgroundColor: color.foreground }]}>
       <StepIndicator steps={STEPS} currentStepIndex={2} />
       <TourStoriesStep locations={tourData.locations} onLocationSelect={handleLocationSelect} />
-      <CreationFooter buttonText={t('creation.continue')} onPress={handleNext} disabled={!canProceed} />
+      <CreationFooter
+        buttonText={t('creation.continue')}
+        onPress={handleNext}
+        disabled={!canProceed}
+      />
     </View>
   );
 }

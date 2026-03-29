@@ -26,10 +26,7 @@ export default function TourReviewStep({ tourData }: TourReviewStepProps) {
 
   return (
     <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-      <ReviewHeader
-        title={t('creation.review.title')}
-        subtitle={t('creation.review.subtitle')}
-      />
+      <ReviewHeader title={t('creation.review.title')} subtitle={t('creation.review.subtitle')} />
 
       <TourSummaryCard
         title={tourData.title || t('creation.review.untitledTour')}

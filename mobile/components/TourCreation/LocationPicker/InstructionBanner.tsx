@@ -19,7 +19,9 @@ export default function InstructionBanner({ message }: InstructionBannerProps) {
   return (
     <View style={styles.instructionBanner}>
       <Ionicons name="information-circle" size={24} color={color.primary} />
-      <Text style={styles.instructionText}>{message ?? t('creation.location.instructionBanner')}</Text>
+      <Text style={styles.instructionText}>
+        {message ?? t('creation.location.instructionBanner')}
+      </Text>
     </View>
   );
 }

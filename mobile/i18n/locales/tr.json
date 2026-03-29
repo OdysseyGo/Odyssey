@@ -97,7 +97,9 @@
     "searchFailed": "Arama başarısız",
     "searching": "Turlar aranıyor...",
     "results": "Arama Sonuçları",
-    "toursCount": "{{count}} tur"
+    "toursCount": "{{count}} tur",
+    "recentSearch": "Son Aramalar",
+    "clearAll": "Hepsini Temizle"
   },
   "tourDetail": {
     "loading": "Tur yükleniyor...",

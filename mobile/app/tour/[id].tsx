@@ -25,14 +25,10 @@ export default function TourDetailPage() {
     // Check if user is logged in
     const loggedIn = await isLoggedIn();
     if (!loggedIn) {
-      Alert.alert(
-        t('tourId.loginRequired'),
-        t('tourId.loginRequiredMessage'),
-        [
-          { text: t('tourId.cancel'), style: 'cancel' },
-          { text: t('tourId.login'), onPress: () => router.push('/login') },
-        ]
-      );
+      Alert.alert(t('tourId.loginRequired'), t('tourId.loginRequiredMessage'), [
+        { text: t('tourId.cancel'), style: 'cancel' },
+        { text: t('tourId.login'), onPress: () => router.push('/login') },
+      ]);
       return;
     }
 

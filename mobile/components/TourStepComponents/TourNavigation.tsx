@@ -81,7 +81,9 @@ function NavigationArrows({
           size={24}
           color={canGoBack ? Colors[theme].iconActive : Colors[theme].iconDisabled}
         />
-        <Text style={[styles.navButtonText, !canGoBack && styles.navButtonTextDisabled]}>{t('tourStep.back')}</Text>
+        <Text style={[styles.navButtonText, !canGoBack && styles.navButtonTextDisabled]}>
+          {t('tourStep.back')}
+        </Text>
       </Pressable>
 
       {requiresLocation ? (

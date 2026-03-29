@@ -16,7 +16,9 @@ export default function LocationsListReview({ locations }: LocationsListReviewPr
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t('creation.review.tourStopsTitle', { count: locations.length })}</Text>
+      <Text style={styles.title}>
+        {t('creation.review.tourStopsTitle', { count: locations.length })}
+      </Text>
 
       {locations.map((location) => (
         <View key={location.id} style={styles.locationCard}>

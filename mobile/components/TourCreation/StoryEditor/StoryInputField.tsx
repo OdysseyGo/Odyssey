@@ -42,7 +42,11 @@ export default function StoryInputField({
         multiline={multiline}
         textAlignVertical={multiline ? 'top' : 'center'}
       />
-      {showCharacterCount && <Text style={styles.characterCount}>{t('creation.story.characters', { count: value.length })}</Text>}
+      {showCharacterCount && (
+        <Text style={styles.characterCount}>
+          {t('creation.story.characters', { count: value.length })}
+        </Text>
+      )}
     </View>
   );
 }

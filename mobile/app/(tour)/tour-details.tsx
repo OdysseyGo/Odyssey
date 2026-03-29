@@ -29,7 +29,11 @@ export default function TourDetailsScreen() {
     <View style={[styles.container, { backgroundColor: color.foreground }]}>
       <StepIndicator steps={STEPS} currentStepIndex={0} />
       <TourDetailsStep tourData={tourData} onUpdate={updateTourData} />
-      <CreationFooter buttonText={t('creation.continue')} onPress={handleNext} disabled={!canProceed} />
+      <CreationFooter
+        buttonText={t('creation.continue')}
+        onPress={handleNext}
+        disabled={!canProceed}
+      />
     </View>
   );
 }

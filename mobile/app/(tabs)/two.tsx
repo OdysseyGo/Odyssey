@@ -142,9 +142,7 @@ export default function TabTwoScreen() {
                 <Text style={[styles.languageLabel, { color: colors.text }]}>
                   {t(lang.labelKey)}
                 </Text>
-                {language === lang.code && (
-                  <Check size={18} color={colors.primary} />
-                )}
+                {language === lang.code && <Check size={18} color={colors.primary} />}
               </Pressable>
             ))}
           </RNView>

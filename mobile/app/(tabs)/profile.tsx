@@ -145,7 +145,11 @@ export default function Profile() {
         <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm }}>
           <ProfileAddFriendsButton onPress={handleOpenAddFriendModal} />
         </View>
-        <ProfileBadgesContainer badges={formattedBadges} title={t('profile.badges')} maxDisplay={3} />
+        <ProfileBadgesContainer
+          badges={formattedBadges}
+          title={t('profile.badges')}
+          maxDisplay={3}
+        />
         <ProfileToursContainer />
         <View
           style={{

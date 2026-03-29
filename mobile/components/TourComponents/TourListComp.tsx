@@ -16,13 +16,16 @@ export default function TourListItem({ title, author, rating }: TourListItemProp
       <View style={styles.row}>
         <View style={styles.left}>
           <Text style={styles.title}>{title}</Text>
-          <Text style={styles.author}>{t('tour.by')} {author}</Text>
+          <Text style={styles.author}>
+            {t('tour.by')} {author}
+          </Text>
         </View>
 
         <View style={styles.right}>
           <Text style={styles.rating}>
             {STAR}
-            {rating}{t('tour.ratingOf')}
+            {rating}
+            {t('tour.ratingOf')}
           </Text>
         </View>
       </View>

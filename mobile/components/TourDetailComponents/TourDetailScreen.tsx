@@ -58,9 +58,7 @@ export interface TourDetailScreenLoadingProps {
   message?: string;
 }
 
-export function TourDetailScreenLoading({
-  message,
-}: TourDetailScreenLoadingProps) {
+export function TourDetailScreenLoading({ message }: TourDetailScreenLoadingProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailScreenStyles(theme), [theme]);
   const colors = Colors[theme];
@@ -69,7 +67,9 @@ export function TourDetailScreenLoading({
   return (
     <View style={[styles.container, styles.centered]}>
       <ActivityIndicator size="large" color={colors.primary} />
-      <Text style={[styles.loadingText, { color: colors.text }]}>{message ?? t('tourDetail.loading')}</Text>
+      <Text style={[styles.loadingText, { color: colors.text }]}>
+        {message ?? t('tourDetail.loading')}
+      </Text>
     </View>
   );
 }

@@ -12,7 +12,9 @@ export default function TourDetailStops({ stops }: TourDetailStopsProps) {
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{t('tourDetail.tourStops')} ({stops.length})</Text>
+      <Text style={styles.sectionTitle}>
+        {t('tourDetail.tourStops')} ({stops.length})
+      </Text>
       {stops.map((stop, index) => (
         <View key={stop.id} style={styles.stopItem}>
           <View style={styles.stopNumber}>

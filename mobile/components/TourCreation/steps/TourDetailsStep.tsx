@@ -2,10 +2,7 @@ import React, { useMemo } from 'react';
 import { Text, ScrollView } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { tourDetailsStepStyles } from './TourDetailsStep.styles';
-import {
-  TourCreationData,
-  TOUR_CATEGORIES,
-} from '../TourCreation.types';
+import { TourCreationData, TOUR_CATEGORIES } from '../TourCreation.types';
 import {
   FormInputGroup,
   FormTextInput,
@@ -26,21 +23,55 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
   const styles = tourDetailsStepStyles(theme);
   const { t } = useTranslation();
 
-  const difficultyOptions = useMemo(() => [
-    { value: 'EASY', label: t('creation.difficulty.easy'), description: t('creation.difficulty.easyDesc') },
-    { value: 'MEDIUM', label: t('creation.difficulty.medium'), description: t('creation.difficulty.mediumDesc') },
-    { value: 'HARD', label: t('creation.difficulty.hard'), description: t('creation.difficulty.hardDesc') },
-  ], [t]);
+  const difficultyOptions = useMemo(
+    () => [
+      {
+        value: 'EASY',
+        label: t('creation.difficulty.easy'),
+        description: t('creation.difficulty.easyDesc'),
+      },
+      {
+        value: 'MEDIUM',
+        label: t('creation.difficulty.medium'),
+        description: t('creation.difficulty.mediumDesc'),
+      },
+      {
+        value: 'HARD',
+        label: t('creation.difficulty.hard'),
+        description: t('creation.difficulty.hardDesc'),
+      },
+    ],
+    [t]
+  );
 
-  const tourTypeOptions = useMemo(() => [
-    { value: 'STORY', label: t('creation.tourType.story'), description: t('creation.tourType.storyDesc') },
-    { value: 'PUZZLE', label: t('creation.tourType.puzzle'), description: t('creation.tourType.puzzleDesc') },
-    { value: 'HYBRID', label: t('creation.tourType.hybrid'), description: t('creation.tourType.hybridDesc') },
-  ], [t]);
+  const tourTypeOptions = useMemo(
+    () => [
+      {
+        value: 'STORY',
+        label: t('creation.tourType.story'),
+        description: t('creation.tourType.storyDesc'),
+      },
+      {
+        value: 'PUZZLE',
+        label: t('creation.tourType.puzzle'),
+        description: t('creation.tourType.puzzleDesc'),
+      },
+      {
+        value: 'HYBRID',
+        label: t('creation.tourType.hybrid'),
+        description: t('creation.tourType.hybridDesc'),
+      },
+    ],
+    [t]
+  );
 
-  const categoryKeyMap = useMemo(() => Object.fromEntries(
-    TOUR_CATEGORIES.map((cat) => [t(`creation.categories.${cat.toLowerCase()}`), cat])
-  ), [t]);
+  const categoryKeyMap = useMemo(
+    () =>
+      Object.fromEntries(
+        TOUR_CATEGORIES.map((cat) => [t(`creation.categories.${cat.toLowerCase()}`), cat])
+      ),
+    [t]
+  );
 
   const translatedCategories = useMemo(
     () => TOUR_CATEGORIES.map((cat) => t(`creation.categories.${cat.toLowerCase()}`)),
@@ -82,7 +113,9 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
         <FormChipSelect
           options={translatedCategories}
           selectedValue={selectedTranslatedCategory}
-          onSelect={(translatedValue) => onUpdate({ category: categoryKeyMap[translatedValue] ?? translatedValue })}
+          onSelect={(translatedValue) =>
+            onUpdate({ category: categoryKeyMap[translatedValue] ?? translatedValue })
+          }
         />
       </FormInputGroup>
 

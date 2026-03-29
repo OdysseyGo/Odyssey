@@ -122,7 +122,9 @@ export default function SearchScreen() {
     <View style={styles.resultsContainer}>
       <View style={styles.resultsHeader}>
         <Text style={styles.resultsTitle}>{t('search.results')}</Text>
-        <Text style={styles.resultsCount}>{t('search.toursCount', { count: searchResults.length })}</Text>
+        <Text style={styles.resultsCount}>
+          {t('search.toursCount', { count: searchResults.length })}
+        </Text>
       </View>
       {searchResults.map((tour) => (
         <SearchResult key={tour.id} {...tour} />

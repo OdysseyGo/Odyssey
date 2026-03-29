@@ -32,9 +32,7 @@ export default function PuzzleOptions({
 
   return (
     <View style={styles.optionsSection}>
-      <Text style={styles.label}>
-        {`${t('creation.puzzle.options')}${isRequired ? ' *' : ''}`}
-      </Text>
+      <Text style={styles.label}>{`${t('creation.puzzle.options')}${isRequired ? ' *' : ''}`}</Text>
 
       {options.map((option, index) => (
         <View key={index} style={styles.optionRow}>

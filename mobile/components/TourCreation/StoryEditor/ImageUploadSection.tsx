@@ -19,11 +19,9 @@ export default function ImageUploadSection({ image, onImageChange }: ImageUpload
 
   const handlePickImage = async () => {
     // TODO: Install expo-image-picker and implement proper image selection
-    Alert.alert(
-      t('creation.story.imagePickerTitle'),
-      t('creation.story.imagePickerMessage'),
-      [{ text: t('creation.story.ok') }]
-    );
+    Alert.alert(t('creation.story.imagePickerTitle'), t('creation.story.imagePickerMessage'), [
+      { text: t('creation.story.ok') },
+    ]);
   };
 
   const handleRemoveImage = () => {

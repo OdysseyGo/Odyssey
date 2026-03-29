@@ -90,7 +90,9 @@ export default function TourCompleteModal({
 
           {/* Title */}
           <Text style={styles.title}>{t('map.tourComplete.title')}</Text>
-          <Text style={styles.subtitle}>{t('map.tourComplete.subtitle', { tourName: tour.title })}</Text>
+          <Text style={styles.subtitle}>
+            {t('map.tourComplete.subtitle', { tourName: tour.title })}
+          </Text>
 
           {/* Stats */}
           <View style={styles.statsContainer}>
@@ -107,7 +109,9 @@ export default function TourCompleteModal({
           {/* XP Earned */}
           <View style={styles.xpEarnedContainer}>
             <MaterialCommunityIcons name="star" size={24} color="#000" />
-            <Text style={styles.xpEarnedText}>{t('map.tourComplete.xpEarned', { xp: earnedXP })}</Text>
+            <Text style={styles.xpEarnedText}>
+              {t('map.tourComplete.xpEarned', { xp: earnedXP })}
+            </Text>
           </View>
 
           {/* Buttons */}
