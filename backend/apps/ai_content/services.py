@@ -1,16 +1,34 @@
 import json
+import logging
 import os
+import re
 
 import google.generativeai as genai
+from django.db import transaction
 
 from apps.tours.models import Puzzle, Tour, TourStep
 from apps.tours.utils import GoogleMapsFacade
 
+logger = logging.getLogger(__name__)
+
 
 class GeminiService:
-    """Generating tours w/ Google Gemini AI."""
+    """
+    RAG-based tour generation with Google Gemini AI.
 
-    GEMINI_MODEL = "gemini-2.5-flash"  # Upgrade to "gemini-1.5-pro" for better reasoning, but slower speed.
+    Architecture (Maps First, AI Second):
+        1. Query Google Maps Places API for real places matching the theme/city.
+        2. Feed verified places into the Gemini prompt so the AI can only
+           select from real, coordinate-verified locations.
+        3. AI writes creative content (stories, puzzles) for the selected places.
+
+    This eliminates geographic hallucinations entirely.
+    """
+
+    GEMINI_MODEL = "gemini-2.5-flash"
+
+    # Estimated time a user spends at each stop (reading, exploring, solving puzzles)
+    MINUTES_PER_STEP = 5
 
     def __init__(self):
         api_key = os.getenv("GEMINI_API_KEY")
@@ -30,7 +48,14 @@ class GeminiService:
         custom_prompt: str = "",
     ) -> Tour:
         """
-        Generate a complete tour with steps and puzzles.
+        Generate a complete tour with steps and puzzles using RAG.
+
+        Pipeline:
+            1. Discover real places via Google Maps Places API.
+            2. Build a prompt that constrains Gemini to those places.
+            3. Parse the AI response and validate place selection.
+            4. Create Tour, TourStep, and Puzzle objects in the database.
+            5. Calculate real-world route metrics.
 
         Args:
             city: City name (e.g., "Paris")
@@ -41,59 +66,257 @@ class GeminiService:
             creator: User object who will own the tour
             custom_prompt: Optional user instructions
         """
+        # ---- Step 1: Discover real places from Google Maps ----
+        num_steps = max(3, duration // 15)
+        candidate_places = self._discover_places(city, theme, num_steps)
+
+        if not candidate_places:
+            raise ValueError(
+                f"Could not find any real places for theme '{theme}' in "
+                f"'{city}'. Please try a different city or theme."
+            )
+
+        # ---- Step 2: Build RAG prompt with verified places ----
         prompt = self._build_prompt(
-            city, theme, mode, duration, language, custom_prompt
+            city,
+            theme,
+            mode,
+            duration,
+            language,
+            custom_prompt,
+            candidate_places,
+            num_steps,
         )
 
-        try:
-            # Set a generous timeout (e.g., 600 seconds) to avoid premature termination
-            response = self.model.generate_content(
-                prompt, request_options={"timeout": 600}
+        # ---- Step 3: Generate creative content via Gemini (with retries) ----
+        max_retries = 3
+        last_error = None
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                current_prompt = prompt
+                if attempt > 1:
+                    # On retries, prepend a stricter instruction
+                    current_prompt = (
+                        "IMPORTANT: Your previous response was not valid JSON. "
+                        "You MUST respond with ONLY a valid JSON object. "
+                        "No prose, no markdown, no explanation — just the JSON.\n\n"
+                        + prompt
+                    )
+
+                response = self.model.generate_content(
+                    current_prompt, request_options={"timeout": 600}
+                )
+                tour_data = self._parse_response(response.text)
+                break  # Success — exit retry loop
+            except ValueError as e:
+                # JSON parse failure — retry
+                last_error = e
+                logger.warning(
+                    "AI response parse failed (attempt %d/%d): %s",
+                    attempt,
+                    max_retries,
+                    e,
+                )
+            except Exception as e:
+                # Non-retryable error (network, timeout, etc.)
+                logger.error("AI Generation failed: %s", e)
+                raise
+        else:
+            # All retries exhausted
+            logger.error(
+                "AI failed to return valid JSON after %d attempts", max_retries
             )
-            tour_data = self._parse_response(response.text)
-        except Exception as e:
-            # Handle API errors or timeouts gracefully
-            print(f"AI Generation failed: {e}")
-            raise e
+            raise ValueError(
+                "AI failed to return a valid tour after multiple attempts. "
+                "Please try again."
+            ) from last_error
 
-        # Create Tour
-        tour = Tour.objects.create(
-            title=tour_data["title"],
-            description=tour_data["description"],
-            creator=creator,
-            tour_type=mode,
-            category=theme,
-            difficulty=tour_data.get("difficulty", "MEDIUM"),
-            duration_minutes=duration,
-            city=city,
-            status=Tour.ARCHIVED,  # Start as draft so creator can review
-        )
+        # ---- Step 4: Validate and enrich with verified coordinates ----
+        self._validate_tour_data(tour_data, mode)
 
-        # Create Steps and Puzzles
-        for idx, step_data in enumerate(tour_data["steps"], start=1):
-            step = TourStep.objects.create(
-                tour=tour,
-                order=idx,
-                title=step_data["title"],
-                description=step_data["description"],
-                latitude=step_data["latitude"],
-                longitude=step_data["longitude"],
+        # Build a lookup of verified places by name (case-insensitive)
+        places_lookup = {p["name"].strip().lower(): p for p in candidate_places}
+
+        # Replace AI coordinates with verified Google Maps coordinates
+        for step_data in tour_data["steps"]:
+            step_name = step_data["title"].strip().lower()
+            matched_place = places_lookup.get(step_name)
+
+            if matched_place:
+                # Use verified Google Maps coordinates
+                step_data["latitude"] = matched_place["latitude"]
+                step_data["longitude"] = matched_place["longitude"]
+            else:
+                # AI may have used a slightly different name — fuzzy match
+                matched_place = self._fuzzy_match_place(
+                    step_data["title"], candidate_places
+                )
+                if matched_place:
+                    step_data["latitude"] = matched_place["latitude"]
+                    step_data["longitude"] = matched_place["longitude"]
+                else:
+                    # Last resort: geocode the AI's title via Google Maps
+                    logger.warning(
+                        "AI selected '%s' which was not in the candidate list. "
+                        "Falling back to geocoding.",
+                        step_data["title"],
+                    )
+                    maps_facade = GoogleMapsFacade()
+                    verified_lat, verified_lng = maps_facade.geocode_location(
+                        name=step_data["title"],
+                        city=city,
+                        fallback_lat=step_data.get("latitude", 0),
+                        fallback_lng=step_data.get("longitude", 0),
+                    )
+                    step_data["latitude"] = verified_lat
+                    step_data["longitude"] = verified_lng
+
+        # ---- Step 5: Persist to database ----
+        with transaction.atomic():
+            tour = Tour.objects.create(
+                title=tour_data["title"],
+                description=tour_data["description"],
+                creator=creator,
+                tour_type=mode,
+                category=theme,
+                difficulty=tour_data.get("difficulty", "MEDIUM"),
+                duration_minutes=duration,
+                city=city,
+                status=Tour.ARCHIVED,
             )
 
-            # Create puzzle if present (for PUZZLE and HYBRID modes)
-            if "puzzle" in step_data and step_data["puzzle"]:
-                puzzle_data = step_data["puzzle"]
-                Puzzle.objects.create(
-                    step=step,
-                    puzzle_type=puzzle_data.get("type", "TRIVIA"),
-                    question=puzzle_data["question"],
-                    options=puzzle_data.get("options"),
-                    correct_answer=puzzle_data["answer"],
-                    hint=puzzle_data.get("hint", ""),
-                    xp_reward=puzzle_data.get("xp", 25),
+            for idx, step_data in enumerate(tour_data["steps"], start=1):
+                step = TourStep.objects.create(
+                    tour=tour,
+                    order=idx,
+                    title=step_data["title"],
+                    description=step_data.get("description", ""),
+                    latitude=step_data["latitude"],
+                    longitude=step_data["longitude"],
                 )
 
-        # Calculate real-world metrics (Distance & Duration)
+                # Create puzzle if present (for PUZZLE and HYBRID modes)
+                puzzle_data = step_data.get("puzzle")
+                if puzzle_data:
+                    Puzzle.objects.create(
+                        step=step,
+                        puzzle_type=puzzle_data.get("type", "TRIVIA"),
+                        question=puzzle_data["question"],
+                        options=puzzle_data.get("options"),
+                        correct_answer=puzzle_data["answer"],
+                        hint=puzzle_data.get("hint", ""),
+                        xp_reward=puzzle_data.get("xp", 25),
+                    )
+                elif mode in ("PUZZLE", "HYBRID"):
+                    Puzzle.objects.create(
+                        step=step,
+                        puzzle_type="TRIVIA",
+                        question="What is the name of this location?",
+                        options=[
+                            step_data["title"],
+                            "Unknown Place",
+                            "Central Park",
+                            "The Grand Palace",
+                        ],
+                        correct_answer=step_data["title"],
+                        hint="Look at the sign or landmark nearby.",
+                        xp_reward=10,
+                    )
+
+        # ---- Step 6: Calculate real-world metrics ----
+        self._calculate_metrics(tour)
+
+        return tour
+
+    # ------------------------------------------------------------------
+    # Place Discovery (RAG — Retrieval Step)
+    # ------------------------------------------------------------------
+
+    def _discover_places(self, city: str, theme: str, num_steps: int) -> list[dict]:
+        """
+        Retrieve real, verified places from Google Maps.
+
+        Requests more candidates than needed so the AI has a rich pool to
+        choose from.  Typically fetches 3× the required number of steps.
+        """
+        maps_facade = GoogleMapsFacade()
+        max_candidates = max(num_steps * 3, 15)
+        return maps_facade.search_places(
+            city=city, theme=theme, max_results=max_candidates
+        )
+
+    # ------------------------------------------------------------------
+    # Fuzzy Matching
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _fuzzy_match_place(
+        ai_name: str, candidates: list[dict], threshold: float = 0.6
+    ) -> dict | None:
+        """
+        Find the best matching candidate place for an AI-generated name.
+
+        Uses simple token-overlap similarity.  Returns the best match if
+        the similarity score is above `threshold`, otherwise None.
+        """
+        ai_tokens = set(ai_name.strip().lower().split())
+        if not ai_tokens:
+            return None
+
+        best_match = None
+        best_score = 0.0
+
+        for place in candidates:
+            place_tokens = set(place["name"].strip().lower().split())
+            if not place_tokens:
+                continue
+            overlap = len(ai_tokens & place_tokens)
+            total = len(ai_tokens | place_tokens)
+            score = overlap / total if total else 0
+            if score > best_score:
+                best_score = score
+                best_match = place
+
+        return best_match if best_score >= threshold else None
+
+    # ------------------------------------------------------------------
+    # Validation
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _validate_tour_data(tour_data: dict, mode: str) -> None:
+        """
+        Validate that the parsed AI response has all required keys and
+        sane structure before attempting database writes.
+
+        Raises ValueError with a human-readable message on failure.
+        """
+        missing = [
+            key for key in ("title", "description", "steps") if key not in tour_data
+        ]
+        if missing:
+            raise ValueError(
+                f"AI response is missing required keys: {', '.join(missing)}"
+            )
+
+        steps = tour_data["steps"]
+        if not isinstance(steps, list) or len(steps) == 0:
+            raise ValueError(
+                "AI response 'steps' must be a non-empty list, "
+                f"got {type(steps).__name__}"
+            )
+
+        for i, step in enumerate(steps):
+            if "title" not in step:
+                raise ValueError(f"Step {i + 1} is missing required key 'title'")
+
+    # ------------------------------------------------------------------
+    # Metrics
+    # ------------------------------------------------------------------
+
+    def _calculate_metrics(self, tour: Tour) -> None:
+        """Calculate real-world route metrics and update the tour in-place."""
         try:
             maps_facade = GoogleMapsFacade()
             steps_list = list(tour.steps.all())
@@ -107,23 +330,21 @@ class GeminiService:
                 tour.requires_transport = metrics.get("requires_transport", False)
                 tour.is_circular = metrics.get("is_circular", False)
 
-                # If calculated duration differs significantly, we update it.
-                # Or just overwrite AI's guess. Let's overwrite for accuracy.
-                calc_duration = metrics.get("duration_minutes", 0)
-                if calc_duration > 0:
-                    tour.duration_minutes = calc_duration
+                walking_minutes = metrics.get("duration_minutes", 0)
+                exploration_minutes = len(steps_list) * self.MINUTES_PER_STEP
+                total_duration = walking_minutes + exploration_minutes
+                if total_duration > 0:
+                    tour.duration_minutes = total_duration
 
                 tour.metrics_calculated = True
-
-                # Calculate Accessibility Rating
                 tour.accessibility_rating = maps_facade.estimate_accessibility(metrics)
-
                 tour.save()
         except Exception as e:
-            # Fallback: keep AI generated values and log error (or print for now)
-            print(f"Failed to calculate route metrics: {e}")
+            logger.warning("Failed to calculate route metrics: %s", e)
 
-        return tour
+    # ------------------------------------------------------------------
+    # Prompt (RAG — Augmented Generation Step)
+    # ------------------------------------------------------------------
 
     def _build_prompt(
         self,
@@ -132,10 +353,14 @@ class GeminiService:
         mode: str,
         duration: int,
         language: str,
-        custom_prompt: str = "",
+        custom_prompt: str,
+        candidate_places: list[dict],
+        num_steps: int,
     ) -> str:
-        """Structured prompt for Gemini"""
-
+        """
+        Build a RAG prompt that constrains Gemini to select from verified
+        Google Maps places.
+        """
         mode_instructions = {
             "STORY": "Focus on rich narrative storytelling. Each step should have detailed historical or thematic descriptions that immerse the user in the story. No puzzles needed.",
             "PUZZLE": "Focus on interactive challenges. Each step MUST have a puzzle (trivia question, riddle, or observation task). Keep descriptions brief.",
@@ -152,8 +377,6 @@ class GeminiService:
             "xp": 25
         }"""
 
-        num_steps = max(3, duration // 15)  # Roughly 15 min per step
-
         puzzle_field = '"puzzle": {...}' if mode in ["PUZZLE", "HYBRID"] else ""
         puzzle_instruction = (
             "Puzzle schema for each step:" + puzzle_schema
@@ -167,16 +390,30 @@ class GeminiService:
             else ""
         )
 
+        # Format verified places as a numbered list for the prompt
+        places_list = "\n".join(
+            f"  {i}. \"{p['name']}\" — GPS: ({p['latitude']}, {p['longitude']})"
+            + (f" — {p['address']}" if p.get("address") else "")
+            for i, p in enumerate(candidate_places, start=1)
+        )
+
         prompt = f"""You are a tour guide AI. Generate a {mode} tour in {city} with the theme "{theme}".
 {user_instruction}
 LANGUAGE: Generate all content in {language}.
-DURATION: {duration} minutes (approximately {num_steps} locations).
+DURATION: {duration} minutes (select exactly {num_steps} locations from the list below).
 MODE: {mode} - {mode_instructions.get(mode, mode_instructions["HYBRID"])}
 
-IMPORTANT REQUIREMENTS:
-1. Use REAL locations with accurate GPS coordinates in {city}.
-2. Create a logical walking route between locations.
-3. Make the narrative engaging and connected to the theme.
+═══════════════════════════════════════════════════════════════
+VERIFIED LOCATIONS (from Google Maps — you MUST choose from this list):
+═══════════════════════════════════════════════════════════════
+{places_list}
+
+CRITICAL RULES:
+1. You MUST select exactly {num_steps} locations from the VERIFIED LOCATIONS list above.
+2. Do NOT invent, fabricate, or hallucinate any new locations.
+3. Use the EXACT name and GPS coordinates provided in the list above.
+4. Arrange the selected locations in a logical walking order to minimize backtracking.
+5. Write engaging, theme-connected narrative content for each selected location.
 
 OUTPUT FORMAT (strict JSON):
 {{
@@ -185,7 +422,7 @@ OUTPUT FORMAT (strict JSON):
     "difficulty": "EASY" or "MEDIUM" or "HARD",
     "steps": [
         {{
-            "title": "Location name",
+            "title": "Exact location name from the list above",
             "description": "Narrative/story content for this location",
             "latitude": 48.8584,
             "longitude": 2.2945{', ' + puzzle_field if puzzle_field else ''}
@@ -199,11 +436,20 @@ Generate the tour now:"""
 
         return prompt
 
+    # ------------------------------------------------------------------
+    # Parsing
+    # ------------------------------------------------------------------
+
     def _parse_response(self, response_text: str) -> dict:
-        """Parse Gemini's response (JSON)."""
-        # this is to clean up response
-        # Gemini sometimes wraps JSON in markdown
+        """Parse Gemini's response (JSON).
+
+        Handles common LLM quirks:
+        - Markdown code fences (```json ... ```)
+        - Leading prose before the JSON object
+        """
         text = response_text.strip()
+
+        # Strip markdown code fences
         if text.startswith("```json"):
             text = text[7:]
         if text.startswith("```"):
@@ -211,7 +457,23 @@ Generate the tour now:"""
         if text.endswith("```"):
             text = text[:-3]
 
+        text = text.strip()
+
+        # First try a direct parse (fast path)
         try:
-            return json.loads(text.strip())
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse AI response as JSON: {e}")
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+
+        # Fallback: extract the first top-level JSON object from the text.
+        match = re.search(r"\{[\s\S]*\}", text)
+        if match:
+            try:
+                return json.loads(match.group())
+            except json.JSONDecodeError:
+                pass
+
+        raise ValueError(
+            "Failed to parse AI response as JSON. "
+            "The model did not return valid JSON."
+        )
