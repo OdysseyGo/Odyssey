@@ -50,6 +50,7 @@ class Tour(models.Model):
     city = models.CharField(
         max_length=100, blank=True, help_text="City where the tour is located"
     )
+    cover_image = models.ImageField(upload_to="tour_covers/", blank=True, null=True)
 
     # Advanced Metrics
     total_distance = models.FloatField(
