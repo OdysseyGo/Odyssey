@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "apps.gamification",
     "apps.ai_content",
     "storages",
+    "apps.admin_dashboard",
 ]
 
 MIDDLEWARE = [

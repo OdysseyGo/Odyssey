@@ -28,6 +28,7 @@ class User(AbstractUser):
     )
     tour_count = models.IntegerField(default=0)
     rating = models.FloatField(default=0.0)
+    is_banned = models.BooleanField(default=False)
 
     class Meta:
         db_table = "user"
