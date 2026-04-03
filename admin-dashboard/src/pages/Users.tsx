@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, ArrowUpDown } from "lucide-react";
 import { getUsers } from "@/api/endpoints";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
@@ -28,6 +28,10 @@ interface Filters {
   user_type: string;
   is_banned: string;
   is_staff: string;
+  country: string;
+  date_joined_after: string;
+  date_joined_before: string;
+  ordering: string;
 }
 
 const USER_TYPE_LABELS: Record<number, string> = {
@@ -47,6 +51,10 @@ export default function Users() {
     user_type: "",
     is_banned: "",
     is_staff: "",
+    country: "",
+    date_joined_after: "",
+    date_joined_before: "",
+    ordering: "-date_joined",
   });
 
   const fetchUsers = useCallback(async () => {
@@ -57,6 +65,10 @@ export default function Users() {
       if (filters.user_type) params.user_type = filters.user_type;
       if (filters.is_banned) params.is_banned = filters.is_banned;
       if (filters.is_staff) params.is_staff = filters.is_staff;
+      if (filters.country) params.country = filters.country;
+      if (filters.date_joined_after) params.date_joined_after = filters.date_joined_after;
+      if (filters.date_joined_before) params.date_joined_before = filters.date_joined_before;
+      if (filters.ordering) params.ordering = filters.ordering;
 
       const { data } = await getUsers(params);
       setUsers(data.results ?? data);
@@ -92,7 +104,7 @@ export default function Users() {
             className="pl-10"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <Select
             value={filters.user_type}
@@ -118,6 +130,49 @@ export default function Users() {
             <option value="">All Roles</option>
             <option value="true">Staff</option>
             <option value="false">Regular</option>
+          </Select>
+          <Input
+            placeholder="Country..."
+            value={filters.country}
+            onChange={(e) => updateFilter("country", e.target.value)}
+            className="w-32"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-muted-foreground">Joined after</label>
+          <Input
+            type="date"
+            value={filters.date_joined_after}
+            onChange={(e) => updateFilter("date_joined_after", e.target.value)}
+            className="w-40"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-muted-foreground">before</label>
+          <Input
+            type="date"
+            value={filters.date_joined_before}
+            onChange={(e) => updateFilter("date_joined_before", e.target.value)}
+            className="w-40"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+          <Select
+            value={filters.ordering}
+            onChange={(e) => updateFilter("ordering", e.target.value)}
+          >
+            <option value="-date_joined">Newest first</option>
+            <option value="date_joined">Oldest first</option>
+            <option value="username">Username A-Z</option>
+            <option value="-username">Username Z-A</option>
+            <option value="-xp">Highest XP</option>
+            <option value="xp">Lowest XP</option>
+            <option value="-level">Highest Level</option>
+            <option value="level">Lowest Level</option>
           </Select>
         </div>
       </div>

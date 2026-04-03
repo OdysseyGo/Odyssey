@@ -21,6 +21,7 @@ import {
   getActiveUsers,
 } from "@/api/endpoints";
 import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { StatCard } from "@/components/ui/StatCard";
 import { Users, Activity } from "lucide-react";
@@ -86,13 +87,29 @@ export default function Analytics() {
             <label className="text-sm font-medium">Active window:</label>
             <Select
               value={String(activeDays)}
-              onChange={(e) => setActiveDays(Number(e.target.value))}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v !== "custom") setActiveDays(Number(v));
+              }}
             >
               <option value="7">7 days</option>
               <option value="14">14 days</option>
               <option value="30">30 days</option>
               <option value="90">90 days</option>
+              <option value="180">180 days</option>
+              <option value="365">1 year</option>
             </Select>
+            <Input
+              type="number"
+              min={1}
+              max={730}
+              value={activeDays}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                if (v > 0) setActiveDays(v);
+              }}
+              className="w-20"
+            />
           </div>
         </Card>
       </div>
@@ -111,14 +128,30 @@ export default function Analytics() {
             </Select>
             <Select
               value={String(days)}
-              onChange={(e) => setDays(Number(e.target.value))}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v !== "custom") setDays(Number(v));
+              }}
             >
               <option value="7">7 days</option>
               <option value="14">14 days</option>
               <option value="30">30 days</option>
               <option value="90">90 days</option>
+              <option value="180">180 days</option>
               <option value="365">1 year</option>
+              <option value="730">2 years</option>
             </Select>
+            <Input
+              type="number"
+              min={1}
+              max={730}
+              value={days}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                if (v > 0) setDays(v);
+              }}
+              className="w-20"
+            />
           </div>
         </div>
 

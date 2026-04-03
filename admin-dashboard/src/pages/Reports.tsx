@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { Filter, ArrowUpDown } from "lucide-react";
 import { getReports, takeReportAction } from "@/api/endpoints";
 import { DataTable } from "@/components/ui/DataTable";
 import { Badge } from "@/components/ui/Badge";
@@ -33,6 +34,9 @@ export default function Reports() {
   const [activeTab, setActiveTab] = useState<string>("PENDING");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [contentType, setContentType] = useState("");
+  const [createdAfter, setCreatedAfter] = useState("");
+  const [ordering, setOrdering] = useState("-created_at");
 
   const [actionModal, setActionModal] = useState<Report | null>(null);
   const [action, setAction] = useState("dismiss");
@@ -44,13 +48,18 @@ export default function Reports() {
   const fetchReports = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await getReports({ status: activeTab, page });
+      const params: Record<string, string | number> = { status: activeTab, page };
+      if (contentType) params.content_type = contentType;
+      if (createdAfter) params.created_after = createdAfter;
+      if (ordering) params.ordering = ordering;
+
+      const { data } = await getReports(params);
       setReports(data.results ?? data);
       setTotalPages(Math.ceil((data.count ?? data.length) / 20));
     } finally {
       setLoading(false);
     }
-  }, [activeTab, page]);
+  }, [activeTab, page, contentType, createdAfter, ordering]);
 
   useEffect(() => {
     fetchReports();
@@ -98,6 +107,40 @@ export default function Reports() {
             {tab.charAt(0) + tab.slice(1).toLowerCase()}
           </button>
         ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select
+            value={contentType}
+            onChange={(e) => { setContentType(e.target.value); setPage(1); }}
+          >
+            <option value="">All Types</option>
+            <option value="Tour">Tour</option>
+            <option value="Review">Review</option>
+            <option value="User">User</option>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-muted-foreground">Created after</label>
+          <Input
+            type="date"
+            value={createdAfter}
+            onChange={(e) => { setCreatedAfter(e.target.value); setPage(1); }}
+            className="w-40"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+          <Select
+            value={ordering}
+            onChange={(e) => { setOrdering(e.target.value); setPage(1); }}
+          >
+            <option value="-created_at">Newest first</option>
+            <option value="created_at">Oldest first</option>
+          </Select>
+        </div>
       </div>
 
       {loading ? (

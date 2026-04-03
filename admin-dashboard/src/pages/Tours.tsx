@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, ArrowUpDown } from "lucide-react";
 import { getTours } from "@/api/endpoints";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
@@ -29,6 +29,10 @@ interface Filters {
   status: string;
   tour_type: string;
   difficulty: string;
+  creator: string;
+  created_after: string;
+  created_before: string;
+  ordering: string;
 }
 
 const STATUS_VARIANT: Record<string, "success" | "warning" | "secondary"> = {
@@ -48,16 +52,24 @@ export default function Tours() {
     status: "",
     tour_type: "",
     difficulty: "",
+    creator: "",
+    created_after: "",
+    created_before: "",
+    ordering: "-created_at",
   });
 
   const fetchTours = useCallback(async () => {
     setLoading(true);
     try {
       const params: Record<string, string | number> = { page };
-      if (filters.search) params.city = filters.search;
+      if (filters.search) params.search = filters.search;
       if (filters.status) params.status = filters.status;
       if (filters.tour_type) params.tour_type = filters.tour_type;
       if (filters.difficulty) params.difficulty = filters.difficulty;
+      if (filters.creator) params.creator = filters.creator;
+      if (filters.created_after) params.created_after = filters.created_after;
+      if (filters.created_before) params.created_before = filters.created_before;
+      if (filters.ordering) params.ordering = filters.ordering;
 
       const { data } = await getTours(params);
       setTours(data.results ?? data);
@@ -87,13 +99,13 @@ export default function Tours() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by city..."
+            placeholder="Search tours..."
             value={filters.search}
             onChange={(e) => updateFilter("search", e.target.value)}
             className="pl-10"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <Select
             value={filters.status}
@@ -121,6 +133,49 @@ export default function Tours() {
             <option value="EASY">Easy</option>
             <option value="MEDIUM">Medium</option>
             <option value="HARD">Hard</option>
+          </Select>
+          <Input
+            placeholder="Creator ID..."
+            value={filters.creator}
+            onChange={(e) => updateFilter("creator", e.target.value)}
+            className="w-28"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-muted-foreground">Created after</label>
+          <Input
+            type="date"
+            value={filters.created_after}
+            onChange={(e) => updateFilter("created_after", e.target.value)}
+            className="w-40"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-muted-foreground">before</label>
+          <Input
+            type="date"
+            value={filters.created_before}
+            onChange={(e) => updateFilter("created_before", e.target.value)}
+            className="w-40"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+          <Select
+            value={filters.ordering}
+            onChange={(e) => updateFilter("ordering", e.target.value)}
+          >
+            <option value="-created_at">Newest first</option>
+            <option value="created_at">Oldest first</option>
+            <option value="title">Title A-Z</option>
+            <option value="-title">Title Z-A</option>
+            <option value="-avg_rating">Highest Rating</option>
+            <option value="avg_rating">Lowest Rating</option>
+            <option value="-completion_count">Most Completions</option>
+            <option value="completion_count">Fewest Completions</option>
           </Select>
         </div>
       </div>
