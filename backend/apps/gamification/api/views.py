@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import action
@@ -59,13 +60,58 @@ class TourProgressViewSet(
 
         current_step = progress.current_step
 
-        # award xp for the CURRENT step
-        xp_awarded = 0
+        # find the next step in the sequence with an order higher than the current one
+        next_step = None
+        if current_step:
+            next_step = (
+                TourStep.objects.filter(
+                    tour=progress.tour,
+                    order__gt=current_step.order,  # get steps with higher order
+                )
+                .order_by("order")
+                .first()
+            )
+        
+        # accumulate xp into total
         if current_step and hasattr(current_step, "puzzle"):
-            user = request.user
-            user.xp += current_step.puzzle.xp_reward
-            user.save()
-            xp_awarded = current_step.puzzle.xp_reward
+            progress.total_xp += current_step.puzzle.xp_reward
+
+        with transaction.atomic():
+            if next_step:
+                progress.current_step = next_step
+                progress.save()
+                message = "Step completed. Moved to next step."
+            else:
+                progress.status = TourProgress.COMPLETED
+                progress.completed_at = timezone.now()
+                progress.current_step = None  
+                progress.save()
+
+                user = request.user
+                user.xp += progress.total_xp
+                user.tour_count += 1
+                user.save()
+
+                new_badges = BadgeService.check_badges(user)
+                message = "Tour completed!"
+
+    
+        return Response(
+            {
+                "status": message,
+                "is_tour_complete": progress.status == TourProgress.COMPLETED,
+                "new_step_id": next_step.id if next_step else None,
+            }
+        )
+
+    @action(detail=True, methods=["post"], url_path="skip-step")
+    def skip_step(self, request, pk=None):
+        progress = self.get_object()
+
+        if progress.status == TourProgress.COMPLETED:
+            return Response({"error": "Tour is already completed"}, status=400)
+
+        current_step = progress.current_step
 
         # find the next step in the sequence with an order higher than the current one
         next_step = None
@@ -78,32 +124,36 @@ class TourProgressViewSet(
                 .order_by("order")
                 .first()
             )
+        
+        # dont accumulate xp, no xp given when skipping!
 
-        if next_step:
-            progress.current_step = next_step
-            progress.save()
-            message = "Step completed. Moved to next step."
-        else:
-            progress.status = TourProgress.COMPLETED
-            progress.completed_at = timezone.now()
-            progress.current_step = None  # if current step is null, its completed but also we have status so redundancy
-            progress.save()
+        with transaction.atomic():
+            progress.skip_count += 1
 
-            # increment user's tour_count
-            user = request.user
-            user.tour_count += 1
-            user.save()
+            if next_step:
+                progress.current_step = next_step
+                progress.save()
+                message = "Step skipped. Moved to next step."
 
-            message = "Tour completed!"
+            else:
+                progress.status = TourProgress.COMPLETED
+                progress.completed_at = timezone.now()
+                progress.current_step = None  
+                progress.save()
 
-        new_badges = BadgeService.check_badges(request.user)
+                user = request.user
+                user.xp += progress.total_xp
+                user.tour_count += 1
+                user.save()
 
+                new_badges = BadgeService.check_badges(user)
+                message = "Tour completed!"
+
+    
         return Response(
             {
                 "status": message,
                 "is_tour_complete": progress.status == TourProgress.COMPLETED,
-                "xp_awarded": xp_awarded,
                 "new_step_id": next_step.id if next_step else None,
-                "new_badges": new_badges,
             }
         )
