@@ -17,6 +17,8 @@ const grayLight = '#FAFAFA'; // Clean light background
 const grayDark = '#16162A'; // Deep space navy
 
 const blackPale = 'rgba(26, 26, 46, 0.65)';
+const overlayDark = 'rgba(0, 0, 0, 0.55)';
+const overlayLightColor = 'rgba(255, 255, 255, 0.5)';
 
 const textGrayLight = '#4A4A68'; // Muted purple-gray for readability
 const textGrayDark = '#B8B8D1'; // Light purple-gray
@@ -68,6 +70,8 @@ const Colors = {
     medium: medium,
     hard: hard,
     correctOptionBackground: correctOptionBackground,
+    overlay: overlayDark,
+    overlayLight: overlayLightColor,
   },
   dark: {
     white: white,
@@ -97,6 +101,8 @@ const Colors = {
     medium: medium,
     hard: hard,
     correctOptionBackground: correctOptionBackground,
+    overlay: overlayDark,
+    overlayLight: overlayLightColor,
   },
 };
 

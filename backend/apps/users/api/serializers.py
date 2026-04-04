@@ -23,6 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
             "user_type",
             "tour_count",
             "rating",
+            "avatar_url",
         ]
         extra_kwargs = {
             "password": {"write_only": True},
