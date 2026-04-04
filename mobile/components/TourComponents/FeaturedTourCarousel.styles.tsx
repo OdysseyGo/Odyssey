@@ -11,7 +11,7 @@ export const featuredTourCarouselStyles = (theme: ThemeName) => {
   return StyleSheet.create({
     container: {
       width: '100%',
-      marginTop: Spacing.md,
+      marginTop: 0,
     },
     carouselWrapper: {
       width: '100%',
