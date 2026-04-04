@@ -1,0 +1,386 @@
+{
+  "auth": {
+    "welcomeTitle": "Welcome, adventurer!",
+    "welcomeSubtitle": "Log in to start your journey.",
+    "registerTitle": "Join the adventure!",
+    "registerSubtitle": "Create an account to begin your quest.",
+    "resetTitle": "Forgot your way?",
+    "resetSubtitle": "Reset your password to continue your quest.",
+    "username": "Username",
+    "password": "Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "confirmPassword": "Confirm Password",
+    "newPassword": "New Password",
+    "usernamePlaceholder": "Your username",
+    "passwordPlaceholder": "Your password",
+    "firstNamePlaceholder": "Your first name",
+    "lastNamePlaceholder": "Your last name",
+    "emailPlaceholder": "you@example.com",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "newPasswordPlaceholder": "New password",
+    "confirmNewPasswordPlaceholder": "Confirm password",
+    "login": "Log In",
+    "createAccount": "Create Account",
+    "noAccount": "No Account? Create One",
+    "forgotPassword": "Forgot Password?",
+    "remembered": "Ooh, I remembered!",
+    "alreadyHaveAccount": "Already have an account? Log In",
+    "verify": "Verify",
+    "resetPassword": "Reset Password",
+    "updatePassword": "Update Password",
+    "cancel": "Cancel",
+    "errors": {
+      "usernameRequired": "Username is required",
+      "passwordRequired": "Password is required",
+      "firstNameRequired": "First name is required",
+      "lastNameRequired": "Last name is required",
+      "emailRequired": "Email is required",
+      "emailFormat": "Email format is wrong. TLD should be at least 2 chars long (.com, .tr etc)",
+      "confirmPasswordRequired": "Confirm password is required",
+      "passwordsMismatch": "Passwords do not match",
+      "loginFailed": "Login failed. Please try again.",
+      "registrationFailed": "Registration failed",
+      "userNotFound": "User not found",
+      "usernameEmailMismatch": "Username and email do not match",
+      "somethingWentWrong": "Something went wrong",
+      "bothFieldsRequired": "Both fields are required",
+      "couldNotUpdate": "Could not update password"
+    },
+    "userCreated": "User has been created!"
+  },
+  "profile": {
+    "notLoggedIn": "You need to be logged in to view your profile.",
+    "loginButton": "Oooh I want to log in!",
+    "logout": "Logout",
+    "xp": "XP",
+    "tours": "Tours",
+    "badges": "Badges",
+    "followers": "Followers",
+    "following": "Following",
+    "noBadges": "No badges earned yet. Keep exploring!",
+    "viewAllBadges": "View All Badges",
+    "showLess": "Show Less",
+    "myTours": "My Tours",
+    "cancel": "Cancel",
+    "tabs": {
+      "published": "Published",
+      "drafts": "Drafts",
+      "archived": "Archived"
+    },
+    "emptyPublished": "No published tours yet. Publish a tour to share it with the community!",
+    "emptyDraft": "No draft tours. Start creating a new tour!",
+    "emptyArchived": "No archived tours.",
+    "emptyDefault": "No tours found."
+  },
+  "tour": {
+    "loading": "Loading tours...",
+    "retry": "Tap to retry",
+    "popular": "Popular Tours",
+    "by": "by",
+    "ratingOf": "/5",
+    "continents": {
+      "europe": "Europe",
+      "asia": "Asia",
+      "northAmerica": "North America",
+      "southAmerica": "South America",
+      "africa": "Africa",
+      "oceania": "Oceania",
+      "antarctica": "Antarctica",
+      "other": "Other"
+    }
+  },
+  "search": {
+    "noToursFound": "No tours found",
+    "noToursFoundSub": "Try searching for a different destination, tour name, or guide",
+    "searchFailed": "Search failed",
+    "searching": "Searching tours...",
+    "results": "Search Results",
+    "toursCount": "{{count}} tours",
+    "recentSearch": "Son Aramalar",
+    "clearAll": "Hepsini Temizle"
+  },
+  "tourDetail": {
+    "loading": "Loading tour...",
+    "retry": "Tap to retry",
+    "startTour": "Start Tour",
+    "duration": "Duration",
+    "distance": "Distance",
+    "difficulty": "Difficulty",
+    "notFound": "Tour not found",
+    "reviews": "reviews",
+    "aboutThisTour": "About this tour",
+    "createdBy": "Created by",
+    "tourStops": "Tour Stops",
+    "routeMap": "Route Map",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "tabs": {
+    "settings": "Settings",
+    "map": "Map",
+    "tours": "Tours",
+    "profile": "Profile"
+  },
+  "settings": {
+    "language": "Language",
+    "selectLanguage": "Select Language",
+    "languages": {
+      "en": "English",
+      "tr": "Turkish"
+    }
+  },
+  "tourId": {
+    "loading": "Loading...",
+    "error": "Error",
+    "loginRequired": "Login Required",
+    "loginRequiredMessage": "You need to be logged in to start a tour. Please log in and try again.",
+    "cancel": "Cancel",
+    "login": "Login",
+    "review": "Review",
+    "min": "min",
+    "stops": "stops"
+  },
+  "creation": {
+    "continue": "Continue",
+    "continueWithCount": "Continue ({{count}} locations)",
+    "submit": "Submit Tour",
+    "submitting": "Submitting...",
+    "submitTitle": "Submit Tour",
+    "submitMessage": "Are you ready to submit your tour for review?",
+    "cancel": "Cancel",
+    "submitConfirm": "Submit",
+    "successTitle": "Success",
+    "successMessage": "Your tour has been created!",
+    "ok": "OK",
+    "errorTitle": "Error",
+    "errorMessage": "Failed to submit tour. Please try again.",
+    "method": {
+      "title": "Create Your Tour",
+      "subtitle": "Choose how you want to create your tour experience",
+      "personal": "Personal Creation",
+      "personalDescription": "Manually select locations, add stories, and customize every detail of your tour",
+      "ai": "AI-Powered Creation",
+      "aiDescription": "Let AI help you generate tour content, stories, and suggestions based on your preferences",
+      "skip": "Nevermind, I'll find a tour",
+      "comingSoon": "COMING SOON"
+    },
+    "details": {
+      "title": "Tour Details",
+      "subtitle": "Provide basic information about your tour",
+      "tourTitle": "Tour Title",
+      "tourTitlePlaceholder": "e.g., Hidden Gems of Old Town",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe what makes your tour special...",
+      "city": "City",
+      "cityPlaceholder": "e.g., Istanbul, Tokyo, Paris",
+      "category": "Category",
+      "difficulty": "Difficulty",
+      "tourType": "Tour Type",
+      "duration": "Estimated Duration"
+    },
+    "location": {
+      "instructionBanner": "Tap on the map to add tour stops.",
+      "empty": "No locations added yet.\nTap on the map to add your first stop!",
+      "tapToAddDetails": "Tap to add details",
+      "deleteTitle": "Delete Location",
+      "deleteMessage": "Are you sure you want to delete this location?",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "tourStops": "Tour Stops",
+      "locationsCount": "{{count}} locations"
+    },
+    "review": {
+      "tourStopsTitle": "Tour Stops ({{count}})",
+      "title": "Review Your Tour",
+      "subtitle": "Make sure everything looks good before submitting",
+      "untitledTour": "Untitled Tour",
+      "noDescription": "No description provided."
+    },
+    "stories": {
+      "empty": "No locations added yet.\nGo back and add some locations first.",
+      "title": "Write Your Stories",
+      "subtitle": "Add a compelling story for each location in your tour",
+      "untitledLocation": "Untitled Location",
+      "tapToAddStory": "Tap to add a story for this location"
+    },
+    "storyEditor": {
+      "locationTitle": "Location Title *",
+      "locationTitlePlaceholder": "e.g., The Grand Bazaar Entrance",
+      "address": "Address (Optional)",
+      "addressPlaceholder": "e.g., 123 Main Street, Istanbul",
+      "story": "Story *",
+      "storyPlaceholder": "Tell the story of this location...",
+      "storyHint": "Write the narrative that visitors will read or hear at this location"
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "easyDesc": "Suitable for all ages and fitness levels",
+      "medium": "Medium",
+      "mediumDesc": "Moderate walking, some elevation",
+      "hard": "Hard",
+      "hardDesc": "Challenging terrain or long distances"
+    },
+    "tourType": {
+      "story": "Story Mode",
+      "storyDesc": "Narrative-driven tour experience",
+      "puzzle": "Puzzle Mode",
+      "puzzleDesc": "Interactive challenges at each stop",
+      "hybrid": "Hybrid Mode",
+      "hybridDesc": "Mix of stories and puzzles"
+    },
+    "categories": {
+      "history": "History",
+      "nature": "Nature",
+      "art": "Art",
+      "food": "Food",
+      "architecture": "Architecture",
+      "adventure": "Adventure",
+      "culture": "Culture",
+      "religious": "Religious",
+      "shopping": "Shopping",
+      "nightlife": "Nightlife"
+    },
+    "stats": {
+      "locations": "Locations",
+      "minutes": "Minutes",
+      "difficulty": "Difficulty"
+    },
+    "story": {
+      "coverImage": "Cover Image (Optional)",
+      "imagePickerTitle": "Image Picker",
+      "imagePickerMessage": "Image picker functionality requires expo-image-picker to be installed.",
+      "ok": "OK",
+      "tapToAddImage": "Tap to add an image",
+      "stopOf": "Stop {{current}} of {{total}}",
+      "writingTipsTitle": "💡 Writing Tips",
+      "writingTip1": "Set the scene: Describe what visitors will see and feel at this location.",
+      "writingTip2": "Include historical context or interesting facts.",
+      "writingTip3": "Add sensory details: sounds, smells, textures.",
+      "writingTip4": "Connect this stop to the overall tour narrative.",
+      "writingTip5": "Keep it engaging but concise (200-500 words ideal).",
+      "characters": "{{count}} characters",
+      "saveLocation": "Save Location",
+      "previous": "Previous",
+      "next": "Next",
+      "editLocation": "Edit Location",
+      "save": "Save"
+    },
+    "puzzle": {
+      "type": "Puzzle Type *",
+      "xpReward": "XP Reward",
+      "xpPlaceholder": "10",
+      "challenge": "Puzzle Challenge",
+      "question": "Question / Challenge",
+      "questionRequired": "Question / Challenge *",
+      "questionPlaceholder": "e.g., What year was the tower built?",
+      "questionHint": "The question that users must answer.",
+      "options": "Options (Mark the correct answer)",
+      "optionsRequired": "Options (Mark the correct answer) *",
+      "optionPlaceholder": "Option {{number}}",
+      "addOption": "Add Option",
+      "hintLabel": "Hint (Optional)",
+      "hintPlaceholder": "e.g., Look at the plaque above the door.",
+      "hintText": "A helpful clue if the user gets stuck."
+    },
+    "editLocation": {
+      "header": "Edit Location",
+      "titleLabel": "Location Title *",
+      "titlePlaceholder": "e.g., The Grand Bazaar Entrance",
+      "addressLabel": "Address (Optional)",
+      "addressPlaceholder": "e.g., 123 Main Street, Istanbul",
+      "storyLabel": "Story *",
+      "storyPlaceholder": "Tell the story of this location...",
+      "storyHint": "Write the narrative that visitors will read or hear at this location"
+    }
+  },
+  "aiTour": {
+    "city": "City",
+    "cityPlaceholder": "e.g., Istanbul, Paris, Tokyo",
+    "theme": "Tour Theme",
+    "themePlaceholder": "e.g., Haunted History, Hidden Gems",
+    "mode": "Tour Mode",
+    "modeSubtitle": "Choose the type of experience",
+    "duration": "Estimated Duration",
+    "durationInfo": "Longer tours will have more stops. AI will create approximately one location per 15 minutes.",
+    "additionalDetails": "Additional Details (Optional)",
+    "additionalDetailsPlaceholder": "Any specific preferences? e.g., 'Focus on medieval architecture', 'Include cafes for breaks', 'Avoid steep hills'...",
+    "missingInfoTitle": "Missing Information",
+    "missingInfoMessage": "Please provide both a city and a theme for your tour.",
+    "successTitle": "Tour Created! 🎉",
+    "viewTour": "View Tour",
+    "createAnother": "Create Another",
+    "failedTitle": "Generation Failed",
+    "failedMessage": "Something went wrong while generating your tour. Please try again.",
+    "generateButton": "Generate Tour",
+    "header": {
+      "title": "Create with AI",
+      "subtitle": "Tell us about your dream tour and let AI craft a unique experience with real locations, engaging stories, and interactive content."
+    },
+    "loading": {
+      "title": "Creating Your Tour...",
+      "subtitle": "AI is finding the best locations and crafting engaging content for you"
+    },
+    "languageSelector": {
+      "title": "Content Language",
+      "subtitle": "Select the language for tour content"
+    },
+    "modes": {
+      "story": "Story Mode",
+      "storyDesc": "Rich narrative-driven tour experience with historical and thematic storytelling",
+      "puzzle": "Puzzle Mode",
+      "puzzleDesc": "Interactive challenges and trivia at each location",
+      "hybrid": "Hybrid Mode",
+      "hybridDesc": "Best of both - engaging stories with fun puzzles"
+    }
+  },
+  "tourStep": {
+    "tourProgress": "Tour Progress",
+    "back": "Back",
+    "next": "Next"
+  },
+  "map": {
+    "noActiveTour": {
+      "title": "No Active Tour",
+      "subtitle": "Start a tour to see interactive map navigation with stops, puzzles, and exciting discoveries along the way!",
+      "browseTours": "Browse Tours",
+      "tip": "Tip: Find a tour you like and tap \"Start Tour\" to begin your adventure!"
+    },
+    "endTour": {
+      "title": "Exit Tour?",
+      "message": "Are you sure you want to exit? You will return to the map and this tour will not be marked as completed.",
+      "completed": "Completed",
+      "remaining": "Remaining",
+      "xpEarned": "XP Earned",
+      "stepsRemaining_one": "You still have {{count}} step to explore!",
+      "stepsRemaining_other": "You still have {{count}} steps to explore!",
+      "continueTour": "Continue Tour",
+      "exitTour": "Exit Tour"
+    },
+    "tourComplete": {
+      "title": "Tour Complete!",
+      "subtitle": "You've finished {{tourName}}",
+      "steps": "Steps",
+      "complete": "Complete",
+      "xpEarned": "+{{xp}} XP Earned!",
+      "done": "Done"
+    },
+    "activeTour": {
+      "stepOf": "Step {{current}} of {{total}}",
+      "end": "End"
+    }
+  },
+  "friends": {
+    "discoverTitle": "Discover Friends",
+    "discoverSubtitle": "Search and connect with new friends",
+    "proTipTitle": "Pro Tip",
+    "proTipDescription": "Start typing to find friends by their username or full name",
+    "searchPlaceholder": "Search by username or name...",
+    "addFriend": "Add Friend"
+  },
+  "badges": {
+    "noBadges": "No badges yet"
+  }
+}

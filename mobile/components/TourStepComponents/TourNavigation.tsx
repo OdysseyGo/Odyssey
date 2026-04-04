@@ -2,6 +2,7 @@ import { View, Text, Pressable } from 'react-native';
 import { useMemo } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import { useTranslation } from 'react-i18next';
 
 import getStyles from './TourNavigation.styles';
 import {
@@ -18,13 +19,14 @@ import Colors from '@/constants/Colors';
 function ProgressBar({ totalSteps, currentStep, solvedSteps, stepIds }: ProgressBarProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   const progressPercent = totalSteps > 1 ? (currentStep / (totalSteps - 1)) * 100 : 0;
 
   return (
     <View style={styles.progressContainer}>
       <View style={styles.progressHeader}>
-        <Text style={styles.progressText}>Tour Progress</Text>
+        <Text style={styles.progressText}>{t('tourStep.tourProgress')}</Text>
         <Text style={styles.progressText}>
           {currentStep + 1} / {totalSteps}
         </Text>
@@ -65,6 +67,7 @@ function NavigationArrows({
 }: NavigationArrowsProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   return (
     <View style={styles.navigationContainer}>
@@ -78,7 +81,9 @@ function NavigationArrows({
           size={24}
           color={canGoBack ? Colors[theme].iconActive : Colors[theme].iconDisabled}
         />
-        <Text style={[styles.navButtonText, !canGoBack && styles.navButtonTextDisabled]}>Back</Text>
+        <Text style={[styles.navButtonText, !canGoBack && styles.navButtonTextDisabled]}>
+          {t('tourStep.back')}
+        </Text>
       </Pressable>
 
       {requiresLocation ? (
@@ -110,7 +115,7 @@ function NavigationArrows({
         disabled={!canGoForward}
       >
         <Text style={[styles.navButtonText, !canGoForward && styles.navButtonTextDisabled]}>
-          Next
+          {t('tourStep.next')}
         </Text>
         {isForwardLocked ? (
           <MaterialCommunityIcons

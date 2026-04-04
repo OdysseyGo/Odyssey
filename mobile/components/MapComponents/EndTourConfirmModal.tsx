@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, Pressable, Modal } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -18,6 +19,7 @@ export default function EndTourConfirmModal({
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const colors = Colors[theme];
+  const { t } = useTranslation();
 
   const remainingSteps = totalSteps - completedSteps;
 
@@ -31,25 +33,22 @@ export default function EndTourConfirmModal({
           </View>
 
           {/* Title */}
-          <Text style={styles.title}>Exit Tour?</Text>
-          <Text style={styles.message}>
-            Are you sure you want to exit? You will return to the map and this tour will not be
-            marked as completed.
-          </Text>
+          <Text style={styles.title}>{t('map.endTour.title')}</Text>
+          <Text style={styles.message}>{t('map.endTour.message')}</Text>
 
           {/* Progress Info */}
           <View style={styles.progressInfo}>
             <View style={styles.progressItem}>
               <Text style={styles.progressValue}>{completedSteps}</Text>
-              <Text style={styles.progressLabel}>Completed</Text>
+              <Text style={styles.progressLabel}>{t('map.endTour.completed')}</Text>
             </View>
             <View style={styles.progressItem}>
               <Text style={styles.progressValue}>{remainingSteps}</Text>
-              <Text style={styles.progressLabel}>Remaining</Text>
+              <Text style={styles.progressLabel}>{t('map.endTour.remaining')}</Text>
             </View>
             <View style={styles.progressItem}>
               <Text style={[styles.progressValue, { color: colors.star }]}>{earnedXP}</Text>
-              <Text style={styles.progressLabel}>XP Earned</Text>
+              <Text style={styles.progressLabel}>{t('map.endTour.xpEarned')}</Text>
             </View>
           </View>
 
@@ -58,7 +57,7 @@ export default function EndTourConfirmModal({
             <View style={styles.warningContainer}>
               <MaterialCommunityIcons name="alert-circle" size={18} color={colors.star} />
               <Text style={styles.warningText}>
-                You still have {remainingSteps} step{remainingSteps > 1 ? 's' : ''} to explore!
+                {t('map.endTour.stepsRemaining', { count: remainingSteps })}
               </Text>
             </View>
           )}
@@ -66,12 +65,12 @@ export default function EndTourConfirmModal({
           {/* Buttons */}
           <View style={styles.buttonsContainer}>
             <Pressable style={styles.cancelButton} onPress={onCancel}>
-              <Text style={styles.cancelButtonText}>Continue Tour</Text>
+              <Text style={styles.cancelButtonText}>{t('map.endTour.continueTour')}</Text>
             </Pressable>
 
             <Pressable style={styles.confirmButton} onPress={onConfirm}>
               <MaterialCommunityIcons name="exit-run" size={18} color={colors.white} />
-              <Text style={styles.confirmButtonText}>Exit Tour</Text>
+              <Text style={styles.confirmButtonText}>{t('map.endTour.exitTour')}</Text>
             </Pressable>
           </View>
         </View>

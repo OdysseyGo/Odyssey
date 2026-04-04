@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Admin, Follow, User
+from .models import Follow, User
 
 
 @admin.register(User)
@@ -24,4 +24,3 @@ class CustomUserAdmin(UserAdmin):
 
 
 admin.site.register(Follow)
-admin.site.register(Admin)

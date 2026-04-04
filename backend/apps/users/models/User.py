@@ -34,6 +34,7 @@ class User(AbstractUser):
         default="",
         help_text="DiceBear avatar URL",
     )
+    is_banned = models.BooleanField(default=False)
 
     class Meta:
         db_table = "user"

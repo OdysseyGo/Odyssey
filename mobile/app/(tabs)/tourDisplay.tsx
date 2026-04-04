@@ -16,24 +16,37 @@ import { Ionicons } from '@expo/vector-icons';
 import { Spacing } from '@/constants/Spacing';
 import Colors from '@/constants/Colors';
 import CreateTourButton from '@/components/TourCreation/CreateTourButton';
+import { useTranslation } from 'react-i18next';
 
 // Convert API Tour to TourDisplayProps for components
-function mapTourToDisplayProps(tour: Tour): TourDisplayProps {
+function mapTourToDisplayProps(tour: Tour, t: (key: string) => string): TourDisplayProps {
   return {
     id: tour.id.toString(),
     image: tour.steps?.[0]?.image || `https://picsum.photos/400/320?random=${tour.id}`,
     title: tour.title,
     author: tour.creator?.username || 'Unknown',
-    duration: `${tour.duration_minutes} min`,
-    length: tour.steps?.length ? `${tour.steps.length} stops` : 'N/A',
-    reviewCount: `${tour.reviews?.length || 0} reviews`,
+    duration: `${tour.duration_minutes} ${t('tourId.min')}`,
+    length: tour.steps?.length ? `${tour.steps.length} ${t('tourId.stops')}` : 'N/A',
+    reviewCount: `${tour.reviews?.length || 0} ${t('tourId.review')}`,
     rating: tour.average_rating?.toFixed(1) || '0',
   };
 }
 
+const continentKeyMap: Record<string, string> = {
+  Europe: 'tour.continents.europe',
+  Asia: 'tour.continents.asia',
+  'North America': 'tour.continents.northAmerica',
+  'South America': 'tour.continents.southAmerica',
+  Africa: 'tour.continents.africa',
+  Oceania: 'tour.continents.oceania',
+  Antarctica: 'tour.continents.antarctica',
+  Other: 'tour.continents.other',
+};
+
 export default function TourDisplay() {
   const colorScheme = useColorTheme();
   const theme = Colors[colorScheme];
+  const { t } = useTranslation();
   const [allTours, setAllTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -144,14 +157,14 @@ export default function TourDisplay() {
     });
 
     return {
-      featuredTours: featured.map(mapTourToDisplayProps),
-      popularTours: popular.map(mapTourToDisplayProps),
+      featuredTours: featured.map((tour) => mapTourToDisplayProps(tour, t)),
+      popularTours: popular.map((tour) => mapTourToDisplayProps(tour, t)),
       toursByContinent: sortedContinents.map(([continent, continentTours]) => ({
         continent,
-        tours: continentTours.map(mapTourToDisplayProps),
+        tours: continentTours.map((tour) => mapTourToDisplayProps(tour, t)),
       })),
     };
-  }, [allTours]);
+  }, [allTours, t]);
 
   const onRefresh = useCallback(() => {
     fetchTours(true);
@@ -168,7 +181,7 @@ export default function TourDisplay() {
         }}
       >
         <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={{ marginTop: Spacing.md, color: theme.text }}>Loading tours...</Text>
+        <Text style={{ marginTop: Spacing.md, color: theme.text }}>{t('tour.loading')}</Text>
       </View>
     );
   }
@@ -192,7 +205,7 @@ export default function TourDisplay() {
           style={{ marginTop: Spacing.md, color: theme.primary, fontWeight: '600' }}
           onPress={() => fetchTours()}
         >
-          Tap to retry
+          {t('tour.retry')}
         </Text>
       </View>
     );
@@ -211,11 +224,19 @@ export default function TourDisplay() {
         )}
 
         {/* Popular Tours */}
-        {popularTours.length > 0 && <TourScrollerComp title="Popular Tours" data={popularTours} />}
+        {popularTours.length > 0 && (
+          <TourScrollerComp title={t('tour.popular')} data={popularTours} />
+        )}
 
         {/* Tours by Continent */}
         {toursByContinent.map(({ continent, tours }) => (
-          <TourScrollerComp key={continent} title={continent} data={tours} />
+          <TourScrollerComp
+            key={continent}
+            title={t(continentKeyMap[continent] ?? 'tour.continents.other', {
+              defaultValue: continent,
+            })}
+            data={tours}
+          />
         ))}
       </ScrollView>
       <CreateTourButton />

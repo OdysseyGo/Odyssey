@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { generateButtonStyles } from './GenerateButton.styles';
+import { useTranslation } from 'react-i18next';
 
 type GenerateButtonProps = {
   onPress: () => void;
@@ -16,11 +17,12 @@ export default function GenerateButton({
   onPress,
   disabled = false,
   isLoading = false,
-  label = 'Generate Tour',
+  label,
 }: GenerateButtonProps) {
   const theme = useColorTheme();
   const styles = generateButtonStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   return (
     <View style={styles.footer}>
@@ -30,7 +32,7 @@ export default function GenerateButton({
         disabled={disabled || isLoading}
       >
         <Ionicons name="sparkles" size={20} color={color.white} />
-        <Text style={styles.buttonText}>{label}</Text>
+        <Text style={styles.buttonText}>{label ?? t('aiTour.generateButton')}</Text>
       </TouchableOpacity>
     </View>
   );

@@ -5,16 +5,18 @@ import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { profileBadgesStyles } from './ProfileBadges.styles';
 import { ProfileBadgesProps } from './ProfileBadges.config';
+import { useTranslation } from 'react-i18next';
 
 export default function ProfileBadges({ badges = [], size = 'medium' }: ProfileBadgesProps) {
   const theme = useColorTheme();
   const styles = profileBadgesStyles(theme, size);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   if (!badges || badges.length === 0) {
     return (
       <View style={{ alignItems: 'center', justifyContent: 'center', padding: Spacing.lg }}>
-        <Text style={{ color: color.subText }}>No badges yet</Text>
+        <Text style={{ color: color.subText }}>{t('badges.noBadges')}</Text>
       </View>
     );
   }

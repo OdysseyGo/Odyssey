@@ -2,6 +2,7 @@ import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs, router, usePathname } from 'expo-router';
 import { Pressable, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -20,6 +21,7 @@ export default function TabLayout() {
   const colorTheme = useColorTheme();
   const pathname = usePathname();
   const { tour, isActive, currentStepIndex } = useActiveTour();
+  const { t } = useTranslation();
 
   // Show FAB only when active tour exists and not on map tab
   const showFAB = isActive && tour && pathname !== '/map';
@@ -47,14 +49,14 @@ export default function TabLayout() {
         <Tabs.Screen
           name="two"
           options={{
-            title: 'Settings',
+            title: t('tabs.settings'),
             tabBarIcon: ({ color }) => <TabBarIcon name="gear" color={color} />,
           }}
         />
         <Tabs.Screen
           name="map"
           options={{
-            title: 'Map',
+            title: t('tabs.map'),
             headerShown: false,
             tabBarIcon: ({ color }) => <TabBarIcon name="map" color={color} />,
           }}
@@ -62,7 +64,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="tourDisplay"
           options={{
-            title: 'Tours',
+            title: t('tabs.tours'),
             tabBarIcon: ({ color }) => <TabBarIcon name="compass" color={color} />,
             headerRight: () => (
               <Pressable onPress={() => router.push('/search')}>
@@ -88,7 +90,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="profile"
           options={{
-            title: 'Profile',
+            title: t('tabs.profile'),
             tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
           }}
         />

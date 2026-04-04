@@ -91,6 +91,7 @@ class TourSerializer(serializers.ModelSerializer):
             "total_distance",
             "is_premium",
             "city",
+            "cover_image",
             "status",
             "created_at",
             "updated_at",

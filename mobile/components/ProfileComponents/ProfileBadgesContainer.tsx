@@ -6,6 +6,7 @@ import { profileBadgesContainerStyles } from './ProfileBadgesContainer.styles';
 import { ProfileBadgesContainerProps } from './ProfileBadgesContainer.config';
 import Colors from '@/constants/Colors';
 import ProfileBadges from './ProfileBadges';
+import { useTranslation } from 'react-i18next';
 
 export default function ProfileBadgesContainer({
   badges = [],
@@ -17,12 +18,13 @@ export default function ProfileBadgesContainer({
   const styles = profileBadgesContainerStyles(theme);
   const color = Colors[theme];
   const [showAll, setShowAll] = useState(initialShowAll);
+  const { t } = useTranslation();
 
   if (!badges || badges.length === 0) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.emptyStateText}>No badges earned yet. Keep exploring!</Text>
+        <Text style={styles.emptyStateText}>{t('profile.noBadges')}</Text>
       </View>
     );
   }
@@ -52,7 +54,7 @@ export default function ProfileBadgesContainer({
           activeOpacity={0.8}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.viewAllButtonText}>View All Badges</Text>
+            <Text style={styles.viewAllButtonText}>{t('profile.viewAllBadges')}</Text>
             <FontAwesome name="arrow-right" size={14} color="white" style={{ marginLeft: 8 }} />
           </View>
         </TouchableOpacity>
@@ -65,7 +67,9 @@ export default function ProfileBadgesContainer({
           activeOpacity={0.8}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={[styles.viewAllButtonText, { color: color.text }]}>Show Less</Text>
+            <Text style={[styles.viewAllButtonText, { color: color.text }]}>
+              {t('profile.showLess')}
+            </Text>
             <FontAwesome name="arrow-up" size={14} color={color.text} style={{ marginLeft: 8 }} />
           </View>
         </TouchableOpacity>

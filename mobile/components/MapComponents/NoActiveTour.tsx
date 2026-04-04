@@ -2,6 +2,7 @@ import React, { useMemo, useEffect, useRef } from 'react';
 import { View, Text, Pressable, Animated, Easing } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -12,6 +13,7 @@ export default function NoActiveTour({ onBrowseTours }: NoActiveTourProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const colors = Colors[theme];
+  const { t } = useTranslation();
 
   // Floating animation for the icon
   const floatAnim = useRef(new Animated.Value(0)).current;
@@ -54,13 +56,10 @@ export default function NoActiveTour({ onBrowseTours }: NoActiveTourProps) {
       </Animated.View>
 
       {/* Title */}
-      <Text style={styles.title}>No Active Tour</Text>
+      <Text style={styles.title}>{t('map.noActiveTour.title')}</Text>
 
       {/* Subtitle */}
-      <Text style={styles.subtitle}>
-        Start a tour to see interactive map navigation with stops, puzzles, and exciting discoveries
-        along the way!
-      </Text>
+      <Text style={styles.subtitle}>{t('map.noActiveTour.subtitle')}</Text>
 
       {/* Browse Tours Button */}
       <Pressable
@@ -69,14 +68,12 @@ export default function NoActiveTour({ onBrowseTours }: NoActiveTourProps) {
         android_ripple={{ color: 'rgba(255, 255, 255, 0.2)' }}
       >
         <MaterialCommunityIcons name="compass" size={20} color={colors.white} />
-        <Text style={styles.browseButtonText}>Browse Tours</Text>
+        <Text style={styles.browseButtonText}>{t('map.noActiveTour.browseTours')}</Text>
       </Pressable>
 
       {/* Hint */}
       <View style={styles.hintContainer}>
-        <Text style={styles.hintText}>
-          Tip: Find a tour you like and tap "Start Tour" to begin your adventure!
-        </Text>
+        <Text style={styles.hintText}>{t('map.noActiveTour.tip')}</Text>
       </View>
     </View>
   );

@@ -7,6 +7,7 @@ import Colors from '@/constants/Colors';
 import { useTourCreation } from '@/contexts/TourCreationContext';
 import { TourReviewStep } from '@/components/TourCreation/steps';
 import { StepIndicator, CreationFooter } from '@/components/TourCreation/common';
+import { useTranslation } from 'react-i18next';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
 
@@ -15,12 +16,13 @@ export default function TourReviewScreen() {
   const color = Colors[theme];
   const { tourData, resetTourData } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { t } = useTranslation();
 
   const handleSubmitTour = async () => {
-    Alert.alert('Submit Tour', 'Are you ready to submit your tour for review?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('creation.submitTitle'), t('creation.submitMessage'), [
+      { text: t('creation.cancel'), style: 'cancel' },
       {
-        text: 'Submit',
+        text: t('creation.submitConfirm'),
         onPress: async () => {
           setIsSubmitting(true);
           try {
@@ -67,9 +69,9 @@ export default function TourReviewScreen() {
 
             await Promise.all(createStepPromises);
 
-            Alert.alert('Success', 'Your tour has been created!', [
+            Alert.alert(t('creation.successTitle'), t('creation.successMessage'), [
               {
-                text: 'OK',
+                text: t('creation.ok'),
                 onPress: () => {
                   resetTourData();
                   // Navigate back to the main screen
@@ -79,7 +81,7 @@ export default function TourReviewScreen() {
             ]);
           } catch (error) {
             console.error('Failed to create tour:', error);
-            Alert.alert('Error', 'Failed to submit tour. Please try again.');
+            Alert.alert(t('creation.errorTitle'), t('creation.errorMessage'));
           } finally {
             setIsSubmitting(false);
           }
@@ -93,7 +95,7 @@ export default function TourReviewScreen() {
       <StepIndicator steps={STEPS} currentStepIndex={3} />
       <TourReviewStep tourData={tourData} />
       <CreationFooter
-        buttonText={isSubmitting ? 'Submitting...' : 'Submit Tour'}
+        buttonText={isSubmitting ? t('creation.submitting') : t('creation.submit')}
         onPress={handleSubmitTour}
         disabled={isSubmitting} // Assuming CreationFooter supports disabled prop, if not we might need to check
       />

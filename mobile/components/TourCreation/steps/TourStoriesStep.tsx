@@ -5,6 +5,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { tourStoriesStepStyles } from './TourStoriesStep.styles';
 import Colors from '@/constants/Colors';
 import { TourLocation } from '../TourCreation.types';
+import { useTranslation } from 'react-i18next';
 
 type TourStoriesStepProps = {
   locations: TourLocation[];
@@ -15,15 +16,14 @@ export default function TourStoriesStep({ locations, onLocationSelect }: TourSto
   const theme = useColorTheme();
   const styles = tourStoriesStepStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   if (locations.length === 0) {
     return (
       <View style={styles.content}>
         <View style={styles.emptyState}>
           <Ionicons name="document-text-outline" size={48} color={color.subText} />
-          <Text style={styles.emptyStateText}>
-            No locations added yet.{'\n'}Go back and add some locations first.
-          </Text>
+          <Text style={styles.emptyStateText}>{t('creation.stories.empty')}</Text>
         </View>
       </View>
     );
@@ -31,10 +31,8 @@ export default function TourStoriesStep({ locations, onLocationSelect }: TourSto
 
   return (
     <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.sectionTitle}>Write Your Stories</Text>
-      <Text style={styles.sectionSubtitle}>
-        Add a compelling story for each location in your tour
-      </Text>
+      <Text style={styles.sectionTitle}>{t('creation.stories.title')}</Text>
+      <Text style={styles.sectionSubtitle}>{t('creation.stories.subtitle')}</Text>
 
       {locations.map((location) => {
         const isComplete = location.title.trim().length > 0 && location.story.trim().length > 0;
@@ -50,7 +48,7 @@ export default function TourStoriesStep({ locations, onLocationSelect }: TourSto
                   <Text style={styles.locationOrderText}>{location.order}</Text>
                 </View>
                 <Text style={styles.locationCardTitle}>
-                  {location.title || 'Untitled Location'}
+                  {location.title || t('creation.stories.untitledLocation')}
                 </Text>
               </View>
               <Ionicons
@@ -60,7 +58,7 @@ export default function TourStoriesStep({ locations, onLocationSelect }: TourSto
               />
             </View>
             <Text style={styles.locationCardDescription} numberOfLines={2}>
-              {location.story || 'Tap to add a story for this location'}
+              {location.story || t('creation.stories.tapToAddStory')}
             </Text>
           </TouchableOpacity>
         );
