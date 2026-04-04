@@ -3,6 +3,7 @@ import { View, Text, TextInput } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { storyInputFieldStyles } from './StoryInputField.styles';
 import Colors from '@/constants/Colors';
+import { useTranslation } from 'react-i18next';
 
 type StoryInputFieldProps = {
   label: string;
@@ -26,6 +27,7 @@ export default function StoryInputField({
   const theme = useColorTheme();
   const styles = storyInputFieldStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   return (
     <View style={styles.inputGroup}>
@@ -40,7 +42,11 @@ export default function StoryInputField({
         multiline={multiline}
         textAlignVertical={multiline ? 'top' : 'center'}
       />
-      {showCharacterCount && <Text style={styles.characterCount}>{value.length} characters</Text>}
+      {showCharacterCount && (
+        <Text style={styles.characterCount}>
+          {t('creation.story.characters', { count: value.length })}
+        </Text>
+      )}
     </View>
   );
 }

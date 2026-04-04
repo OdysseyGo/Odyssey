@@ -11,12 +11,14 @@ import WritingTips from '@/components/TourCreation/StoryEditor/WritingTips';
 import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditorFooter';
 import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
 import { Puzzle } from '@/components/TourCreation';
+import { useTranslation } from 'react-i18next';
 
 export default function EditLocationScreen() {
   const theme = useColorTheme();
   const color = Colors[theme];
   const navigation = useNavigation();
   const { tourData, selectedLocation, setSelectedLocation, updateLocation } = useTourCreation();
+  const { t } = useTranslation();
 
   const [title, setTitle] = useState('');
   const [address, setAddress] = useState('');
@@ -99,9 +101,9 @@ export default function EditLocationScreen() {
   // Update header title
   useEffect(() => {
     navigation.setOptions({
-      headerTitle: 'Edit Location',
+      headerTitle: t('creation.editLocation.header'),
     });
-  }, [navigation]);
+  }, [navigation, t]);
 
   const isValid =
     title.trim().length > 0 &&
@@ -135,27 +137,27 @@ export default function EditLocationScreen() {
           />
 
           <StoryInputField
-            label="Location Title *"
+            label={t('creation.editLocation.titleLabel')}
             value={title}
             onChangeText={setTitle}
-            placeholder="e.g., The Grand Bazaar Entrance"
+            placeholder={t('creation.editLocation.titlePlaceholder')}
           />
 
           <StoryInputField
-            label="Address (Optional)"
+            label={t('creation.editLocation.addressLabel')}
             value={address}
             onChangeText={setAddress}
-            placeholder="e.g., 123 Main Street, Istanbul"
+            placeholder={t('creation.editLocation.addressPlaceholder')}
           />
 
           <ImageUploadSection image={image} onImageChange={setImage} />
 
           <StoryInputField
-            label="Story *"
+            label={t('creation.editLocation.storyLabel')}
             value={story}
             onChangeText={setStory}
-            placeholder="Tell the story of this location..."
-            hint="Write the narrative that visitors will read or hear at this location"
+            placeholder={t('creation.editLocation.storyPlaceholder')}
+            hint={t('creation.editLocation.storyHint')}
             multiline
             showCharacterCount
           />

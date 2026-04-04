@@ -121,22 +121,18 @@ export default function FeaturedTourCarousel({
                 <View style={styles.imageWrapper}>
                   <Image source={{ uri: tour.image }} style={styles.image} />
 
-                  {/* Dark overlay for better text readability */}
                   <View style={styles.imageOverlay} />
 
-                  {/* Featured Badge with icon */}
                   <View style={styles.featuredBadge}>
                     <Ionicons name="flame" size={14} color={color.white} />
                     <Text style={styles.featuredBadgeText}>Featured</Text>
                   </View>
 
-                  {/* Rating Badge */}
                   <View style={styles.ratingBadge}>
                     <Text style={styles.star}>{STAR}</Text>
                     <Text style={styles.ratingText}>{tour.rating}</Text>
                   </View>
 
-                  {/* Info Container with gradient */}
                   <View style={styles.infoContainer}>
                     <View style={styles.infoGradient} />
                     <View style={styles.infoContent}>

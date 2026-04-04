@@ -6,11 +6,13 @@ import { profileToursContainerStyles } from './ProfileToursContainer.styles';
 import { ProfileToursContainerProps, TOUR_TABS, TourTab } from './ProfileToursContainer.config';
 import { Tour, TourStatus, getMyTours } from '@/api/tours';
 import ProfileTourCard from './ProfileTourCard';
+import { useTranslation } from 'react-i18next';
 
 export default function ProfileToursContainer({}: ProfileToursContainerProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => profileToursContainerStyles(theme), [theme]);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<TourStatus>('PUBLISHED');
   const [tours, setTours] = useState<Tour[]>([]);
@@ -40,20 +42,20 @@ export default function ProfileToursContainer({}: ProfileToursContainerProps) {
   const getEmptyMessage = () => {
     switch (activeTab) {
       case 'PUBLISHED':
-        return 'No published tours yet. Publish a tour to share it with the community!';
+        return t('profile.emptyPublished');
       case 'DRAFT':
-        return 'No draft tours. Start creating a new tour!';
+        return t('profile.emptyDraft');
       case 'ARCHIVED':
-        return 'No archived tours.';
+        return t('profile.emptyArchived');
       default:
-        return 'No tours found.';
+        return t('profile.emptyDefault');
     }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Tours</Text>
+        <Text style={styles.title}>{t('profile.myTours')}</Text>
       </View>
 
       {/* Tabs */}
@@ -66,7 +68,7 @@ export default function ProfileToursContainer({}: ProfileToursContainerProps) {
             activeOpacity={0.7}
           >
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-              {tab.label}
+              {t(tab.label)}
             </Text>
           </TouchableOpacity>
         ))}

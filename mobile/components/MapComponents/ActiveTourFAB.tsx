@@ -1,6 +1,7 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { View, Text, Pressable, Animated, Easing } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -16,6 +17,7 @@ export default function ActiveTourFAB({
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const colors = Colors[theme];
+  const { t } = useTranslation();
 
   // Pulse animation for the indicator dot
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -60,7 +62,7 @@ export default function ActiveTourFAB({
         <View style={styles.textContainer}>
           <Text style={styles.title}>{displayTitle}</Text>
           <Text style={styles.subtitle}>
-            Step {currentStep} of {totalSteps}
+            {t('map.activeTour.stepOf', { current: currentStep, total: totalSteps })}
           </Text>
         </View>
 

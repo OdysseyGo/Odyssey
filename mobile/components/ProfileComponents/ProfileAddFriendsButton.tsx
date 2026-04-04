@@ -4,11 +4,13 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { profileAddFriendsButtonStyles } from './ProfileAddFriendsButton.styles';
 import { ProfileAddFriendsButtonProps } from './ProfileAddFriendsButton.config';
+import { useTranslation } from 'react-i18next';
 
 export default function ProfileAddFriendsButton({ onPress }: ProfileAddFriendsButtonProps) {
   const [isPressedFeedback, setIsPressedFeedback] = useState(false);
   const theme = useColorTheme();
   const styles = profileAddFriendsButtonStyles(theme);
+  const { t } = useTranslation();
 
   const handlePress = async () => {
     setIsPressedFeedback(true);
@@ -24,7 +26,7 @@ export default function ProfileAddFriendsButton({ onPress }: ProfileAddFriendsBu
       activeOpacity={1}
     >
       <FontAwesome name="plus" size={18} color="white" />
-      <Text style={styles.buttonText}>Add Friend</Text>
+      <Text style={styles.buttonText}>{t('friends.addFriend')}</Text>
     </TouchableOpacity>
   );
 }

@@ -6,6 +6,7 @@ import { TourLocation } from '../TourCreation.types';
 import LocationsHeader from './LocationsHeader';
 import LocationItem from './LocationItem';
 import EmptyLocations from './EmptyLocations';
+import { useTranslation } from 'react-i18next';
 
 type LocationsListProps = {
   locations: TourLocation[];
@@ -24,12 +25,13 @@ export default function LocationsList({
 }: LocationsListProps) {
   const theme = useColorTheme();
   const styles = locationsListStyles(theme);
+  const { t } = useTranslation();
 
   const handleDelete = (locationId: string) => {
-    Alert.alert('Delete Location', 'Are you sure you want to delete this location?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('creation.location.deleteTitle'), t('creation.location.deleteMessage'), [
+      { text: t('creation.location.cancel'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: t('creation.location.delete'),
         style: 'destructive',
         onPress: () => onDeleteLocation(locationId),
       },

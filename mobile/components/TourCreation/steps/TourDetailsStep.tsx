@@ -1,13 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Text, ScrollView } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { tourDetailsStepStyles } from './TourDetailsStep.styles';
-import {
-  TourCreationData,
-  TOUR_CATEGORIES,
-  DIFFICULTY_OPTIONS,
-  TOUR_TYPE_OPTIONS,
-} from '../TourCreation.types';
+import { TourCreationData, TOUR_CATEGORIES } from '../TourCreation.types';
 import {
   FormInputGroup,
   FormTextInput,
@@ -16,6 +11,7 @@ import {
   FormOptionCard,
   FormDurationPicker,
 } from '../inputs';
+import { useTranslation } from 'react-i18next';
 
 type TourDetailsStepProps = {
   tourData: TourCreationData;
@@ -25,61 +21,121 @@ type TourDetailsStepProps = {
 export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepProps) {
   const theme = useColorTheme();
   const styles = tourDetailsStepStyles(theme);
+  const { t } = useTranslation();
+
+  const difficultyOptions = useMemo(
+    () => [
+      {
+        value: 'EASY',
+        label: t('creation.difficulty.easy'),
+        description: t('creation.difficulty.easyDesc'),
+      },
+      {
+        value: 'MEDIUM',
+        label: t('creation.difficulty.medium'),
+        description: t('creation.difficulty.mediumDesc'),
+      },
+      {
+        value: 'HARD',
+        label: t('creation.difficulty.hard'),
+        description: t('creation.difficulty.hardDesc'),
+      },
+    ],
+    [t]
+  );
+
+  const tourTypeOptions = useMemo(
+    () => [
+      {
+        value: 'STORY',
+        label: t('creation.tourType.story'),
+        description: t('creation.tourType.storyDesc'),
+      },
+      {
+        value: 'PUZZLE',
+        label: t('creation.tourType.puzzle'),
+        description: t('creation.tourType.puzzleDesc'),
+      },
+      {
+        value: 'HYBRID',
+        label: t('creation.tourType.hybrid'),
+        description: t('creation.tourType.hybridDesc'),
+      },
+    ],
+    [t]
+  );
+
+  const categoryKeyMap = useMemo(
+    () =>
+      Object.fromEntries(
+        TOUR_CATEGORIES.map((cat) => [t(`creation.categories.${cat.toLowerCase()}`), cat])
+      ),
+    [t]
+  );
+
+  const translatedCategories = useMemo(
+    () => TOUR_CATEGORIES.map((cat) => t(`creation.categories.${cat.toLowerCase()}`)),
+    [t]
+  ) as unknown as readonly string[];
+
+  const selectedTranslatedCategory = t(`creation.categories.${tourData.category.toLowerCase()}`);
 
   return (
     <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.sectionTitle}>Tour Details</Text>
-      <Text style={styles.sectionSubtitle}>Provide basic information about your tour</Text>
+      <Text style={styles.sectionTitle}>{t('creation.details.title')}</Text>
+      <Text style={styles.sectionSubtitle}>{t('creation.details.subtitle')}</Text>
 
-      <FormInputGroup label="Tour Title" required>
+      <FormInputGroup label={t('creation.details.tourTitle')} required>
         <FormTextInput
           value={tourData.title}
           onChangeText={(text) => onUpdate({ title: text })}
-          placeholder="e.g., Hidden Gems of Old Town"
+          placeholder={t('creation.details.tourTitlePlaceholder')}
         />
       </FormInputGroup>
 
-      <FormInputGroup label="Description" required>
+      <FormInputGroup label={t('creation.details.description')} required>
         <FormTextArea
           value={tourData.description}
           onChangeText={(text) => onUpdate({ description: text })}
-          placeholder="Describe what makes your tour special..."
+          placeholder={t('creation.details.descriptionPlaceholder')}
         />
       </FormInputGroup>
 
-      <FormInputGroup label="City">
+      <FormInputGroup label={t('creation.details.city')}>
         <FormTextInput
           value={tourData.city}
           onChangeText={(text) => onUpdate({ city: text })}
-          placeholder="e.g., Istanbul, Tokyo, Paris"
+          placeholder={t('creation.details.cityPlaceholder')}
         />
       </FormInputGroup>
 
-      <FormInputGroup label="Category" required>
+      <FormInputGroup label={t('creation.details.category')} required>
         <FormChipSelect
-          options={TOUR_CATEGORIES}
-          selectedValue={tourData.category}
-          onSelect={(category) => onUpdate({ category })}
+          options={translatedCategories}
+          selectedValue={selectedTranslatedCategory}
+          onSelect={(translatedValue) =>
+            onUpdate({ category: categoryKeyMap[translatedValue] ?? translatedValue })
+          }
         />
       </FormInputGroup>
 
-      <FormInputGroup label="Difficulty">
+      <FormInputGroup label={t('creation.details.difficulty')}>
         <FormOptionCard
-          options={DIFFICULTY_OPTIONS}
+          options={difficultyOptions}
           selectedValue={tourData.difficulty}
           onSelect={(value) => onUpdate({ difficulty: value as 'EASY' | 'MEDIUM' | 'HARD' })}
         />
       </FormInputGroup>
 
-      <FormInputGroup label="Tour Type">
+      <FormInputGroup label={t('creation.details.tourType')}>
         <FormOptionCard
-          options={TOUR_TYPE_OPTIONS}
+          options={tourTypeOptions}
           selectedValue={tourData.tourType}
           onSelect={(value) => onUpdate({ tourType: value as 'STORY' | 'PUZZLE' | 'HYBRID' })}
         />
       </FormInputGroup>
 
-      <FormInputGroup label="Estimated Duration">
+      <FormInputGroup label={t('creation.details.duration')}>
         <FormDurationPicker
           value={tourData.estimatedDuration}
           onChange={(estimatedDuration) => onUpdate({ estimatedDuration })}
