@@ -6,7 +6,12 @@ import Colors from '@/constants/Colors';
 import { profileHeaderCompStyles } from './ProfileHeaderComp.styles';
 import { ProfileHeaderProps } from './ProfileHeaderComp.config';
 
-export default function ProfileHeaderComp({ title, subtitle, avatarUrl, onAvatarPress }: ProfileHeaderProps) {
+export default function ProfileHeaderComp({
+  title,
+  subtitle,
+  avatarUrl,
+  onAvatarPress,
+}: ProfileHeaderProps) {
   const theme = useColorTheme();
   const styles = profileHeaderCompStyles(theme);
   const color = Colors[theme];
