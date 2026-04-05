@@ -142,8 +142,8 @@
     "review": "Review",
     "min": "min",
     "stops": "stops",
-    "tourInProgressTitle":"Tour in Progress",
-    "tourInProgressMessage":"You already have an active tour! Please finish or quit it before starting a new one."
+    "tourInProgressTitle": "Tour in Progress",
+    "tourInProgressMessage": "You already have an active tour! Please finish or quit it before starting a new one."
   },
   "creation": {
     "continue": "Continue",

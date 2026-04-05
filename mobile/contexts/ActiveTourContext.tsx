@@ -8,12 +8,12 @@ import {
   Puzzle,
 } from '@/components/TourStepComponents/TourStep.config';
 
-import { getInProgressTour } from '@/api/tourProgress'; 
+import { getInProgressTour } from '@/api/tourProgress';
 import { getTour } from '@/api/tours';
 
 interface ActiveTourState {
   tour: Tour | null;
-  progressId: number | null; 
+  progressId: number | null;
   isActive: boolean;
   currentStepIndex: number;
   highestStepIndex: number;
@@ -24,10 +24,10 @@ interface ActiveTourState {
 
 interface ActiveTourContextType extends ActiveTourState {
   startTour: (apiTour: ApiTour, progressId: number) => void;
-  resumeActiveTour: () => Promise<void>
+  resumeActiveTour: () => Promise<void>;
   endTour: () => void;
   setCurrentStepIndex: (index: number) => void;
-  setHighestStepIndex: (index: number) => void; 
+  setHighestStepIndex: (index: number) => void;
   solveStep: (stepId: string, xpReward?: number) => void;
   confirmLocation: (stepId: string) => void;
   resetProgress: () => void;
@@ -38,7 +38,7 @@ const initialState: ActiveTourState = {
   progressId: null,
   isActive: false,
   currentStepIndex: 0,
-  highestStepIndex: 0, 
+  highestStepIndex: 0,
   solvedSteps: new Set(),
   locationConfirmedSteps: new Set(),
   earnedXP: 0,
@@ -142,9 +142,9 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setHighestStepIndex = useCallback((index: number) => {
-    setState((prev) => ({ 
-      ...prev, 
-      highestStepIndex: Math.max(prev.highestStepIndex, index) 
+    setState((prev) => ({
+      ...prev,
+      highestStepIndex: Math.max(prev.highestStepIndex, index),
     }));
   }, []);
 
@@ -177,15 +177,15 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const resumeActiveTour = useCallback(async () => {    
+  const resumeActiveTour = useCallback(async () => {
     if (state.isActive) return;
 
     try {
       const activeProgress = await getInProgressTour();
       //console.log(activeProgress);
       if (!activeProgress || !activeProgress.id) {
-        console.log("No active tour found in background check.");
-        return; 
+        console.log('No active tour found in background check.');
+        return;
       }
 
       const apiTour = await getTour(activeProgress.tour.id);
@@ -193,17 +193,15 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
 
       let currentStepIdx = 0;
       if (activeProgress.current_step) {
-  
-        const targetStepId = typeof activeProgress.current_step === 'object' 
-          ? String(activeProgress.current_step.id) 
-          : String(activeProgress.current_step);
+        const targetStepId =
+          typeof activeProgress.current_step === 'object'
+            ? String(activeProgress.current_step.id)
+            : String(activeProgress.current_step);
 
-        currentStepIdx = internalTour.steps.findIndex(
-          (s) => s.id === targetStepId
-        );
-  
+        currentStepIdx = internalTour.steps.findIndex((s) => s.id === targetStepId);
+
         if (currentStepIdx === -1) {
-          console.warn("Warning: Step ID not found in tour!");
+          console.warn('Warning: Step ID not found in tour!');
           currentStepIdx = 0;
         }
       }
@@ -220,10 +218,9 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         currentStepIndex: currentStepIdx,
         highestStepIndex: currentStepIdx,
         solvedSteps: restoredSolvedSteps,
-        locationConfirmedSteps: new Set(), 
+        locationConfirmedSteps: new Set(),
         earnedXP: activeProgress.total_xp,
       });
-
     } catch (error: any) {
       console.error("Couldn't fetch current active tour ", error);
     }

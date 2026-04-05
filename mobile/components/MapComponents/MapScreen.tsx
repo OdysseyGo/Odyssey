@@ -23,12 +23,12 @@ export default function MapScreen() {
   const {
     tour,
     isActive,
-    progressId, 
+    progressId,
     currentStepIndex,
     solvedSteps,
     earnedXP,
     endTour,
-    resumeActiveTour
+    resumeActiveTour,
   } = useActiveTour();
 
   // Local state for modals and final backend data
@@ -38,10 +38,9 @@ export default function MapScreen() {
 
   useFocusEffect(
     useCallback(() => {
-  
       resumeActiveTour();
-      
-      return () => {}; 
+
+      return () => {};
     }, [resumeActiveTour])
   );
 
@@ -76,21 +75,20 @@ export default function MapScreen() {
 
   // This gets called ONLY when the "Next" button is pressed on the final step
   const handleTourComplete = useCallback(async () => {
-
     if (progressId) {
       try {
         // Fetch the authoritative final progress from the backend
         const progress = await getTourProgress(progressId);
         setFinalXP(progress.total_xp);
       } catch (error) {
-        console.error("Failed to fetch final tour progress:", error);
+        console.error('Failed to fetch final tour progress:', error);
         // Fallback to local XP if the API fails for some reason
-        setFinalXP(earnedXP); 
+        setFinalXP(earnedXP);
       }
     } else {
       setFinalXP(earnedXP);
     }
-    
+
     setShowCompleteModal(true);
   }, [progressId, earnedXP]);
 
@@ -148,7 +146,7 @@ export default function MapScreen() {
       <BottomSlider
         tour={tour}
         onEndTour={handleEndTourPress}
-        onTourComplete={handleTourComplete} 
+        onTourComplete={handleTourComplete}
       />
 
       {/* End Tour Confirmation Modal */}

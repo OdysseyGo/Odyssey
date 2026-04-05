@@ -116,7 +116,7 @@ function NavigationArrows({
         disabled={!canGoForward}
       >
         <Text style={[styles.navButtonText, !canGoForward && styles.navButtonTextDisabled]}>
-           {isLastStep ? t('tourStep.finish', 'Finish') : t('tourStep.next')}
+          {isLastStep ? t('tourStep.finish', 'Finish') : t('tourStep.next')}
         </Text>
         {isForwardLocked ? (
           <MaterialCommunityIcons
@@ -159,8 +159,8 @@ export default function TourNavigation({
   const isLastStep = currentStepIndex === tour.steps.length - 1;
 
   const canGoBack = canNavigateBackward(currentStepIndex);
-  const canGoForward = isLastStep 
-    ? true 
+  const canGoForward = isLastStep
+    ? true
     : canNavigateForward(
         currentStep,
         currentStepIndex,
@@ -169,7 +169,7 @@ export default function TourNavigation({
         locationConfirmedSteps
       );
 
-  const isForwardLocked = 
+  const isForwardLocked =
     (currentStep.type === 'puzzle' && !isSolved) || (requiresLocation && !isLocationConfirmed);
 
   const handleSolve = () => {

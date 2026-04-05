@@ -13,7 +13,7 @@ import { getTour } from '@/api/tours';
 import { isLoggedIn } from '@/api/auth';
 import { useTranslation } from 'react-i18next';
 
-import { createTourProgress, getInProgressTour } from '@/api/tourProgress'; 
+import { createTourProgress, getInProgressTour } from '@/api/tourProgress';
 
 export default function TourDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -39,10 +39,13 @@ export default function TourDetailPage() {
 
     if (activeProgress && activeProgress.id) {
       Alert.alert(
-        t('tourId.tourInProgressTitle', "Tour in Progress"), 
-        t('tourId.tourInProgressMessage', "You already have an active tour! Please finish or quit it before starting a new one.")
+        t('tourId.tourInProgressTitle', 'Tour in Progress'),
+        t(
+          'tourId.tourInProgressMessage',
+          'You already have an active tour! Please finish or quit it before starting a new one.'
+        )
       );
-      return; 
+      return;
     }
 
     try {
@@ -58,15 +61,18 @@ export default function TourDetailPage() {
 
       // Check if the backend blocked us because a tour is already active
       if (err.response?.data?.active_tour_id) {
-         Alert.alert(
-           t('tourId.tourInProgressTitle', "Tour in Progress"), 
-           t('tourId.tourInProgressMessage', "You already have an active tour! Please finish or quit it before starting a new one.")
-         );
+        Alert.alert(
+          t('tourId.tourInProgressTitle', 'Tour in Progress'),
+          t(
+            'tourId.tourInProgressMessage',
+            'You already have an active tour! Please finish or quit it before starting a new one.'
+          )
+        );
       } else {
-         Alert.alert(
-           t('tourId.errorTitle', "Error"), 
-           t('tourId.errorMessage', "Could not start the tour. Please try again.")
-         );
+        Alert.alert(
+          t('tourId.errorTitle', 'Error'),
+          t('tourId.errorMessage', 'Could not start the tour. Please try again.')
+        );
       }
     }
   };

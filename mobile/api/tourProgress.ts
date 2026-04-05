@@ -15,7 +15,7 @@ export type TourProgress = {
 };
 
 export type CreateTourProgressRequest = {
-  tour_id: number; 
+  tour_id: number;
 };
 
 export type StepActionResponse = {
@@ -43,9 +43,7 @@ export async function createTourProgress(
 /**
  * Gets a list of the user's tour progresses
  */
-export async function getTourProgressList(
-  signal?: AbortSignal
-): Promise<TourProgress[]> {
+export async function getTourProgressList(signal?: AbortSignal): Promise<TourProgress[]> {
   return apiRequest<TourProgress[], void>({
     method: 'GET',
     url: '/api/tour-progress/',
@@ -57,10 +55,7 @@ export async function getTourProgressList(
 /**
  * Retrieves a specific tour progress by its ID
  */
-export async function getTourProgress(
-  id: number,
-  signal?: AbortSignal
-): Promise<TourProgress> {
+export async function getTourProgress(id: number, signal?: AbortSignal): Promise<TourProgress> {
   return apiRequest<TourProgress, void>({
     method: 'GET',
     url: `/api/tour-progress/${id}/`,
@@ -87,13 +82,10 @@ export async function updateTourProgress(
 }
 
 /**
- * Marks the current step as completed and moves to the next, 
+ * Marks the current step as completed and moves to the next,
  * or finishes the tour if no steps remain.
  */
-export async function completeStep(
-  id: number,
-  signal?: AbortSignal
-): Promise<StepActionResponse> {
+export async function completeStep(id: number, signal?: AbortSignal): Promise<StepActionResponse> {
   return apiRequest<StepActionResponse, void>({
     method: 'POST',
     url: `/api/tour-progress/${id}/complete-step/`,
@@ -106,10 +98,7 @@ export async function completeStep(
  * Skips the current step without awarding XP and moves to the next,
  * or finishes the tour if no steps remain.
  */
-export async function skipStep(
-  id: number,
-  signal?: AbortSignal
-): Promise<StepActionResponse> {
+export async function skipStep(id: number, signal?: AbortSignal): Promise<StepActionResponse> {
   return apiRequest<StepActionResponse, void>({
     method: 'POST',
     url: `/api/tour-progress/${id}/skip-step/`,
@@ -123,9 +112,7 @@ export async function skipStep(
 /**
  * Returns users in progress tour (if there is one)
  */
-export async function getInProgressTour(
-  signal?: AbortSignal
-): Promise<TourProgress> {
+export async function getInProgressTour(signal?: AbortSignal): Promise<TourProgress> {
   return apiRequest<TourProgress, void>({
     method: 'GET',
     url: '/api/tour-progress/in-progress/',

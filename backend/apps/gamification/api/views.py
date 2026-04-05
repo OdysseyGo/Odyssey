@@ -46,17 +46,18 @@ class TourProgressViewSet(
 
         # Check if the user already has an active tour
         active_progress = TourProgress.objects.filter(
-            user=user, 
-            status=TourProgress.IN_PROGRESS
+            user=user, status=TourProgress.IN_PROGRESS
         ).first()
 
         if active_progress:
             # Block creation and tell the frontend about the existing tour
-            raise ValidationError({
-                "error": "You already have a tour in progress.",
-                "active_tour_id": active_progress.tour_id,
-                "progress_id": active_progress.id
-            })
+            raise ValidationError(
+                {
+                    "error": "You already have a tour in progress.",
+                    "active_tour_id": active_progress.tour_id,
+                    "progress_id": active_progress.id,
+                }
+            )
 
         # If no active tour, create the new one normally
         tour = serializer.validated_data["tour"]
@@ -88,7 +89,7 @@ class TourProgressViewSet(
                 .order_by("order")
                 .first()
             )
-        
+
         # accumulate xp into total
         if current_step and hasattr(current_step, "puzzle"):
             progress.total_xp += current_step.puzzle.xp_reward
@@ -101,7 +102,7 @@ class TourProgressViewSet(
             else:
                 progress.status = TourProgress.COMPLETED
                 progress.completed_at = timezone.now()
-                progress.current_step = None  
+                progress.current_step = None
                 progress.save()
 
                 user = request.user
@@ -112,7 +113,6 @@ class TourProgressViewSet(
                 new_badges = BadgeService.check_badges(user)
                 message = "Tour completed!"
 
-    
         return Response(
             {
                 "status": message,
@@ -141,7 +141,7 @@ class TourProgressViewSet(
                 .order_by("order")
                 .first()
             )
-        
+
         # dont accumulate xp, no xp given when skipping!
 
         with transaction.atomic():
@@ -155,7 +155,7 @@ class TourProgressViewSet(
             else:
                 progress.status = TourProgress.COMPLETED
                 progress.completed_at = timezone.now()
-                progress.current_step = None  
+                progress.current_step = None
                 progress.save()
 
                 user = request.user
@@ -166,7 +166,6 @@ class TourProgressViewSet(
                 new_badges = BadgeService.check_badges(user)
                 message = "Tour completed!"
 
-    
         return Response(
             {
                 "status": message,
@@ -174,12 +173,11 @@ class TourProgressViewSet(
                 "new_step_id": next_step.id if next_step else None,
             }
         )
-    
+
     @action(detail=False, methods=["get"], url_path="in-progress")
     def get_in_progress(self, request):
         active_progress = TourProgress.objects.filter(
-            user=request.user, 
-            status=TourProgress.IN_PROGRESS
+            user=request.user, status=TourProgress.IN_PROGRESS
         ).first()
 
         if not active_progress:
@@ -187,4 +185,3 @@ class TourProgressViewSet(
 
         serializer = self.get_serializer(active_progress)
         return Response(serializer.data)
-    

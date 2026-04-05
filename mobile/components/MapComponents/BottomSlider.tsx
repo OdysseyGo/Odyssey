@@ -14,8 +14,8 @@ const BOTTOM_SHEET_ANIMATION_DURATION = Animations.bottomSheet.animationDuration
 
 export default function BottomSlider({
   onEndTour,
-  onTourComplete, 
-}: BottomSliderProps & { onTourComplete?: () => void }) { 
+  onTourComplete,
+}: BottomSliderProps & { onTourComplete?: () => void }) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const { height: screenHeight } = useWindowDimensions();
@@ -28,17 +28,17 @@ export default function BottomSlider({
     solvedSteps,
     locationConfirmedSteps,
     setCurrentStepIndex,
-    setHighestStepIndex, 
+    setHighestStepIndex,
     solveStep,
     confirmLocation,
   } = useActiveTour();
 
-  const handleNavigateNext = useCallback(async () => {  
+  const handleNavigateNext = useCallback(async () => {
     if (!tour || !progressId) return;
 
     if (currentStepIndex < highestStepIndex) {
       setCurrentStepIndex(currentStepIndex + 1);
-      return; 
+      return;
     }
 
     const currentStep = tour.steps[currentStepIndex];
@@ -56,7 +56,7 @@ export default function BottomSlider({
         const nextStepIndex = tour.steps.findIndex(
           (s) => s.id === response.new_step_id?.toString()
         );
-       if (nextStepIndex !== -1) {
+        if (nextStepIndex !== -1) {
           setCurrentStepIndex(nextStepIndex);
           setHighestStepIndex(nextStepIndex);
         }
@@ -65,7 +65,16 @@ export default function BottomSlider({
       console.error('Failed to navigate next:', error);
       Alert.alert('Error', 'Could not sync progress with server.');
     }
-  }, [tour, progressId, currentStepIndex, highestStepIndex, solvedSteps, setCurrentStepIndex, setHighestStepIndex, onTourComplete]);
+  }, [
+    tour,
+    progressId,
+    currentStepIndex,
+    highestStepIndex,
+    solvedSteps,
+    setCurrentStepIndex,
+    setHighestStepIndex,
+    onTourComplete,
+  ]);
 
   const handleNavigatePrev = useCallback(() => {
     if (currentStepIndex > 0) {
@@ -73,9 +82,12 @@ export default function BottomSlider({
     }
   }, [currentStepIndex, setCurrentStepIndex]);
 
-  const handleStepSolved = useCallback((stepId: string) => {
-    solveStep(stepId, 15);
-  }, [solveStep]);
+  const handleStepSolved = useCallback(
+    (stepId: string) => {
+      solveStep(stepId, 15);
+    },
+    [solveStep]
+  );
 
   const handleLocationConfirm = useCallback(
     async (stepId: string, latitude: number, longitude: number) => {
