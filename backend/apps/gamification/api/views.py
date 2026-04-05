@@ -2,6 +2,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from apps.gamification.models import Badge, TourProgress, UserBadge
@@ -41,12 +42,28 @@ class TourProgressViewSet(
         )
 
     def perform_create(self, serializer):
-        # auto assign the first step when the tour starts
+        user = self.request.user
+
+        # Check if the user already has an active tour
+        active_progress = TourProgress.objects.filter(
+            user=user, 
+            status=TourProgress.IN_PROGRESS
+        ).first()
+
+        if active_progress:
+            # Block creation and tell the frontend about the existing tour
+            raise ValidationError({
+                "error": "You already have a tour in progress.",
+                "active_tour_id": active_progress.tour_id,
+                "progress_id": active_progress.id
+            })
+
+        # If no active tour, create the new one normally
         tour = serializer.validated_data["tour"]
         first_step = TourStep.objects.filter(tour=tour).order_by("order").first()
 
         serializer.save(
-            user=self.request.user,
+            user=user,
             current_step=first_step,
             status=TourProgress.IN_PROGRESS,
         )
@@ -157,3 +174,17 @@ class TourProgressViewSet(
                 "new_step_id": next_step.id if next_step else None,
             }
         )
+    
+    @action(detail=False, methods=["get"], url_path="in-progress")
+    def get_in_progress(self, request):
+        active_progress = TourProgress.objects.filter(
+            user=request.user, 
+            status=TourProgress.IN_PROGRESS
+        ).first()
+
+        if not active_progress:
+            return Response({"detail": "No active tour found."}, status=200)
+
+        serializer = self.get_serializer(active_progress)
+        return Response(serializer.data)
+    
