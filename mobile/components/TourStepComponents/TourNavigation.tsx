@@ -64,6 +64,7 @@ function NavigationArrows({
   requiresLocation,
   isLocationConfirmed,
   onLocationConfirm,
+  isLastStep,
 }: NavigationArrowsProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -115,7 +116,7 @@ function NavigationArrows({
         disabled={!canGoForward}
       >
         <Text style={[styles.navButtonText, !canGoForward && styles.navButtonTextDisabled]}>
-          {t('tourStep.next')}
+           {isLastStep ? t('tourStep.finish', 'Finish') : t('tourStep.next')}
         </Text>
         {isForwardLocked ? (
           <MaterialCommunityIcons
@@ -149,22 +150,26 @@ export default function TourNavigation({
 }: TourNavigationProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
-  console.log('Rendering TourNavigation - currentStepIndex:', tour);
+  //console.log('Rendering TourNavigation - currentStepIndex:', tour);
   const currentStep = tour.steps[currentStepIndex];
   const isSolved = solvedSteps.has(currentStep.id);
   const isLocationConfirmed = locationConfirmedSteps.has(currentStep.id);
   const requiresLocation = currentStep.requiresLocationConfirmation === true;
 
-  const canGoBack = canNavigateBackward(currentStepIndex);
-  const canGoForward = canNavigateForward(
-    currentStep,
-    currentStepIndex,
-    tour.steps.length,
-    solvedSteps,
-    locationConfirmedSteps
-  );
+  const isLastStep = currentStepIndex === tour.steps.length - 1;
 
-  const isForwardLocked =
+  const canGoBack = canNavigateBackward(currentStepIndex);
+  const canGoForward = isLastStep 
+    ? true 
+    : canNavigateForward(
+        currentStep,
+        currentStepIndex,
+        tour.steps.length,
+        solvedSteps,
+        locationConfirmedSteps
+      );
+
+  const isForwardLocked = 
     (currentStep.type === 'puzzle' && !isSolved) || (requiresLocation && !isLocationConfirmed);
 
   const handleSolve = () => {
@@ -215,6 +220,7 @@ export default function TourNavigation({
         requiresLocation={requiresLocation}
         isLocationConfirmed={isLocationConfirmed}
         onLocationConfirm={handleLocationConfirm}
+        isLastStep={isLastStep}
       />
     </View>
   );

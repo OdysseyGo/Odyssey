@@ -64,7 +64,7 @@ export default function LocationItem({
         <TouchableOpacity
           style={styles.locationActionButton}
           onPress={onReorderDown}
-          disabled={isLast}
+          //disabled={isLast}
         >
           <Ionicons
             name="chevron-down"

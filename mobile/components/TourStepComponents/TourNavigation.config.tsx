@@ -30,6 +30,7 @@ export interface NavigationArrowsProps {
   requiresLocation: boolean;
   isLocationConfirmed: boolean;
   onLocationConfirm: () => Promise<void>;
+  isLastStep: boolean;
 }
 
 export function getVisibleMarkers(

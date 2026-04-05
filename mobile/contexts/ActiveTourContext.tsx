@@ -8,19 +8,26 @@ import {
   Puzzle,
 } from '@/components/TourStepComponents/TourStep.config';
 
+import { getInProgressTour } from '@/api/tourProgress'; 
+import { getTour } from '@/api/tours';
+
 interface ActiveTourState {
   tour: Tour | null;
+  progressId: number | null; 
   isActive: boolean;
   currentStepIndex: number;
+  highestStepIndex: number;
   solvedSteps: Set<string>;
   locationConfirmedSteps: Set<string>;
   earnedXP: number;
 }
 
 interface ActiveTourContextType extends ActiveTourState {
-  startTour: (apiTour: ApiTour) => void;
+  startTour: (apiTour: ApiTour, progressId: number) => void;
+  resumeActiveTour: () => Promise<void>
   endTour: () => void;
   setCurrentStepIndex: (index: number) => void;
+  setHighestStepIndex: (index: number) => void; 
   solveStep: (stepId: string, xpReward?: number) => void;
   confirmLocation: (stepId: string) => void;
   resetProgress: () => void;
@@ -28,8 +35,10 @@ interface ActiveTourContextType extends ActiveTourState {
 
 const initialState: ActiveTourState = {
   tour: null,
+  progressId: null,
   isActive: false,
   currentStepIndex: 0,
+  highestStepIndex: 0, 
   solvedSteps: new Set(),
   locationConfirmedSteps: new Set(),
   earnedXP: 0,
@@ -114,12 +123,14 @@ function mapApiPuzzleToInternal(apiPuzzle: ApiTour['steps'][0]['puzzle']): Puzzl
 export function ActiveTourProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ActiveTourState>(initialState);
 
-  const startTour = useCallback((apiTour: ApiTour) => {
+  const startTour = useCallback((apiTour: ApiTour, progressId: number) => {
     const tour = mapApiTourToInternalTour(apiTour);
     setState({
       tour,
+      progressId,
       isActive: true,
       currentStepIndex: 0,
+      highestStepIndex: 0,
       solvedSteps: new Set(),
       locationConfirmedSteps: new Set(),
       earnedXP: 0,
@@ -128,6 +139,13 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
 
   const endTour = useCallback(() => {
     setState(initialState);
+  }, []);
+
+  const setHighestStepIndex = useCallback((index: number) => {
+    setState((prev) => ({ 
+      ...prev, 
+      highestStepIndex: Math.max(prev.highestStepIndex, index) 
+    }));
   }, []);
 
   const setCurrentStepIndex = useCallback((index: number) => {
@@ -159,13 +177,67 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const resumeActiveTour = useCallback(async () => {    
+    if (state.isActive) return;
+
+    try {
+      const activeProgress = await getInProgressTour();
+      //console.log(activeProgress);
+      if (!activeProgress || !activeProgress.id) {
+        console.log("No active tour found in background check.");
+        return; 
+      }
+
+      const apiTour = await getTour(activeProgress.tour.id);
+      const internalTour = mapApiTourToInternalTour(apiTour);
+
+      let currentStepIdx = 0;
+      if (activeProgress.current_step) {
+  
+        const targetStepId = typeof activeProgress.current_step === 'object' 
+          ? String(activeProgress.current_step.id) 
+          : String(activeProgress.current_step);
+
+        currentStepIdx = internalTour.steps.findIndex(
+          (s) => s.id === targetStepId
+        );
+  
+        if (currentStepIdx === -1) {
+          console.warn("Warning: Step ID not found in tour!");
+          currentStepIdx = 0;
+        }
+      }
+
+      const restoredSolvedSteps = new Set<string>();
+      for (let i = 0; i < currentStepIdx; i++) {
+        restoredSolvedSteps.add(internalTour.steps[i].id);
+      }
+
+      setState({
+        tour: internalTour,
+        progressId: activeProgress.id,
+        isActive: true,
+        currentStepIndex: currentStepIdx,
+        highestStepIndex: currentStepIdx,
+        solvedSteps: restoredSolvedSteps,
+        locationConfirmedSteps: new Set(), 
+        earnedXP: activeProgress.total_xp,
+      });
+
+    } catch (error: any) {
+      console.error("Couldn't fetch current active tour ", error);
+    }
+  }, [state.isActive]);
+
   return (
     <ActiveTourContext.Provider
       value={{
         ...state,
         startTour,
+        resumeActiveTour,
         endTour,
         setCurrentStepIndex,
+        setHighestStepIndex,
         solveStep,
         confirmLocation,
         resetProgress,

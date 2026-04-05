@@ -141,7 +141,9 @@
     "login": "Giriş Yap",
     "review": "Yorum",
     "min": "dk",
-    "stops": "durak"
+    "stops": "durak",
+    "tourInProgressTitle":"Turun devam etmekte",
+    "tourInProgressMessage":"Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et."
   },
   "creation": {
     "continue": "Devam Et",
@@ -339,7 +341,8 @@
   "tourStep": {
     "tourProgress": "Tur İlerlemesi",
     "back": "Geri",
-    "next": "İleri"
+    "next": "İleri",
+    "finish":"Bitir"
   },
   "map": {
     "noActiveTour": {
