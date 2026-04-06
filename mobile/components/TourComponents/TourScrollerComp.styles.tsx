@@ -1,13 +1,14 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
 export const tourScrollerCompStyles = (theme: ThemeName) => {
   const color = Colors[theme];
+  const isDark = theme === 'dark';
 
   return StyleSheet.create({
     container: {
-      marginTop: Spacing.md,
+      marginTop: Spacing.lg + 4,
     },
 
     // ─── Section header
@@ -16,8 +17,7 @@ export const tourScrollerCompStyles = (theme: ThemeName) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: Spacing.xl,
-      paddingVertical: Spacing.md,
-      marginBottom: Spacing.xs,
+      marginBottom: Spacing.md,
     },
     titleRow: {
       flexDirection: 'row',
@@ -26,25 +26,40 @@ export const tourScrollerCompStyles = (theme: ThemeName) => {
       flex: 1,
     },
     accentBar: {
-      width: 4,
-      height: 22,
-      borderRadius: 3,
+      width: 3.5,
+      height: 20,
+      borderRadius: 2,
     },
     title: {
       color: color.text,
-      fontSize: 20,
+      fontSize: 19,
       fontWeight: '700',
-      letterSpacing: -0.4,
+      letterSpacing: -0.3,
+    },
+    rightSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
     },
     countBadge: {
-      paddingHorizontal: Spacing.md,
-      paddingVertical: 5,
+      paddingHorizontal: Spacing.sm + 2,
+      paddingVertical: 4,
       borderRadius: Spacing.borderRadiusFull,
-      marginLeft: Spacing.sm,
     },
     countText: {
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: '700',
+    },
+    seeAllButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+      paddingVertical: 4,
+      paddingHorizontal: 2,
+    },
+    seeAllText: {
+      fontSize: 13,
+      fontWeight: '600',
     },
 
     // ─── List

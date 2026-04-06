@@ -10,37 +10,25 @@ export default function ProfileStatsComp({ xp, tours, badges, followers, followi
   const styles = profileStatsCompStyles(theme);
   const { t } = useTranslation();
 
+  const stats = [
+    { value: xp, label: t('profile.xp') },
+    { value: tours, label: t('profile.tours') },
+    { value: badges, label: t('profile.badges') },
+    { value: followers, label: t('profile.followers') },
+    { value: following, label: t('profile.following') },
+  ];
+
   return (
     <View style={styles.card}>
-      <View style={styles.topRow}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{xp}</Text>
-          <Text style={styles.statLabel}>{t('profile.xp')}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{tours}</Text>
-          <Text style={styles.statLabel}>{t('profile.tours')}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{badges}</Text>
-          <Text style={styles.statLabel}>{t('profile.badges')}</Text>
-        </View>
-      </View>
-      <View style={styles.divider} />
-
-      <View style={styles.bottomRow}>
-        <View style={styles.bottomItem}>
-          <Text style={styles.bottomValue}>{followers}</Text>
-          <Text style={styles.bottomLabel}>{t('profile.followers')}</Text>
-        </View>
-
-        <View style={styles.bottomDivider} />
-
-        <View style={styles.bottomItem}>
-          <Text style={styles.bottomValue}>{following}</Text>
-          <Text style={styles.bottomLabel}>{t('profile.following')}</Text>
-        </View>
-      </View>
+      {stats.map((stat, index) => (
+        <React.Fragment key={stat.label}>
+          {index > 0 && <View style={styles.divider} />}
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{stat.value}</Text>
+            <Text style={styles.statLabel}>{stat.label}</Text>
+          </View>
+        </React.Fragment>
+      ))}
     </View>
   );
 }

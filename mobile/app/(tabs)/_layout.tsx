@@ -74,6 +74,7 @@ export default function TabLayout() {
           options={{
             title: t('tabs.profile'),
             tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+            headerShown: false,
           }}
         />
       </Tabs>

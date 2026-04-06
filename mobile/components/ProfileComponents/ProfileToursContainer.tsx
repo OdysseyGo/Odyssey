@@ -55,10 +55,13 @@ export default function ProfileToursContainer({}: ProfileToursContainerProps) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t('profile.myTours')}</Text>
+        <View style={styles.titleRow}>
+          <View style={styles.accentBar} />
+          <Text style={styles.title}>{t('profile.myTours')}</Text>
+        </View>
       </View>
 
-      {/* Tabs */}
+      {/* Segmented control */}
       <View style={styles.tabsContainer}>
         {TOUR_TABS.map((tab) => (
           <TouchableOpacity

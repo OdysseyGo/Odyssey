@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, FlatList } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import TourDisplayComp from './TourDisplayComp';
 import type { TourDisplayProps } from './TourDisplayComp.config';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -27,15 +28,17 @@ export default function TourScrollerComp({ title, data, accentColor }: TourScrol
             <View style={[styles.accentBar, { backgroundColor: accent }]} />
             <Text style={styles.title}>{title}</Text>
           </View>
-          <View style={[styles.countBadge, { backgroundColor: `${accent}18` }]}>
-            <Text style={[styles.countText, { color: accent }]}>{data.length}</Text>
+          <View style={styles.rightSection}>
+            <View style={[styles.countBadge, { backgroundColor: `${accent}15` }]}>
+              <Text style={[styles.countText, { color: accent }]}>{data.length}</Text>
+            </View>
           </View>
         </View>
       )}
 
       <FlatList
         data={data}
-        keyExtractor={(_, index) => index.toString()}
+        keyExtractor={(item) => item.id}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.listContent}

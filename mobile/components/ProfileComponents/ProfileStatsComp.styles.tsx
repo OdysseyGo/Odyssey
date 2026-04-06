@@ -1,79 +1,58 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
 export const profileStatsCompStyles = (theme: ThemeName) => {
   const color = Colors[theme];
+  const isLight = theme === 'light';
+
   return StyleSheet.create({
     card: {
-      backgroundColor: color.foreground,
-      borderRadius: Spacing.borderRadius,
-      paddingVertical: Spacing.lg,
-      paddingHorizontal: Spacing.lg,
+      backgroundColor: color.cardSurface,
+      borderRadius: 22,
+      paddingVertical: Spacing.lg + 2,
+      paddingHorizontal: Spacing.md,
       marginTop: -Spacing.xxl,
-      width: '90%',
+      width: '88%',
       alignSelf: 'center',
-
-      shadowColor: color.textShadowColor,
-      shadowOpacity: 0.1,
-      shadowRadius: Spacing.lg,
-      shadowOffset: { width: 0, height: Spacing.sm },
-      elevation: 4,
-      maxWidth: 500,
-    },
-
-    topRow: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: Spacing.lg,
-      paddingHorizontal: '10%',
-    },
-    statItem: {
       alignItems: 'center',
+      // Light: subtle border adds crispness; dark: no border
+      ...(isLight ? { borderWidth: StyleSheet.hairlineWidth, borderColor: color.borderLight } : {}),
+      ...Platform.select({
+        ios: {
+          shadowColor: isLight ? 'rgba(45,50,68,0.16)' : '#000',
+          shadowOpacity: 1,
+          shadowRadius: isLight ? 24 : 20,
+          shadowOffset: { width: 0, height: isLight ? 10 : 8 },
+        },
+        android: { elevation: isLight ? 8 : 6 },
+      }),
+    },
+
+    statItem: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 3,
     },
     statValue: {
-      fontSize: 24,
-      fontWeight: '700',
-      marginTop: Spacing.xs,
+      fontSize: 20,
+      fontWeight: '800',
       color: color.text,
+      letterSpacing: -0.3,
     },
     statLabel: {
-      fontSize: 14,
+      fontSize: 11,
+      fontWeight: '500',
       color: color.subText,
-      marginTop: Spacing.xs,
+      letterSpacing: 0.2,
+      textTransform: 'uppercase',
     },
 
     divider: {
-      height: 1,
-      backgroundColor: color.foregroundSecondary,
-      marginVertical: Spacing.md,
-    },
-
-    bottomRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-evenly',
-      alignItems: 'center',
-      marginTop: Spacing.xs,
-    },
-    bottomItem: {
-      alignItems: 'center',
-      flex: 1,
-    },
-    bottomValue: {
-      fontSize: 22,
-      fontWeight: '600',
-      color: color.text,
-    },
-    bottomLabel: {
-      fontSize: 14,
-      color: color.subText,
-      marginTop: Spacing.xs,
-    },
-
-    bottomDivider: {
-      width: 1,
-      height: '80%',
-      backgroundColor: color.foregroundSecondary,
+      width: StyleSheet.hairlineWidth,
+      height: 30,
+      backgroundColor: isLight ? 'rgba(45,50,68,0.1)' : color.foregroundSecondary,
     },
   });
 };

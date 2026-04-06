@@ -1,20 +1,21 @@
 import {
   View,
   ScrollView,
-  ActivityIndicator,
   Text,
   RefreshControl,
   StyleSheet,
   TouchableOpacity,
   Platform,
+  Animated,
+  Dimensions,
 } from 'react-native';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TourScrollerComp from '@/components/TourComponents/TourScrollerComp';
 import FeaturedTourCarousel from '@/components/TourComponents/FeaturedTourCarousel';
 import { getTours, Tour } from '@/api/tours';
 import { TourDisplayProps } from '@/components/TourComponents/TourDisplayComp.config';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Spacing } from '@/constants/Spacing';
@@ -22,16 +23,23 @@ import Colors from '@/constants/Colors';
 import CreateTourButton from '@/components/TourCreation/CreateTourButton';
 import { useTranslation } from 'react-i18next';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// ─────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────
+
 function mapTourToDisplayProps(tour: Tour, t: (key: string) => string): TourDisplayProps {
   return {
     id: tour.id.toString(),
-    image: tour.steps?.[0]?.image || `https://picsum.photos/400/320?random=${tour.id}`,
+    image: tour.steps?.[0]?.image || '',
     title: tour.title,
     author: tour.creator?.username || 'Unknown',
     duration: `${tour.duration_minutes} ${t('tourId.min')}`,
     length: tour.steps?.length ? `${tour.steps.length} ${t('tourId.stops')}` : 'N/A',
     reviewCount: `${tour.reviews?.length || 0} ${t('tourId.review')}`,
     rating: tour.average_rating?.toFixed(1) || '0',
+    city: tour.city,
   };
 }
 
@@ -57,9 +65,115 @@ const CONTINENT_ICONS: Record<string, string> = {
   Other: 'help-circle-outline',
 };
 
+// ─────────────────────────────────────────────────────────
+// Skeleton shimmer block
+// ─────────────────────────────────────────────────────────
+
+function ShimmerBlock({
+  width,
+  height,
+  borderRadius = 14,
+  style,
+  color,
+}: {
+  width: number | string;
+  height: number;
+  borderRadius?: number;
+  style?: any;
+  color: string;
+}) {
+  const opacity = useRef(new Animated.Value(0.35)).current;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.7, duration: 750, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.35, duration: 750, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={[{ width: width as any, height, borderRadius, backgroundColor: color, opacity }, style]}
+    />
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+// Skeleton loading screen
+// ─────────────────────────────────────────────────────────
+
+function SkeletonLoading({ theme }: { theme: (typeof Colors)['light'] }) {
+  const shimmerColor = theme.foregroundSecondary;
+  const cardW = (SCREEN_WIDTH - Spacing.xl * 2 - Spacing.md) / 2;
+
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      {/* Skeleton header */}
+      <View style={{ paddingHorizontal: Spacing.xl, paddingTop: Spacing.lg, gap: 8 }}>
+        <ShimmerBlock width={130} height={14} color={shimmerColor} />
+        <ShimmerBlock width={190} height={28} borderRadius={8} color={shimmerColor} />
+      </View>
+
+      {/* Skeleton carousel */}
+      <View style={{ paddingHorizontal: Spacing.lg, marginTop: Spacing.xl }}>
+        <ShimmerBlock width="100%" height={260} borderRadius={24} color={shimmerColor} />
+      </View>
+
+      {/* Skeleton pills */}
+      <View
+        style={{
+          flexDirection: 'row',
+          gap: Spacing.sm,
+          paddingHorizontal: Spacing.xl,
+          marginTop: Spacing.xl,
+        }}
+      >
+        {[70, 90, 80, 85, 75].map((w, i) => (
+          <ShimmerBlock key={i} width={w} height={36} borderRadius={999} color={shimmerColor} />
+        ))}
+      </View>
+
+      {/* Skeleton section header */}
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          paddingHorizontal: Spacing.xl,
+          marginTop: Spacing.xl,
+        }}
+      >
+        <ShimmerBlock width={120} height={20} color={shimmerColor} />
+        <ShimmerBlock width={30} height={20} borderRadius={999} color={shimmerColor} />
+      </View>
+
+      {/* Skeleton cards */}
+      <View
+        style={{
+          flexDirection: 'row',
+          gap: Spacing.md,
+          paddingHorizontal: Spacing.xl,
+          marginTop: Spacing.md,
+        }}
+      >
+        <ShimmerBlock width={cardW} height={235} borderRadius={22} color={shimmerColor} />
+        <ShimmerBlock width={cardW} height={235} borderRadius={22} color={shimmerColor} />
+      </View>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+// Main component
+// ─────────────────────────────────────────────────────────
+
 export default function TourDisplay() {
   const colorScheme = useColorTheme();
   const theme = Colors[colorScheme];
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
@@ -69,26 +183,31 @@ export default function TourDisplay() {
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
+  const hasFetchedRef = useRef(false);
+
   const fetchTours = useCallback(async (isRefresh = false) => {
     try {
       if (isRefresh) setRefreshing(true);
-      else setLoading((prev) => allTours.length === 0);
+      else if (!hasFetchedRef.current) setLoading(true);
       setError(null);
       const response = await getTours({ page_size: 50 });
       setAllTours(response.results);
+      hasFetchedRef.current = true;
     } catch (err: any) {
-      if (allTours.length === 0) setError(err.message || 'Failed to load tours');
+      if (!hasFetchedRef.current) setError(err.message || 'Failed to load tours');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [allTours.length]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       fetchTours();
     }, [fetchTours])
   );
+
+  // ─── Continent logic ──────────────────────────────────
 
   const getContinentFromCoordinates = (lat: number, lon: number): string => {
     if (lat >= -35 && lat <= 37 && lon >= -18 && lon <= 51) return 'Africa';
@@ -110,6 +229,8 @@ export default function TourDisplay() {
     }
     return 'Other';
   };
+
+  // ─── Computed data ────────────────────────────────────
 
   const { featuredTours, popularTours, toursByContinent } = useMemo(() => {
     const tours = allTours;
@@ -154,7 +275,7 @@ export default function TourDisplay() {
 
   const categories: { key: string; label: string; icon: string }[] = useMemo(
     () => [
-      { key: 'all', label: 'All', icon: 'compass' },
+      { key: 'all', label: t('tour.all', { defaultValue: 'All' }), icon: 'compass' },
       { key: 'popular', label: t('tour.popular'), icon: 'flame' },
       ...toursByContinent.map(({ continent }) => ({
         key: continent,
@@ -169,41 +290,43 @@ export default function TourDisplay() {
 
   const onRefresh = useCallback(() => fetchTours(true), [fetchTours]);
 
+  // ─── Loading state — skeleton ─────────────────────────
+
   if (loading) {
     return (
-      <View style={[styles.centerScreen, { backgroundColor: theme.background }]}>
-        <View style={[styles.loadingCard, { backgroundColor: theme.foreground }]}>
-          <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={[styles.loadingTitle, { color: theme.text }]}>{t('tour.loading')}</Text>
-          <Text style={[styles.loadingSubText, { color: theme.subText }]}>
-            Finding amazing tours for you
-          </Text>
-        </View>
+      <View style={{ flex: 1, paddingTop: insets.top + Spacing.sm }}>
+        <SkeletonLoading theme={theme} />
       </View>
     );
   }
+
+  // ─── Error state ──────────────────────────────────────
 
   if (error) {
     return (
       <View style={[styles.centerScreen, { backgroundColor: theme.background }]}>
         <View style={[styles.errorCard, { backgroundColor: theme.foreground }]}>
-          <View style={[styles.errorIconWrap, { backgroundColor: `${theme.error}18` }]}>
-            <Ionicons name="alert-circle" size={44} color={theme.error} />
+          <View style={[styles.errorIconWrap, { backgroundColor: `${theme.error}15` }]}>
+            <Ionicons name="cloud-offline-outline" size={40} color={theme.error} />
           </View>
-          <Text style={[styles.errorTitle, { color: theme.text }]}>Oops!</Text>
+          <Text style={[styles.errorTitle, { color: theme.text }]}>
+            {t('tour.errorTitle', { defaultValue: 'Something went wrong' })}
+          </Text>
           <Text style={[styles.errorMessage, { color: theme.subText }]}>{error}</Text>
           <TouchableOpacity
             style={[styles.retryButton, { backgroundColor: theme.primary }]}
             onPress={() => fetchTours()}
             activeOpacity={0.8}
           >
-            <Ionicons name="refresh" size={17} color="#fff" />
+            <Ionicons name="refresh" size={16} color={theme.white} />
             <Text style={styles.retryText}>{t('tour.retry')}</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
   }
+
+  // ─── Content ──────────────────────────────────────────
 
   const showFeatured = selectedCategory === 'all';
   const showPopular = selectedCategory === 'all' || selectedCategory === 'popular';
@@ -216,28 +339,85 @@ export default function TourDisplay() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
-      {/* ─── Page Header ─────────────────────────────────────── */}
+      {/* ─── Header ──────────────────────────────────────── */}
       <View
         style={[
           styles.pageHeader,
           {
             backgroundColor: theme.background,
-            borderBottomColor: theme.borderLight,
             paddingTop: insets.top + Spacing.sm,
           },
         ]}
       >
-        <View>
-          <Text style={[styles.headerEyebrow, { color: theme.subText }]}>Ready to explore?</Text>
-          <Text style={[styles.headerHeadline, { color: theme.text }]}>Discover Tours</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.headerEyebrow, { color: theme.subText }]}>
+            {t('tour.headerEyebrow', { defaultValue: 'Ready to explore?' })}
+          </Text>
+          <Text style={[styles.headerHeadline, { color: theme.text }]}>
+            {t('tour.headerTitle', { defaultValue: 'Discover Tours' })}
+          </Text>
         </View>
         <TouchableOpacity
           style={[styles.headerIconBtn, { backgroundColor: theme.foreground }]}
           activeOpacity={0.7}
+          onPress={() => router.push('/search')}
         >
           <Ionicons name="search" size={20} color={theme.text} />
         </TouchableOpacity>
       </View>
+
+      {/* ─── Category Filter Pills (sticky) ──────────────── */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoryRow}
+        style={{ flexShrink: 0, flexGrow: 0 }}
+      >
+        {categories.map((cat) => {
+          const isActive = selectedCategory === cat.key;
+          return (
+            <TouchableOpacity
+              key={cat.key}
+              onPress={() => setSelectedCategory(cat.key)}
+              activeOpacity={0.75}
+              style={[
+                styles.categoryPill,
+                {
+                  backgroundColor: isActive ? theme.primary : theme.foreground,
+                  borderWidth: isActive ? 0 : StyleSheet.hairlineWidth,
+                  borderColor: theme.borderLight,
+                  ...(isActive
+                    ? Platform.select({
+                        ios: {
+                          shadowColor: theme.primary,
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.35,
+                          shadowRadius: 8,
+                        },
+                        android: { elevation: 6 },
+                      })
+                    : {}),
+                },
+              ]}
+            >
+              <Ionicons
+                name={cat.icon as any}
+                size={14}
+                color={isActive ? theme.white : theme.subText}
+              />
+              <Text
+                style={[
+                  styles.categoryPillText,
+                  { color: isActive ? theme.white : theme.subText },
+                  isActive && { fontWeight: '700' },
+                ]}
+              >
+                {cat.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
 
       <ScrollView
         style={{ flex: 1 }}
@@ -245,111 +425,23 @@ export default function TourDisplay() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
         }
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
       >
-        {/* ─── Hero Carousel ───────────────────────────────────── */}
+        {/* ─── Hero Carousel ─────────────────────────────── */}
         {featuredTours.length > 0 && showFeatured && (
           <FeaturedTourCarousel tours={featuredTours} autoPlayInterval={5000} />
         )}
 
-        {/* ─── Stats Bar ───────────────────────────────────────── */}
-        <View
-          style={[
-            styles.statsBar,
-            {
-              backgroundColor: theme.foreground,
-              borderColor: theme.borderLight,
-            },
-          ]}
-        >
-          <View style={styles.statItem}>
-            <View style={[styles.statIconWrap, { backgroundColor: `${theme.primary}22` }]}>
-              <Ionicons name="map" size={13} color={theme.primary} />
-            </View>
-            <Text style={[styles.statText, { color: theme.subText }]}>
-              <Text style={{ color: theme.text, fontWeight: '700' }}>{allTours.length}</Text> tours
-            </Text>
-          </View>
-
-          <View style={[styles.statSep, { backgroundColor: theme.borderLight }]} />
-
-          <View style={styles.statItem}>
-            <View style={[styles.statIconWrap, { backgroundColor: `${theme.secondary}22` }]}>
-              <Ionicons name="globe" size={13} color={theme.secondary} />
-            </View>
-            <Text style={[styles.statText, { color: theme.subText }]}>
-              <Text style={{ color: theme.text, fontWeight: '700' }}>
-                {toursByContinent.length}
-              </Text>{' '}
-              regions
-            </Text>
-          </View>
-
-          <View style={[styles.statSep, { backgroundColor: theme.borderLight }]} />
-
-          <View style={styles.statItem}>
-            <View style={[styles.statIconWrap, { backgroundColor: `${theme.star}22` }]}>
-              <Ionicons name="star" size={13} color={theme.star} />
-            </View>
-            <Text style={[styles.statText, { color: theme.subText }]}>Top picks</Text>
-          </View>
-        </View>
-
-        {/* ─── Category Filter Pills ───────────────────────────── */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          nestedScrollEnabled={true}
-          contentContainerStyle={styles.categoryRow}
-        >
-          {categories.map((cat) => {
-            const isActive = selectedCategory === cat.key;
-            return (
-              <TouchableOpacity
-                key={cat.key}
-                onPress={() => setSelectedCategory(cat.key)}
-                activeOpacity={0.75}
-                style={[
-                  styles.categoryPill,
-                  {
-                    backgroundColor: isActive ? theme.primary : theme.foreground,
-                    ...(isActive
-                      ? {
-                          shadowColor: theme.primary,
-                          shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: 0.38,
-                          shadowRadius: 10,
-                          elevation: 6,
-                        }
-                      : {}),
-                  },
-                ]}
-              >
-                <Ionicons
-                  name={cat.icon}
-                  size={15}
-                  color={isActive ? '#fff' : theme.subText}
-                />
-                <Text
-                  style={[
-                    styles.categoryPillText,
-                    { color: isActive ? '#fff' : theme.subText },
-                    isActive && { fontWeight: '700' },
-                  ]}
-                >
-                  {cat.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-
-        {/* ─── Popular Tours ───────────────────────────────────── */}
+        {/* ─── Popular Tours ─────────────────────────────── */}
         {showPopular && popularTours.length > 0 && (
-          <TourScrollerComp title={t('tour.popular')} data={popularTours} accentColor={theme.primary} />
+          <TourScrollerComp
+            title={t('tour.popular')}
+            data={popularTours}
+            accentColor={theme.primary}
+          />
         )}
 
-        {/* ─── Continent Sections ──────────────────────────────── */}
+        {/* ─── Continent Sections ────────────────────────── */}
         {shownContinents.map(({ continent, tours }, index) => (
           <TourScrollerComp
             key={continent}
@@ -361,15 +453,19 @@ export default function TourDisplay() {
           />
         ))}
 
-        {/* ─── Empty State ─────────────────────────────────────── */}
+        {/* ─── Empty state ───────────────────────────────── */}
         {!showPopular && shownContinents.length === 0 && (
           <View style={styles.emptyState}>
-            <View style={[styles.emptyIconWrap, { backgroundColor: theme.foreground }]}>
-              <Ionicons name="map-outline" size={40} color={theme.icon} />
+            <View style={[styles.emptyIconWrap, { backgroundColor: `${theme.primary}12` }]}>
+              <Ionicons name="map-outline" size={38} color={theme.primary} />
             </View>
-            <Text style={[styles.emptyTitle, { color: theme.text }]}>No tours here yet</Text>
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>
+              {t('tour.emptyTitle', { defaultValue: 'No tours here yet' })}
+            </Text>
             <Text style={[styles.emptySubText, { color: theme.subText }]}>
-              Be the first to create a tour in this region!
+              {t('tour.emptySubtitle', {
+                defaultValue: 'Be the first to create a tour in this region!',
+              })}
             </Text>
           </View>
         )}
@@ -380,8 +476,12 @@ export default function TourDisplay() {
   );
 }
 
-const styles = StyleSheet.create({
-  // ─── Screens
+// ─────────────────────────────────────────────────────────
+// Styles
+// ─────────────────────────────────────────────────────────
+
+const createStyles = (theme: (typeof Colors)['light']) =>
+  StyleSheet.create({
   centerScreen: {
     flex: 1,
     justifyContent: 'center',
@@ -389,83 +489,55 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
 
-  // ─── Page Header
+  // ─── Header
   pageHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingBottom: Spacing.sm + 2,
   },
   headerEyebrow: {
     fontSize: 13,
     fontWeight: '500',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
     marginBottom: 2,
   },
   headerHeadline: {
-    fontSize: 26,
+    fontSize: 27,
     fontWeight: '800',
-    letterSpacing: -0.6,
+    letterSpacing: -0.7,
   },
   headerIconBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.text,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
+      },
+      android: { elevation: 2 },
+    }),
   },
 
-  // ─── Stats Bar
-  statsBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: Spacing.xl,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.sm,
-    borderRadius: 18,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  statItem: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-  },
-  statIconWrap: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  statSep: {
-    width: StyleSheet.hairlineWidth,
-    height: 28,
-    marginHorizontal: Spacing.xs,
-  },
-
-  // ─── Category Pills
+  // ─── Category pills
   categoryRow: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md + 2,
+    paddingBottom: Spacing.md,
     gap: Spacing.sm,
   },
   categoryPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: Spacing.md + 4,
-    paddingVertical: Spacing.sm + 3,
+    paddingHorizontal: Spacing.md + 2,
+    paddingVertical: Spacing.sm + 2,
     borderRadius: Spacing.borderRadiusFull,
   },
   categoryPillText: {
@@ -474,61 +546,33 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
 
-  // ─── Loading
-  loadingCard: {
-    alignItems: 'center',
-    padding: Spacing.xxl,
-    borderRadius: 28,
-    gap: Spacing.md,
-    minWidth: 220,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
-      },
-      android: { elevation: 8 },
-    }),
-  },
-  loadingTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    marginTop: Spacing.sm,
-  },
-  loadingSubText: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-
   // ─── Error
   errorCard: {
     alignItems: 'center',
     padding: Spacing.xxl,
-    borderRadius: 28,
+    borderRadius: 26,
     gap: Spacing.md,
     maxWidth: 300,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
+        shadowColor: theme.text,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.08,
+        shadowRadius: 24,
       },
       android: { elevation: 8 },
     }),
   },
   errorIconWrap: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   errorTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     letterSpacing: -0.3,
   },
@@ -540,19 +584,28 @@ const styles = StyleSheet.create({
   retryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 7,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
     borderRadius: Spacing.borderRadiusFull,
-    marginTop: Spacing.sm,
+    marginTop: Spacing.xs,
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: { elevation: 4 },
+    }),
   },
   retryText: {
-    color: '#fff',
+    color: theme.white,
     fontSize: 15,
     fontWeight: '700',
   },
 
-  // ─── Empty State
+  // ─── Empty state
   emptyState: {
     alignItems: 'center',
     padding: Spacing.xxl,
@@ -560,15 +613,15 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xxl,
   },
   emptyIconWrap: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '700',
     letterSpacing: -0.3,
   },
