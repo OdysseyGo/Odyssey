@@ -21,6 +21,33 @@ type SettingsGroup = {
   items: SettingsItemConfig[];
 };
 
+import React from 'react';
+import { ViroARScene, ViroText, ViroARSceneNavigator, ViroConstants } from '@reactvision/react-viro';
+
+const HelloWorldScene = () => {
+  return (
+    <ViroARScene>
+      <ViroText 
+        text="Hello Bilkent!" 
+        scale={[.5, .5, .5]} 
+        position={[0, 0, -1]} 
+        style={{fontFamily: 'Arial', fontSize: 30, color: '#ffffff'}} 
+      />
+    </ViroARScene>
+  );
+};
+
+export default () => {
+  return (
+    <ViroARSceneNavigator
+      autofocus={true}
+      initialScene={{ scene: HelloWorldScene }}
+      style={{ flex: 1 }}
+    />
+  );
+};
+
+/*
 export default function TabTwoScreen() {
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
@@ -197,3 +224,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+ */
