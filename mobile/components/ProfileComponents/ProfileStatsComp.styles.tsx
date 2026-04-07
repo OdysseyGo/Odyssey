@@ -10,14 +10,10 @@ export const profileStatsCompStyles = (theme: ThemeName) => {
     card: {
       backgroundColor: color.cardSurface,
       borderRadius: 22,
-      paddingVertical: Spacing.lg + 2,
-      paddingHorizontal: Spacing.md,
       marginTop: -Spacing.xxl,
       width: '88%',
       alignSelf: 'center',
-      flexDirection: 'row',
-      alignItems: 'center',
-      // Light: subtle border adds crispness; dark: no border
+      overflow: 'hidden',
       ...(isLight ? { borderWidth: StyleSheet.hairlineWidth, borderColor: color.borderLight } : {}),
       ...Platform.select({
         ios: {
@@ -30,29 +26,43 @@ export const profileStatsCompStyles = (theme: ThemeName) => {
       }),
     },
 
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: Spacing.lg,
+      paddingHorizontal: Spacing.md,
+    },
+
+    hDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: isLight ? 'rgba(45,50,68,0.1)' : color.foregroundSecondary,
+      marginHorizontal: Spacing.md,
+    },
+
+    vDivider: {
+      width: StyleSheet.hairlineWidth,
+      height: 28,
+      backgroundColor: isLight ? 'rgba(45,50,68,0.1)' : color.foregroundSecondary,
+    },
+
     statItem: {
       flex: 1,
       alignItems: 'center',
       gap: 3,
     },
+
     statValue: {
       fontSize: 20,
       fontWeight: '800',
       color: color.text,
       letterSpacing: -0.3,
     },
+
     statLabel: {
       fontSize: 11,
       fontWeight: '500',
       color: color.subText,
-      letterSpacing: 0.2,
       textTransform: 'uppercase',
-    },
-
-    divider: {
-      width: StyleSheet.hairlineWidth,
-      height: 30,
-      backgroundColor: isLight ? 'rgba(45,50,68,0.1)' : color.foregroundSecondary,
     },
   });
 };

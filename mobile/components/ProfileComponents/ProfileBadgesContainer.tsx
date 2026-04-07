@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 export default function ProfileBadgesContainer({
   badges = [],
   title = 'Badges',
+  onViewAll,
 }: ProfileBadgesContainerProps) {
   const theme = useColorTheme();
   const styles = profileBadgesContainerStyles(theme);
@@ -59,8 +60,8 @@ export default function ProfileBadgesContainer({
           </View>
         ))}
 
-        {badges.length > 3 && (
-          <TouchableOpacity style={styles.viewAllCard} activeOpacity={0.7}>
+        {badges.length > 3 && onViewAll && (
+          <TouchableOpacity style={styles.viewAllCard} activeOpacity={0.7} onPress={onViewAll}>
             <Ionicons name="grid-outline" size={22} color={color.primary} />
             <Text style={styles.viewAllText}>{t('profile.viewAllBadges')}</Text>
           </TouchableOpacity>

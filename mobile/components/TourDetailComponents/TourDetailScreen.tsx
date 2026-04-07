@@ -99,9 +99,10 @@ export function TourDetailScreenError({ error, onRetry }: TourDetailScreenErrorP
 export interface TourDetailScreenContentProps {
   tour: TourDetail;
   onStartTour: () => void;
+  starting?: boolean;
 }
 
-export function TourDetailScreenContent({ tour, onStartTour }: TourDetailScreenContentProps) {
+export function TourDetailScreenContent({ tour, onStartTour, starting }: TourDetailScreenContentProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailScreenStyles(theme), [theme]);
 
@@ -134,7 +135,7 @@ export function TourDetailScreenContent({ tour, onStartTour }: TourDetailScreenC
         </View>
       </ScrollView>
 
-      <TourDetailBottomBar onStartTour={onStartTour} />
+      <TourDetailBottomBar onStartTour={onStartTour} starting={starting} />
     </>
   );
 }

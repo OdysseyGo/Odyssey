@@ -5,8 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Animated,
-  Platform,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -30,8 +30,9 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = 240;
+const GUEST_HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.30 : SCREEN_HEIGHT * 0.35;
 
 async function getAccessToken() {
   return await SecureStore.getItemAsync('userToken');
@@ -129,6 +130,204 @@ function SkeletonLoading({ theme }: { theme: (typeof Colors)['light'] }) {
 }
 
 // ─────────────────────────────────────────────────────────
+// Guest screen (not logged in)
+// ─────────────────────────────────────────────────────────
+
+function GuestScreen({
+  theme,
+  insets,
+  t,
+}: {
+  theme: (typeof Colors)['light'];
+  insets: ReturnType<typeof useSafeAreaInsets>;
+  t: ReturnType<typeof useTranslation>['t'];
+}) {
+  const cardY = useRef(new Animated.Value(40)).current;
+  const cardOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(cardY, { toValue: 0, duration: 580, delay: 100, useNativeDriver: true }),
+      Animated.timing(cardOpacity, { toValue: 1, duration: 580, delay: 100, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  const features = [
+    { icon: 'map-outline' as const, label: t('profile.feature1', { defaultValue: 'Create and join guided tours' }) },
+    { icon: 'trophy-outline' as const, label: t('profile.feature2', { defaultValue: 'Earn badges and XP' }) },
+    { icon: 'people-outline' as const, label: t('profile.feature3', { defaultValue: 'Connect with other travelers' }) },
+  ];
+
+  return (
+    <View style={[guestStyles.root, { backgroundColor: theme.headerGradientTop }]}>
+      {/* ── Hero ── */}
+      <View style={[guestStyles.hero, { paddingTop: insets.top, height: GUEST_HERO_HEIGHT }]}>
+        <View style={guestStyles.iconRing}>
+          <Ionicons name="compass" size={44} color="#FFFFFF" />
+        </View>
+        <Text style={guestStyles.appName}>ODYSSEY</Text>
+        <Text style={guestStyles.tagline}>
+          {t('auth.tagline', { defaultValue: 'Your journey begins here' })}
+        </Text>
+      </View>
+
+      {/* ── Card ── */}
+      <Animated.View
+        style={[
+          guestStyles.card,
+          {
+            backgroundColor: theme.background,
+            paddingBottom: insets.bottom + Spacing.xl,
+            opacity: cardOpacity,
+            transform: [{ translateY: cardY }],
+          },
+        ]}
+      >
+        <Text style={[guestStyles.cardTitle, { color: theme.text }]}>
+          {t('profile.signInToUnlock', { defaultValue: 'Sign in to unlock' })}
+        </Text>
+        <Text style={[guestStyles.cardSubtitle, { color: theme.subText }]}>
+          {t('profile.signInSubtitle', { defaultValue: 'Join thousands of explorers on Odyssey.' })}
+        </Text>
+
+        {/* Feature bullets */}
+        <View style={guestStyles.features}>
+          {features.map((f) => (
+            <View key={f.icon} style={guestStyles.featureRow}>
+              <View style={[guestStyles.featureIcon, { backgroundColor: theme.primaryMuted }]}>
+                <Ionicons name={f.icon} size={18} color={theme.primary} />
+              </View>
+              <Text style={[guestStyles.featureLabel, { color: theme.subText }]}>{f.label}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Log in CTA */}
+        <TouchableOpacity
+          style={[guestStyles.loginButton, { backgroundColor: theme.primary }]}
+          onPress={() => router.push('/login')}
+          activeOpacity={0.85}
+        >
+          <Text style={guestStyles.loginButtonText}>
+            {t('profile.loginButton')}
+          </Text>
+          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+        </TouchableOpacity>
+
+        {/* Sign up link */}
+        <View style={guestStyles.signUpRow}>
+          <Text style={[guestStyles.signUpLabel, { color: theme.subText }]}>
+            {t('auth.noAccountLabel', { defaultValue: "Don't have an account?" })}
+          </Text>
+          <TouchableOpacity onPress={() => router.push('/register')}>
+            <Text style={[guestStyles.signUpLink, { color: theme.primary }]}>
+              {` ${t('auth.signUp', { defaultValue: 'Sign up' })}`}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+    </View>
+  );
+}
+
+const guestStyles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  hero: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingBottom: Spacing.xxl,
+  },
+  iconRing: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.md,
+  },
+  appName: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 5,
+  },
+  tagline: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.70)',
+    letterSpacing: 0.3,
+    marginTop: 4,
+  },
+  card: {
+    flex: 1,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.xxl,
+  },
+  cardTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.xl,
+  },
+  features: {
+    gap: Spacing.md,
+    marginBottom: Spacing.xl,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  featureIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  loginButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md + 2,
+    borderRadius: Spacing.borderRadiusFull,
+  },
+  loginButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  signUpRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: Spacing.lg,
+  },
+  signUpLabel: {
+    fontSize: 14,
+  },
+  signUpLink: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+});
+
+// ─────────────────────────────────────────────────────────
 // Main component
 // ─────────────────────────────────────────────────────────
 
@@ -138,6 +337,8 @@ export default function Profile() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasToken, setHasToken] = useState<boolean | null>(null);
+  const [fetchError, setFetchError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -159,6 +360,7 @@ export default function Profile() {
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
+      setLoading(true);
 
       const fetchProfile = async () => {
         const token = await getAccessToken();
@@ -170,6 +372,7 @@ export default function Profile() {
         }
 
         setHasToken(true);
+        setFetchError(false);
         try {
           const user = await getMe();
           const badgesResponse = await getMyBadges();
@@ -181,6 +384,7 @@ export default function Profile() {
           }
         } catch (err) {
           console.error('Failed to load profile:', err);
+          if (isActive) setFetchError(true);
         } finally {
           if (isActive) setLoading(false);
         }
@@ -190,46 +394,63 @@ export default function Profile() {
       return () => {
         isActive = false;
       };
-    }, [])
+    }, [retryKey])
   );
 
-  const handleLogout = async () => {
-    await removeAuthToken();
-    setHasToken(false);
-    setCurUser(null);
-    router.push('/login');
+  const handleLogout = () => {
+    Alert.alert(
+      t('profile.logoutConfirmTitle', { defaultValue: 'Log out' }),
+      t('profile.logoutConfirmMessage', { defaultValue: 'Are you sure you want to log out?' }),
+      [
+        { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+        {
+          text: t('profile.logout'),
+          style: 'destructive',
+          onPress: async () => {
+            await removeAuthToken();
+            setHasToken(false);
+            setCurUser(null);
+            router.push('/login');
+          },
+        },
+      ]
+    );
   };
 
   // ─── Not logged in ────────────────────────────────────
 
   if (hasToken === false) {
-    return (
-      <View
-        style={[
-          styles.notLoggedIn,
-          { backgroundColor: theme.background, paddingTop: insets.top },
-        ]}
-      >
-        <View style={[styles.notLoggedInCard, { backgroundColor: theme.cardSurface }]}>
-          <View style={[styles.loginIconWrap, { backgroundColor: `${theme.primary}12` }]}>
-            <Ionicons name="person-outline" size={36} color={theme.primary} />
-          </View>
-          <Text style={[styles.loginTitle, { color: theme.text }]}>
-            {t('profile.notLoggedInTitle', { defaultValue: 'Welcome to Odyssey' })}
-          </Text>
-          <Text style={[styles.loginSubtext, { color: theme.subText }]}>
-            {t('profile.notLoggedIn')}
-          </Text>
-          <AuthButton title={t('profile.loginButton')} onPress={() => router.push('/login')} />
-        </View>
-      </View>
-    );
+    return <GuestScreen theme={theme} insets={insets} t={t} />;
   }
 
   // ─── Loading ──────────────────────────────────────────
 
-  if (loading || !curUser) {
+  if (loading) {
     return <SkeletonLoading theme={theme} />;
+  }
+
+  // ─── Error ────────────────────────────────────────────
+
+  if (fetchError || !curUser) {
+    return (
+      <View style={[errorStyles.root, { backgroundColor: theme.background, paddingTop: insets.top }]}>
+        <View style={[errorStyles.card, { backgroundColor: theme.cardSurface }]}>
+          <View style={[errorStyles.iconWrap, { backgroundColor: `${theme.error}12` }]}>
+            <Ionicons name="alert-circle-outline" size={36} color={theme.error} />
+          </View>
+          <Text style={[errorStyles.title, { color: theme.text }]}>
+            {t('profile.errorTitle', { defaultValue: 'Something went wrong' })}
+          </Text>
+          <Text style={[errorStyles.subtitle, { color: theme.subText }]}>
+            {t('profile.errorMessage', { defaultValue: "We couldn't load your profile. Please try again." })}
+          </Text>
+          <AuthButton
+            title={t('common.retry', { defaultValue: 'Try Again' })}
+            onPress={() => { setFetchError(false); setRetryKey((k) => k + 1); }}
+          />
+        </View>
+      </View>
+    );
   }
 
   // ─── Profile data ─────────────────────────────────────
@@ -340,48 +561,6 @@ export default function Profile() {
 // ─────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  // Not logged in
-  notLoggedIn: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.xl,
-  },
-  notLoggedInCard: {
-    alignItems: 'center',
-    padding: Spacing.xxl,
-    borderRadius: 26,
-    gap: Spacing.md,
-    maxWidth: 320,
-    ...Platform.select({
-      ios: {
-        shadowColor: 'rgba(45,50,68,0.14)',
-        shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 1,
-        shadowRadius: 28,
-      },
-      android: { elevation: 6 },
-    }),
-  },
-  loginIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.xs,
-  },
-  loginTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: -0.3,
-  },
-  loginSubtext: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 21,
-  },
-
   // Sticky mini-header
   stickyBar: {
     position: 'absolute',
@@ -421,5 +600,41 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+});
+
+const errorStyles = StyleSheet.create({
+  root: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  },
+  card: {
+    alignItems: 'center',
+    padding: Spacing.xxl,
+    borderRadius: 26,
+    gap: Spacing.md,
+    maxWidth: 320,
+    width: '100%',
+  },
+  iconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xs,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 21,
   },
 });

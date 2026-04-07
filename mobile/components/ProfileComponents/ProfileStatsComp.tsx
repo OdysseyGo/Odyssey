@@ -10,25 +10,40 @@ export default function ProfileStatsComp({ xp, tours, badges, followers, followi
   const styles = profileStatsCompStyles(theme);
   const { t } = useTranslation();
 
-  const stats = [
+  const achievementStats = [
     { value: xp, label: t('profile.xp') },
     { value: tours, label: t('profile.tours') },
     { value: badges, label: t('profile.badges') },
+  ];
+
+  const socialStats = [
     { value: followers, label: t('profile.followers') },
     { value: following, label: t('profile.following') },
   ];
 
+  const renderStat = (stat: { value?: number; label: string }, index: number, total: number) => (
+    <React.Fragment key={stat.label}>
+      {index > 0 && <View style={styles.vDivider} />}
+      <View style={styles.statItem}>
+        <Text style={styles.statValue}>{stat.value ?? 0}</Text>
+        <Text style={styles.statLabel}>{stat.label}</Text>
+      </View>
+    </React.Fragment>
+  );
+
   return (
     <View style={styles.card}>
-      {stats.map((stat, index) => (
-        <React.Fragment key={stat.label}>
-          {index > 0 && <View style={styles.divider} />}
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{stat.value}</Text>
-            <Text style={styles.statLabel}>{stat.label}</Text>
-          </View>
-        </React.Fragment>
-      ))}
+      {/* Achievement row: XP · Tours · Badges */}
+      <View style={styles.row}>
+        {achievementStats.map((s, i) => renderStat(s, i, achievementStats.length))}
+      </View>
+
+      <View style={styles.hDivider} />
+
+      {/* Social row: Followers · Following */}
+      <View style={styles.row}>
+        {socialStats.map((s, i) => renderStat(s, i, socialStats.length))}
+      </View>
     </View>
   );
 }

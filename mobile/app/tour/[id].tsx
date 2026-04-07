@@ -1,6 +1,7 @@
 // app/tour/[id].tsx
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { Alert } from 'react-native';
+import { useState } from 'react';
 import {
   TourDetailScreen,
   TourDetailScreenLoading,
@@ -18,11 +19,9 @@ export default function TourDetailPage() {
   const { tour, loading, error, fetchTour } = useTourDetailScreen(id || '');
   const { startTour } = useActiveTour();
   const { t } = useTranslation();
+  const [starting, setStarting] = useState(false);
 
   const handleStartTour = async () => {
-    console.log('Starting tour:', id);
-
-    // Check if user is logged in
     const loggedIn = await isLoggedIn();
     if (!loggedIn) {
       Alert.alert(t('tourId.loginRequired'), t('tourId.loginRequiredMessage'), [
@@ -33,18 +32,15 @@ export default function TourDetailPage() {
     }
 
     try {
-      // Fetch fresh tour data with steps and puzzles
+      setStarting(true);
       if (id) {
         const tourData = await getTour(parseInt(id, 10));
-        console.log('Tour data:', tourData);
-
-        // Start the tour in context (this will map API data to internal format)
         startTour(tourData);
-        // Navigate to the map tab
         router.replace('/(tabs)/map');
       }
     } catch (err) {
       console.error('Failed to start tour:', err);
+      setStarting(false);
     }
   };
 
@@ -69,7 +65,7 @@ export default function TourDetailPage() {
   return (
     <>
       <Stack.Screen options={{ title: tour.title }} />
-      <TourDetailScreenContent tour={tour} onStartTour={handleStartTour} />
+      <TourDetailScreenContent tour={tour} onStartTour={handleStartTour} starting={starting} />
     </>
   );
 }
