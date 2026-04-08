@@ -184,6 +184,11 @@ export default function TourDisplay() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const hasFetchedRef = useRef(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+  }, [selectedCategory]);
 
   const fetchTours = useCallback(async (isRefresh = false) => {
     try {
@@ -420,6 +425,7 @@ export default function TourDisplay() {
       </ScrollView>
 
       <ScrollView
+        ref={scrollViewRef}
         style={{ flex: 1 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />

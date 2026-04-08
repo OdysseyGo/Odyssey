@@ -1,51 +1,22 @@
 import { StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
-import { Spacing } from '@/constants/Spacing';
 
-export const tourDetailCoverStyles = (theme: ThemeName, headerHeight: number = 0) => {
-  const color = Colors[theme];
-
+export const tourDetailCoverStyles = (theme: ThemeName) => {
   return StyleSheet.create({
     coverContainer: {
-      marginTop: headerHeight,
-      height: 280,
-      position: 'relative',
+      height: 400,
+      borderBottomLeftRadius: 24,
+      borderBottomRightRadius: 24,
+      overflow: 'hidden',
     },
     coverImage: {
       width: '100%',
       height: '100%',
     },
-    coverOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: color.backgroundBlack,
-    },
-    coverContent: {
+    backButton: {
       position: 'absolute',
-      bottom: Spacing.xl,
-      left: Spacing.lg,
-      right: Spacing.lg,
-    },
-    coverTitle: {
-      color: '#fff',
-      fontSize: 24,
-      fontWeight: '700',
-      marginBottom: Spacing.sm,
-      textShadowColor: color.textShadowColor,
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 3,
-    },
-    ratingContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.xs,
-    },
-    star: {
-      color: color.star,
-      fontSize: 16,
-    },
-    ratingText: {
-      color: color.white,
-      fontSize: 14,
+      left: 16,
+      backgroundColor: 'rgba(0,0,0,0.35)',
     },
   });
 };

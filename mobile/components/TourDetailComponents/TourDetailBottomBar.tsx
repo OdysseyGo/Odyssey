@@ -1,5 +1,6 @@
 import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { useMemo } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { TourDetailBottomBarProps } from './TourDetailBottomBar.config';
@@ -25,7 +26,10 @@ export default function TourDetailBottomBar({ onStartTour, starting }: TourDetai
         {starting ? (
           <ActivityIndicator size="small" color={colors.white} />
         ) : (
-          <Text style={styles.startButtonText}>{t('tourDetail.startTour')}</Text>
+          <>
+            <Ionicons name="compass" size={20} color="#FFFFFF" />
+            <Text style={styles.startButtonText}>{t('tourDetail.startTour')}</Text>
+          </>
         )}
       </Pressable>
     </View>

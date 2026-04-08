@@ -89,7 +89,7 @@ const Colors = {
     press: pressDark,
     primary: primaryDark,
     secondary: secondaryDark,
-    textBackground: white,
+    textBackground: foregroundSecondaryDark,
     placeholderTextColor: gray666,
     tabIconDefault: gray666,
     tabIconSelected: primaryDark,

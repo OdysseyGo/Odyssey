@@ -169,6 +169,7 @@ export default function FeaturedTourCarousel({
             </View>
           ))}
         </ScrollView>
+
       </View>
 
       {tours.length > 1 && (

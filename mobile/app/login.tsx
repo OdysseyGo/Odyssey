@@ -6,6 +6,7 @@ import {
   Animated,
   TouchableOpacity,
   KeyboardAvoidingView,
+  ScrollView,
   Platform,
   Dimensions,
   TextInput,
@@ -18,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
+import BackButton from '@/components/common/BackButton';
 import { login, UserCredentials } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -80,24 +82,31 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: theme.headerGradientTop }]}>
-
+    <KeyboardAvoidingView
+      style={[styles.root, { backgroundColor: theme.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        style={{ backgroundColor: theme.headerGradientTop }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
       {/* ── Hero ─────────────────────────────────────── */}
       <Animated.View
         style={[
           styles.hero,
-          { height: HERO_HEIGHT, paddingTop: insets.top },
+          { height: HERO_HEIGHT, paddingTop: insets.top, backgroundColor: theme.headerGradientTop },
           { opacity: heroOpacity, transform: [{ translateY: heroY }] },
         ]}
       >
         {/* Back button */}
-        <TouchableOpacity
+        <BackButton
+          color="rgba(255,255,255,0.9)"
           style={[styles.backButton, { top: insets.top + 12 }]}
-          onPress={() => (router.canGoBack() ? router.back() : router.push('/(tabs)/profile'))}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.9)" />
-        </TouchableOpacity>
+        />
 
         {/* Branding */}
         <View style={styles.logoArea}>
@@ -112,13 +121,9 @@ export default function LoginScreen() {
       </Animated.View>
 
       {/* ── Form card ────────────────────────────────── */}
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      <Animated.View
+        style={[styles.flex, { opacity: cardOpacity, transform: [{ translateY: cardY }] }]}
       >
-        <Animated.View
-          style={[styles.flex, { opacity: cardOpacity, transform: [{ translateY: cardY }] }]}
-        >
           <View
             style={[
               styles.card,
@@ -215,14 +220,15 @@ export default function LoginScreen() {
             </View>
           </View>
         </Animated.View>
-      </KeyboardAvoidingView>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
   flex: { flex: 1 },
+  scrollContent: { flexGrow: 1 },
 
   // ── Hero
   hero: {
@@ -233,12 +239,7 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     left: Spacing.lg,
-    width: 38,
-    height: 38,
-    borderRadius: 19,
     backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   logoArea: {
     alignItems: 'center',

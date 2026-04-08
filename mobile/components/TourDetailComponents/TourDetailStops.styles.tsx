@@ -9,46 +9,88 @@ export const tourDetailStopsStyles = (theme: ThemeName) => {
     section: {
       marginBottom: Spacing.xl,
     },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: Spacing.lg,
+    },
     sectionTitle: {
       color: color.text,
       fontSize: 18,
       fontWeight: '700',
-      marginBottom: Spacing.md,
+    },
+    stopCount: {
+      color: color.subText,
+      fontSize: 13,
+      fontWeight: '500',
     },
     stopItem: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: Spacing.md,
-      marginBottom: Spacing.md,
-      padding: Spacing.md,
-      backgroundColor: color.foreground,
-      borderRadius: Spacing.borderRadius,
+      minHeight: 80,
+    },
+    // Timeline column
+    timelineColumn: {
+      width: 40,
+      alignItems: 'center',
     },
     stopNumber: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      width: 34,
+      height: 34,
+      borderRadius: 17,
       backgroundColor: color.primary,
       justifyContent: 'center',
       alignItems: 'center',
+      zIndex: 1,
+    },
+    stopNumberFirst: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      borderWidth: 3,
+      borderColor: color.primary + '30',
     },
     stopNumberText: {
-      color: '#fff',
+      color: '#FFFFFF',
       fontSize: 14,
       fontWeight: '700',
     },
+    connectorLine: {
+      flex: 1,
+      width: 2,
+      backgroundColor: color.primary + '25',
+    },
+    connectorLineDashed: {
+      flex: 1,
+      width: 2,
+      backgroundColor: color.primary + '15',
+    },
+    // Content column
     stopContent: {
       flex: 1,
+      marginLeft: Spacing.md,
+      paddingBottom: Spacing.xl,
+    },
+    stopContentLast: {
+      paddingBottom: Spacing.sm,
+    },
+    stopCard: {
+      backgroundColor: color.foreground,
+      borderRadius: Spacing.borderRadius,
+      padding: Spacing.md + 2,
+      borderLeftWidth: 3,
+      borderLeftColor: color.primary + '40',
     },
     stopTitle: {
       color: color.text,
-      fontSize: 16,
-      fontWeight: '600',
+      fontSize: 15,
+      fontWeight: '700',
       marginBottom: Spacing.xs,
     },
     stopDescription: {
       color: color.subText,
-      fontSize: 14,
+      fontSize: 13,
+      lineHeight: 20,
     },
   });
 };
