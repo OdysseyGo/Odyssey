@@ -54,6 +54,7 @@ export default function RegisterScreen() {
     general?: string;
   }>({});
   const [loading, setLoading] = useState(false);
+  const isNavigatingAway = useRef(false);
 
   // Entrance animations
   const heroY = useRef(new Animated.Value(-24)).current;
@@ -74,6 +75,7 @@ export default function RegisterScreen() {
   useEffect(() => {
     if (step !== 2) return;
     const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
+      if (isNavigatingAway.current) return;
       e.preventDefault();
       setStep(1);
     });
@@ -132,6 +134,7 @@ export default function RegisterScreen() {
         last_name: lastName,
       };
       await createUser(user);
+      isNavigatingAway.current = true;
       router.replace('/login');
     } catch (e) {
       console.error(e);
