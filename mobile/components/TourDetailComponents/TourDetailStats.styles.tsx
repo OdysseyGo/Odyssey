@@ -16,21 +16,27 @@ export const tourDetailStatsStyles = (theme: ThemeName) => {
     statItem: {
       flex: 1,
       alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    statIcon: {
+      marginBottom: Spacing.xs / 2,
     },
     statValue: {
-      color: color.primary,
-      fontSize: 16,
-      fontWeight: '700',
-      marginBottom: Spacing.xs,
+      color: color.text,
+      fontSize: 17,
+      fontWeight: '800',
     },
     statLabel: {
       color: color.subText,
-      fontSize: 12,
+      fontSize: 11,
+      fontWeight: '500',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
     },
     statDivider: {
       width: 1,
       backgroundColor: color.subText,
-      opacity: 0.3,
+      opacity: 0.15,
       marginVertical: Spacing.xs,
     },
   });

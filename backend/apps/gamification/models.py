@@ -50,6 +50,8 @@ class TourProgress(models.Model):
     )
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
+    total_xp = models.IntegerField(default=0)
+    skip_count = models.IntegerField(default=0)
 
     class Meta:
         unique_together = ("user", "tour")

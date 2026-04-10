@@ -1,6 +1,8 @@
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from apps.gamification.models import Badge, TourProgress, UserBadge
@@ -29,6 +31,7 @@ class TourProgressViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     serializer_class = TourProgressSerializer
@@ -40,12 +43,29 @@ class TourProgressViewSet(
         )
 
     def perform_create(self, serializer):
-        # auto assign the first step when the tour starts
+        user = self.request.user
+
+        # Check if the user already has an active tour
+        active_progress = TourProgress.objects.filter(
+            user=user, status=TourProgress.IN_PROGRESS
+        ).first()
+
+        if active_progress:
+            # Block creation and tell the frontend about the existing tour
+            raise ValidationError(
+                {
+                    "error": "You already have a tour in progress.",
+                    "active_tour_id": active_progress.tour_id,
+                    "progress_id": active_progress.id,
+                }
+            )
+
+        # If no active tour, create the new one normally
         tour = serializer.validated_data["tour"]
         first_step = TourStep.objects.filter(tour=tour).order_by("order").first()
 
         serializer.save(
-            user=self.request.user,
+            user=user,
             current_step=first_step,
             status=TourProgress.IN_PROGRESS,
         )
@@ -59,13 +79,58 @@ class TourProgressViewSet(
 
         current_step = progress.current_step
 
-        # award xp for the CURRENT step
-        xp_awarded = 0
+        # find the next step in the sequence with an order higher than the current one
+        next_step = None
+        if current_step:
+            next_step = (
+                TourStep.objects.filter(
+                    tour=progress.tour,
+                    order__gt=current_step.order,  # get steps with higher order
+                )
+                .order_by("order")
+                .first()
+            )
+
+        # accumulate xp into total
         if current_step and hasattr(current_step, "puzzle"):
-            user = request.user
-            user.xp += current_step.puzzle.xp_reward
-            user.save()
-            xp_awarded = current_step.puzzle.xp_reward
+            progress.total_xp += current_step.puzzle.xp_reward
+
+        with transaction.atomic():
+            if next_step:
+                progress.current_step = next_step
+                progress.save()
+                message = "Step completed. Moved to next step."
+            else:
+                progress.status = TourProgress.COMPLETED
+                progress.completed_at = timezone.now()
+                progress.current_step = None
+                progress.save()
+
+                user = request.user
+                user.xp += progress.total_xp
+                user.tour_count += 1
+                user.save()
+
+                # new_badges = BadgeService.check_badges(user)
+                BadgeService.check_badges(user)
+                message = "Tour completed!"
+
+        return Response(
+            {
+                "status": message,
+                "is_tour_complete": progress.status == TourProgress.COMPLETED,
+                "new_step_id": next_step.id if next_step else None,
+            }
+        )
+
+    @action(detail=True, methods=["post"], url_path="skip-step")
+    def skip_step(self, request, pk=None):
+        progress = self.get_object()
+
+        if progress.status == TourProgress.COMPLETED:
+            return Response({"error": "Tour is already completed"}, status=400)
+
+        current_step = progress.current_step
 
         # find the next step in the sequence with an order higher than the current one
         next_step = None
@@ -79,31 +144,47 @@ class TourProgressViewSet(
                 .first()
             )
 
-        if next_step:
-            progress.current_step = next_step
-            progress.save()
-            message = "Step completed. Moved to next step."
-        else:
-            progress.status = TourProgress.COMPLETED
-            progress.completed_at = timezone.now()
-            progress.current_step = None  # if current step is null, its completed but also we have status so redundancy
-            progress.save()
+        # dont accumulate xp, no xp given when skipping!
 
-            # increment user's tour_count
-            user = request.user
-            user.tour_count += 1
-            user.save()
+        with transaction.atomic():
+            progress.skip_count += 1
 
-            message = "Tour completed!"
+            if next_step:
+                progress.current_step = next_step
+                progress.save()
+                message = "Step skipped. Moved to next step."
 
-        new_badges = BadgeService.check_badges(request.user)
+            else:
+                progress.status = TourProgress.COMPLETED
+                progress.completed_at = timezone.now()
+                progress.current_step = None
+                progress.save()
+
+                user = request.user
+                user.xp += progress.total_xp
+                user.tour_count += 1
+                user.save()
+
+                # new_badges = BadgeService.check_badges(user)
+                BadgeService.check_badges(user)
+                message = "Tour completed!"
 
         return Response(
             {
                 "status": message,
                 "is_tour_complete": progress.status == TourProgress.COMPLETED,
-                "xp_awarded": xp_awarded,
                 "new_step_id": next_step.id if next_step else None,
-                "new_badges": new_badges,
             }
         )
+
+    @action(detail=False, methods=["get"], url_path="in-progress")
+    def get_in_progress(self, request):
+        active_progress = TourProgress.objects.filter(
+            user=request.user, status=TourProgress.IN_PROGRESS
+        ).first()
+
+        if not active_progress:
+            return Response({"detail": "No active tour found."}, status=200)
+
+        serializer = self.get_serializer(active_progress)
+        return Response(serializer.data)

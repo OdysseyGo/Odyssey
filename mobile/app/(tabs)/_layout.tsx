@@ -66,25 +66,7 @@ export default function TabLayout() {
           options={{
             title: t('tabs.tours'),
             tabBarIcon: ({ color }) => <TabBarIcon name="compass" color={color} />,
-            headerRight: () => (
-              <Pressable onPress={() => router.push('/search')}>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="search"
-                    size={15}
-                    color={Colors[colorTheme ?? 'light'].white}
-                    style={{
-                      marginRight: 15,
-                      opacity: pressed ? 0.5 : 1,
-                      backgroundColor: Colors[colorTheme ?? 'light'].backgroundBlack,
-                      padding: 10,
-                      borderRadius: 20,
-                      marginBottom: 5,
-                    }}
-                  />
-                )}
-              </Pressable>
-            ),
+            headerShown: false,
           }}
         />
         <Tabs.Screen
@@ -92,6 +74,7 @@ export default function TabLayout() {
           options={{
             title: t('tabs.profile'),
             tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+            headerShown: false,
           }}
         />
       </Tabs>
