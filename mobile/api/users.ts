@@ -82,7 +82,6 @@ export const getUsers = (page?: number) =>
     params: page ? { page } : undefined,
   });
 
-
 /**
  * POST /api/users/ - Create a new user
  */

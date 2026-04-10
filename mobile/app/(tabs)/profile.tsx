@@ -501,7 +501,7 @@ export default function Profile() {
 
   const handleBadgesPress = () => {
     //router.push({pathname: '/profile/badges'});
-    alert("deneme")
+    alert('deneme');
   };
 
   return (
@@ -565,7 +565,10 @@ export default function Profile() {
       {/* ─── Modals ────────────────────────────────── */}
       <AddFriendsModal
         visible={showAddFriendModal}
-        onClose={() => { setShowAddFriendModal(false); refreshProfile(); }}
+        onClose={() => {
+          setShowAddFriendModal(false);
+          refreshProfile();
+        }}
         searchText={searchText}
         onSearchChange={setSearchText}
         searchFocused={searchFocused}

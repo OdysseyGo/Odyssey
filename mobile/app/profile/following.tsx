@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  ActivityIndicator,
-  TouchableOpacity,
-  Image,
-} from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -100,10 +93,7 @@ export default function FollowingPage() {
 
       {/* Header */}
       <View
-        style={[
-          styles.header,
-          { backgroundColor: colors.primary, paddingTop: insets.top + 8 },
-        ]}
+        style={[styles.header, { backgroundColor: colors.primary, paddingTop: insets.top + 8 }]}
       >
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
           <Ionicons name="chevron-back" size={26} color="#FFFFFF" />
@@ -136,9 +126,7 @@ export default function FollowingPage() {
             />
           )}
           contentContainerStyle={
-            users.length === 0
-              ? styles.centered
-              : { paddingBottom: insets.bottom + Spacing.xl }
+            users.length === 0 ? styles.centered : { paddingBottom: insets.bottom + Spacing.xl }
           }
           ListEmptyComponent={
             <Text style={[styles.message, { color: colors.subText }]}>

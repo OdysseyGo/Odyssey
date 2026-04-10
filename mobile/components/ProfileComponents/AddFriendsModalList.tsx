@@ -55,7 +55,6 @@ export default function AddFriendsModalList({ searchTextVal = '' }: AddFriendsMo
       });
       return;
     }
-
   }
 
   const renderItem = ({ item }: { item: AddFriendUserDisplayDTO }) => {

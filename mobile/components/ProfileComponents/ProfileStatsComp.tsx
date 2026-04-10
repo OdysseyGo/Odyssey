@@ -1,11 +1,21 @@
 import React from 'react';
-import { TouchableOpacity ,View, Text } from 'react-native';
+import { TouchableOpacity, View, Text } from 'react-native';
 import { profileStatsCompStyles } from './ProfileStatsComp.styles';
 import { Props } from './ProfileStatsComp.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { useTranslation } from 'react-i18next';
 
-export default function ProfileStatsComp({ xp, tours, badges, followers, following, onToursPress,onBadgesPress,onFollowersPress,onFollowingPress }: Props) {
+export default function ProfileStatsComp({
+  xp,
+  tours,
+  badges,
+  followers,
+  following,
+  onToursPress,
+  onBadgesPress,
+  onFollowersPress,
+  onFollowingPress,
+}: Props) {
   const theme = useColorTheme();
   const styles = profileStatsCompStyles(theme);
   const { t } = useTranslation();
@@ -21,7 +31,10 @@ export default function ProfileStatsComp({ xp, tours, badges, followers, followi
     { value: following, label: t('profile.following'), onPress: onFollowingPress },
   ];
 
-  const renderStat = (stat: { value?: number; label: string; onPress?: () => void }, index: number) => (
+  const renderStat = (
+    stat: { value?: number; label: string; onPress?: () => void },
+    index: number
+  ) => (
     <React.Fragment key={stat.label}>
       {index > 0 && <View style={styles.vDivider} />}
       {stat.onPress ? (
@@ -41,16 +54,12 @@ export default function ProfileStatsComp({ xp, tours, badges, followers, followi
   return (
     <View style={styles.card}>
       {/* Achievement row: XP · Tours · Badges */}
-      <View style={styles.row}>
-        {achievementStats.map((s, i) => renderStat(s, i))}
-      </View>
+      <View style={styles.row}>{achievementStats.map((s, i) => renderStat(s, i))}</View>
 
       <View style={styles.hDivider} />
 
       {/* Social row: Followers · Following */}
-      <View style={styles.row}>
-        {socialStats.map((s, i) => renderStat(s, i))}
-      </View>
+      <View style={styles.row}>{socialStats.map((s, i) => renderStat(s, i))}</View>
     </View>
   );
 }
