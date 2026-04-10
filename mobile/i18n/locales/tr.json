@@ -372,7 +372,8 @@
     },
     "activeTour": {
       "stepOf": "Adım {{current}} / {{total}}",
-      "end": "Bitir"
+      "end": "Bitir",
+      "skip":"ATLA"
     }
   },
   "friends": {

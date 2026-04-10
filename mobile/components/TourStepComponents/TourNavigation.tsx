@@ -15,6 +15,7 @@ import {
 import TourStepComponent from './TourStep';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
+import { skipStep } from '@/api/tourProgress';
 
 function ProgressBar({ totalSteps, currentStep, solvedSteps, stepIds }: ProgressBarProps) {
   const theme = useColorTheme();
@@ -147,6 +148,7 @@ export default function TourNavigation({
   onStepSolved,
   onLocationConfirm,
   onEndTour,
+  onSkipStep,
 }: TourNavigationProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -159,8 +161,9 @@ export default function TourNavigation({
   const isLastStep = currentStepIndex === tour.steps.length - 1;
 
   const canGoBack = canNavigateBackward(currentStepIndex);
-  
-   const isForwardLocked =
+  const { t } = useTranslation();
+
+  const isForwardLocked =
     (currentStep.type === 'puzzle' && !isSolved) || (requiresLocation && !isLocationConfirmed);
 
   const canGoForward = isLastStep
@@ -191,6 +194,24 @@ export default function TourNavigation({
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
+        <Pressable style={styles.endTourButton} onPress={onSkipStep}>
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <MaterialCommunityIcons
+              name="skip-forward"
+              size={20}
+              color={Colors[theme].primary}
+            />
+            
+            <Text style={{ 
+              fontSize: 10, 
+              color: Colors[theme].primary, 
+              fontWeight: 'bold',
+              marginTop: -2
+            }}>
+              {t('map.activeTour.skip')}
+            </Text>
+          </View>
+        </Pressable>
         <ProgressBar
           totalSteps={tour.steps.length}
           currentStep={currentStepIndex}

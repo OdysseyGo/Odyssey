@@ -12,7 +12,7 @@ import { getVisibleMarkers, getVisibleRoute } from '../TourStepComponents/TourNa
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import Colors from '@/constants/Colors';
 
-import { getTourProgress, deleteTourProgress } from '@/api/tourProgress';
+import { getTourProgress, deleteTourProgress, skipStep } from '@/api/tourProgress';
 import { number } from 'react-i18next/icu.macro';
 
 export default function MapScreen() {
@@ -125,6 +125,18 @@ const handleConfirmEndTour = useCallback(async () => {
     []
   );
 
+  const handleSkipStep = useCallback(async () => {
+
+    //TODO: Add modal for skip confirming
+
+    if (!progressId) return; 
+    try {
+      skipStep(progressId)
+    } catch (error) {
+      console.error('Failed to abort tour on the backend:', error);
+    }
+  }, [progressId]); 
+
   // No active tour - show just the map
   if (!isActive || !tour) {
     return (
@@ -150,6 +162,7 @@ const handleConfirmEndTour = useCallback(async () => {
         tour={tour}
         onEndTour={handleEndTourPress}
         onTourComplete={handleTourComplete}
+        onSkipStep = {handleSkipStep}
       />
 
       {/* End Tour Confirmation Modal */}

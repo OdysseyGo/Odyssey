@@ -15,6 +15,7 @@ const BOTTOM_SHEET_ANIMATION_DURATION = Animations.bottomSheet.animationDuration
 export default function BottomSlider({
   onEndTour,
   onTourComplete,
+  onSkipStep
 }: BottomSliderProps & { onTourComplete?: () => void }) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -227,6 +228,7 @@ export default function BottomSlider({
             onStepSolved={handleStepSolved}
             onLocationConfirm={handleLocationConfirm}
             onEndTour={onEndTour}
+            onSkipStep={onSkipStep}
           />
         </View>
       </View>

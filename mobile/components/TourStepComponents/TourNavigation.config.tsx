@@ -12,6 +12,7 @@ export interface TourNavigationProps {
   onStepSolved: (stepId: string) => void;
   onLocationConfirm: (stepId: string, latitude: number, longitude: number) => Promise<void>;
   onEndTour?: () => void;
+  onSkipStep?: () => void;
 }
 
 export interface ProgressBarProps {
