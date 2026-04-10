@@ -1,5 +1,12 @@
 import React from 'react';
-import { Pressable, StyleSheet, StyleProp, ViewStyle, Touchable, TouchableOpacity } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+  Touchable,
+  TouchableOpacity,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -34,7 +41,7 @@ export default function BackButton({ onPress, color, style, size = 24 }: BackBut
     >
       <Ionicons name="arrow-back" size={size} color={iconColor} />
     </TouchableOpacity>
-   );
+  );
 }
 
 const BUTTON_SIZE = 38;

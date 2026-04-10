@@ -14,10 +14,7 @@ export default function TourDetailCover({ coverImage }: TourDetailCoverProps) {
   return (
     <View style={styles.coverContainer}>
       <Image source={{ uri: coverImage }} style={styles.coverImage} />
-      <BackButton
-        color="#FFFFFF"
-        style={[styles.backButton, { top: insets.top + 8 }]}
-      />
+      <BackButton color="#FFFFFF" style={[styles.backButton, { top: insets.top + 8 }]} />
     </View>
   );
 }

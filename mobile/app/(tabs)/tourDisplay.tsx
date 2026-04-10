@@ -97,7 +97,10 @@ function ShimmerBlock({
 
   return (
     <Animated.View
-      style={[{ width: width as any, height, borderRadius, backgroundColor: color, opacity }, style]}
+      style={[
+        { width: width as any, height, borderRadius, backgroundColor: color, opacity },
+        style,
+      ]}
     />
   );
 }
@@ -488,153 +491,153 @@ export default function TourDisplay() {
 
 const createStyles = (theme: (typeof Colors)['light']) =>
   StyleSheet.create({
-  centerScreen: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.xl,
-  },
+    centerScreen: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: Spacing.xl,
+    },
 
-  // ─── Header
-  pageHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.sm + 2,
-  },
-  headerEyebrow: {
-    fontSize: 13,
-    fontWeight: '500',
-    letterSpacing: 0.2,
-    marginBottom: 2,
-  },
-  headerHeadline: {
-    fontSize: 27,
-    fontWeight: '800',
-    letterSpacing: -0.7,
-  },
-  headerIconBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: theme.text,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-      },
-      android: { elevation: 2 },
-    }),
-  },
+    // ─── Header
+    pageHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.xl,
+      paddingBottom: Spacing.sm + 2,
+    },
+    headerEyebrow: {
+      fontSize: 13,
+      fontWeight: '500',
+      letterSpacing: 0.2,
+      marginBottom: 2,
+    },
+    headerHeadline: {
+      fontSize: 27,
+      fontWeight: '800',
+      letterSpacing: -0.7,
+    },
+    headerIconBtn: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...Platform.select({
+        ios: {
+          shadowColor: theme.text,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 6,
+        },
+        android: { elevation: 2 },
+      }),
+    },
 
-  // ─── Category pills
-  categoryRow: {
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.md + 2,
-    paddingBottom: Spacing.md,
-    gap: Spacing.sm,
-  },
-  categoryPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: Spacing.md + 2,
-    paddingVertical: Spacing.sm + 2,
-    borderRadius: Spacing.borderRadiusFull,
-  },
-  categoryPillText: {
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 0.1,
-  },
+    // ─── Category pills
+    categoryRow: {
+      paddingHorizontal: Spacing.xl,
+      paddingTop: Spacing.md + 2,
+      paddingBottom: Spacing.md,
+      gap: Spacing.sm,
+    },
+    categoryPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: Spacing.md + 2,
+      paddingVertical: Spacing.sm + 2,
+      borderRadius: Spacing.borderRadiusFull,
+    },
+    categoryPillText: {
+      fontSize: 13,
+      fontWeight: '600',
+      letterSpacing: 0.1,
+    },
 
-  // ─── Error
-  errorCard: {
-    alignItems: 'center',
-    padding: Spacing.xxl,
-    borderRadius: 26,
-    gap: Spacing.md,
-    maxWidth: 300,
-    ...Platform.select({
-      ios: {
-        shadowColor: theme.text,
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.08,
-        shadowRadius: 24,
-      },
-      android: { elevation: 8 },
-    }),
-  },
-  errorIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.xs,
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: -0.3,
-  },
-  errorMessage: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 21,
-  },
-  retryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: Spacing.borderRadiusFull,
-    marginTop: Spacing.xs,
-    ...Platform.select({
-      ios: {
-        shadowColor: theme.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      },
-      android: { elevation: 4 },
-    }),
-  },
-  retryText: {
-    color: theme.white,
-    fontSize: 15,
-    fontWeight: '700',
-  },
+    // ─── Error
+    errorCard: {
+      alignItems: 'center',
+      padding: Spacing.xxl,
+      borderRadius: 26,
+      gap: Spacing.md,
+      maxWidth: 300,
+      ...Platform.select({
+        ios: {
+          shadowColor: theme.text,
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.08,
+          shadowRadius: 24,
+        },
+        android: { elevation: 8 },
+      }),
+    },
+    errorIconWrap: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: Spacing.xs,
+    },
+    errorTitle: {
+      fontSize: 20,
+      fontWeight: '800',
+      letterSpacing: -0.3,
+    },
+    errorMessage: {
+      fontSize: 14,
+      textAlign: 'center',
+      lineHeight: 21,
+    },
+    retryButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
+      paddingHorizontal: Spacing.xl,
+      paddingVertical: Spacing.md,
+      borderRadius: Spacing.borderRadiusFull,
+      marginTop: Spacing.xs,
+      ...Platform.select({
+        ios: {
+          shadowColor: theme.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+        },
+        android: { elevation: 4 },
+      }),
+    },
+    retryText: {
+      color: theme.white,
+      fontSize: 15,
+      fontWeight: '700',
+    },
 
-  // ─── Empty state
-  emptyState: {
-    alignItems: 'center',
-    padding: Spacing.xxl,
-    gap: Spacing.md,
-    marginTop: Spacing.xxl,
-  },
-  emptyIconWrap: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.xs,
-  },
-  emptyTitle: {
-    fontSize: 19,
-    fontWeight: '700',
-    letterSpacing: -0.3,
-  },
-  emptySubText: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 21,
-    maxWidth: 240,
-  },
-});
+    // ─── Empty state
+    emptyState: {
+      alignItems: 'center',
+      padding: Spacing.xxl,
+      gap: Spacing.md,
+      marginTop: Spacing.xxl,
+    },
+    emptyIconWrap: {
+      width: 84,
+      height: 84,
+      borderRadius: 42,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: Spacing.xs,
+    },
+    emptyTitle: {
+      fontSize: 19,
+      fontWeight: '700',
+      letterSpacing: -0.3,
+    },
+    emptySubText: {
+      fontSize: 14,
+      textAlign: 'center',
+      lineHeight: 21,
+      maxWidth: 240,
+    },
+  });

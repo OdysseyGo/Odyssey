@@ -23,15 +23,27 @@ export default function ProfileHeaderComp({
   const insets = useSafeAreaInsets();
 
   const avatarScale = scrollY
-    ? scrollY.interpolate({ inputRange: [0, HEADER_HEIGHT * 0.5], outputRange: [1, 0.72], extrapolate: 'clamp' })
+    ? scrollY.interpolate({
+        inputRange: [0, HEADER_HEIGHT * 0.5],
+        outputRange: [1, 0.72],
+        extrapolate: 'clamp',
+      })
     : 1;
 
   const avatarTranslateY = scrollY
-    ? scrollY.interpolate({ inputRange: [0, HEADER_HEIGHT], outputRange: [0, -(HEADER_HEIGHT * 0.35)], extrapolate: 'clamp' })
+    ? scrollY.interpolate({
+        inputRange: [0, HEADER_HEIGHT],
+        outputRange: [0, -(HEADER_HEIGHT * 0.35)],
+        extrapolate: 'clamp',
+      })
     : 0;
 
   const textOpacity = scrollY
-    ? scrollY.interpolate({ inputRange: [0, HEADER_HEIGHT * 0.4], outputRange: [1, 0], extrapolate: 'clamp' })
+    ? scrollY.interpolate({
+        inputRange: [0, HEADER_HEIGHT * 0.4],
+        outputRange: [1, 0],
+        extrapolate: 'clamp',
+      })
     : 1;
 
   return (
@@ -41,7 +53,9 @@ export default function ProfileHeaderComp({
 
       {/* Avatar with parallax + scale animation */}
       <Animated.View
-        style={{ transform: [{ scale: avatarScale as any }, { translateY: avatarTranslateY as any }] }}
+        style={{
+          transform: [{ scale: avatarScale as any }, { translateY: avatarTranslateY as any }],
+        }}
       >
         <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.7}>
           <View style={styles.avatarRing}>

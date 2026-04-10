@@ -26,7 +26,7 @@ import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.30 : SCREEN_HEIGHT * 0.36;
+const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEIGHT * 0.36;
 
 export default function LoginScreen() {
   const colorScheme = useColorTheme();
@@ -36,7 +36,9 @@ export default function LoginScreen() {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<{ username?: string; password?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{ username?: string; password?: string; general?: string }>(
+    {}
+  );
   const [loading, setLoading] = useState(false);
 
   const passwordRef = useRef<TextInput>(null);
@@ -52,7 +54,12 @@ export default function LoginScreen() {
       Animated.timing(heroY, { toValue: 0, duration: 560, useNativeDriver: true }),
       Animated.timing(heroOpacity, { toValue: 1, duration: 560, useNativeDriver: true }),
       Animated.timing(cardY, { toValue: 0, duration: 620, delay: 160, useNativeDriver: true }),
-      Animated.timing(cardOpacity, { toValue: 1, duration: 620, delay: 160, useNativeDriver: true }),
+      Animated.timing(cardOpacity, {
+        toValue: 1,
+        duration: 620,
+        delay: 160,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, []);
 
@@ -94,36 +101,40 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-      {/* ── Hero ─────────────────────────────────────── */}
-      <Animated.View
-        style={[
-          styles.hero,
-          { height: HERO_HEIGHT, paddingTop: insets.top, backgroundColor: theme.headerGradientTop },
-          { opacity: heroOpacity, transform: [{ translateY: heroY }] },
-        ]}
-      >
-        {/* Back button */}
-        <BackButton
-          color="rgba(255,255,255,0.9)"
-          style={[styles.backButton, { top: insets.top + 12 }]}
-        />
+        {/* ── Hero ─────────────────────────────────────── */}
+        <Animated.View
+          style={[
+            styles.hero,
+            {
+              height: HERO_HEIGHT,
+              paddingTop: insets.top,
+              backgroundColor: theme.headerGradientTop,
+            },
+            { opacity: heroOpacity, transform: [{ translateY: heroY }] },
+          ]}
+        >
+          {/* Back button */}
+          <BackButton
+            color="rgba(255,255,255,0.9)"
+            style={[styles.backButton, { top: insets.top + 12 }]}
+          />
 
-        {/* Branding */}
-        <View style={styles.logoArea}>
-          <View style={styles.iconRing}>
-            <Ionicons name="compass" size={46} color="#FFFFFF" />
+          {/* Branding */}
+          <View style={styles.logoArea}>
+            <View style={styles.iconRing}>
+              <Ionicons name="compass" size={46} color="#FFFFFF" />
+            </View>
+            <Text style={styles.appName}>ODYSSEY</Text>
+            <Text style={styles.tagline}>
+              {t('auth.tagline', { defaultValue: 'Your journey begins here' })}
+            </Text>
           </View>
-          <Text style={styles.appName}>ODYSSEY</Text>
-          <Text style={styles.tagline}>
-            {t('auth.tagline', { defaultValue: 'Your journey begins here' })}
-          </Text>
-        </View>
-      </Animated.View>
+        </Animated.View>
 
-      {/* ── Form card ────────────────────────────────── */}
-      <Animated.View
-        style={[styles.flex, { opacity: cardOpacity, transform: [{ translateY: cardY }] }]}
-      >
+        {/* ── Form card ────────────────────────────────── */}
+        <Animated.View
+          style={[styles.flex, { opacity: cardOpacity, transform: [{ translateY: cardY }] }]}
+        >
           <View
             style={[
               styles.card,

@@ -32,7 +32,7 @@ import { Spacing } from '@/constants/Spacing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = 240;
-const GUEST_HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.30 : SCREEN_HEIGHT * 0.35;
+const GUEST_HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEIGHT * 0.35;
 
 async function getAccessToken() {
   return await SecureStore.getItemAsync('userToken');
@@ -70,7 +70,10 @@ function ShimmerBlock({
 
   return (
     <Animated.View
-      style={[{ width: width as any, height, borderRadius, backgroundColor: color, opacity }, style]}
+      style={[
+        { width: width as any, height, borderRadius, backgroundColor: color, opacity },
+        style,
+      ]}
     />
   );
 }
@@ -88,12 +91,7 @@ function SkeletonLoading({ theme }: { theme: (typeof Colors)['light'] }) {
           paddingBottom: 60,
         }}
       >
-        <ShimmerBlock
-          width={104}
-          height={104}
-          borderRadius={52}
-          color="rgba(255,255,255,0.2)"
-        />
+        <ShimmerBlock width={104} height={104} borderRadius={52} color="rgba(255,255,255,0.2)" />
         <ShimmerBlock
           width={140}
           height={22}
@@ -148,14 +146,28 @@ function GuestScreen({
   useEffect(() => {
     Animated.parallel([
       Animated.timing(cardY, { toValue: 0, duration: 580, delay: 100, useNativeDriver: true }),
-      Animated.timing(cardOpacity, { toValue: 1, duration: 580, delay: 100, useNativeDriver: true }),
+      Animated.timing(cardOpacity, {
+        toValue: 1,
+        duration: 580,
+        delay: 100,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, []);
 
   const features = [
-    { icon: 'map-outline' as const, label: t('profile.feature1', { defaultValue: 'Create and join guided tours' }) },
-    { icon: 'trophy-outline' as const, label: t('profile.feature2', { defaultValue: 'Earn badges and XP' }) },
-    { icon: 'people-outline' as const, label: t('profile.feature3', { defaultValue: 'Connect with other travelers' }) },
+    {
+      icon: 'map-outline' as const,
+      label: t('profile.feature1', { defaultValue: 'Create and join guided tours' }),
+    },
+    {
+      icon: 'trophy-outline' as const,
+      label: t('profile.feature2', { defaultValue: 'Earn badges and XP' }),
+    },
+    {
+      icon: 'people-outline' as const,
+      label: t('profile.feature3', { defaultValue: 'Connect with other travelers' }),
+    },
   ];
 
   return (
@@ -208,9 +220,7 @@ function GuestScreen({
           onPress={() => router.push('/login')}
           activeOpacity={0.85}
         >
-          <Text style={guestStyles.loginButtonText}>
-            {t('profile.loginButton')}
-          </Text>
+          <Text style={guestStyles.loginButtonText}>{t('profile.loginButton')}</Text>
           <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
         </TouchableOpacity>
 
@@ -433,7 +443,9 @@ export default function Profile() {
 
   if (fetchError || !curUser) {
     return (
-      <View style={[errorStyles.root, { backgroundColor: theme.background, paddingTop: insets.top }]}>
+      <View
+        style={[errorStyles.root, { backgroundColor: theme.background, paddingTop: insets.top }]}
+      >
         <View style={[errorStyles.card, { backgroundColor: theme.cardSurface }]}>
           <View style={[errorStyles.iconWrap, { backgroundColor: `${theme.error}12` }]}>
             <Ionicons name="alert-circle-outline" size={36} color={theme.error} />
@@ -442,11 +454,16 @@ export default function Profile() {
             {t('profile.errorTitle', { defaultValue: 'Something went wrong' })}
           </Text>
           <Text style={[errorStyles.subtitle, { color: theme.subText }]}>
-            {t('profile.errorMessage', { defaultValue: "We couldn't load your profile. Please try again." })}
+            {t('profile.errorMessage', {
+              defaultValue: "We couldn't load your profile. Please try again.",
+            })}
           </Text>
           <AuthButton
             title={t('common.retry', { defaultValue: 'Try Again' })}
-            onPress={() => { setFetchError(false); setRetryKey((k) => k + 1); }}
+            onPress={() => {
+              setFetchError(false);
+              setRetryKey((k) => k + 1);
+            }}
           />
         </View>
       </View>
@@ -501,10 +518,9 @@ export default function Profile() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: Spacing.xxl + insets.bottom }}
         scrollEventThrottle={16}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          useNativeDriver: false,
+        })}
       >
         {/* ─── Header ──────────────────────────────── */}
         <ProfileHeaderComp {...profileHeader} scrollY={scrollY} />
@@ -518,10 +534,7 @@ export default function Profile() {
         </View>
 
         {/* ─── Badges ──────────────────────────────── */}
-        <ProfileBadgesContainer
-          badges={formattedBadges}
-          title={t('profile.badges')}
-        />
+        <ProfileBadgesContainer badges={formattedBadges} title={t('profile.badges')} />
 
         {/* ─── My Tours ────────────────────────────── */}
         <ProfileToursContainer />

@@ -18,14 +18,11 @@ export default function TourDetailDescription({ description, tags }: TourDetailD
   const [expanded, setExpanded] = useState(false);
   const [needsTruncation, setNeedsTruncation] = useState(false);
 
-  const handleTextLayout = useCallback(
-    (e: { nativeEvent: { lines: Array<{ text: string }> } }) => {
-      if (e.nativeEvent.lines.length > MAX_LINES) {
-        setNeedsTruncation(true);
-      }
-    },
-    [],
-  );
+  const handleTextLayout = useCallback((e: { nativeEvent: { lines: { text: string }[] } }) => {
+    if (e.nativeEvent.lines.length > MAX_LINES) {
+      setNeedsTruncation(true);
+    }
+  }, []);
 
   const tagIcons: Record<string, string> = {
     walking: 'walk-outline',
@@ -57,7 +54,9 @@ export default function TourDetailDescription({ description, tags }: TourDetailD
       {needsTruncation && (
         <TouchableOpacity style={styles.readMoreButton} onPress={() => setExpanded(!expanded)}>
           <Text style={styles.readMoreText}>
-            {expanded ? t('tourDetail.readLess', { defaultValue: 'Read less' }) : t('tourDetail.readMore', { defaultValue: 'Read more' })}
+            {expanded
+              ? t('tourDetail.readLess', { defaultValue: 'Read less' })
+              : t('tourDetail.readMore', { defaultValue: 'Read more' })}
           </Text>
         </TouchableOpacity>
       )}

@@ -67,7 +67,12 @@ export default function RegisterScreen() {
       Animated.timing(heroY, { toValue: 0, duration: 560, useNativeDriver: true }),
       Animated.timing(heroOpacity, { toValue: 1, duration: 560, useNativeDriver: true }),
       Animated.timing(cardY, { toValue: 0, duration: 620, delay: 160, useNativeDriver: true }),
-      Animated.timing(cardOpacity, { toValue: 1, duration: 620, delay: 160, useNativeDriver: true }),
+      Animated.timing(cardOpacity, {
+        toValue: 1,
+        duration: 620,
+        delay: 160,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, []);
 
@@ -157,34 +162,37 @@ export default function RegisterScreen() {
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-
-          {/* ── Hero ─────────────────────────────────────── */}
-          <Animated.View
-            style={[
-              styles.hero,
-              { height: HERO_HEIGHT, paddingTop: insets.top, backgroundColor: theme.headerGradientTop },
-              { opacity: heroOpacity, transform: [{ translateY: heroY }] },
-            ]}
-          >
-            <BackButton
-              color="rgba(255,255,255,0.9)"
-              style={[styles.backButton, { top: insets.top + 12 }]}
-            />
-            <View style={styles.logoArea}>
-              <View style={styles.iconRing}>
-                <Ionicons name="compass" size={40} color="#FFFFFF" />
-              </View>
-              <Text style={styles.appName}>ODYSSEY</Text>
-              <Text style={styles.tagline}>
-                {t('auth.registerTagline', { defaultValue: 'Create your account' })}
-              </Text>
+        {/* ── Hero ─────────────────────────────────────── */}
+        <Animated.View
+          style={[
+            styles.hero,
+            {
+              height: HERO_HEIGHT,
+              paddingTop: insets.top,
+              backgroundColor: theme.headerGradientTop,
+            },
+            { opacity: heroOpacity, transform: [{ translateY: heroY }] },
+          ]}
+        >
+          <BackButton
+            color="rgba(255,255,255,0.9)"
+            style={[styles.backButton, { top: insets.top + 12 }]}
+          />
+          <View style={styles.logoArea}>
+            <View style={styles.iconRing}>
+              <Ionicons name="compass" size={40} color="#FFFFFF" />
             </View>
-          </Animated.View>
+            <Text style={styles.appName}>ODYSSEY</Text>
+            <Text style={styles.tagline}>
+              {t('auth.registerTagline', { defaultValue: 'Create your account' })}
+            </Text>
+          </View>
+        </Animated.View>
 
-          {/* ── Form card ────────────────────────────────── */}
-          <Animated.View
-            style={[styles.flex, { opacity: cardOpacity, transform: [{ translateY: cardY }] }]}
-          >
+        {/* ── Form card ────────────────────────────────── */}
+        <Animated.View
+          style={[styles.flex, { opacity: cardOpacity, transform: [{ translateY: cardY }] }]}
+        >
           <View
             style={[
               styles.card,
@@ -204,8 +212,18 @@ export default function RegisterScreen() {
             {/* Step indicator */}
             <View style={styles.stepRow}>
               <View style={[styles.stepDot, { backgroundColor: theme.primary }]} />
-              <View style={[styles.stepLine, { backgroundColor: step === 2 ? theme.primary : theme.foregroundSecondary }]} />
-              <View style={[styles.stepDot, { backgroundColor: step === 2 ? theme.primary : theme.foregroundSecondary }]} />
+              <View
+                style={[
+                  styles.stepLine,
+                  { backgroundColor: step === 2 ? theme.primary : theme.foregroundSecondary },
+                ]}
+              />
+              <View
+                style={[
+                  styles.stepDot,
+                  { backgroundColor: step === 2 ? theme.primary : theme.foregroundSecondary },
+                ]}
+              />
             </View>
 
             {/* Error banner */}
@@ -235,7 +253,10 @@ export default function RegisterScreen() {
                   <AuthTextInput
                     label={t('auth.firstName')}
                     value={firstName}
-                    onChangeText={(text) => { setFirstName(text); setErrors((e) => ({ ...e, firstName: undefined })); }}
+                    onChangeText={(text) => {
+                      setFirstName(text);
+                      setErrors((e) => ({ ...e, firstName: undefined }));
+                    }}
                     placeholder={t('auth.firstNamePlaceholder')}
                     autoCapitalize="words"
                     returnKeyType="next"
@@ -246,7 +267,10 @@ export default function RegisterScreen() {
                     ref={lastNameRef}
                     label={t('auth.lastName')}
                     value={lastName}
-                    onChangeText={(text) => { setLastName(text); setErrors((e) => ({ ...e, lastName: undefined })); }}
+                    onChangeText={(text) => {
+                      setLastName(text);
+                      setErrors((e) => ({ ...e, lastName: undefined }));
+                    }}
                     placeholder={t('auth.lastNamePlaceholder')}
                     autoCapitalize="words"
                     returnKeyType="next"
@@ -257,14 +281,20 @@ export default function RegisterScreen() {
                     ref={usernameRef}
                     label={t('auth.username')}
                     value={username}
-                    onChangeText={(text) => { setUsername(text); setErrors((e) => ({ ...e, username: undefined })); }}
+                    onChangeText={(text) => {
+                      setUsername(text);
+                      setErrors((e) => ({ ...e, username: undefined }));
+                    }}
                     placeholder={t('auth.usernamePlaceholder')}
                     autoCapitalize="none"
                     returnKeyType="done"
                     onSubmitEditing={handleNext}
                     error={errors.username}
                   />
-                  <AuthButton title={t('auth.continue', { defaultValue: 'Continue' })} onPress={handleNext} />
+                  <AuthButton
+                    title={t('auth.continue', { defaultValue: 'Continue' })}
+                    onPress={handleNext}
+                  />
                   <View style={styles.footerRow}>
                     <Text style={[styles.footerLabel, { color: theme.subText }]}>
                       {t('auth.alreadyHaveAccount', { defaultValue: 'Already have an account?' })}
@@ -282,7 +312,10 @@ export default function RegisterScreen() {
                     ref={emailRef}
                     label={t('auth.email')}
                     value={email}
-                    onChangeText={(text) => { setEmail(text); setErrors((e) => ({ ...e, email: undefined })); }}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      setErrors((e) => ({ ...e, email: undefined }));
+                    }}
                     placeholder={t('auth.emailPlaceholder')}
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -294,7 +327,10 @@ export default function RegisterScreen() {
                     ref={passwordRef}
                     label={t('auth.password')}
                     value={password}
-                    onChangeText={(text) => { setPassword(text); setErrors((e) => ({ ...e, password: undefined })); }}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      setErrors((e) => ({ ...e, password: undefined }));
+                    }}
                     placeholder={t('auth.passwordPlaceholder')}
                     secureTextEntry
                     showPasswordToggle
@@ -307,7 +343,10 @@ export default function RegisterScreen() {
                     ref={confirmPasswordRef}
                     label={t('auth.confirmPassword')}
                     value={confirmPassword}
-                    onChangeText={(text) => { setConfirmPassword(text); setErrors((e) => ({ ...e, confirmPassword: undefined })); }}
+                    onChangeText={(text) => {
+                      setConfirmPassword(text);
+                      setErrors((e) => ({ ...e, confirmPassword: undefined }));
+                    }}
                     placeholder={t('auth.confirmPasswordPlaceholder')}
                     secureTextEntry
                     autoCapitalize="none"
@@ -315,7 +354,11 @@ export default function RegisterScreen() {
                     onSubmitEditing={handleRegister}
                     error={errors.confirmPassword}
                   />
-                  <AuthButton title={t('auth.createAccount')} onPress={handleRegister} loading={loading} />
+                  <AuthButton
+                    title={t('auth.createAccount')}
+                    onPress={handleRegister}
+                    loading={loading}
+                  />
                   <View style={styles.footerRow}>
                     <TouchableOpacity onPress={() => setStep(1)} disabled={loading}>
                       <Text style={[styles.footerLink, { color: theme.primary }]}>
@@ -328,7 +371,6 @@ export default function RegisterScreen() {
             </View>
           </View>
         </Animated.View>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );

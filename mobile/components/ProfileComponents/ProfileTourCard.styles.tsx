@@ -29,9 +29,7 @@ export const profileTourCardStyles = (theme: ThemeName) => {
     },
     cardPressed: {
       opacity: 0.75,
-      ...(isLight
-        ? { backgroundColor: color.foreground }
-        : {}),
+      ...(isLight ? { backgroundColor: color.foreground } : {}),
     },
     iconWrap: {
       width: 40,

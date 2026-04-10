@@ -124,21 +124,25 @@ function AnimatedSection({ delay, children }: { delay: number; children: React.R
     ]).start();
   }, []);
 
-  return (
-    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-      {children}
-    </Animated.View>
-  );
+  return <Animated.View style={{ opacity, transform: [{ translateY }] }}>{children}</Animated.View>;
 }
 
-export function TourDetailScreenContent({ tour, onStartTour, starting }: TourDetailScreenContentProps) {
+export function TourDetailScreenContent({
+  tour,
+  onStartTour,
+  starting,
+}: TourDetailScreenContentProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailScreenStyles(theme), [theme]);
   const { t } = useTranslation();
 
   return (
     <>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="never">
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior="never"
+      >
         <TourDetailCover
           coverImage={tour.coverImage}
           title={tour.title}

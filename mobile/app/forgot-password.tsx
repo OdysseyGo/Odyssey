@@ -25,7 +25,7 @@ import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.30 : SCREEN_HEIGHT * 0.36;
+const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEIGHT * 0.36;
 
 export default function ForgotPasswordScreen() {
   const colorScheme = useColorTheme();
@@ -54,7 +54,12 @@ export default function ForgotPasswordScreen() {
       Animated.timing(heroY, { toValue: 0, duration: 560, useNativeDriver: true }),
       Animated.timing(heroOpacity, { toValue: 1, duration: 560, useNativeDriver: true }),
       Animated.timing(cardY, { toValue: 0, duration: 620, delay: 160, useNativeDriver: true }),
-      Animated.timing(cardOpacity, { toValue: 1, duration: 620, delay: 160, useNativeDriver: true }),
+      Animated.timing(cardOpacity, {
+        toValue: 1,
+        duration: 620,
+        delay: 160,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, []);
 
@@ -120,34 +125,37 @@ export default function ForgotPasswordScreen() {
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-
-          {/* ── Hero ─────────────────────────────────────── */}
-          <Animated.View
-            style={[
-              styles.hero,
-              { height: HERO_HEIGHT, paddingTop: insets.top, backgroundColor: theme.headerGradientTop },
-              { opacity: heroOpacity, transform: [{ translateY: heroY }] },
-            ]}
-          >
-            <BackButton
-              color="rgba(255,255,255,0.9)"
-              style={[styles.backButton, { top: insets.top + 12 }]}
-            />
-            <View style={styles.logoArea}>
-              <View style={styles.iconRing}>
-                <Ionicons name="compass" size={46} color="#FFFFFF" />
-              </View>
-              <Text style={styles.appName}>ODYSSEY</Text>
-              <Text style={styles.tagline}>
-                {t('auth.resetTagline', { defaultValue: 'Reset your password' })}
-              </Text>
+        {/* ── Hero ─────────────────────────────────────── */}
+        <Animated.View
+          style={[
+            styles.hero,
+            {
+              height: HERO_HEIGHT,
+              paddingTop: insets.top,
+              backgroundColor: theme.headerGradientTop,
+            },
+            { opacity: heroOpacity, transform: [{ translateY: heroY }] },
+          ]}
+        >
+          <BackButton
+            color="rgba(255,255,255,0.9)"
+            style={[styles.backButton, { top: insets.top + 12 }]}
+          />
+          <View style={styles.logoArea}>
+            <View style={styles.iconRing}>
+              <Ionicons name="compass" size={46} color="#FFFFFF" />
             </View>
-          </Animated.View>
+            <Text style={styles.appName}>ODYSSEY</Text>
+            <Text style={styles.tagline}>
+              {t('auth.resetTagline', { defaultValue: 'Reset your password' })}
+            </Text>
+          </View>
+        </Animated.View>
 
-          {/* ── Form card ────────────────────────────────── */}
-          <Animated.View
-            style={[styles.flex, { opacity: cardOpacity, transform: [{ translateY: cardY }] }]}
-          >
+        {/* ── Form card ────────────────────────────────── */}
+        <Animated.View
+          style={[styles.flex, { opacity: cardOpacity, transform: [{ translateY: cardY }] }]}
+        >
           <View
             style={[
               styles.card,
@@ -161,7 +169,9 @@ export default function ForgotPasswordScreen() {
               {t('auth.resetTitle', { defaultValue: 'Forgot password?' })}
             </Text>
             <Text style={[styles.cardSubtitle, { color: theme.subText }]}>
-              {t('auth.resetSubtitle', { defaultValue: "Enter your username and email and we'll verify your account" })}
+              {t('auth.resetSubtitle', {
+                defaultValue: "Enter your username and email and we'll verify your account",
+              })}
             </Text>
 
             {/* Error banner */}
@@ -189,7 +199,10 @@ export default function ForgotPasswordScreen() {
               <AuthTextInput
                 label={t('auth.username')}
                 value={username}
-                onChangeText={(text) => { setUsername(text); setErrors((e) => ({ ...e, username: undefined })); }}
+                onChangeText={(text) => {
+                  setUsername(text);
+                  setErrors((e) => ({ ...e, username: undefined }));
+                }}
                 placeholder={t('auth.usernamePlaceholder')}
                 autoCapitalize="none"
                 returnKeyType="next"
@@ -198,7 +211,10 @@ export default function ForgotPasswordScreen() {
               <AuthTextInput
                 label={t('auth.email')}
                 value={email}
-                onChangeText={(text) => { setEmail(text); setErrors((e) => ({ ...e, email: undefined })); }}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  setErrors((e) => ({ ...e, email: undefined }));
+                }}
                 placeholder={t('auth.emailPlaceholder')}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -222,14 +238,15 @@ export default function ForgotPasswordScreen() {
             </View>
           </View>
         </Animated.View>
-
       </ScrollView>
 
       {/* ── Reset password modal ── */}
       <Modal visible={showResetModal} transparent animationType="fade">
         <View style={modalStyles.overlay}>
           <View style={[modalStyles.card, { backgroundColor: theme.cardSurface }]}>
-            <Text style={[modalStyles.title, { color: theme.text }]}>{t('auth.resetPassword')}</Text>
+            <Text style={[modalStyles.title, { color: theme.text }]}>
+              {t('auth.resetPassword')}
+            </Text>
 
             {modalError ? (
               <Text style={[modalStyles.error, { color: theme.error }]}>{modalError}</Text>

@@ -23,7 +23,12 @@ export default function TourDetailStats({ duration, distance, difficulty }: Tour
       </View>
       <View style={styles.statDivider} />
       <View style={styles.statItem}>
-        <Ionicons name="navigate-outline" size={22} color={colors.primary} style={styles.statIcon} />
+        <Ionicons
+          name="navigate-outline"
+          size={22}
+          color={colors.primary}
+          style={styles.statIcon}
+        />
         <Text style={styles.statValue}>{distance}</Text>
         <Text style={styles.statLabel}>{t('tourDetail.distance')}</Text>
       </View>

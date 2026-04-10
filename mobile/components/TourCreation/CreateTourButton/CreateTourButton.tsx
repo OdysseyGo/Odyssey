@@ -25,7 +25,6 @@ export default function CreateTourButton() {
         justifyContent: 'center',
       }}
     >
-    
       <TouchableOpacity style={styles.floatingButton} onPress={handlePress} activeOpacity={0.8}>
         <Ionicons name="add" size={30} color={color.white} />
       </TouchableOpacity>

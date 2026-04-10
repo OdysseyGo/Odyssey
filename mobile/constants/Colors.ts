@@ -2,30 +2,30 @@
 // Rich sky-blue primary, golden-amber secondary, clean neutrals.
 // Evokes open skies, ocean, adventure maps, and golden-hour travel.
 
-const primaryLight = '#0284C7';   // Rich sky blue — clear expedition skies
-const primaryDark  = '#38BDF8';   // Bright sky blue for dark backgrounds
+const primaryLight = '#0284C7'; // Rich sky blue — clear expedition skies
+const primaryDark = '#38BDF8'; // Bright sky blue for dark backgrounds
 
 const secondaryLight = '#D97706'; // Warm amber — sunsets, culture, warmth
-const secondaryDark  = '#FBBF24'; // Golden amber for dark mode
+const secondaryDark = '#FBBF24'; // Golden amber for dark mode
 
-const black = '#1E293B';          // Deep slate — grounded, map-ink feel
-const white = '#F8FAFC';          // Clean near-white — crisp like a fresh page
+const black = '#1E293B'; // Deep slate — grounded, map-ink feel
+const white = '#F8FAFC'; // Clean near-white — crisp like a fresh page
 
 const foregroundSecondaryLight = '#E2E8F0'; // Soft blue-gray card surface
-const foregroundSecondaryDark  = '#1E2D3D'; // Deep ocean-night card surface
+const foregroundSecondaryDark = '#1E2D3D'; // Deep ocean-night card surface
 
 const grayLight = '#F1F5F9'; // Light slate — open, airy
-const grayDark  = '#0F172A'; // Night sky navy — deep and immersive
+const grayDark = '#0F172A'; // Night sky navy — deep and immersive
 
-const blackPale       = 'rgba(30, 41, 59, 0.65)';
-const overlayDark     = 'rgba(0, 0, 0, 0.55)';
+const blackPale = 'rgba(30, 41, 59, 0.65)';
+const overlayDark = 'rgba(0, 0, 0, 0.55)';
 const overlayLightColor = 'rgba(248, 250, 252, 0.5)';
 
 const textGrayLight = '#64748B'; // Slate gray — readable, calm
-const textGrayDark  = '#94A3B8'; // Soft cool gray
+const textGrayDark = '#94A3B8'; // Soft cool gray
 
 const pressLight = '#E0F2FE'; // Subtle sky-blue tint on press
-const pressDark  = '#1E293B'; // Pressed state dark
+const pressDark = '#1E293B'; // Pressed state dark
 
 const errorRed = '#DC2626'; // Clear red — easy to spot on maps/ui
 
@@ -36,9 +36,9 @@ const gray333 = '#334155';
 
 const yellow = '#F59E0B'; // Amber gold — star ratings, highlights
 
-const easy   = '#16A34A'; // Forest green — easy trails
+const easy = '#16A34A'; // Forest green — easy trails
 const medium = '#D97706'; // Amber — moderate challenge
-const hard   = '#DC2626'; // Clear red — difficult
+const hard = '#DC2626'; // Clear red — difficult
 
 const correctOptionBackground = '#16A34A';
 
