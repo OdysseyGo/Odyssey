@@ -138,9 +138,11 @@ class UserViewSet(ModelViewSet):
 
         current_user = request.user
 
-        following_ids = Follow.objects.filter(follower=current_user).values_list(
+        following_ids = Follow.objects.filter(follow=current_user).values_list(
             "follow_id", flat=True
         )
+
+        print(following_ids)
 
         users = (
             User.objects.filter(username__icontains=filter)
