@@ -128,6 +128,24 @@ class UserViewSet(ModelViewSet):
 
         return Response({"detail": "Password updated successfully"}, status=200)
 
+    @action(detail=True, methods=["delete"], url_path="remove-follower")
+    def remove_follower(self, request, pk=None):
+        """Remove a specific user from the current user's followers."""
+        follower_user = self.get_object()  # user to be removed as a follower
+        try:
+            follow = Follow.objects.get(follower=follower_user, following=request.user)
+        except Follow.DoesNotExist:
+            return Response({"error": "Follow relationship not found"}, status=404)
+
+        User.objects.filter(id=follow.following_id).update(
+            follower_count=F("follower_count") - 1
+        )
+        User.objects.filter(id=follow.follower_id).update(
+            following_count=F("following_count") - 1
+        )
+        follow.delete()
+        return Response(status=204)
+
     @action(
         detail=False, methods=["get"], url_path="get-filtered-users-add-friend"
     )  # filter by username to add friend (excludes itself and already following)
@@ -138,8 +156,8 @@ class UserViewSet(ModelViewSet):
 
         current_user = request.user
 
-        following_ids = Follow.objects.filter(follow=current_user).values_list(
-            "follow_id", flat=True
+        following_ids = Follow.objects.filter(follower=current_user).values_list(
+            "following_id", flat=True
         )
 
         print(following_ids)
@@ -157,7 +175,7 @@ class UserViewSet(ModelViewSet):
 class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = FollowSerializer
 
-    lookup_field = "follow_id"
+    lookup_field = "following"
 
     def get_queryset(self):
         return Follow.objects.filter(follower=self.request.user).select_related(
@@ -167,7 +185,7 @@ class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     def perform_create(self, serializer):
         follow = serializer.save(follower=self.request.user)
         # increment counters
-        User.objects.filter(id=follow.follow_id).update(
+        User.objects.filter(id=follow.following_id).update(
             follower_count=F("follower_count") + 1
         )
         User.objects.filter(id=follow.follower_id).update(
@@ -176,7 +194,7 @@ class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
 
     def perform_destroy(self, instance):
         # decrement counters safely on unfollow
-        User.objects.filter(id=instance.follow_id).update(
+        User.objects.filter(id=instance.following_id).update(
             follower_count=F("follower_count") - 1
         )
         User.objects.filter(id=instance.follower_id).update(

@@ -72,7 +72,15 @@
     "emptyPublished": "Henüz yayınlanmış tur yok. Topluluğa katılmak için bir tur yayınla!",
     "emptyDraft": "Taslak tur yok. Yeni bir tur oluşturmaya başla!",
     "emptyArchived": "Arşivlenmiş tur yok.",
-    "emptyDefault": "Tur bulunamadı."
+    "emptyDefault": "Tur bulunamadı.",
+    "followersTitle": "Takipçiler",
+    "followingTitle": "Takip Edilenler",
+    "followersEmpty": "Henüz takipçi yok",
+    "followingEmpty": "Henüz kimse takip edilmiyor",
+    "followersError": "Takipçiler yüklenemedi",
+    "followingError": "Takip edilenler yüklenemedi",
+    "unfollow": "Takibi Bırak",
+    "removeFollower": "Kaldır"
   },
   "tour": {
     "loading": "Turlar yükleniyor...",

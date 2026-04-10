@@ -182,7 +182,7 @@ export const unfollowUser = (payload: FollowPayload) =>
  * @returns array of users
  */
 export const getFilteredUsersAddFriend = (filter: string) =>
-  apiRequest<void>({
+  apiRequest<AddFriendUserDisplayDTO[]>({
     method: 'get',
     url: `api/users/get-filtered-users-add-friend/?filter=${filter}`,
   });
@@ -195,4 +195,29 @@ export const updateAvatar = (avatarUrl: string) =>
     method: 'patch',
     url: '/api/users/me/avatar/',
     data: { avatar_url: avatarUrl },
+  });
+
+/**
+ * DELETE /api/users/{followerId}/remove-follower/ - Remove a follower from the current user's followers
+ */
+export const removeFollower = (followerId: number) =>
+  apiRequest<void>({
+    method: 'delete',
+    url: `/api/users/${followerId}/remove-follower/`,
+  });
+
+/**
+ * GET /api/users/{id}/followers/ - Get users who follow the given user
+ */
+export const getUserFollowers = (id: string) =>
+  apiRequest<User[]>({
+    url: `/api/users/${id}/followers/`,
+  });
+
+/**
+ * GET /api/users/{id}/followings/ - Get users that the given user follows
+ */
+export const getUserFollowings = (id: string) =>
+  apiRequest<User[]>({
+    url: `/api/users/${id}/followings/`,
   });

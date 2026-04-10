@@ -6,7 +6,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { addFriendsModalListStyles } from './AddFriendsModalList.styles';
 import type { AddFriendsModalListProps } from './AddFriendsModalList.config';
-import type { User } from '@/api/users';
+import { AddFriendUserDisplayDTO } from '@/api/users';
 import { followUser, FollowPayload, getFilteredUsersAddFriend } from '@/api/users';
 
 export default function AddFriendsModalList({ searchTextVal = '' }: AddFriendsModalListProps) {
@@ -14,13 +14,15 @@ export default function AddFriendsModalList({ searchTextVal = '' }: AddFriendsMo
   const styles = addFriendsModalListStyles(theme);
   const color = Colors[theme];
 
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AddFriendUserDisplayDTO[]>([]);
+  const [followedIds, setFollowedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const query = searchTextVal.trim();
 
     if (!query) {
       setUsers([]);
+      setFollowedIds(new Set());
       return;
     }
 
@@ -37,31 +39,50 @@ export default function AddFriendsModalList({ searchTextVal = '' }: AddFriendsMo
   }, [searchTextVal]);
 
   async function followHandler(user_id: number) {
+    // Optimistically show checkmark immediately
+    setFollowedIds((prev) => new Set(prev).add(user_id));
+
     try {
-      const payload: FollowPayload = {
-        following: user_id,
-      };
-      const response = await followUser(payload); // TODO: give alert to notify user that the follow is done
+      const payload: FollowPayload = { following: user_id };
+      await followUser(payload);
     } catch (e) {
       console.error(e);
+      // Revert on failure
+      setFollowedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(user_id);
+        return next;
+      });
+      return;
     }
+
   }
 
-  const renderItem = ({ item }: { item: User }) => (
-    <View style={styles.userRow}>
-      <View style={styles.userInfo}>
-        <View style={styles.avatarPlaceholder}>
-          <FontAwesome name="user" size={14} color="white" />
+  const renderItem = ({ item }: { item: AddFriendUserDisplayDTO }) => {
+    const justFollowed = followedIds.has(item.id);
+    return (
+      <View style={styles.userRow}>
+        <View style={styles.userInfo}>
+          <View style={styles.avatarPlaceholder}>
+            <FontAwesome name="user" size={14} color="white" />
+          </View>
+          <Text style={styles.username}>{item.username}</Text>
         </View>
 
-        <Text style={styles.username}>{item.username}</Text>
+        <TouchableOpacity
+          style={[styles.addButton, justFollowed && { backgroundColor: color.primary }]}
+          onPress={() => !justFollowed && followHandler(item.id)}
+          activeOpacity={justFollowed ? 1 : 0.7}
+        >
+          <FontAwesome
+            name={justFollowed ? 'check' : 'user-plus'}
+            size={justFollowed ? 16 : 18}
+            color={justFollowed ? 'white' : color.primary}
+          />
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity style={styles.addButton} onPress={() => followHandler(item.id)}>
-        <FontAwesome name="user-plus" size={18} color={color.primary} />
-      </TouchableOpacity>
-    </View>
-  );
+    );
+  };
 
   return (
     <FlatList
