@@ -11,7 +11,38 @@ export const tourDetailScreenStyles = (theme: ThemeName) => {
       backgroundColor: color.background,
     },
     content: {
-      padding: Spacing.lg,
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.lg,
+    },
+    titleSection: {
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.lg,
+      paddingBottom: Spacing.xs,
+    },
+    tourTitle: {
+      color: color.text,
+      fontSize: 26,
+      fontWeight: '800',
+      letterSpacing: -0.5,
+      marginBottom: Spacing.sm,
+    },
+    ratingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    star: {
+      color: color.star,
+      fontSize: 15,
+    },
+    ratingText: {
+      color: color.text,
+      fontSize: 15,
+      fontWeight: '700',
+    },
+    reviewCount: {
+      color: color.subText,
+      fontSize: 13,
     },
     centered: {
       justifyContent: 'center',
@@ -33,7 +64,7 @@ export const tourDetailScreenStyles = (theme: ThemeName) => {
       fontWeight: '600',
     },
     bottomSpacer: {
-      height: 100,
+      height: 120,
     },
   });
 };

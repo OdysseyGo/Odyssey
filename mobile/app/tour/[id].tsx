@@ -1,6 +1,7 @@
 // app/tour/[id].tsx
-import { Stack, useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { Alert } from 'react-native';
+import { useState } from 'react';
 import {
   TourDetailScreen,
   TourDetailScreenLoading,
@@ -20,11 +21,9 @@ export default function TourDetailPage() {
   const { tour, loading, error, fetchTour } = useTourDetailScreen(id || '');
   const { startTour } = useActiveTour();
   const { t } = useTranslation();
+  const [starting, setStarting] = useState(false);
 
   const handleStartTour = async () => {
-    //console.log('Starting tour:', id);
-
-    // Check if user is logged in
     const loggedIn = await isLoggedIn();
     if (!loggedIn) {
       Alert.alert(t('tourId.loginRequired'), t('tourId.loginRequiredMessage'), [
@@ -78,27 +77,12 @@ export default function TourDetailPage() {
   };
 
   if (loading) {
-    return (
-      <>
-        <Stack.Screen options={{ title: t('tourId.loading') }} />
-        <TourDetailScreenLoading />
-      </>
-    );
+    return <TourDetailScreenLoading />;
   }
 
   if (error || !tour) {
-    return (
-      <>
-        <Stack.Screen options={{ title: t('tourId.error') }} />
-        <TourDetailScreenError error={error || 'Tour not found'} onRetry={fetchTour} />
-      </>
-    );
+    return <TourDetailScreenError error={error || 'Tour not found'} onRetry={fetchTour} />;
   }
 
-  return (
-    <>
-      <Stack.Screen options={{ title: tour.title }} />
-      <TourDetailScreenContent tour={tour} onStartTour={handleStartTour} />
-    </>
-  );
+  return <TourDetailScreenContent tour={tour} onStartTour={handleStartTour} starting={starting} />;
 }

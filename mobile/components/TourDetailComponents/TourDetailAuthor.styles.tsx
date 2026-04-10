@@ -10,24 +10,34 @@ export const tourDetailAuthorStyles = (theme: ThemeName) => {
       flexDirection: 'row',
       alignItems: 'center',
       gap: Spacing.md,
-      marginBottom: Spacing.lg,
-      padding: Spacing.md,
-      backgroundColor: color.foreground,
-      borderRadius: Spacing.borderRadius,
+      marginBottom: Spacing.xl,
+    },
+    avatarRing: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      borderWidth: 2,
+      borderColor: color.primary,
+      padding: 2,
     },
     authorAvatar: {
-      width: 48,
-      height: 48,
+      width: '100%',
+      height: '100%',
       borderRadius: 24,
+    },
+    authorInfo: {
+      flex: 1,
     },
     authorLabel: {
       color: color.subText,
       fontSize: 12,
+      fontWeight: '500',
+      marginBottom: 2,
     },
     authorName: {
       color: color.text,
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: '700',
     },
   });
 };

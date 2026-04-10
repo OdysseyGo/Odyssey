@@ -54,5 +54,36 @@ export const routeMapStyles = (theme: ThemeName) => {
       color: color.subText,
       fontSize: 12,
     },
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0,0,0,0.25)',
+      borderRadius: Spacing.borderRadius,
+    },
+    overlayHint: {
+      color: '#fff',
+      fontSize: 13,
+      fontWeight: '600',
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: Spacing.borderRadiusFull,
+      overflow: 'hidden',
+    },
+    doneButton: {
+      position: 'absolute',
+      top: Spacing.sm,
+      right: Spacing.sm,
+      backgroundColor: color.primary,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      borderRadius: Spacing.borderRadiusFull,
+    },
+    doneButtonText: {
+      color: '#fff',
+      fontSize: 12,
+      fontWeight: '700',
+    },
   });
 };

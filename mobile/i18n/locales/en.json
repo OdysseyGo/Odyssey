@@ -98,8 +98,8 @@
     "searching": "Searching tours...",
     "results": "Search Results",
     "toursCount": "{{count}} tours",
-    "recentSearch": "Son Aramalar",
-    "clearAll": "Hepsini Temizle"
+    "recentSearch": "Recent Searches",
+    "clearAll": "Clear All"
   },
   "tourDetail": {
     "loading": "Loading tour...",
