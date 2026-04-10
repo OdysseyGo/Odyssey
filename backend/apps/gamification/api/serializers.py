@@ -49,6 +49,6 @@ class TourProgressSerializer(serializers.ModelSerializer):
             "started_at",
             "completed_at",
             "total_xp",
-            "skip_count"
+            "skip_count",
         ]
         read_only_fields = ["user", "started_at", "completed_at"]

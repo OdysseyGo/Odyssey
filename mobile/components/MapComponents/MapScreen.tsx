@@ -78,7 +78,7 @@ export default function MapScreen() {
         const progress = await getTourProgress(progressId);
         setFinalXP(progress.total_xp);
       } catch (error) {
-        console.error('Failed to fetch final tour progress:', error); 
+        console.error('Failed to fetch final tour progress:', error);
         setFinalXP(earnedXP);
       }
     } else {
@@ -92,19 +92,19 @@ export default function MapScreen() {
     setShowEndConfirmModal(true);
   }, []);
 
-const handleConfirmEndTour = useCallback(async () => {
+  const handleConfirmEndTour = useCallback(async () => {
     setShowEndConfirmModal(false);
 
-    if (!progressId) return; 
+    if (!progressId) return;
     try {
-      await deleteTourProgress({ 
+      await deleteTourProgress({
         id: Number(progressId),
       });
       endTour();
     } catch (error) {
       console.error('Failed to abort tour on the backend:', error);
     }
-  }, [endTour, progressId]); 
+  }, [endTour, progressId]);
 
   const handleCancelEndTour = useCallback(() => {
     setShowEndConfirmModal(false);
@@ -124,18 +124,6 @@ const handleConfirmEndTour = useCallback(async () => {
     }),
     []
   );
-
-  const handleSkipStep = useCallback(async () => {
-
-    //TODO: Add modal for skip confirming
-
-    if (!progressId) return; 
-    try {
-      skipStep(progressId)
-    } catch (error) {
-      console.error('Failed to abort tour on the backend:', error);
-    }
-  }, [progressId]); 
 
   // No active tour - show just the map
   if (!isActive || !tour) {
@@ -162,7 +150,6 @@ const handleConfirmEndTour = useCallback(async () => {
         tour={tour}
         onEndTour={handleEndTourPress}
         onTourComplete={handleTourComplete}
-        onSkipStep = {handleSkipStep}
       />
 
       {/* End Tour Confirmation Modal */}

@@ -5,7 +5,6 @@ export interface BottomSliderProps {
   onCurrentStepChange?: (stepIndex: number) => void;
   onSolvedStepsChange?: (solvedSteps: Set<string>) => void;
   onEndTour?: () => void;
-  onSkipStep?: () => void;
   initialStepIndex?: number;
   initialSolvedSteps?: Set<string>;
 }

@@ -15,7 +15,6 @@ const BOTTOM_SHEET_ANIMATION_DURATION = Animations.bottomSheet.animationDuration
 export default function BottomSlider({
   onEndTour,
   onTourComplete,
-  onSkipStep
 }: BottomSliderProps & { onTourComplete?: () => void }) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -54,6 +53,47 @@ export default function BottomSlider({
         onTourComplete?.(); // Tell MapScreen to show the completion modal
       } else if (response.new_step_id) {
         // Backend dictates the next step, update our UI context
+        const nextStepIndex = tour.steps.findIndex(
+          (s) => s.id === response.new_step_id?.toString()
+        );
+        if (nextStepIndex !== -1) {
+          setCurrentStepIndex(nextStepIndex);
+          setHighestStepIndex(nextStepIndex);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to navigate next:', error);
+      Alert.alert('Error', 'Could not sync progress with server.');
+    }
+  }, [
+    tour,
+    progressId,
+    currentStepIndex,
+    highestStepIndex,
+    solvedSteps,
+    setCurrentStepIndex,
+    setHighestStepIndex,
+    onTourComplete,
+  ]);
+
+  const handleSkip = useCallback(async () => {
+    if (!tour || !progressId) return;
+
+    if (currentStepIndex < highestStepIndex) {
+      setCurrentStepIndex(currentStepIndex + 1);
+      return;
+    }
+
+    const currentStep = tour.steps[currentStepIndex];
+    const isPuzzle = currentStep.type === 'puzzle';
+    const isSolved = solvedSteps.has(currentStep.id);
+
+    try {
+      let response = await skipStep(progressId);
+
+      if (response.is_tour_complete) {
+        onTourComplete?.(); // Tell MapScreen to show the completion modal
+      } else if (response.new_step_id) {
         const nextStepIndex = tour.steps.findIndex(
           (s) => s.id === response.new_step_id?.toString()
         );
@@ -228,7 +268,7 @@ export default function BottomSlider({
             onStepSolved={handleStepSolved}
             onLocationConfirm={handleLocationConfirm}
             onEndTour={onEndTour}
-            onSkipStep={onSkipStep}
+            onSkipStep={handleSkip}
           />
         </View>
       </View>

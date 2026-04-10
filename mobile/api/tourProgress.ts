@@ -26,7 +26,7 @@ export type StepActionResponse = {
 
 export type DeleteTourProgressRequest = {
   id: number;
-}
+};
 
 /**
  * Starts a new tour progress (triggers perform_create in Django)
@@ -126,7 +126,7 @@ export async function getInProgressTour(signal?: AbortSignal): Promise<TourProgr
 export async function deleteTourProgress(request: DeleteTourProgressRequest, signal?: AbortSignal) {
   return apiRequest<void, void>({
     method: 'DELETE',
-    url: `/api/tour-progress/${request.id}/`, 
+    url: `/api/tour-progress/${request.id}/`,
     auth: true,
     signal,
   });

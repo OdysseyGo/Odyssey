@@ -15,7 +15,6 @@ import {
 import TourStepComponent from './TourStep';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
-import { skipStep } from '@/api/tourProgress';
 
 function ProgressBar({ totalSteps, currentStep, solvedSteps, stepIds }: ProgressBarProps) {
   const theme = useColorTheme();
@@ -167,7 +166,7 @@ export default function TourNavigation({
     (currentStep.type === 'puzzle' && !isSolved) || (requiresLocation && !isLocationConfirmed);
 
   const canGoForward = isLastStep
-    ? !isForwardLocked 
+    ? !isForwardLocked
     : canNavigateForward(
         currentStep,
         currentStepIndex,
@@ -196,18 +195,16 @@ export default function TourNavigation({
       <View style={styles.headerRow}>
         <Pressable style={styles.endTourButton} onPress={onSkipStep}>
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <MaterialCommunityIcons
-              name="skip-forward"
-              size={20}
-              color={Colors[theme].primary}
-            />
-            
-            <Text style={{ 
-              fontSize: 10, 
-              color: Colors[theme].primary, 
-              fontWeight: 'bold',
-              marginTop: -2
-            }}>
+            <MaterialCommunityIcons name="skip-forward" size={20} color={Colors[theme].primary} />
+
+            <Text
+              style={{
+                fontSize: 10,
+                color: Colors[theme].primary,
+                fontWeight: 'bold',
+                marginTop: -2,
+              }}
+            >
               {t('map.activeTour.skip')}
             </Text>
           </View>
