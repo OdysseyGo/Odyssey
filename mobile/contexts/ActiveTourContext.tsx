@@ -207,8 +207,10 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
       }
 
       const restoredSolvedSteps = new Set<string>();
+      const restoredLocationConfirmedSteps = new Set<string>();
       for (let i = 0; i < currentStepIdx; i++) {
         restoredSolvedSteps.add(internalTour.steps[i].id);
+        restoredLocationConfirmedSteps.add(internalTour.steps[i].id);
       }
 
       setState({
@@ -218,7 +220,7 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         currentStepIndex: currentStepIdx,
         highestStepIndex: currentStepIdx,
         solvedSteps: restoredSolvedSteps,
-        locationConfirmedSteps: new Set(),
+        locationConfirmedSteps: restoredLocationConfirmedSteps,
         earnedXP: activeProgress.total_xp,
       });
     } catch (error: any) {
