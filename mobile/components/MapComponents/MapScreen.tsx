@@ -12,14 +12,14 @@ import { getVisibleMarkers, getVisibleRoute } from '../TourStepComponents/TourNa
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import Colors from '@/constants/Colors';
 
-import { getTourProgress } from '@/api/tourProgress';
+import { getTourProgress, deleteTourProgress } from '@/api/tourProgress';
+import { number } from 'react-i18next/icu.macro';
 
 export default function MapScreen() {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const colors = Colors[theme];
 
-  // Active tour context
   const {
     tour,
     isActive,
@@ -31,7 +31,6 @@ export default function MapScreen() {
     resumeActiveTour,
   } = useActiveTour();
 
-  // Local state for modals and final backend data
   const [showEndConfirmModal, setShowEndConfirmModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [finalXP, setFinalXP] = useState<number>(0);
@@ -44,7 +43,6 @@ export default function MapScreen() {
     }, [resumeActiveTour])
   );
 
-  // Calculate visible markers and routes for active tour
   const visibleMarkers = useMemo(() => {
     if (!tour || !isActive) return [];
     return getVisibleMarkers(tour, currentStepIndex, solvedSteps);
@@ -73,16 +71,14 @@ export default function MapScreen() {
     };
   }, [tour, isActive]);
 
-  // This gets called ONLY when the "Next" button is pressed on the final step
+  // This gets called only when the finish button is pressed on the final step
   const handleTourComplete = useCallback(async () => {
     if (progressId) {
       try {
-        // Fetch the authoritative final progress from the backend
         const progress = await getTourProgress(progressId);
         setFinalXP(progress.total_xp);
       } catch (error) {
-        console.error('Failed to fetch final tour progress:', error);
-        // Fallback to local XP if the API fails for some reason
+        console.error('Failed to fetch final tour progress:', error); 
         setFinalXP(earnedXP);
       }
     } else {
@@ -96,12 +92,19 @@ export default function MapScreen() {
     setShowEndConfirmModal(true);
   }, []);
 
-  const handleConfirmEndTour = useCallback(() => {
+const handleConfirmEndTour = useCallback(async () => {
     setShowEndConfirmModal(false);
-    // User confirmed they want to exit - just end the tour without completion modal
-    // Tour is NOT completed, user is just exiting early
-    endTour();
-  }, [endTour]);
+
+    if (!progressId) return; 
+    try {
+      await deleteTourProgress({ 
+        id: Number(progressId),
+      });
+      endTour();
+    } catch (error) {
+      console.error('Failed to abort tour on the backend:', error);
+    }
+  }, [endTour, progressId]); 
 
   const handleCancelEndTour = useCallback(() => {
     setShowEndConfirmModal(false);

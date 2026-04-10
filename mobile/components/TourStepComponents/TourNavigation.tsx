@@ -159,8 +159,12 @@ export default function TourNavigation({
   const isLastStep = currentStepIndex === tour.steps.length - 1;
 
   const canGoBack = canNavigateBackward(currentStepIndex);
+  
+   const isForwardLocked =
+    (currentStep.type === 'puzzle' && !isSolved) || (requiresLocation && !isLocationConfirmed);
+
   const canGoForward = isLastStep
-    ? true
+    ? !isForwardLocked 
     : canNavigateForward(
         currentStep,
         currentStepIndex,
@@ -168,9 +172,6 @@ export default function TourNavigation({
         solvedSteps,
         locationConfirmedSteps
       );
-
-  const isForwardLocked =
-    (currentStep.type === 'puzzle' && !isSolved) || (requiresLocation && !isLocationConfirmed);
 
   const handleSolve = () => {
     onStepSolved(currentStep.id);

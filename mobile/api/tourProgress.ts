@@ -24,6 +24,10 @@ export type StepActionResponse = {
   new_step_id: number | null;
 };
 
+export type DeleteTourProgressRequest = {
+  id: number;
+}
+
 /**
  * Starts a new tour progress (triggers perform_create in Django)
  */
@@ -107,8 +111,6 @@ export async function skipStep(id: number, signal?: AbortSignal): Promise<StepAc
   });
 }
 
-// tourProgress.ts
-
 /**
  * Returns users in progress tour (if there is one)
  */
@@ -116,6 +118,15 @@ export async function getInProgressTour(signal?: AbortSignal): Promise<TourProgr
   return apiRequest<TourProgress, void>({
     method: 'GET',
     url: '/api/tour-progress/in-progress/',
+    auth: true,
+    signal,
+  });
+}
+
+export async function deleteTourProgress(request: DeleteTourProgressRequest, signal?: AbortSignal) {
+  return apiRequest<void, void>({
+    method: 'DELETE',
+    url: `/api/tour-progress/${request.id}/`, 
     auth: true,
     signal,
   });
