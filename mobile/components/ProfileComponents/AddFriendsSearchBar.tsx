@@ -5,6 +5,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { addFriendsSearchBarStyles } from './AddFriendsSearchBar.styles';
 import { AddFriendsSearchBarProps } from './AddFriendsSearchBar.config';
+import { useTranslation } from 'react-i18next';
 
 export default function AddFriendsSearchBar({
   searchText,
@@ -15,6 +16,7 @@ export default function AddFriendsSearchBar({
   const theme = useColorTheme();
   const styles = addFriendsSearchBarStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
@@ -26,7 +28,7 @@ export default function AddFriendsSearchBar({
       >
         <FontAwesome name="search" size={16} color={color.primary} />
         <TextInput
-          placeholder="Search by username or name..."
+          placeholder={t('friends.searchPlaceholder')}
           placeholderTextColor={color.subText}
           value={searchText}
           onChangeText={onSearchChange}

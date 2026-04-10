@@ -1,76 +1,93 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
 export const profileToursContainerStyles = (theme: ThemeName) => {
   const color = Colors[theme];
+  const isLight = theme === 'light';
+
   return StyleSheet.create({
     container: {
-      backgroundColor: color.foreground,
-      borderRadius: Spacing.borderRadius,
-      paddingVertical: Spacing.lg,
-      paddingHorizontal: Spacing.lg,
-      marginTop: Spacing.lg,
-      marginHorizontal: Spacing.lg,
-      marginBottom: Spacing.xl,
-      width: '90%',
-      maxWidth: 500,
-      alignSelf: 'center',
-
-      shadowColor: color.textShadowColor,
-      shadowOpacity: 0.1,
-      shadowRadius: Spacing.lg,
-      shadowOffset: { width: 0, height: Spacing.sm },
-      elevation: 4,
+      marginTop: Spacing.xl,
+      paddingHorizontal: Spacing.xl,
     },
     header: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
+      justifyContent: 'space-between',
       marginBottom: Spacing.md,
     },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm + 2,
+    },
+    accentBar: {
+      width: 3.5,
+      height: 20,
+      borderRadius: 2,
+      backgroundColor: color.primary,
+    },
     title: {
-      fontSize: 20,
+      fontSize: 19,
       fontWeight: '700',
       color: color.text,
+      letterSpacing: -0.3,
     },
+
+    // Segmented control
     tabsContainer: {
       flexDirection: 'row',
-      borderRadius: Spacing.borderRadius,
-      backgroundColor: color.secondary,
-      padding: 4,
+      borderRadius: 14,
+      backgroundColor: isLight ? color.foreground : color.foreground,
+      padding: 3,
       marginBottom: Spacing.lg,
+      ...(isLight
+        ? {
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: color.borderLight,
+          }
+        : {}),
     },
     tab: {
       flex: 1,
-      paddingVertical: Spacing.sm,
-      paddingHorizontal: Spacing.md,
-      borderRadius: Spacing.borderRadius - 2,
+      paddingVertical: Spacing.sm + 1,
+      borderRadius: 11,
       alignItems: 'center',
     },
     tabActive: {
       backgroundColor: color.primary,
+      ...Platform.select({
+        ios: {
+          shadowColor: color.primary,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: isLight ? 0.25 : 0.3,
+          shadowRadius: 6,
+        },
+        android: { elevation: 3 },
+      }),
     },
     tabText: {
-      fontSize: 14,
-      fontWeight: '500',
+      fontSize: 13,
+      fontWeight: '600',
       color: color.subText,
     },
     tabTextActive: {
-      color: 'white',
-      fontWeight: '600',
+      color: color.white,
+      fontWeight: '700',
     },
+
     toursList: {
-      gap: Spacing.md,
+      gap: Spacing.sm + 2,
     },
     emptyStateText: {
       fontSize: 14,
       color: color.subText,
       textAlign: 'center',
-      paddingVertical: Spacing.xl,
+      paddingVertical: Spacing.xxl,
     },
     loadingContainer: {
-      paddingVertical: Spacing.xl,
+      paddingVertical: Spacing.xxl,
       alignItems: 'center',
     },
   });

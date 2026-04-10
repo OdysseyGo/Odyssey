@@ -3,6 +3,7 @@ import { View, Text } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import StoryInputField from './StoryInputField';
 import { puzzleQuestionStyles } from './PuzzleQuestion.styles';
+import { useTranslation } from 'react-i18next';
 
 interface PuzzleQuestionProps {
   question: string;
@@ -17,16 +18,17 @@ export default function PuzzleQuestion({
 }: PuzzleQuestionProps) {
   const theme = useColorTheme();
   const styles = puzzleQuestionStyles(theme);
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Puzzle Challenge</Text>
+      <Text style={styles.sectionTitle}>{t('creation.puzzle.challenge')}</Text>
       <StoryInputField
-        label={`Question / Challenge${isRequired ? ' *' : ''}`}
+        label={`${t('creation.puzzle.question')}${isRequired ? ' *' : ''}`}
         value={question}
         onChangeText={onChange}
-        placeholder="e.g., What year was the tower built?"
-        hint="The question that users must answer."
+        placeholder={t('creation.puzzle.questionPlaceholder')}
+        hint={t('creation.puzzle.questionHint')}
         multiline
       />
     </View>

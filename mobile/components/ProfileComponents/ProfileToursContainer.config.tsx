@@ -10,7 +10,7 @@ export type TourTab = {
 };
 
 export const TOUR_TABS: TourTab[] = [
-  { key: 'PUBLISHED', label: 'Published' },
-  { key: 'DRAFT', label: 'Drafts' },
-  { key: 'ARCHIVED', label: 'Archived' },
+  { key: 'PUBLISHED', label: 'profile.tabs.published' },
+  { key: 'DRAFT', label: 'profile.tabs.drafts' },
+  { key: 'ARCHIVED', label: 'profile.tabs.archived' },
 ];

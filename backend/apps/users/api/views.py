@@ -1,15 +1,14 @@
 from django.contrib.auth import authenticate  # login direkt
 from django.db.models import F, QuerySet  # F dbden çıkarmadan yazıyon
-from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken  # login token
 
-from apps.users.models import Admin, Follow, User
+from apps.users.models import Follow, User
 
-from .serializers import AdminSerializer, FollowSerializer, UserSerializer
+from .serializers import FollowSerializer, UserSerializer
 
 
 class UserViewSet(ModelViewSet):
@@ -74,6 +73,14 @@ class UserViewSet(ModelViewSet):
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["patch"], url_path="me/avatar")
+    def update_avatar(self, request):
+        user = request.user
+        avatar_url = request.data.get("avatar_url", "")
+        user.avatar_url = avatar_url
+        user.save(update_fields=["avatar_url"])
+        return Response({"avatar_url": user.avatar_url})
 
     @action(detail=True, methods=["get"], url_path="followers")
     def followers(self, request, pk=None):
@@ -175,8 +182,3 @@ class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
         )
 
         instance.delete()
-
-
-class AdminViewSet(viewsets.ModelViewSet):
-    queryset = Admin.objects.all().order_by("admin_id")
-    serializer_class = AdminSerializer

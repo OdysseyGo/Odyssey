@@ -16,6 +16,7 @@ export type User = {
   user_type: number;
   tour_count: number;
   rating: number;
+  avatar_url: string;
 };
 
 export type AddFriendUserDisplayDTO = {
@@ -184,4 +185,14 @@ export const getFilteredUsersAddFriend = (filter: string) =>
   apiRequest<void>({
     method: 'get',
     url: `api/users/get-filtered-users-add-friend/?filter=${filter}`,
+  });
+
+/**
+ * PATCH /api/users/me/avatar/ - Update avatar URL
+ */
+export const updateAvatar = (avatarUrl: string) =>
+  apiRequest<{ avatar_url: string }>({
+    method: 'patch',
+    url: '/api/users/me/avatar/',
+    data: { avatar_url: avatarUrl },
   });

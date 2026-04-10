@@ -3,6 +3,7 @@ import { View, Text, ActivityIndicator } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { loadingOverlayStyles } from './LoadingOverlay.styles';
+import { useTranslation } from 'react-i18next';
 
 type LoadingOverlayProps = {
   visible: boolean;
@@ -10,14 +11,11 @@ type LoadingOverlayProps = {
   subtitle?: string;
 };
 
-export default function LoadingOverlay({
-  visible,
-  title = 'Creating Your Tour...',
-  subtitle = 'AI is finding the best locations and crafting engaging content for you',
-}: LoadingOverlayProps) {
+export default function LoadingOverlay({ visible, title, subtitle }: LoadingOverlayProps) {
   const theme = useColorTheme();
   const styles = loadingOverlayStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   if (!visible) return null;
 
@@ -25,8 +23,8 @@ export default function LoadingOverlay({
     <View style={styles.overlay}>
       <View style={styles.content}>
         <ActivityIndicator size="large" color={color.primary} />
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        <Text style={styles.title}>{title ?? t('aiTour.loading.title')}</Text>
+        <Text style={styles.subtitle}>{subtitle ?? t('aiTour.loading.subtitle')}</Text>
       </View>
     </View>
   );

@@ -1,5 +1,5 @@
-import { View, Pressable, Animated, PanResponder, useWindowDimensions } from 'react-native';
-import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
+import { View, Pressable, Animated, PanResponder, useWindowDimensions, Alert } from 'react-native';
+import { useMemo, useRef, useCallback } from 'react';
 
 import getStyles from './BottomSlider.styles';
 import { BottomSliderProps } from './BottomSlider.config';
@@ -7,60 +7,135 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { Animations } from '@/constants/Animations';
 import TourNavigation from '../TourStepComponents/TourNavigation';
 
+import { useActiveTour } from '@/contexts/ActiveTourContext';
+import { completeStep, skipStep } from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
+
 const BOTTOM_SHEET_ANIMATION_DURATION = Animations.bottomSheet.animationDuration;
 
 export default function BottomSlider({
-  tour,
-  onCurrentStepChange,
-  onSolvedStepsChange,
   onEndTour,
-}: BottomSliderProps) {
+  onTourComplete,
+}: BottomSliderProps & { onTourComplete?: () => void }) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
-
   const { height: screenHeight } = useWindowDimensions();
 
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [solvedSteps, setSolvedSteps] = useState<Set<string>>(new Set());
-  const [locationConfirmedSteps, setLocationConfirmedSteps] = useState<Set<string>>(new Set());
+  const {
+    tour,
+    progressId,
+    currentStepIndex,
+    highestStepIndex,
+    solvedSteps,
+    locationConfirmedSteps,
+    setCurrentStepIndex,
+    setHighestStepIndex,
+    solveStep,
+    confirmLocation,
+  } = useActiveTour();
 
-  useEffect(() => {
-    onCurrentStepChange?.(currentStepIndex);
-  }, [currentStepIndex, onCurrentStepChange]);
+  const handleNavigateNext = useCallback(async () => {
+    if (!tour || !progressId) return;
 
-  useEffect(() => {
-    onSolvedStepsChange?.(solvedSteps);
-  }, [solvedSteps, onSolvedStepsChange]);
-
-  const handleNavigateNext = useCallback(() => {
-    if (currentStepIndex < tour.steps.length - 1) {
-      setCurrentStepIndex((prev) => prev + 1);
+    if (currentStepIndex < highestStepIndex) {
+      setCurrentStepIndex(currentStepIndex + 1);
+      return;
     }
-  }, [currentStepIndex, tour.steps.length]);
+
+    const currentStep = tour.steps[currentStepIndex];
+    const isPuzzle = currentStep.type === 'puzzle';
+    const isSolved = solvedSteps.has(currentStep.id);
+
+    try {
+      let response = await completeStep(progressId);
+
+      // Handle backend response
+      if (response.is_tour_complete) {
+        onTourComplete?.(); // Tell MapScreen to show the completion modal
+      } else if (response.new_step_id) {
+        // Backend dictates the next step, update our UI context
+        const nextStepIndex = tour.steps.findIndex(
+          (s) => s.id === response.new_step_id?.toString()
+        );
+        if (nextStepIndex !== -1) {
+          setCurrentStepIndex(nextStepIndex);
+          setHighestStepIndex(nextStepIndex);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to navigate next:', error);
+      Alert.alert('Error', 'Could not sync progress with server.');
+    }
+  }, [
+    tour,
+    progressId,
+    currentStepIndex,
+    highestStepIndex,
+    solvedSteps,
+    setCurrentStepIndex,
+    setHighestStepIndex,
+    onTourComplete,
+  ]);
+
+  const handleSkip = useCallback(async () => {
+    if (!tour || !progressId) return;
+
+    if (currentStepIndex < highestStepIndex) {
+      setCurrentStepIndex(currentStepIndex + 1);
+      return;
+    }
+
+    const currentStep = tour.steps[currentStepIndex];
+    const isPuzzle = currentStep.type === 'puzzle';
+    const isSolved = solvedSteps.has(currentStep.id);
+
+    try {
+      let response = await skipStep(progressId);
+
+      if (response.is_tour_complete) {
+        onTourComplete?.(); // Tell MapScreen to show the completion modal
+      } else if (response.new_step_id) {
+        const nextStepIndex = tour.steps.findIndex(
+          (s) => s.id === response.new_step_id?.toString()
+        );
+        if (nextStepIndex !== -1) {
+          setCurrentStepIndex(nextStepIndex);
+          setHighestStepIndex(nextStepIndex);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to navigate next:', error);
+      Alert.alert('Error', 'Could not sync progress with server.');
+    }
+  }, [
+    tour,
+    progressId,
+    currentStepIndex,
+    highestStepIndex,
+    solvedSteps,
+    setCurrentStepIndex,
+    setHighestStepIndex,
+    onTourComplete,
+  ]);
 
   const handleNavigatePrev = useCallback(() => {
     if (currentStepIndex > 0) {
-      setCurrentStepIndex((prev) => prev - 1);
+      setCurrentStepIndex(currentStepIndex - 1);
     }
-  }, [currentStepIndex]);
+  }, [currentStepIndex, setCurrentStepIndex]);
 
-  const handleStepSolved = useCallback((stepId: string) => {
-    setSolvedSteps((prev) => new Set([...prev, stepId]));
-  }, []);
+  const handleStepSolved = useCallback(
+    (stepId: string) => {
+      solveStep(stepId, 15);
+    },
+    [solveStep]
+  );
 
   const handleLocationConfirm = useCallback(
     async (stepId: string, latitude: number, longitude: number) => {
-      try {
-        // TODO: Make API call to backend to verify location
-        // For now, just mark as confirmed locally
-        setLocationConfirmedSteps((prev) => new Set([...prev, stepId]));
-        console.log(`Location confirmed for step ${stepId} at:`, { latitude, longitude });
-      } catch (error) {
-        console.error('Failed to confirm location:', error);
-        throw error;
-      }
+      confirmLocation(stepId);
+      console.log(`Location confirmed for step ${stepId} at:`, { latitude, longitude });
     },
-    []
+    [confirmLocation]
   );
 
   // Slider is anchored to bottom. translateY moves it:
@@ -161,17 +236,16 @@ export default function BottomSlider({
     })
   ).current;
 
+  // We are missing the return early if no tour
+  if (!tour) return null;
+
   return (
     <Animated.View
       style={[
         styles.bottomOverlay,
         {
           maxHeight: screenHeight * Animations.bottomSheet.maxScreenMultiplier,
-          transform: [
-            {
-              translateY: bottomSheetTranslateY,
-            },
-          ],
+          transform: [{ translateY: bottomSheetTranslateY }],
         },
       ]}
       pointerEvents="box-none"
@@ -194,6 +268,7 @@ export default function BottomSlider({
             onStepSolved={handleStepSolved}
             onLocationConfirm={handleLocationConfirm}
             onEndTour={onEndTour}
+            onSkipStep={handleSkip}
           />
         </View>
       </View>

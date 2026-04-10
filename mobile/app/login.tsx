@@ -1,113 +1,350 @@
-import AuthLayout from '@/components/LoginComponents/AuthLayout';
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  Dimensions,
+  TextInput,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { useTranslation } from 'react-i18next';
+
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
-import { authLayoutStyles } from '@/components/LoginComponents/AuthLayout.styles';
-import { useColorTheme } from '@/utils/useColorTheme';
-import { loginHeaderConfig } from '@/components/LoginComponents/AuthLayout.config';
+import BackButton from '@/components/common/BackButton';
 import { login, UserCredentials } from '@/api/users';
-import * as SecureStore from 'expo-secure-store';
-import AuthSubButton from '@/components/LoginComponents/AuthSubButton';
-import { router } from 'expo-router';
-import { logout } from '@/api/auth';
+import { useColorTheme } from '@/utils/useColorTheme';
+import Colors from '@/constants/Colors';
+import { Spacing } from '@/constants/Spacing';
 
-type LoginScreenProps = {
-  navigation?: any;
-};
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEIGHT * 0.36;
 
-export default function LoginScreen({ navigation }: LoginScreenProps) {
-  const theme = useColorTheme();
-  const layoutStyles = authLayoutStyles(theme);
+export default function LoginScreen() {
+  const colorScheme = useColorTheme();
+  const theme = Colors[colorScheme];
+  const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
-  const [username, setUsername] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ username?: string; password?: string; general?: string }>(
     {}
   );
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
+
+  const passwordRef = useRef<TextInput>(null);
+
+  // Entrance animations
+  const heroY = useRef(new Animated.Value(-24)).current;
+  const heroOpacity = useRef(new Animated.Value(0)).current;
+  const cardY = useRef(new Animated.Value(48)).current;
+  const cardOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(heroY, { toValue: 0, duration: 560, useNativeDriver: true }),
+      Animated.timing(heroOpacity, { toValue: 1, duration: 560, useNativeDriver: true }),
+      Animated.timing(cardY, { toValue: 0, duration: 620, delay: 160, useNativeDriver: true }),
+      Animated.timing(cardOpacity, {
+        toValue: 1,
+        duration: 620,
+        delay: 160,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const validate = () => {
     const newErrors: typeof errors = {};
-    if (!username) newErrors.username = 'username is required';
-    if (!password) newErrors.password = 'Password is required';
+    if (!username.trim()) newErrors.username = t('auth.errors.usernameRequired');
+    if (!password.trim()) newErrors.password = t('auth.errors.passwordRequired');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleLogin = async () => {
     if (!validate()) return;
-
     setLoading(true);
     try {
-      const credentials: UserCredentials = {
-        username: username, // username as username bcs backend uses username/password
-        password: password,
-      };
-
-      //alert(`user creds is ${credentials.username}, ${credentials.password}`)
-
+      const credentials: UserCredentials = { username, password };
       const response = await login(credentials);
-      //alert(response)
-
-      // response contains: { access: string, refresh: string }
-      const { access, refresh } = response;
-
-      await SecureStore.setItem('userToken', access);
-      await SecureStore.setItem('refreshToken', refresh);
-      // Do not push but clear the route and then push
+      SecureStore.setItem('userToken', response.access);
+      SecureStore.setItem('refreshToken', response.refresh);
       router.push('/(tabs)/profile');
     } catch (e) {
       console.error(e);
-      // Clear token on login failure
-      await logout();
-      setErrors({ general: 'Login failed. Please try again.' });
+      setErrors({ general: t('auth.errors.loginFailed') });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthLayout>
-      <View style={layoutStyles.headerContainer}>
-        <Text style={layoutStyles.headerTitle}>{loginHeaderConfig.title}</Text>
-        <Text style={layoutStyles.headerSubtitle}>{loginHeaderConfig.subtitle}</Text>
-      </View>
+    <KeyboardAvoidingView
+      style={[styles.root, { backgroundColor: theme.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        style={{ backgroundColor: theme.headerGradientTop }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        {/* ── Hero ─────────────────────────────────────── */}
+        <Animated.View
+          style={[
+            styles.hero,
+            {
+              height: HERO_HEIGHT,
+              paddingTop: insets.top,
+              backgroundColor: theme.headerGradientTop,
+            },
+            { opacity: heroOpacity, transform: [{ translateY: heroY }] },
+          ]}
+        >
+          {/* Back button */}
+          <BackButton
+            color="rgba(255,255,255,0.9)"
+            style={[styles.backButton, { top: insets.top + 12 }]}
+          />
 
-      {errors.general && <Text style={layoutStyles.errorText}>{errors.general}</Text>}
-      <View style={layoutStyles.inputContainer}>
-        <AuthTextInput
-          label="Username"
-          value={username}
-          onChangeText={setUsername}
-          placeholder="Your username"
-          keyboardType="twitter"
-          autoCapitalize="none"
-          error={errors.username}
-        />
+          {/* Branding */}
+          <View style={styles.logoArea}>
+            <View style={styles.iconRing}>
+              <Ionicons name="compass" size={46} color="#FFFFFF" />
+            </View>
+            <Text style={styles.appName}>ODYSSEY</Text>
+            <Text style={styles.tagline}>
+              {t('auth.tagline', { defaultValue: 'Your journey begins here' })}
+            </Text>
+          </View>
+        </Animated.View>
 
-        <AuthTextInput
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Your password"
-          secureTextEntry
-          autoCapitalize="none"
-          error={errors.password}
-        />
+        {/* ── Form card ────────────────────────────────── */}
+        <Animated.View
+          style={[styles.flex, { opacity: cardOpacity, transform: [{ translateY: cardY }] }]}
+        >
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: theme.background,
+                paddingBottom: insets.bottom + Spacing.xxl,
+              },
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: theme.text }]}>
+              {t('auth.welcomeBack', { defaultValue: 'Welcome back' })}
+            </Text>
+            <Text style={[styles.cardSubtitle, { color: theme.subText }]}>
+              {t('auth.welcomeSubtitle')}
+            </Text>
 
-        <AuthButton title="Log In" onPress={handleLogin} loading={loading} />
-        <AuthSubButton
-          title="No Account? Create One"
-          onPress={() => router.push('/register')}
-          loading={loading}
-        />
-        <AuthSubButton
-          title="Forgot Password?"
-          onPress={() => router.push('/forgot-password')}
-          loading={loading}
-        />
-      </View>
-    </AuthLayout>
+            {/* Error banner */}
+            {errors.general && (
+              <View
+                style={[
+                  styles.errorBanner,
+                  { backgroundColor: `${theme.error}12`, borderColor: `${theme.error}35` },
+                ]}
+              >
+                <Ionicons name="alert-circle" size={16} color={theme.error} />
+                <Text style={[styles.errorBannerText, { color: theme.error }]}>
+                  {errors.general}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setErrors((e) => ({ ...e, general: undefined }))}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="close" size={16} color={theme.error} />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Fields */}
+            <View style={styles.inputs}>
+              <AuthTextInput
+                label={t('auth.username')}
+                value={username}
+                onChangeText={(text) => {
+                  setUsername(text);
+                  setErrors((e) => ({ ...e, username: undefined }));
+                }}
+                placeholder={t('auth.usernamePlaceholder')}
+                autoCapitalize="none"
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                error={errors.username}
+              />
+              <AuthTextInput
+                ref={passwordRef}
+                label={t('auth.password')}
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  setErrors((e) => ({ ...e, password: undefined }));
+                }}
+                placeholder={t('auth.passwordPlaceholder')}
+                secureTextEntry
+                showPasswordToggle
+                autoCapitalize="none"
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
+                error={errors.password}
+              />
+            </View>
+
+            {/* Forgot password — right-aligned link */}
+            <TouchableOpacity
+              style={styles.forgotRow}
+              onPress={() => router.push('/forgot-password')}
+              disabled={loading}
+            >
+              <Text style={[styles.forgotText, { color: theme.primary }]}>
+                {t('auth.forgotPassword')}
+              </Text>
+            </TouchableOpacity>
+
+            <AuthButton title={t('auth.login')} onPress={handleLogin} loading={loading} />
+
+            {/* Register inline link */}
+            <View style={styles.registerRow}>
+              <Text style={[styles.registerLabel, { color: theme.subText }]}>
+                {t('auth.noAccountLabel', { defaultValue: "Don't have an account?" })}
+              </Text>
+              <TouchableOpacity onPress={() => router.push('/register')} disabled={loading}>
+                <Text style={[styles.registerLink, { color: theme.primary }]}>
+                  {` ${t('auth.signUp', { defaultValue: 'Sign up' })}`}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Animated.View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  flex: { flex: 1 },
+  scrollContent: { flexGrow: 1 },
+
+  // ── Hero
+  hero: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingBottom: Spacing.xxl + 4,
+  },
+  backButton: {
+    position: 'absolute',
+    left: Spacing.lg,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  logoArea: {
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  iconRing: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.sm,
+  },
+  appName: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 5,
+  },
+  tagline: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.70)',
+    letterSpacing: 0.3,
+    marginTop: 2,
+  },
+
+  // ── Card
+  card: {
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.xxl,
+    flexGrow: 1,
+  },
+  cardTitle: {
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.xl,
+  },
+
+  // ── Error banner
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm + 2,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Spacing.borderRadius,
+    borderWidth: 1,
+    marginBottom: Spacing.lg,
+  },
+  errorBannerText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
+  },
+
+  // ── Inputs
+  inputs: {
+    gap: Spacing.xs,
+  },
+
+  // ── Forgot password
+  forgotRow: {
+    alignSelf: 'flex-end',
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.xl,
+    paddingVertical: 4,
+  },
+  forgotText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // ── Register link
+  registerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: Spacing.xl,
+  },
+  registerLabel: {
+    fontSize: 14,
+  },
+  registerLink: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+});

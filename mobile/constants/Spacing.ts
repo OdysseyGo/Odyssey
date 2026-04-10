@@ -5,5 +5,8 @@ export const Spacing = {
   lg: 16,
   xl: 24,
   xxl: 32,
+  iconButton: 44,
+  iconButtonSmall: 36,
   borderRadius: 16,
+  borderRadiusFull: 999,
 };

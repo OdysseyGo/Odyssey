@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -18,17 +18,35 @@ import {
   LoadingOverlay,
   InfoCard,
   AITourFormData,
-  TOUR_MODE_OPTIONS,
   createEmptyFormData,
 } from '@/components/AITourCreation';
 import { generateAITour } from '@/api/aiTours';
+import { useTranslation } from 'react-i18next';
 
 export default function AITourCreation() {
   const theme = useColorTheme();
   const styles = aiTourCreationStyles(theme);
+  const { t } = useTranslation();
 
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<AITourFormData>(createEmptyFormData());
+
+  const tourModeOptions = useMemo(
+    () => [
+      { value: 'STORY', label: t('aiTour.modes.story'), description: t('aiTour.modes.storyDesc') },
+      {
+        value: 'PUZZLE',
+        label: t('aiTour.modes.puzzle'),
+        description: t('aiTour.modes.puzzleDesc'),
+      },
+      {
+        value: 'HYBRID',
+        label: t('aiTour.modes.hybrid'),
+        description: t('aiTour.modes.hybridDesc'),
+      },
+    ],
+    [t]
+  );
 
   const updateFormData = (updates: Partial<AITourFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -38,7 +56,7 @@ export default function AITourCreation() {
 
   const handleGenerate = async () => {
     if (!isFormValid) {
-      Alert.alert('Missing Information', 'Please provide both a city and a theme for your tour.');
+      Alert.alert(t('aiTour.missingInfoTitle'), t('aiTour.missingInfoMessage'));
       return;
     }
 
@@ -54,21 +72,18 @@ export default function AITourCreation() {
         additional_details: formData.additionalDetails.trim() || undefined,
       });
 
-      Alert.alert('Tour Created! 🎉', response.message, [
+      Alert.alert(t('aiTour.successTitle'), response.message, [
         {
-          text: 'View Tour',
+          text: t('aiTour.viewTour'),
           onPress: () => router.replace(`/tour/${response.tour_id}`),
         },
         {
-          text: 'Create Another',
+          text: t('aiTour.createAnother'),
           style: 'cancel',
         },
       ]);
     } catch (error: any) {
-      Alert.alert(
-        'Generation Failed',
-        error?.message || 'Something went wrong while generating your tour. Please try again.'
-      );
+      Alert.alert(t('aiTour.failedTitle'), error?.message || t('aiTour.failedMessage'));
     } finally {
       setIsLoading(false);
     }
@@ -93,21 +108,21 @@ export default function AITourCreation() {
           <AICreationHeader />
 
           {/* City Input */}
-          <FormInputGroup label="City" required>
+          <FormInputGroup label={t('aiTour.city')} required>
             <FormTextInput
               value={formData.city}
               onChangeText={(text) => updateFormData({ city: text })}
-              placeholder="e.g., Istanbul, Paris, Tokyo"
+              placeholder={t('aiTour.cityPlaceholder')}
               autoCapitalize="words"
             />
           </FormInputGroup>
 
           {/* Theme Input */}
-          <FormInputGroup label="Tour Theme" required>
+          <FormInputGroup label={t('aiTour.theme')} required>
             <FormTextInput
               value={formData.theme}
               onChangeText={(text) => updateFormData({ theme: text })}
-              placeholder="e.g., Haunted History, Hidden Gems"
+              placeholder={t('aiTour.themePlaceholder')}
             />
             <ThemeSuggestions
               onSelect={(selectedTheme) => updateFormData({ theme: selectedTheme })}
@@ -118,10 +133,10 @@ export default function AITourCreation() {
 
           {/* Tour Mode */}
           <View>
-            <Text style={styles.sectionTitle}>Tour Mode</Text>
-            <Text style={styles.sectionSubtitle}>Choose the type of experience</Text>
+            <Text style={styles.sectionTitle}>{t('aiTour.mode')}</Text>
+            <Text style={styles.sectionSubtitle}>{t('aiTour.modeSubtitle')}</Text>
             <FormOptionCard
-              options={TOUR_MODE_OPTIONS}
+              options={tourModeOptions}
               selectedValue={formData.mode}
               onSelect={(value) => updateFormData({ mode: value as AITourFormData['mode'] })}
             />
@@ -130,7 +145,7 @@ export default function AITourCreation() {
           <View style={styles.sectionDivider} />
 
           {/* Duration */}
-          <FormInputGroup label="Estimated Duration">
+          <FormInputGroup label={t('aiTour.duration')}>
             <FormDurationPicker
               value={formData.duration}
               onChange={(duration) => updateFormData({ duration })}
@@ -138,7 +153,7 @@ export default function AITourCreation() {
               max={180}
               step={15}
             />
-            <InfoCard message="Longer tours will have more stops. AI will create approximately one location per 15 minutes." />
+            <InfoCard message={t('aiTour.durationInfo')} />
           </FormInputGroup>
 
           <View style={styles.sectionDivider} />
@@ -152,11 +167,11 @@ export default function AITourCreation() {
           <View style={styles.sectionDivider} />
 
           {/* Additional Details */}
-          <FormInputGroup label="Additional Details (Optional)">
+          <FormInputGroup label={t('aiTour.additionalDetails')}>
             <FormTextArea
               value={formData.additionalDetails}
               onChangeText={(text) => updateFormData({ additionalDetails: text })}
-              placeholder="Any specific preferences? e.g., 'Focus on medieval architecture', 'Include cafes for breaks', 'Avoid steep hills'..."
+              placeholder={t('aiTour.additionalDetailsPlaceholder')}
               numberOfLines={4}
             />
           </FormInputGroup>

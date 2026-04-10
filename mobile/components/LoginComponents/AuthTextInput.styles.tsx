@@ -16,25 +16,38 @@ export const authTextInputStyle = (theme: ThemeName) => {
     },
     label: {
       marginBottom: Spacing.xs,
-      fontSize: 14,
-      fontWeight: '500',
-      color: color.primary,
+      fontSize: 13,
+      fontWeight: '600',
+      color: color.subText,
+      letterSpacing: 0.2,
     },
-    input: {
-      borderWidth: 1,
-      borderColor: color.border,
+    inputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1.5,
+      borderColor: color.borderLight,
       backgroundColor: color.textBackground,
       borderRadius: Spacing.borderRadius,
       paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.lg,
-      fontSize: 16,
-      color: color.primary,
     },
-    inputError: {
+    inputRowFocused: {
+      borderColor: color.primary,
+    },
+    inputRowError: {
       borderColor: color.error,
     },
+    textInput: {
+      flex: 1,
+      paddingVertical: Spacing.lg,
+      fontSize: 16,
+      color: color.text,
+    },
+    toggleButton: {
+      paddingLeft: Spacing.sm,
+      paddingVertical: Spacing.lg,
+    },
     error: {
-      marginTop: 4,
+      marginTop: 5,
       fontSize: 12,
       color: color.error,
     },

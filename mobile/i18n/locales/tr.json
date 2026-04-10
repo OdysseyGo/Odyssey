@@ -1,0 +1,390 @@
+{
+  "auth": {
+    "welcomeTitle": "Hoş geldin, kaşif!",
+    "welcomeSubtitle": "Yolculuğuna başlamak için giriş yap.",
+    "registerTitle": "Maceraya katıl!",
+    "registerSubtitle": "Keşfine başlamak için hesap oluştur.",
+    "resetTitle": "Yolunu mu unuttun?",
+    "resetSubtitle": "Keşfine devam etmek için şifreni sıfırla.",
+    "username": "Kullanıcı Adı",
+    "password": "Şifre",
+    "firstName": "Ad",
+    "lastName": "Soyad",
+    "email": "E-posta",
+    "confirmPassword": "Şifre Tekrar",
+    "newPassword": "Yeni Şifre",
+    "usernamePlaceholder": "Kullanıcı adınız",
+    "passwordPlaceholder": "Şifreniz",
+    "firstNamePlaceholder": "Adınız",
+    "lastNamePlaceholder": "Soyadınız",
+    "emailPlaceholder": "siz@ornek.com",
+    "confirmPasswordPlaceholder": "Şifrenizi onaylayın",
+    "newPasswordPlaceholder": "Yeni şifre",
+    "confirmNewPasswordPlaceholder": "Şifreyi onaylayın",
+    "login": "Giriş Yap",
+    "createAccount": "Hesap Oluştur",
+    "noAccount": "Hesabın yok mu? Oluştur",
+    "forgotPassword": "Şifreni mi unuttun?",
+    "remembered": "Aah, hatırladım!",
+    "alreadyHaveAccount": "Zaten hesabın var mı? Giriş Yap",
+    "verify": "Doğrula",
+    "resetPassword": "Şifre Sıfırla",
+    "updatePassword": "Şifreyi Güncelle",
+    "cancel": "İptal",
+    "errors": {
+      "usernameRequired": "Kullanıcı adı gereklidir",
+      "passwordRequired": "Şifre gereklidir",
+      "firstNameRequired": "Ad gereklidir",
+      "lastNameRequired": "Soyad gereklidir",
+      "emailRequired": "E-posta gereklidir",
+      "emailFormat": "E-posta formatı hatalı. Uzantı en az 2 karakter olmalıdır (.com, .tr vb)",
+      "confirmPasswordRequired": "Şifre tekrarı gereklidir",
+      "passwordsMismatch": "Şifreler eşleşmiyor",
+      "loginFailed": "Giriş başarısız. Lütfen tekrar deneyin.",
+      "registrationFailed": "Kayıt başarısız",
+      "userNotFound": "Kullanıcı bulunamadı",
+      "usernameEmailMismatch": "Kullanıcı adı ve e-posta eşleşmiyor",
+      "somethingWentWrong": "Bir şeyler ters gitti",
+      "bothFieldsRequired": "Her iki alan da gereklidir",
+      "couldNotUpdate": "Şifre güncellenemedi"
+    },
+    "userCreated": "Kullanıcı oluşturuldu!"
+  },
+  "profile": {
+    "notLoggedIn": "Profilini görüntülemek için giriş yapman gerekiyor.",
+    "loginButton": "Giriş yapmak istiyorum!",
+    "logout": "Çıkış Yap",
+    "xp": "XP",
+    "tours": "Turlar",
+    "badges": "Rozetler",
+    "followers": "Takipçiler",
+    "following": "Takip",
+    "noBadges": "Henüz rozet kazanılmadı. Keşfetmeye devam et!",
+    "viewAllBadges": "Tüm Rozetleri Gör",
+    "showLess": "Daha Az Göster",
+    "myTours": "Turlarım",
+    "cancel": "İptal",
+    "tabs": {
+      "published": "Yayınlandı",
+      "drafts": "Taslaklar",
+      "archived": "Arşivlendi"
+    },
+    "emptyPublished": "Henüz yayınlanmış tur yok. Topluluğa katılmak için bir tur yayınla!",
+    "emptyDraft": "Taslak tur yok. Yeni bir tur oluşturmaya başla!",
+    "emptyArchived": "Arşivlenmiş tur yok.",
+    "emptyDefault": "Tur bulunamadı."
+  },
+  "tour": {
+    "loading": "Turlar yükleniyor...",
+    "retry": "Tekrar denemek için dokun",
+    "popular": "Popüler Turlar",
+    "by": "tarafından",
+    "ratingOf": "/5",
+    "continents": {
+      "europe": "Avrupa",
+      "asia": "Asya",
+      "northAmerica": "Kuzey Amerika",
+      "southAmerica": "Güney Amerika",
+      "africa": "Afrika",
+      "oceania": "Okyanusya",
+      "antarctica": "Antarktika",
+      "other": "Diğer"
+    }
+  },
+  "search": {
+    "noToursFound": "Tur bulunamadı",
+    "noToursFoundSub": "Farklı bir destinasyon, tur adı veya rehber aramayı deneyin",
+    "searchFailed": "Arama başarısız",
+    "searching": "Turlar aranıyor...",
+    "results": "Arama Sonuçları",
+    "toursCount": "{{count}} tur",
+    "recentSearch": "Son Aramalar",
+    "clearAll": "Hepsini Temizle"
+  },
+  "tourDetail": {
+    "loading": "Tur yükleniyor...",
+    "retry": "Tekrar denemek için dokun",
+    "startTour": "Tura Başla",
+    "duration": "Süre",
+    "distance": "Mesafe",
+    "difficulty": "Zorluk",
+    "notFound": "Tur bulunamadı",
+    "reviews": "yorum",
+    "aboutThisTour": "Bu tur hakkında",
+    "createdBy": "Oluşturan",
+    "tourStops": "Tur Durakları",
+    "routeMap": "Rota Haritası",
+    "easy": "Kolay",
+    "medium": "Orta",
+    "hard": "Zor"
+  },
+  "tabs": {
+    "settings": "Ayarlar",
+    "map": "Harita",
+    "tours": "Turlar",
+    "profile": "Profil"
+  },
+  "settings": {
+    "language": "Dil",
+    "selectLanguage": "Dil Seç",
+    "languages": {
+      "en": "İngilizce",
+      "tr": "Türkçe"
+    }
+  },
+  "tourId": {
+    "loading": "Yükleniyor...",
+    "error": "Hata",
+    "loginRequired": "Giriş Gerekli",
+    "loginRequiredMessage": "Bir tura başlamak için giriş yapman gerekiyor. Lütfen giriş yap ve tekrar dene.",
+    "cancel": "İptal",
+    "login": "Giriş Yap",
+    "review": "Yorum",
+    "min": "dk",
+    "stops": "durak",
+    "tourInProgressTitle": "Turun devam etmekte",
+    "tourInProgressMessage": "Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et."
+  },
+  "creation": {
+    "continue": "Devam Et",
+    "continueWithCount": "Devam Et ({{count}} konum)",
+    "submit": "Turu Gönder",
+    "submitting": "Gönderiliyor...",
+    "submitTitle": "Turu Gönder",
+    "submitMessage": "Turunuzu inceleme için göndermeye hazır mısınız?",
+    "cancel": "İptal",
+    "submitConfirm": "Gönder",
+    "successTitle": "Başarılı",
+    "successMessage": "Turunuz oluşturuldu!",
+    "ok": "Tamam",
+    "errorTitle": "Hata",
+    "errorMessage": "Tur gönderilemedi. Lütfen tekrar deneyin.",
+    "method": {
+      "title": "Turunuzu Oluşturun",
+      "subtitle": "Tur deneyiminizi nasıl oluşturmak istediğinizi seçin",
+      "personal": "Kişisel Oluşturma",
+      "personalDescription": "Konumları manuel olarak seçin, hikayeler ekleyin ve turunuzun her detayını özelleştirin",
+      "ai": "Yapay Zeka ile Oluşturma",
+      "aiDescription": "Yapay zekanın tercihlerinize göre tur içeriği, hikayeler ve öneriler oluşturmasına izin verin",
+      "skip": "Vazgeçtim, bir tur bulacağım",
+      "comingSoon": "YAKINDA"
+    },
+    "details": {
+      "title": "Tur Detayları",
+      "subtitle": "Turunuz hakkında temel bilgileri girin",
+      "tourTitle": "Tur Başlığı",
+      "tourTitlePlaceholder": "ör. Eski Şehrin Gizli Mücevherleri",
+      "description": "Açıklama",
+      "descriptionPlaceholder": "Turunuzu özel kılan nedir?...",
+      "city": "Şehir",
+      "cityPlaceholder": "ör. İstanbul, Tokyo, Paris",
+      "category": "Kategori",
+      "difficulty": "Zorluk",
+      "tourType": "Tur Türü",
+      "duration": "Tahmini Süre"
+    },
+    "location": {
+      "instructionBanner": "Tur durağı eklemek için haritaya dokunun.",
+      "empty": "Henüz konum eklenmedi.\nİlk durağınızı eklemek için haritaya dokunun!",
+      "tapToAddDetails": "Detay eklemek için dokunun",
+      "deleteTitle": "Konumu Sil",
+      "deleteMessage": "Bu konumu silmek istediğinizden emin misiniz?",
+      "cancel": "İptal",
+      "delete": "Sil",
+      "tourStops": "Tur Durakları",
+      "locationsCount": "{{count}} konum"
+    },
+    "review": {
+      "tourStopsTitle": "Tur Durakları ({{count}})",
+      "title": "Turunuzu İnceleyin",
+      "subtitle": "Göndermeden önce her şeyin doğru olduğundan emin olun",
+      "untitledTour": "Başlıksız Tur",
+      "noDescription": "Açıklama girilmedi."
+    },
+    "stories": {
+      "empty": "Henüz konum eklenmedi.\nGeri dönüp önce bazı konumlar ekleyin.",
+      "title": "Hikayelerinizi Yazın",
+      "subtitle": "Turumuzun her konumu için ilgi çekici bir hikaye ekleyin",
+      "untitledLocation": "Başlıksız Konum",
+      "tapToAddStory": "Bu konum için hikaye eklemek üzere dokun"
+    },
+    "storyEditor": {
+      "locationTitle": "Konum Başlığı *",
+      "locationTitlePlaceholder": "örn., Büyük Çarşı Girişi",
+      "address": "Adres (İsteğe Bağlı)",
+      "addressPlaceholder": "örn., 123 Ana Sokak, İstanbul",
+      "story": "Hikaye *",
+      "storyPlaceholder": "Bu konumun hikayesini anlatın...",
+      "storyHint": "Ziyaretçilerin bu konumda okuyacağı veya duyacağı anlatıyı yazın"
+    },
+    "difficulty": {
+      "easy": "Kolay",
+      "easyDesc": "Her yaş ve kondisyon düzeyine uygundur",
+      "medium": "Orta",
+      "mediumDesc": "Orta düzey yürüyüş, bazı yükseltiler",
+      "hard": "Zor",
+      "hardDesc": "Zorlu arazi veya uzun mesafeler"
+    },
+    "tourType": {
+      "story": "Hikaye Modu",
+      "storyDesc": "Anlatı odaklı tur deneyimi",
+      "puzzle": "Bulmaca Modu",
+      "puzzleDesc": "Her durakta etkileşimli meydan okumalar",
+      "hybrid": "Hibrit Mod",
+      "hybridDesc": "Hikayeler ve bulmacaların karışımı"
+    },
+    "categories": {
+      "history": "Tarih",
+      "nature": "Doğa",
+      "art": "Sanat",
+      "food": "Yemek",
+      "architecture": "Mimari",
+      "adventure": "Macera",
+      "culture": "Kültür",
+      "religious": "Dini",
+      "shopping": "Alışveriş",
+      "nightlife": "Gece Hayatı"
+    },
+    "stats": {
+      "locations": "Konum",
+      "minutes": "Dakika",
+      "difficulty": "Zorluk"
+    },
+    "story": {
+      "coverImage": "Kapak Görseli (İsteğe Bağlı)",
+      "imagePickerTitle": "Görsel Seçici",
+      "imagePickerMessage": "Görsel seçici işlevi expo-image-picker kurulumunu gerektirir.",
+      "ok": "Tamam",
+      "tapToAddImage": "Görsel eklemek için dokunun",
+      "stopOf": "Durak {{current}} / {{total}}",
+      "writingTipsTitle": "💡 Yazım İpuçları",
+      "writingTip1": "Sahneyi kurun: Ziyaretçilerin bu konumda ne göreceğini ve hissedeceğini anlatın.",
+      "writingTip2": "Tarihi bağlam veya ilginç gerçekleri ekleyin.",
+      "writingTip3": "Duyusal detaylar ekleyin: sesler, kokular, dokular.",
+      "writingTip4": "Bu durağı genel tur anlatısıyla ilişkilendirin.",
+      "writingTip5": "İlgi çekici ama kısa tutun (ideal: 200-500 kelime).",
+      "characters": "{{count}} karakter",
+      "saveLocation": "Konumu Kaydet",
+      "previous": "Önceki",
+      "next": "Sonraki",
+      "editLocation": "Konumu Düzenle",
+      "save": "Kaydet"
+    },
+    "puzzle": {
+      "type": "Bulmaca Türü *",
+      "xpReward": "XP Ödülü",
+      "xpPlaceholder": "10",
+      "challenge": "Bulmaca Mücadelesi",
+      "question": "Soru / Meydan Okuma",
+      "questionRequired": "Soru / Meydan Okuma *",
+      "questionPlaceholder": "ör. Kule hangi yılda inşa edildi?",
+      "questionHint": "Kullanıcıların cevaplaması gereken soru.",
+      "options": "Seçenekler (Doğru cevabı işaretleyin)",
+      "optionsRequired": "Seçenekler (Doğru cevabı işaretleyin) *",
+      "optionPlaceholder": "Seçenek {{number}}",
+      "addOption": "Seçenek Ekle",
+      "hintLabel": "İpucu (İsteğe Bağlı)",
+      "hintPlaceholder": "ör. Kapının üstündeki levhaya bakın.",
+      "hintText": "Kullanıcı takılırsa işe yarayacak bir ipucu."
+    },
+    "editLocation": {
+      "header": "Konumu Düzenle",
+      "titleLabel": "Konum Başlığı *",
+      "titlePlaceholder": "ör. Büyük Çarşı Girişi",
+      "addressLabel": "Adres (İsteğe Bağlı)",
+      "addressPlaceholder": "ör. Atpazarı Caddesi, 15, İstanbul",
+      "storyLabel": "Hikaye *",
+      "storyPlaceholder": "Bu konumun hikayesini anlatın...",
+      "storyHint": "Ziyaretçilerin bu konumda okuyacağı veya duyacağı anlatıyı yazın"
+    }
+  },
+  "aiTour": {
+    "city": "Şehir",
+    "cityPlaceholder": "ör. İstanbul, Paris, Tokyo",
+    "theme": "Tur Teması",
+    "themePlaceholder": "ör. Korkunç Tarih, Gizli Mücevherler",
+    "mode": "Tur Modu",
+    "modeSubtitle": "Deneyim türünü seçin",
+    "duration": "Tahmini Süre",
+    "durationInfo": "Daha uzun turların daha fazla durağı olacak. Yapay zeka her 15 dakika için yaklaşık bir konum oluşturacak.",
+    "additionalDetails": "Ek Detaylar (İsteğe Bağlı)",
+    "additionalDetailsPlaceholder": "Özel tercihleriniz var mı? ör. 'Orta çağ mimarisine odaklan', 'Mola için kafeler ekle', 'Dik yokuşlardan kaçın'...",
+    "missingInfoTitle": "Eksik Bilgi",
+    "missingInfoMessage": "Lütfen turunuz için hem bir şehir hem de bir tema girin.",
+    "successTitle": "Tur Oluşturuldu! 🎉",
+    "viewTour": "Turu Görüntüle",
+    "createAnother": "Başka Bir Tane Oluştur",
+    "failedTitle": "Oluşturma Başarısız",
+    "failedMessage": "Turunuz oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
+    "generateButton": "Tur Oluştur",
+    "header": {
+      "title": "Yapay Zeka ile Oluştur",
+      "subtitle": "Hayalinizdeki tur hakkında bize bilgi verin, yapay zeka gerçek konumlar, ilgi çekici hikayeler ve etkileşimli içeriklerle benzersiz bir deneyim tasarlasın."
+    },
+    "loading": {
+      "title": "Turunuz Oluşturuluyor...",
+      "subtitle": "Yapay zeka sizin için en iyi konumları buluyor ve ilgi çekici içerikler hazırlıyor"
+    },
+    "languageSelector": {
+      "title": "İçerik Dili",
+      "subtitle": "Tur içeriği için dili seçin"
+    },
+    "modes": {
+      "story": "Hikaye Modu",
+      "storyDesc": "Tarihi ve tematik hikayeciliğe sahip anlatı odaklı tur deneyimi",
+      "puzzle": "Bulmaca Modu",
+      "puzzleDesc": "Her konumda etkileşimli meydan okumalar ve bilgi soruları",
+      "hybrid": "Hibrit Mod",
+      "hybridDesc": "Her ikisinin en iyisi - ilgi çekici hikayeler ve eğlenceli bulmacalar"
+    }
+  },
+  "tourStep": {
+    "tourProgress": "Tur İlerlemesi",
+    "back": "Geri",
+    "next": "İleri",
+    "finish": "Bitir"
+  },
+  "map": {
+    "noActiveTour": {
+      "title": "Aktif Tur Yok",
+      "subtitle": "Duraklar, bulmacalar ve yol boyunca heyecan verici keşiflerle interaktif harita navigasyonunu görmek için bir tur başlatın!",
+      "browseTours": "Turlara Göz At",
+      "tip": "İpucu: Beğendiğin bir turu bul ve macerana başlamak için \"Tura Başla\"ya dokun!"
+    },
+    "endTour": {
+      "title": "Turdan Çık?",
+      "message": "Çıkmak istediğinizden emin misiniz? Haritaya döneceksiniz ve bu tur tamamlandı olarak işaretlenmeyecek.",
+      "completed": "Tamamlandı",
+      "remaining": "Kalan",
+      "xpEarned": "Kazanılan XP",
+      "stepsRemaining_one": "Hâlâ keşfedecek {{count}} adımın var!",
+      "stepsRemaining_other": "Hâlâ keşfedecek {{count}} adımın var!",
+      "continueTour": "Tura Devam Et",
+      "exitTour": "Turdan Çık"
+    },
+    "tourComplete": {
+      "title": "Tur Tamamlandı!",
+      "subtitle": "{{tourName}} turunu bitirdiniz",
+      "steps": "Adım",
+      "complete": "Tamamlandı",
+      "xpEarned": "+{{xp}} XP Kazandınız!",
+      "done": "Tamam"
+    },
+    "activeTour": {
+      "stepOf": "Adım {{current}} / {{total}}",
+      "end": "Bitir",
+      "skip": "ATLA"
+    }
+  },
+  "friends": {
+    "discoverTitle": "Arkadaş Bul",
+    "discoverSubtitle": "Yeni arkadaşlar ara ve bağlan",
+    "proTipTitle": "Profesyonel İpucu",
+    "proTipDescription": "Arkadaşları kullanıcı adı veya tam adlarıyla bulmak için yazmaya başlayın",
+    "searchPlaceholder": "Kullanıcı adı veya adıyla ara...",
+    "addFriend": "Arkadaş Ekle"
+  },
+  "badges": {
+    "noBadges": "Henüz rozet yok"
+  }
+}

@@ -5,6 +5,7 @@ export type ProfileBadgesContainerProps = {
   title?: string;
   showAll?: boolean;
   maxDisplay?: number;
+  onViewAll?: () => void;
 };
 
 export const exampleProfileBadgesContainer: ProfileBadgesContainerProps = {

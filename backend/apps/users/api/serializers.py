@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from apps.users.models.Admin import Admin
 from apps.users.models.Follow import Follow
 from apps.users.models.User import User
 
@@ -24,6 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
             "user_type",
             "tour_count",
             "rating",
+            "avatar_url",
         ]
         extra_kwargs = {
             "password": {"write_only": True},
@@ -52,16 +52,3 @@ class FollowSerializer(serializers.ModelSerializer):
         if Follow.objects.filter(follower=follower, following=following).exists():
             raise serializers.ValidationError("Already following this user.")
         return attrs
-
-
-class AdminSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Admin
-        fields = [
-            "admin_id",
-            "name",
-            "hashed_password",
-        ]
-        extra_kwargs = {
-            "hashed_password": {"write_only": True},  
-        }
