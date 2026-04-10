@@ -188,15 +188,12 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const apiTour = await getTour(activeProgress.tour.id);
+      const apiTour = await getTour(activeProgress.tour);
       const internalTour = mapApiTourToInternalTour(apiTour);
 
       let currentStepIdx = 0;
       if (activeProgress.current_step) {
-        const targetStepId =
-          typeof activeProgress.current_step === 'object'
-            ? String(activeProgress.current_step.id)
-            : String(activeProgress.current_step);
+        const targetStepId = String(activeProgress.current_step);
 
         currentStepIdx = internalTour.steps.findIndex((s) => s.id === targetStepId);
 
