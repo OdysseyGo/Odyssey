@@ -1,5 +1,5 @@
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Modal, View as RNView, Pressable } from 'react-native';
-import { useState } from 'react';
 import { User, Bell, Shield, Globe, Palette, HelpCircle, Check } from 'lucide-react-native';
 import { Text, View } from '@/components/Themed';
 import { SettingsRowItem } from '@/components/SettingComponents/SettingsRowItem';
@@ -21,33 +21,6 @@ type SettingsGroup = {
   items: SettingsItemConfig[];
 };
 
-import React from 'react';
-import { ViroARScene, ViroText, ViroARSceneNavigator, ViroConstants } from '@reactvision/react-viro';
-
-const HelloWorldScene = () => {
-  return (
-    <ViroARScene>
-      <ViroText 
-        text="Hello Bilkent!" 
-        scale={[.5, .5, .5]} 
-        position={[0, 0, -1]} 
-        style={{fontFamily: 'Arial', fontSize: 30, color: '#ffffff'}} 
-      />
-    </ViroARScene>
-  );
-};
-
-export default () => {
-  return (
-    <ViroARSceneNavigator
-      autofocus={true}
-      initialScene={{ scene: HelloWorldScene }}
-      style={{ flex: 1 }}
-    />
-  );
-};
-
-/*
 export default function TabTwoScreen() {
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
@@ -148,7 +121,7 @@ export default function TabTwoScreen() {
 
       <Modal visible={showLanguageModal} transparent animationType="fade">
         <RNView style={styles.modalOverlay}>
-          <RNView style={[styles.modalCard, { backgroundColor: colors.card }]}>
+          <RNView style={[styles.modalCard, { backgroundColor: colors.foreground }]}> 
             <Text style={[styles.modalTitle, { color: colors.text }]}>
               {t('settings.selectLanguage')}
             </Text>
@@ -224,4 +197,3 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
- */
