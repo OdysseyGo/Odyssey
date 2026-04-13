@@ -1,0 +1,43 @@
+name: Deploy Odyssey
+
+on:
+  push:
+    branches:
+      - main
+      - testing 
+    paths:
+      - 'backend/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Image Tag
+        # If branch is main, use 'latest'. Otherwise, use 'testing'.
+        run: |
+          if [[ ${{ github.ref_name }} == 'main' ]]; then
+            echo "TAG=latest" >> $GITHUB_ENV
+          else
+            echo "TAG=testing" >> $GITHUB_ENV
+          fi
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build and Push
+        run: |
+          docker build -t odyssey-hcf3h4fwgkfudpbj.azurecr.io/odyssey-backend:${{ env.TAG }} ./backend
+          docker push odyssey-hcf3h4fwgkfudpbj.azurecr.io/odyssey-backend:${{ env.TAG }}
+
+      - name: Deploy to Azure
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          containerAppName: odyssey-api
+          resourceGroup: odyssey
+          imageToDeploy: odyssey-hcf3h4fwgkfudpbj.azurecr.io/odyssey-backend:${{ env.TAG }}
+          revisionSuffix: ${{ env.TAG }}-${{ github.run_number }}
