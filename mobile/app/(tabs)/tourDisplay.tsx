@@ -9,6 +9,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TourScrollerComp from '@/components/TourComponents/TourScrollerComp';
@@ -23,7 +24,7 @@ import Colors from '@/constants/Colors';
 import CreateTourButton from '@/components/TourCreation/CreateTourButton';
 import { useTranslation } from 'react-i18next';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ─────────────────────────────────────────────────────────
 // Helpers
@@ -185,6 +186,8 @@ export default function TourDisplay() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  // Tracks the rendered height of the floating header so scroll content starts below it
+  const [headerHeight, setHeaderHeight] = useState(insets.top + 130);
 
   const hasFetchedRef = useRef(false);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -347,86 +350,7 @@ export default function TourDisplay() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
-      {/* ─── Header ──────────────────────────────────────── */}
-      <View
-        style={[
-          styles.pageHeader,
-          {
-            backgroundColor: theme.background,
-            paddingTop: insets.top + Spacing.sm,
-          },
-        ]}
-      >
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.headerEyebrow, { color: theme.subText }]}>
-            {t('tour.headerEyebrow', { defaultValue: 'Ready to explore?' })}
-          </Text>
-          <Text style={[styles.headerHeadline, { color: theme.text }]}>
-            {t('tour.headerTitle', { defaultValue: 'Discover Tours' })}
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.headerIconBtn, { backgroundColor: theme.foreground }]}
-          activeOpacity={0.7}
-          onPress={() => router.push('/search')}
-        >
-          <Ionicons name="search" size={20} color={theme.text} />
-        </TouchableOpacity>
-      </View>
-
-      {/* ─── Category Filter Pills (sticky) ──────────────── */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryRow}
-        style={{ flexShrink: 0, flexGrow: 0 }}
-      >
-        {categories.map((cat) => {
-          const isActive = selectedCategory === cat.key;
-          return (
-            <TouchableOpacity
-              key={cat.key}
-              onPress={() => setSelectedCategory(cat.key)}
-              activeOpacity={0.75}
-              style={[
-                styles.categoryPill,
-                {
-                  backgroundColor: isActive ? theme.primary : theme.foreground,
-                  borderWidth: isActive ? 0 : StyleSheet.hairlineWidth,
-                  borderColor: theme.borderLight,
-                  ...(isActive
-                    ? Platform.select({
-                        ios: {
-                          shadowColor: theme.primary,
-                          shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: 0.35,
-                          shadowRadius: 8,
-                        },
-                        android: { elevation: 6 },
-                      })
-                    : {}),
-                },
-              ]}
-            >
-              <Ionicons
-                name={cat.icon as any}
-                size={14}
-                color={isActive ? theme.white : theme.subText}
-              />
-              <Text
-                style={[
-                  styles.categoryPillText,
-                  { color: isActive ? theme.white : theme.subText },
-                  isActive && { fontWeight: '700' },
-                ]}
-              >
-                {cat.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
+      {/* ─── Main scroll — fills the full screen ─────────── */}
       <ScrollView
         ref={scrollViewRef}
         style={{ flex: 1 }}
@@ -434,7 +358,7 @@ export default function TourDisplay() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
         }
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
+        contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: insets.bottom + 80 }}
       >
         {/* ─── Hero Carousel ─────────────────────────────── */}
         {featuredTours.length > 0 && showFeatured && (
@@ -480,6 +404,86 @@ export default function TourDisplay() {
         )}
       </ScrollView>
 
+      {/* ─── Floating blurred header ─────────────────────── */}
+      <BlurView
+        intensity={90}
+        tint={colorScheme === 'dark' ? 'dark' : 'light'}
+        style={[styles.blurHeader, { paddingTop: insets.top }]}
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
+      >
+        {/* Title row */}
+        <View style={styles.pageHeader}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.headerEyebrow, { color: theme.primary }]}>
+              {t('tour.headerEyebrow', { defaultValue: 'Ready to explore?' })}
+            </Text>
+            <Text style={[styles.headerHeadline, { color: theme.text }]}>
+              {t('tour.headerTitle', { defaultValue: 'Discover Tours' })}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
+            activeOpacity={0.7}
+            onPress={() => router.push('/search')}
+          >
+            <Ionicons name="search" size={20} color={theme.text} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Category pills */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryRow}
+          style={{ flexShrink: 0, flexGrow: 0 }}
+        >
+          {categories.map((cat) => {
+            const isActive = selectedCategory === cat.key;
+            return (
+              <TouchableOpacity
+                key={cat.key}
+                onPress={() => setSelectedCategory(cat.key)}
+                activeOpacity={0.75}
+                style={[
+                  styles.categoryPill,
+                  {
+                    backgroundColor: isActive ? theme.primary : theme.foregroundSecondary,
+                    borderWidth: isActive ? 0 : StyleSheet.hairlineWidth,
+                    borderColor: theme.borderLight,
+                    ...(isActive
+                      ? Platform.select({
+                          ios: {
+                            shadowColor: theme.primary,
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.35,
+                            shadowRadius: 8,
+                          },
+                          android: { elevation: 6 },
+                        })
+                      : {}),
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={cat.icon as any}
+                  size={14}
+                  color={isActive ? theme.white : theme.subText}
+                />
+                <Text
+                  style={[
+                    styles.categoryPillText,
+                    { color: isActive ? theme.white : theme.subText },
+                    isActive && { fontWeight: '700' },
+                  ]}
+                >
+                  {cat.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </BlurView>
+
       <CreateTourButton />
     </View>
   );
@@ -498,24 +502,36 @@ const createStyles = (theme: (typeof Colors)['light']) =>
       padding: Spacing.xl,
     },
 
-    // ─── Header
+    // ─── Blur header wrapper
+    blurHeader: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 10,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.borderLight,
+      backgroundColor: theme.background + 'CC', // ~80% opaque backing for legibility
+    },
+    // ─── Header row
     pageHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: Spacing.xl,
-      paddingBottom: Spacing.sm + 2,
+      paddingTop: Math.max(Spacing.xs, SCREEN_HEIGHT * 0.006),
+      paddingBottom: Math.max(Spacing.xs, SCREEN_HEIGHT * 0.006),
     },
     headerEyebrow: {
-      fontSize: 13,
-      fontWeight: '500',
+      fontSize: Math.min(Math.max(11, SCREEN_HEIGHT * 0.015), 14),
+      fontWeight: '600',
       letterSpacing: 0.2,
-      marginBottom: 2,
+      marginBottom: 1,
     },
     headerHeadline: {
-      fontSize: 27,
+      fontSize: Math.min(Math.max(18, SCREEN_HEIGHT * 0.026), 26),
       fontWeight: '800',
-      letterSpacing: -0.7,
+      letterSpacing: -0.5,
     },
     headerIconBtn: {
       width: 42,
@@ -537,8 +553,8 @@ const createStyles = (theme: (typeof Colors)['light']) =>
     // ─── Category pills
     categoryRow: {
       paddingHorizontal: Spacing.xl,
-      paddingTop: Spacing.md + 2,
-      paddingBottom: Spacing.md,
+      paddingTop: Math.max(Spacing.sm, SCREEN_HEIGHT * 0.008),
+      paddingBottom: Math.max(Spacing.sm, SCREEN_HEIGHT * 0.008),
       gap: Spacing.sm,
     },
     categoryPill: {

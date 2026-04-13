@@ -9,6 +9,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
@@ -138,14 +139,17 @@ export default function FeaturedTourCarousel({
                   </View>
 
                   {/* Bottom info */}
-                  <View style={styles.infoContainer}>
-                    <View style={styles.infoGradient} />
+                  <LinearGradient
+                    colors={['transparent', color.overlay]}
+                    locations={[0, 1]}
+                    style={styles.infoGradient}
+                  >
                     <View style={styles.infoContent}>
                       <Text style={styles.title} numberOfLines={2}>
                         {tour.title}
                       </Text>
                       <View style={styles.authorRow}>
-                        <Ionicons name="person-circle" size={15} color="rgba(255,255,255,0.75)" />
+                        <Ionicons name="person-circle" size={15} color={color.white} />
                         <Text style={styles.author}>{tour.author}</Text>
                       </View>
                       <View style={styles.metaRow}>
@@ -163,7 +167,7 @@ export default function FeaturedTourCarousel({
                         </View>
                       </View>
                     </View>
-                  </View>
+                  </LinearGradient>
                 </View>
               </Pressable>
             </View>

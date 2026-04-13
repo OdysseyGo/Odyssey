@@ -96,7 +96,7 @@ export default function FollowingPage() {
         style={[styles.header, { backgroundColor: colors.primary, paddingTop: insets.top + 8 }]}
       >
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
-          <Ionicons name="chevron-back" size={26} color="#FFFFFF" />
+          <Ionicons name="chevron-back" size={26} color={colors.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('profile.followingTitle', 'Following')}</Text>
         <View style={styles.backButton} />

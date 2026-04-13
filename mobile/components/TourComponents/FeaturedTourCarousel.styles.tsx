@@ -10,7 +10,7 @@ export { CARD_WIDTH, CARD_H_PADDING };
 
 export const featuredTourCarouselStyles = (theme: ThemeName) => {
   const color = Colors[theme];
-  const isDark = theme === 'dark';
+  const isDark = theme === 'dark'; // used for card shadow
 
   return StyleSheet.create({
     container: {
@@ -126,23 +126,16 @@ export const featuredTourCarouselStyles = (theme: ThemeName) => {
       letterSpacing: 0.3,
     },
 
-    // Bottom info — layered gradient look
-    infoContainer: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      paddingTop: 60,
-    },
+    // Bottom info — true gradient from transparent to overlay
     infoGradient: {
       position: 'absolute',
       bottom: 0,
       left: 0,
       right: 0,
-      backgroundColor: 'rgba(0,0,0,0.55)',
+      paddingTop: 80,
+      justifyContent: 'flex-end',
     },
     infoContent: {
-      zIndex: 1,
       paddingHorizontal: Spacing.xl,
       paddingBottom: Spacing.lg + 2,
     },
@@ -163,9 +156,10 @@ export const featuredTourCarouselStyles = (theme: ThemeName) => {
       marginBottom: Spacing.sm + 2,
     },
     author: {
-      color: 'rgba(255,255,255,0.85)',
+      color: color.white,
       fontSize: 13,
       fontWeight: '500',
+      opacity: 0.85,
     },
     metaRow: {
       flexDirection: 'row',

@@ -14,9 +14,9 @@ export default function TourDetailStops({ stops }: TourDetailStopsProps) {
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{t('tourDetail.tourStops')}</Text>
-        <Text style={styles.stopCount}>
-          {stops.length} {stops.length === 1 ? 'stop' : 'stops'}
-        </Text>
+        <View style={styles.stopCountBadge}>
+          <Text style={styles.stopCount}>{stops.length}</Text>
+        </View>
       </View>
 
       {stops.map((stop, index) => {

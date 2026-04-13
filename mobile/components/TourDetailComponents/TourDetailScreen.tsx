@@ -1,10 +1,18 @@
-import { View, ScrollView, ActivityIndicator, Text, Animated } from 'react-native';
+import {
+  View,
+  ScrollView,
+  Text,
+  Animated,
+  TouchableOpacity,
+  Platform,
+  Dimensions,
+} from 'react-native';
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
-import { STAR } from '@/constants/Symbols';
+import { Spacing } from '@/constants/Spacing';
 import { getTour } from '@/api/tours';
 import { TourDetail } from './TourDetail.config';
 import { TourDetailScreenProps, mapApiTourToDetail } from './TourDetailScreen.config';
@@ -16,6 +24,48 @@ import TourDetailDescription from './TourDetailDescription';
 import TourDetailMap from './TourDetailMap';
 import TourDetailStops from './TourDetailStops';
 import TourDetailBottomBar from './TourDetailBottomBar';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// ─────────────────────────────────────────────────────────
+// Shimmer skeleton block
+// ─────────────────────────────────────────────────────────
+
+function ShimmerBlock({
+  width,
+  height,
+  borderRadius = 12,
+  style,
+  color,
+}: {
+  width: number | string;
+  height: number;
+  borderRadius?: number;
+  style?: object;
+  color: string;
+}) {
+  const opacity = useRef(new Animated.Value(0.35)).current;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.7, duration: 750, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.35, duration: 750, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={[
+        { width: width as any, height, borderRadius, backgroundColor: color, opacity },
+        style,
+      ]}
+    />
+  );
+}
 
 interface TourDetailScreenState {
   tour: TourDetail | null;
@@ -59,18 +109,48 @@ export interface TourDetailScreenLoadingProps {
   message?: string;
 }
 
-export function TourDetailScreenLoading({ message }: TourDetailScreenLoadingProps) {
+export function TourDetailScreenLoading({ message: _message }: TourDetailScreenLoadingProps) {
   const theme = useColorTheme();
-  const styles = useMemo(() => tourDetailScreenStyles(theme), [theme]);
   const colors = Colors[theme];
-  const { t } = useTranslation();
+  const shimmer = colors.foregroundSecondary;
 
   return (
-    <View style={[styles.container, styles.centered]}>
-      <ActivityIndicator size="large" color={colors.primary} />
-      <Text style={[styles.loadingText, { color: colors.text }]}>
-        {message ?? t('tourDetail.loading')}
-      </Text>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Cover skeleton */}
+      <ShimmerBlock width={SCREEN_WIDTH} height={460} borderRadius={0} color={shimmer} />
+
+      {/* Content skeleton */}
+      <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, gap: Spacing.md }}>
+        {/* Stats row */}
+        <ShimmerBlock width="100%" height={88} color={shimmer} />
+
+        {/* Author row */}
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: Spacing.md,
+            alignItems: 'center',
+            marginTop: Spacing.xs,
+          }}
+        >
+          <ShimmerBlock width={52} height={52} borderRadius={26} color={shimmer} />
+          <View style={{ gap: Spacing.sm }}>
+            <ShimmerBlock width={72} height={12} borderRadius={6} color={shimmer} />
+            <ShimmerBlock width={140} height={16} borderRadius={6} color={shimmer} />
+          </View>
+        </View>
+
+        {/* Description lines */}
+        <View style={{ gap: Spacing.sm, marginTop: Spacing.xs }}>
+          <ShimmerBlock width={110} height={18} borderRadius={6} color={shimmer} />
+          <ShimmerBlock width="100%" height={13} borderRadius={6} color={shimmer} />
+          <ShimmerBlock width="92%" height={13} borderRadius={6} color={shimmer} />
+          <ShimmerBlock width="76%" height={13} borderRadius={6} color={shimmer} />
+        </View>
+
+        {/* Map block */}
+        <ShimmerBlock width="100%" height={180} color={shimmer} style={{ marginTop: Spacing.xs }} />
+      </View>
     </View>
   );
 }
@@ -87,12 +167,40 @@ export function TourDetailScreenError({ error, onRetry }: TourDetailScreenErrorP
   const { t } = useTranslation();
 
   return (
-    <View style={[styles.container, styles.centered]}>
-      <Ionicons name="alert-circle-outline" size={48} color={colors.icon} />
-      <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
-      <Text style={[styles.retryText, { color: colors.primary }]} onPress={onRetry}>
-        {t('tourDetail.retry')}
-      </Text>
+    <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
+      <View
+        style={[
+          styles.errorCard,
+          { backgroundColor: colors.foreground },
+          Platform.select({
+            ios: {
+              shadowColor: colors.text,
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: 0.08,
+              shadowRadius: 24,
+            },
+            android: { elevation: 8 },
+          }),
+        ]}
+      >
+        <View style={[styles.errorIconWrap, { backgroundColor: `${colors.error}15` }]}>
+          <Ionicons name="cloud-offline-outline" size={36} color={colors.error} />
+        </View>
+        <Text style={[styles.errorTitle, { color: colors.text }]}>
+          {t('tourDetail.errorTitle', { defaultValue: 'Something went wrong' })}
+        </Text>
+        <Text style={[styles.errorText, { color: colors.subText }]}>{error}</Text>
+        <TouchableOpacity
+          style={[styles.retryButton, { backgroundColor: colors.primary }]}
+          onPress={onRetry}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="refresh" size={16} color={colors.white} />
+          <Text style={[styles.retryButtonText, { color: colors.white }]}>
+            {t('tourDetail.retry')}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -134,7 +242,6 @@ export function TourDetailScreenContent({
 }: TourDetailScreenContentProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailScreenStyles(theme), [theme]);
-  const { t } = useTranslation();
 
   return (
     <>
@@ -150,22 +257,8 @@ export function TourDetailScreenContent({
           reviewCount={tour.reviewCount}
         />
 
-        {/* Title + rating below image */}
-        <AnimatedSection delay={60}>
-          <View style={styles.titleSection}>
-            <Text style={styles.tourTitle}>{tour.title}</Text>
-            <View style={styles.ratingRow}>
-              <Text style={styles.star}>{STAR}</Text>
-              <Text style={styles.ratingText}>{tour.rating}</Text>
-              <Text style={styles.reviewCount}>
-                ({tour.reviewCount} {t('tourDetail.reviews')})
-              </Text>
-            </View>
-          </View>
-        </AnimatedSection>
-
         <View style={styles.content}>
-          <AnimatedSection delay={120}>
+          <AnimatedSection delay={80}>
             <TourDetailStats
               duration={tour.duration}
               distance={tour.distance}
@@ -173,19 +266,19 @@ export function TourDetailScreenContent({
             />
           </AnimatedSection>
 
-          <AnimatedSection delay={200}>
+          <AnimatedSection delay={160}>
             <TourDetailAuthor authorAvatar={tour.authorAvatar} authorName={tour.author} />
           </AnimatedSection>
 
-          <AnimatedSection delay={280}>
+          <AnimatedSection delay={240}>
             <TourDetailDescription description={tour.description} tags={tour.tags} />
           </AnimatedSection>
 
-          <AnimatedSection delay={360}>
+          <AnimatedSection delay={320}>
             <TourDetailMap stops={tour.stops} />
           </AnimatedSection>
 
-          <AnimatedSection delay={440}>
+          <AnimatedSection delay={400}>
             <TourDetailStops stops={tour.stops} />
           </AnimatedSection>
 

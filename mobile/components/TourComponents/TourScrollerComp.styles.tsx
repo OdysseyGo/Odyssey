@@ -64,7 +64,7 @@ export const tourScrollerCompStyles = (theme: ThemeName) => {
 
     // ─── List
     listContent: {
-      paddingHorizontal: Spacing.xl,
+      paddingHorizontal: Spacing.md,
       paddingBottom: Spacing.sm,
     },
     separator: {

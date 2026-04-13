@@ -1,5 +1,8 @@
 import { StyleSheet } from 'react-native';
+import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+
+const { white } = Colors.light;
 
 export const styles = StyleSheet.create({
   root: {
@@ -16,7 +19,7 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: white,
     letterSpacing: -0.3,
   },
   backButton: {
@@ -60,7 +63,7 @@ export const rowStyles = StyleSheet.create({
   initials: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: white,
   },
   info: {
     flex: 1,
@@ -76,7 +79,7 @@ export const rowStyles = StyleSheet.create({
   actionButton: {
     paddingHorizontal: 14,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: Spacing.borderRadius,
     borderWidth: 1.5,
     minWidth: 80,
     alignItems: 'center',

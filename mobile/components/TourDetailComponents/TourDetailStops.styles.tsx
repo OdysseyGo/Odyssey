@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
@@ -20,10 +20,16 @@ export const tourDetailStopsStyles = (theme: ThemeName) => {
       fontSize: 18,
       fontWeight: '700',
     },
+    stopCountBadge: {
+      backgroundColor: color.primaryMuted,
+      paddingHorizontal: Spacing.sm + 2,
+      paddingVertical: 3,
+      borderRadius: Spacing.borderRadiusFull,
+    },
     stopCount: {
-      color: color.subText,
+      color: color.primary,
       fontSize: 13,
-      fontWeight: '500',
+      fontWeight: '700',
     },
     stopItem: {
       flexDirection: 'row',
@@ -42,28 +48,37 @@ export const tourDetailStopsStyles = (theme: ThemeName) => {
       justifyContent: 'center',
       alignItems: 'center',
       zIndex: 1,
+      ...Platform.select({
+        ios: {
+          shadowColor: color.primary,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.35,
+          shadowRadius: 6,
+        },
+        android: { elevation: 4 },
+      }),
     },
     stopNumberFirst: {
       width: 38,
       height: 38,
       borderRadius: 19,
       borderWidth: 3,
-      borderColor: color.primary + '30',
+      borderColor: color.primary + '35',
     },
     stopNumberText: {
-      color: '#FFFFFF',
-      fontSize: 14,
-      fontWeight: '700',
+      color: color.white,
+      fontSize: 13,
+      fontWeight: '800',
     },
     connectorLine: {
       flex: 1,
       width: 2,
-      backgroundColor: color.primary + '25',
+      backgroundColor: color.primary + '20',
     },
     connectorLineDashed: {
       flex: 1,
       width: 2,
-      backgroundColor: color.primary + '15',
+      backgroundColor: color.primary + '12',
     },
     // Content column
     stopContent: {

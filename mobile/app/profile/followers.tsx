@@ -37,14 +37,14 @@ function UserRow({ item, theme, onRemove, removing }: FollowersUserRowProps) {
         )}
       </View>
       <TouchableOpacity
-        style={[rowStyles.actionButton, { borderColor: theme.error ?? '#EF4444' }]}
+        style={[rowStyles.actionButton, { borderColor: theme.error }]}
         onPress={() => onRemove(item.id)}
         disabled={removing}
       >
         {removing ? (
-          <ActivityIndicator size="small" color={theme.error ?? '#EF4444'} />
+          <ActivityIndicator size="small" color={theme.error} />
         ) : (
-          <Text style={[rowStyles.actionButtonText, { color: theme.error ?? '#EF4444' }]}>
+          <Text style={[rowStyles.actionButtonText, { color: theme.error }]}>
             {t('profile.removeFollower', 'Remove')}
           </Text>
         )}
@@ -96,7 +96,7 @@ export default function FollowersPage() {
         style={[styles.header, { backgroundColor: colors.primary, paddingTop: insets.top + 8 }]}
       >
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
-          <Ionicons name="chevron-back" size={26} color="#FFFFFF" />
+          <Ionicons name="chevron-back" size={26} color={colors.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('profile.followersTitle', 'Followers')}</Text>
         <View style={styles.backButton} />

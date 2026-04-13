@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef, useEffect } from 'react';
+import React, { useCallback, useState, useRef, useEffect, startTransition } from 'react';
 import {
   View,
   Text,
@@ -381,9 +381,11 @@ export default function Profile() {
     try {
       const user = await getMe();
       const badgesResponse = await getMyBadges();
-      setCurUser(user);
-      setBadgesCount(badgesResponse.count);
-      setBadges(badgesResponse.results);
+      startTransition(() => {
+        setCurUser(user);
+        setBadgesCount(badgesResponse.count);
+        setBadges(badgesResponse.results);
+      });
     } catch (err) {
       console.error('Failed to load profile:', err);
       setFetchError(true);
