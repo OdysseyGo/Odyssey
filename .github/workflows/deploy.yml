@@ -28,7 +28,8 @@ jobs:
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
+      - name: Log in to ACR
+        run: az acr login --name odyssey-hcf3h4fwgkfudpbj
       - name: Build and Push
         run: |
           docker build -t odyssey-hcf3h4fwgkfudpbj.azurecr.io/odyssey-backend:${{ env.TAG }} ./backend
