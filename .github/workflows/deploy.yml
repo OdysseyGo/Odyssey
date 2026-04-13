@@ -39,10 +39,20 @@ jobs:
           docker build -t odyssey-hcf3h4fwgkfudpbj.azurecr.io/odyssey-backend:${{ env.TAG }} ./backend
           docker push odyssey-hcf3h4fwgkfudpbj.azurecr.io/odyssey-backend:${{ env.TAG }}
 
-      - name: Deploy to Azure
-        uses: azure/container-apps-deploy-action@v1
-        with:
-          containerAppName: odyssey-api
-          resourceGroup: odyssey
-          imageToDeploy: odyssey-hcf3h4fwgkfudpbj.azurecr.io/odyssey-backend:${{ env.TAG }}
-          revisionSuffix: ${{ env.TAG }}-${{ github.run_number }}
+      - name: Set deploy metadata
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "TAG=latest" >> $GITHUB_ENV
+            echo "REVISION_SUFFIX=prod-${{ github.run_number }}" >> $GITHUB_ENV
+          else
+            echo "TAG=testing" >> $GITHUB_ENV
+            echo "REVISION_SUFFIX=test-${{ github.run_number }}" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy to Azure Container App
+        run: |
+          az containerapp update \
+            --name odyssey-api \
+            --resource-group odyssey \
+            --image odyssey-hcf3h4fwgkfudpbj.azurecr.io/odyssey-backend:${TAG} \
+            --revision-suffix "${REVISION_SUFFIX}"
