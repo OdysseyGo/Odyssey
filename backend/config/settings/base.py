@@ -11,9 +11,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 from datetime import timedelta  # jwt token lifetime
 from pathlib import Path
-import sys
 
 from dotenv import load_dotenv
 
@@ -30,6 +30,7 @@ load_dotenv(dotenv_path=env_path)
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     import os
+
     env_keys = list(os.environ.keys())
     raise RuntimeError(
         f"SECRET_KEY is {type(SECRET_KEY)}. Total Env Vars found: {len(env_keys)}. "
@@ -39,7 +40,7 @@ DEBUG = os.getenv("DEBUG", "1") == "1"
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # Application definition
 
 INSTALLED_APPS = [
@@ -122,8 +123,8 @@ DATABASES = {
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "odyssey"),
         "HOST": os.getenv("DB_HOST", "db"),
         "PORT": os.getenv("DB_PORT", "5432"),
-        'OPTIONS': {
-            'sslmode': 'require' if os.getenv('DB_HOST') != 'db' else 'disable',
+        "OPTIONS": {
+            "sslmode": "require" if os.getenv("DB_HOST") != "db" else "disable",
         },
     }
 }
@@ -166,10 +167,12 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 csrf_origins = os.getenv("CSRF_TRUSTED_ORIGINS", "")
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins.split(",") if origin.strip()]
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in csrf_origins.split(",") if origin.strip()
+]
 
 # If we are in DEBUG mode, add the local dev URLs automatically
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "True") == "True"
 if DEBUG:
     CSRF_TRUSTED_ORIGINS += [
@@ -207,7 +210,11 @@ else:
     MEDIA_URL = "media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
-default_storage = "storages.backends.s3boto3.S3Boto3Storage" if USE_S3 else "django.core.files.storage.FileSystemStorage"
+default_storage = (
+    "storages.backends.s3boto3.S3Boto3Storage"
+    if USE_S3
+    else "django.core.files.storage.FileSystemStorage"
+)
 
 STORAGES = {
     "default": {
@@ -232,40 +239,40 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
-LOG_LEVEL = os.environ.get('DJANGO_LOG_LEVEL', 'DEBUG').upper()
+LOG_LEVEL = os.environ.get("DJANGO_LOG_LEVEL", "DEBUG").upper()
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
         },
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'stream': sys.stdout,
-            'formatter': 'verbose',
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "stream": sys.stdout,
+            "formatter": "verbose",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': LOG_LEVEL,
+    "root": {
+        "handlers": ["console"],
+        "level": LOG_LEVEL,
     },
-    'loggers': {
+    "loggers": {
         # Catch-all for any Django-specific logs
-        'django': {
-            'handlers': ['console'],
-            'level': LOG_LEVEL,
-            'propagate': False, # Set to False so it doesn't double-print via root
+        "django": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            "propagate": False,  # Set to False so it doesn't double-print via root
         },
         # Specifically catch database queries (if level is DEBUG)
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': LOG_LEVEL,
-            'propagate': False,
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            "propagate": False,
         },
     },
 }
