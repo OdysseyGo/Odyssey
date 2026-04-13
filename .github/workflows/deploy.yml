@@ -29,7 +29,11 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Log in to ACR
-        run: az acr login --name odyssey-hcf3h4fwgkfudpbj
+        uses: docker/login-action@v3
+        with:
+          registry: odyssey-hcf3h4fwgkfudpbj.azurecr.io
+          username: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
+          password: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
       - name: Build and Push
         run: |
           docker build -t odyssey-hcf3h4fwgkfudpbj.azurecr.io/odyssey-backend:${{ env.TAG }} ./backend
