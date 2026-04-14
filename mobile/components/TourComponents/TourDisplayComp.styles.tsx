@@ -3,8 +3,10 @@ import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = (SCREEN_WIDTH - Spacing.lg * 2.5) / 2;
-const CARD_HEIGHT = 280;
+const CARD_WIDTH = (SCREEN_WIDTH - Spacing.xl * 2 - Spacing.md) / 2;
+const CARD_HEIGHT = 255;
+
+export { CARD_WIDTH, CARD_HEIGHT };
 
 export const tourDisplayCompStyles = (theme: ThemeName) => {
   const color = Colors[theme];
@@ -13,223 +15,150 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
   return StyleSheet.create({
     cardWrapper: {
       width: CARD_WIDTH,
-      marginBottom: Spacing.md,
     },
 
     card: {
       width: '100%',
       height: CARD_HEIGHT,
-      backgroundColor: isDark ? color.foreground : color.white,
-      borderRadius: 28,
+      borderRadius: 22,
       overflow: 'hidden',
-      position: 'relative',
+      backgroundColor: color.foreground,
       ...Platform.select({
         ios: {
-          shadowColor: isDark ? color.background : color.primary,
-          shadowOffset: { width: 0, height: 16 },
-          shadowOpacity: isDark ? 0.6 : 0.15,
-          shadowRadius: 32,
+          shadowColor: isDark ? '#000' : color.text,
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: isDark ? 0.5 : 0.18,
+          shadowRadius: 24,
         },
         android: {
-          elevation: 16,
+          elevation: 12,
         },
       }),
     },
 
-    imageContainer: {
-      position: 'relative',
-      width: '100%',
-      height: 160,
-      overflow: 'hidden',
-    },
     image: {
+      ...StyleSheet.absoluteFillObject,
       width: '100%',
       height: '100%',
       resizeMode: 'cover',
     },
-
-    imageGradientTop: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 60,
-      backgroundColor: color.textShadowColor,
+    imagePlaceholder: {
+      backgroundColor: color.foreground,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    imageGradientBottom: {
+
+    // Single scrim — covers the bottom portion cleanly
+    scrim: {
       position: 'absolute',
       bottom: 0,
       left: 0,
       right: 0,
-      height: 80,
-      backgroundColor: color.backgroundBlack,
-    },
-    bookmarkButton: {
-      position: 'absolute',
-      top: 12,
-      left: 12,
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: color.backgroundBlack,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 1.5,
-      borderColor: color.borderLight,
-    },
-    bookmarkButtonActive: {
-      backgroundColor: `${color.primary}40`,
-      borderColor: color.primary,
-      ...Platform.select({
-        ios: {
-          shadowColor: color.primary,
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.6,
-          shadowRadius: 10,
-        },
-      }),
+      height: '25%',
+      backgroundColor: 'rgba(0,0,0,0.52)',
     },
 
+    // Rating badge — glassmorphic
     ratingBadge: {
       position: 'absolute',
-      top: 12,
-      right: 12,
+      top: Spacing.md,
+      right: Spacing.md,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      backgroundColor: color.backgroundBlack,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: `${color.star}4D`,
+      gap: 3,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      borderRadius: 10,
+      borderWidth: 0.5,
+      borderColor: 'rgba(255,255,255,0.15)',
     },
     ratingText: {
       color: color.white,
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: '800',
-      letterSpacing: 0.3,
+      letterSpacing: 0.2,
     },
 
-    durationChip: {
+    // Duration pill
+    durationPill: {
       position: 'absolute',
-      bottom: 12,
-      left: 12,
+      top: Spacing.md,
+      left: Spacing.md,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 5,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
       backgroundColor: color.primary,
-      borderRadius: 20,
+      borderRadius: 10,
       ...Platform.select({
         ios: {
           shadowColor: color.primary,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.5,
-          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.45,
+          shadowRadius: 6,
         },
-        android: {
-          elevation: 6,
-        },
+        android: { elevation: 4 },
       }),
     },
     durationText: {
       color: color.white,
-      fontSize: 12,
-      fontWeight: '700',
-      letterSpacing: 0.2,
-    },
-
-    distanceChip: {
-      position: 'absolute',
-      bottom: 12,
-      right: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      backgroundColor: color.backgroundBlack,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: color.borderLight,
-    },
-    distanceText: {
-      color: color.white,
       fontSize: 11,
-      fontWeight: '600',
+      fontWeight: '700',
     },
 
-    contentContainer: {
-      flex: 1,
-      padding: 14,
-      paddingTop: 14,
-      justifyContent: 'space-between',
-      backgroundColor: isDark ? color.foregroundSecondary : color.foreground,
+    // Info overlay at bottom
+    infoOverlay: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: Spacing.md + 2,
+      paddingTop: Spacing.lg,
     },
 
-    titleContainer: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-    },
     title: {
-      flex: 1,
-      color: color.text,
-      fontSize: 17,
-      fontWeight: '500',
-      lineHeight: 22,
+      color: color.white,
+      fontSize: 15,
+      fontWeight: '700',
+      lineHeight: 20,
       letterSpacing: -0.2,
+      textShadowColor: 'rgba(0,0,0,0.5)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 3,
     },
 
-    bottomRow: {
+    metaRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      marginTop: 8,
-    },
-
-    authorContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      flex: 1,
-    },
-    authorAvatar: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      backgroundColor: color.secondary,
-      justifyContent: 'center',
-      alignItems: 'center',
-      ...Platform.select({
-        ios: {
-          shadowColor: color.secondary,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.4,
-          shadowRadius: 4,
-        },
-      }),
-    },
-    authorText: {
-      flex: 1,
-      color: color.subText,
-      fontSize: 12,
-      fontWeight: '600',
-    },
-
-    reviewsContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      marginTop: 6,
       gap: 4,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      backgroundColor: isDark ? `${color.primary}1F` : `${color.primary}14`,
-      borderRadius: 12,
     },
-    reviewsText: {
-      color: color.primary,
-      fontSize: 12,
+    metaText: {
+      color: 'rgba(255,255,255,0.75)',
+      fontSize: 11,
+      fontWeight: '500',
+    },
+    metaDot: {
+      width: 3,
+      height: 3,
+      borderRadius: 1.5,
+      backgroundColor: 'rgba(255,255,255,0.4)',
+    },
+    stepsChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      marginLeft: 'auto',
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      backgroundColor: 'rgba(255,255,255,0.15)',
+      borderRadius: 8,
+    },
+    stepsText: {
+      color: 'rgba(255,255,255,0.9)',
+      fontSize: 10,
       fontWeight: '700',
     },
   });

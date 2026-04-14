@@ -1,6 +1,7 @@
 // app/tour/[id].tsx
-import { Stack, useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { Alert } from 'react-native';
+import { useState } from 'react';
 import {
   TourDetailScreen,
   TourDetailScreenLoading,
@@ -13,16 +14,16 @@ import { getTour } from '@/api/tours';
 import { isLoggedIn } from '@/api/auth';
 import { useTranslation } from 'react-i18next';
 
+import { createTourProgress, getInProgressTour } from '@/api/tourProgress';
+
 export default function TourDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { tour, loading, error, fetchTour } = useTourDetailScreen(id || '');
   const { startTour } = useActiveTour();
   const { t } = useTranslation();
+  const [starting, setStarting] = useState(false);
 
   const handleStartTour = async () => {
-    console.log('Starting tour:', id);
-
-    // Check if user is logged in
     const loggedIn = await isLoggedIn();
     if (!loggedIn) {
       Alert.alert(t('tourId.loginRequired'), t('tourId.loginRequiredMessage'), [
@@ -32,44 +33,56 @@ export default function TourDetailPage() {
       return;
     }
 
-    try {
-      // Fetch fresh tour data with steps and puzzles
-      if (id) {
-        const tourData = await getTour(parseInt(id, 10));
-        console.log('Tour data:', tourData);
+    // Then check if user has an active tour
+    const activeProgress = await getInProgressTour();
 
-        // Start the tour in context (this will map API data to internal format)
-        startTour(tourData);
-        // Navigate to the map tab
+    if (activeProgress && activeProgress.id) {
+      Alert.alert(
+        t('tourId.tourInProgressTitle', 'Tour in Progress'),
+        t(
+          'tourId.tourInProgressMessage',
+          'You already have an active tour! Please finish or quit it before starting a new one.'
+        )
+      );
+      return;
+    }
+
+    try {
+      if (id) {
+        const tourIdNum = parseInt(id, 10);
+        const tourData = await getTour(tourIdNum);
+        const progressResponse = await createTourProgress({ tour_id: tourIdNum });
+        startTour(tourData, progressResponse.id);
         router.replace('/(tabs)/map');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to start tour:', err);
+
+      // Check if the backend blocked us because a tour is already active
+      if (err.response?.data?.active_tour_id) {
+        Alert.alert(
+          t('tourId.tourInProgressTitle', 'Tour in Progress'),
+          t(
+            'tourId.tourInProgressMessage',
+            'You already have an active tour! Please finish or quit it before starting a new one.'
+          )
+        );
+      } else {
+        Alert.alert(
+          t('tourId.errorTitle', 'Error'),
+          t('tourId.errorMessage', 'Could not start the tour. Please try again.')
+        );
+      }
     }
   };
 
   if (loading) {
-    return (
-      <>
-        <Stack.Screen options={{ title: t('tourId.loading') }} />
-        <TourDetailScreenLoading />
-      </>
-    );
+    return <TourDetailScreenLoading />;
   }
 
   if (error || !tour) {
-    return (
-      <>
-        <Stack.Screen options={{ title: t('tourId.error') }} />
-        <TourDetailScreenError error={error || 'Tour not found'} onRetry={fetchTour} />
-      </>
-    );
+    return <TourDetailScreenError error={error || 'Tour not found'} onRetry={fetchTour} />;
   }
 
-  return (
-    <>
-      <Stack.Screen options={{ title: tour.title }} />
-      <TourDetailScreenContent tour={tour} onStartTour={handleStartTour} />
-    </>
-  );
+  return <TourDetailScreenContent tour={tour} onStartTour={handleStartTour} starting={starting} />;
 }

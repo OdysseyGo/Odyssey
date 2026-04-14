@@ -1,5 +1,6 @@
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
 import { useMemo, useState, useCallback, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 
 import getStyles from './MapScreen.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -11,47 +12,46 @@ import { getVisibleMarkers, getVisibleRoute } from '../TourStepComponents/TourNa
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import Colors from '@/constants/Colors';
 
+import { getTourProgress, deleteTourProgress, skipStep } from '@/api/tourProgress';
+import { number } from 'react-i18next/icu.macro';
+
 export default function MapScreen() {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const colors = Colors[theme];
 
-  // Active tour context
   const {
     tour,
     isActive,
+    progressId,
     currentStepIndex,
     solvedSteps,
     earnedXP,
-    setCurrentStepIndex,
-    solveStep,
-    confirmLocation,
     endTour,
-    resetProgress,
+    resumeActiveTour,
   } = useActiveTour();
 
-  // Local state for modals
   const [showEndConfirmModal, setShowEndConfirmModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [localSolvedSteps, setLocalSolvedSteps] = useState<Set<string>>(new Set());
+  const [finalXP, setFinalXP] = useState<number>(0);
 
-  // Merge context solved steps with local for UI updates
-  const mergedSolvedSteps = useMemo(() => {
-    const merged = new Set(solvedSteps);
-    localSolvedSteps.forEach((id) => merged.add(id));
-    return merged;
-  }, [solvedSteps, localSolvedSteps]);
+  useFocusEffect(
+    useCallback(() => {
+      resumeActiveTour();
 
-  // Calculate visible markers and routes for active tour
+      return () => {};
+    }, [resumeActiveTour])
+  );
+
   const visibleMarkers = useMemo(() => {
     if (!tour || !isActive) return [];
-    return getVisibleMarkers(tour, currentStepIndex, mergedSolvedSteps);
-  }, [tour, isActive, currentStepIndex, mergedSolvedSteps]);
+    return getVisibleMarkers(tour, currentStepIndex, solvedSteps);
+  }, [tour, isActive, currentStepIndex, solvedSteps]);
 
   const visibleRoute = useMemo(() => {
     if (!tour || !isActive) return [];
-    return getVisibleRoute(tour, currentStepIndex, mergedSolvedSteps);
-  }, [tour, isActive, currentStepIndex, mergedSolvedSteps]);
+    return getVisibleRoute(tour, currentStepIndex, solvedSteps);
+  }, [tour, isActive, currentStepIndex, solvedSteps]);
 
   const initialRegion = useMemo(() => {
     if (!tour || !isActive || tour.steps.length === 0) {
@@ -71,36 +71,40 @@ export default function MapScreen() {
     };
   }, [tour, isActive]);
 
-  const handleCurrentStepChange = useCallback(
-    (stepIndex: number) => {
-      setCurrentStepIndex(stepIndex);
-    },
-    [setCurrentStepIndex]
-  );
+  // This gets called only when the finish button is pressed on the final step
+  const handleTourComplete = useCallback(async () => {
+    if (progressId) {
+      try {
+        const progress = await getTourProgress(progressId);
+        setFinalXP(progress.total_xp);
+      } catch (error) {
+        console.error('Failed to fetch final tour progress:', error);
+        setFinalXP(earnedXP);
+      }
+    } else {
+      setFinalXP(earnedXP);
+    }
 
-  const handleSolvedStepsChange = useCallback(
-    (newSolvedSteps: Set<string>) => {
-      setLocalSolvedSteps(newSolvedSteps);
-      // Sync with context - find newly solved steps and add XP
-      newSolvedSteps.forEach((stepId) => {
-        if (!solvedSteps.has(stepId)) {
-          solveStep(stepId, 15); // Award 15 XP per solved puzzle
-        }
-      });
-    },
-    [solvedSteps, solveStep]
-  );
+    setShowCompleteModal(true);
+  }, [progressId, earnedXP]);
 
   const handleEndTourPress = useCallback(() => {
     setShowEndConfirmModal(true);
   }, []);
 
-  const handleConfirmEndTour = useCallback(() => {
+  const handleConfirmEndTour = useCallback(async () => {
     setShowEndConfirmModal(false);
-    // User confirmed they want to exit - just end the tour without completion modal
-    // Tour is NOT completed, user is just exiting early
-    endTour();
-  }, [endTour]);
+
+    if (!progressId) return;
+    try {
+      await deleteTourProgress({
+        id: Number(progressId),
+      });
+      endTour();
+    } catch (error) {
+      console.error('Failed to abort tour on the backend:', error);
+    }
+  }, [endTour, progressId]);
 
   const handleCancelEndTour = useCallback(() => {
     setShowEndConfirmModal(false);
@@ -111,24 +115,6 @@ export default function MapScreen() {
     endTour();
   }, [endTour]);
 
-  // Effect to check for tour completion when all puzzles are solved and on last step
-  useEffect(() => {
-    if (!tour || showCompleteModal) return;
-
-    const totalPuzzles = tour.steps.filter((s) => s.type === 'puzzle').length;
-    const solvedPuzzles = mergedSolvedSteps.size;
-
-    // Check if on last step and all puzzles solved (or no puzzles for story tours)
-    if (currentStepIndex === tour.steps.length - 1 && solvedPuzzles >= totalPuzzles) {
-      // All puzzles solved (or no puzzles) and on last step - show completion modal after a short delay
-      const timer = setTimeout(() => {
-        setShowCompleteModal(true);
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-  }, [tour, currentStepIndex, mergedSolvedSteps, showCompleteModal]);
-
-  // Default region (e.g., Istanbul)
   const defaultRegion = useMemo(
     () => ({
       latitude: 41.0082,
@@ -162,16 +148,15 @@ export default function MapScreen() {
       {/* Bottom Navigation Slider */}
       <BottomSlider
         tour={tour}
-        onCurrentStepChange={handleCurrentStepChange}
-        onSolvedStepsChange={handleSolvedStepsChange}
         onEndTour={handleEndTourPress}
+        onTourComplete={handleTourComplete}
       />
 
       {/* End Tour Confirmation Modal */}
       <EndTourConfirmModal
         visible={showEndConfirmModal}
         earnedXP={earnedXP}
-        completedSteps={mergedSolvedSteps.size}
+        completedSteps={solvedSteps.size}
         totalSteps={tour.steps.length}
         onConfirm={handleConfirmEndTour}
         onCancel={handleCancelEndTour}
@@ -181,8 +166,8 @@ export default function MapScreen() {
       <TourCompleteModal
         visible={showCompleteModal}
         tour={tour}
-        earnedXP={earnedXP}
-        completedSteps={mergedSolvedSteps.size}
+        earnedXP={finalXP}
+        completedSteps={solvedSteps.size}
         totalSteps={tour.steps.length}
         onClose={handleCloseCompleteModal}
       />

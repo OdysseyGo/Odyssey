@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 from datetime import timedelta  # jwt token lifetime
 from pathlib import Path
 
@@ -28,14 +29,18 @@ load_dotenv(dotenv_path=env_path)
 # SECURITY WARNING: don't run with debug turned on in production!
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
+    import os
+
+    env_keys = list(os.environ.keys())
     raise RuntimeError(
-        "SECRET_KEY environment variable is not set. Application cannot start without a secret key."
+        f"SECRET_KEY is {type(SECRET_KEY)}. Total Env Vars found: {len(env_keys)}. "
+        f"Is 'SECRET_KEY' in keys? {'SECRET_KEY' in env_keys}"
     )
 DEBUG = os.getenv("DEBUG", "1") == "1"
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
-
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # Application definition
 
 INSTALLED_APPS = [
@@ -63,6 +68,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -117,6 +123,9 @@ DATABASES = {
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "odyssey"),
         "HOST": os.getenv("DB_HOST", "db"),
         "PORT": os.getenv("DB_PORT", "5432"),
+        "OPTIONS": {
+            "sslmode": "require" if os.getenv("DB_HOST") != "db" else "disable",
+        },
     }
 }
 
@@ -151,13 +160,31 @@ USE_I18N = True
 
 USE_TZ = True
 
-CORS_ALLOW_ALL_ORIGINS = True  # DEV only
-CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # DEV only
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8081",  # Typical Expo/React Native local port
+    "http://127.0.0.1:8081",
+]
+
+csrf_origins = os.getenv("CSRF_TRUSTED_ORIGINS", "")
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in csrf_origins.split(",") if origin.strip()
+]
+
+# If we are in DEBUG mode, add the local dev URLs automatically
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "True") == "True"
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS += [
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # AWS S3 Configurations
 USE_S3 = os.getenv("USE_S3", "False") == "True"
@@ -177,21 +204,27 @@ if USE_S3:
         False  # Generate clean public URLs (requires public bucket policy)
     )
 
-    # Define standard Media storage class location (Django 5.1+ requires STORAGES dict)
-    STORAGES = {
-        "default": {
-            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-        },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    }
     MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
 else:
     # Local Storage fallback for local development (if USE_S3 is not True)
     MEDIA_URL = "media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
+default_storage = (
+    "storages.backends.s3boto3.S3Boto3Storage"
+    if USE_S3
+    else "django.core.files.storage.FileSystemStorage"
+)
+
+STORAGES = {
+    "default": {
+        "BACKEND": default_storage,
+    },
+    "staticfiles": {
+        # WhiteNoise is great for local 'DEBUG=False' testing too!
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -204,4 +237,42 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
+}
+
+LOG_LEVEL = os.environ.get("DJANGO_LOG_LEVEL", "DEBUG").upper()
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "stream": sys.stdout,
+            "formatter": "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": LOG_LEVEL,
+    },
+    "loggers": {
+        # Catch-all for any Django-specific logs
+        "django": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            "propagate": False,  # Set to False so it doesn't double-print via root
+        },
+        # Specifically catch database queries (if level is DEBUG)
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            "propagate": False,
+        },
+    },
 }
