@@ -7,6 +7,7 @@ import AddFriendsModalHeader from './AddFriendsModalHeader';
 import AddFriendsSearchBar from './AddFriendsSearchBar';
 import AddFriendsModalProTip from './AddFriendsModalProTip';
 import AddFriendsModalActions from './AddFriendsModalActions';
+import AddFriendsModalList from './AddFriendsModalList';
 
 export default function AddFriendsModal({
   visible,
@@ -58,6 +59,7 @@ export default function AddFriendsModal({
               searchFocused={searchFocused}
               onSearchFocus={onSearchFocus}
             />
+            <AddFriendsModalList searchTextVal={searchText} />
             <AddFriendsModalProTip />
             <AddFriendsModalActions onCancel={onClose} />
           </View>

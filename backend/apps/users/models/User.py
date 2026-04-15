@@ -17,7 +17,7 @@ class User(AbstractUser):
     # (id, username/first_name/last_name, password)
 
     xp = models.IntegerField(default=0)
-    follow_count = models.IntegerField(default=0)
+    following_count = models.IntegerField(default=0)
     follower_count = models.IntegerField(default=0)
     credit = models.IntegerField(default=0)
     level = models.IntegerField(default=1)

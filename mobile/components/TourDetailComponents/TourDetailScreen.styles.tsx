@@ -14,54 +14,50 @@ export const tourDetailScreenStyles = (theme: ThemeName) => {
       paddingHorizontal: Spacing.lg,
       paddingTop: Spacing.lg,
     },
-    titleSection: {
-      paddingHorizontal: Spacing.lg,
-      paddingTop: Spacing.lg,
-      paddingBottom: Spacing.xs,
-    },
-    tourTitle: {
-      color: color.text,
-      fontSize: 26,
-      fontWeight: '800',
-      letterSpacing: -0.5,
-      marginBottom: Spacing.sm,
-    },
-    ratingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.xs,
-    },
-    star: {
-      color: color.star,
-      fontSize: 15,
-    },
-    ratingText: {
-      color: color.text,
-      fontSize: 15,
-      fontWeight: '700',
-    },
-    reviewCount: {
-      color: color.subText,
-      fontSize: 13,
-    },
     centered: {
       justifyContent: 'center',
       alignItems: 'center',
+      padding: Spacing.xl,
     },
-    loadingText: {
-      marginTop: Spacing.md,
-      fontSize: 16,
+    // ─── Error card
+    errorCard: {
+      alignItems: 'center',
+      padding: Spacing.xxl,
+      borderRadius: 26,
+      gap: Spacing.md,
+      maxWidth: 300,
+      width: '100%',
+    },
+    errorIconWrap: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: Spacing.xs,
+    },
+    errorTitle: {
+      fontSize: 19,
+      fontWeight: '800',
+      letterSpacing: -0.3,
     },
     errorText: {
-      marginTop: Spacing.md,
-      fontSize: 16,
+      fontSize: 14,
       textAlign: 'center',
-      paddingHorizontal: Spacing.xl,
+      lineHeight: 21,
     },
-    retryText: {
-      marginTop: Spacing.md,
-      fontSize: 16,
-      fontWeight: '600',
+    retryButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
+      paddingHorizontal: Spacing.xl,
+      paddingVertical: Spacing.md,
+      borderRadius: Spacing.borderRadiusFull,
+      marginTop: Spacing.xs,
+    },
+    retryButtonText: {
+      fontSize: 15,
+      fontWeight: '700',
     },
     bottomSpacer: {
       height: 120,

@@ -1,4 +1,5 @@
 import { View, Text, Image, Pressable, Animated } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { TourDisplayProps } from './TourDisplayComp.config';
 import { tourDisplayCompStyles } from './TourDisplayComp.styles';
@@ -62,8 +63,12 @@ export default function TourDisplayComp({
           style={styles.image}
         />
 
-        {/* Bottom scrim for text readability */}
-        <View style={styles.scrim} />
+        {/* Bottom gradient for text readability */}
+        <LinearGradient
+          colors={['transparent', color.overlay]}
+          locations={[0, 1]}
+          style={styles.gradient}
+        />
 
         {/* Duration pill — top left */}
         <View style={styles.durationPill}>
@@ -86,7 +91,6 @@ export default function TourDisplayComp({
             <Text style={styles.metaText} numberOfLines={1}>
               {author}
             </Text>
-            <View style={styles.metaDot} />
             <View style={styles.stepsChip}>
               <Ionicons name="footsteps" size={9} color="rgba(255,255,255,0.9)" />
               <Text style={styles.stepsText}>{length}</Text>

@@ -72,7 +72,15 @@
     "emptyPublished": "No published tours yet. Publish a tour to share it with the community!",
     "emptyDraft": "No draft tours. Start creating a new tour!",
     "emptyArchived": "No archived tours.",
-    "emptyDefault": "No tours found."
+    "emptyDefault": "No tours found.",
+    "followersTitle": "Followers",
+    "followingTitle": "Following",
+    "followersEmpty": "No followers yet",
+    "followingEmpty": "Not following anyone yet",
+    "followersError": "Could not load followers",
+    "followingError": "Could not load following",
+    "unfollow": "Unfollow",
+    "removeFollower": "Remove"
   },
   "tour": {
     "loading": "Loading tours...",

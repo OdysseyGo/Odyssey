@@ -3,7 +3,7 @@ import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = (SCREEN_WIDTH - Spacing.xl * 2 - Spacing.md) / 2;
+const CARD_WIDTH = (SCREEN_WIDTH - Spacing.md * 2 - Spacing.md) / 2;
 const CARD_HEIGHT = 255;
 
 export { CARD_WIDTH, CARD_HEIGHT };
@@ -48,14 +48,12 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
       justifyContent: 'center',
     },
 
-    // Single scrim — covers the bottom portion cleanly
-    scrim: {
+    gradient: {
       position: 'absolute',
       bottom: 0,
       left: 0,
       right: 0,
-      height: '25%',
-      backgroundColor: 'rgba(0,0,0,0.52)',
+      height: '65%',
     },
 
     // Rating badge — glassmorphic
@@ -139,12 +137,7 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
       color: 'rgba(255,255,255,0.75)',
       fontSize: 11,
       fontWeight: '500',
-    },
-    metaDot: {
-      width: 3,
-      height: 3,
-      borderRadius: 1.5,
-      backgroundColor: 'rgba(255,255,255,0.4)',
+      flexShrink: 1,
     },
     stepsChip: {
       flexDirection: 'row',

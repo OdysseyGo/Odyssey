@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef, useEffect } from 'react';
+import React, { useCallback, useState, useRef, useEffect, startTransition } from 'react';
 import {
   View,
   Text,
@@ -367,43 +367,40 @@ export default function Profile() {
     extrapolate: 'clamp',
   });
 
+  const refreshProfile = useCallback(async () => {
+    const token = await getAccessToken();
+
+    if (!token) {
+      setHasToken(false);
+      setLoading(false);
+      return;
+    }
+
+    setHasToken(true);
+    setFetchError(false);
+    try {
+      const user = await getMe();
+      const badgesResponse = await getMyBadges();
+      startTransition(() => {
+        setCurUser(user);
+        setBadgesCount(badgesResponse.count);
+        setBadges(badgesResponse.results);
+      });
+    } catch (err) {
+      console.error('Failed to load profile:', err);
+      setFetchError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
-      let isActive = true;
-      setLoading(true);
-
-      const fetchProfile = async () => {
-        const token = await getAccessToken();
-
-        if (!token) {
-          setHasToken(false);
-          setLoading(false);
-          return;
-        }
-
-        setHasToken(true);
-        setFetchError(false);
-        try {
-          const user = await getMe();
-          const badgesResponse = await getMyBadges();
-
-          if (isActive) {
-            setCurUser(user);
-            setBadgesCount(badgesResponse.count);
-            setBadges(badgesResponse.results);
-          }
-        } catch (err) {
-          console.error('Failed to load profile:', err);
-          if (isActive) setFetchError(true);
-        } finally {
-          if (isActive) setLoading(false);
-        }
-      };
-
-      fetchProfile();
-      return () => {
-        isActive = false;
-      };
+      // Only show full skeleton on initial load (no existing data)
+      if (!curUser) {
+        setLoading(true);
+      }
+      refreshProfile();
     }, [retryKey])
   );
 
@@ -484,7 +481,7 @@ export default function Profile() {
     tours: curUser.tour_count,
     badges: badgesCount,
     followers: curUser.follower_count,
-    following: curUser.follow_count,
+    following: curUser.following_count,
   };
 
   const formattedBadges = badges.map((badge) => ({
@@ -495,6 +492,19 @@ export default function Profile() {
     unlocked: true,
     earnedDate: badge.created_at,
   }));
+
+  const handleFollowersPress = () => {
+    router.push({ pathname: '/profile/followers', params: { userId: curUser.id.toString() } });
+  };
+
+  const handleFollowingPress = () => {
+    router.push({ pathname: '/profile/following', params: { userId: curUser.id.toString() } });
+  };
+
+  const handleBadgesPress = () => {
+    //router.push({pathname: '/profile/badges'});
+    alert('deneme');
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -526,7 +536,11 @@ export default function Profile() {
         <ProfileHeaderComp {...profileHeader} scrollY={scrollY} />
 
         {/* ─── Stats (overlaps header) ─────────────── */}
-        <ProfileStatsComp {...profileStats} />
+        <ProfileStatsComp
+          {...profileStats}
+          onFollowersPress={handleFollowersPress}
+          onFollowingPress={handleFollowingPress}
+        />
 
         {/* ─── Actions ─────────────────────────────── */}
         <View style={styles.actionsRow}>
@@ -553,7 +567,10 @@ export default function Profile() {
       {/* ─── Modals ────────────────────────────────── */}
       <AddFriendsModal
         visible={showAddFriendModal}
-        onClose={() => setShowAddFriendModal(false)}
+        onClose={() => {
+          setShowAddFriendModal(false);
+          refreshProfile();
+        }}
         searchText={searchText}
         onSearchChange={setSearchText}
         searchFocused={searchFocused}

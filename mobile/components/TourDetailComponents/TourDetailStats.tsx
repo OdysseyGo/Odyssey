@@ -14,33 +14,35 @@ export default function TourDetailStats({ duration, distance, difficulty }: Tour
   const colors = Colors[theme];
   const { t } = useTranslation();
 
+  const difficultyColor = getDifficultyColor(difficulty, theme);
+
   return (
     <View style={styles.statsRow}>
-      <View style={styles.statItem}>
-        <Ionicons name="time-outline" size={22} color={colors.primary} style={styles.statIcon} />
+      <View style={styles.statCard}>
+        <Ionicons name="time-outline" size={24} color={colors.primary} style={styles.statIcon} />
         <Text style={styles.statValue}>{duration}</Text>
         <Text style={styles.statLabel}>{t('tourDetail.duration')}</Text>
       </View>
-      <View style={styles.statDivider} />
-      <View style={styles.statItem}>
+
+      <View style={styles.statCard}>
         <Ionicons
           name="navigate-outline"
-          size={22}
+          size={24}
           color={colors.primary}
           style={styles.statIcon}
         />
         <Text style={styles.statValue}>{distance}</Text>
         <Text style={styles.statLabel}>{t('tourDetail.distance')}</Text>
       </View>
-      <View style={styles.statDivider} />
-      <View style={styles.statItem}>
+
+      <View style={[styles.statCard, { borderBottomWidth: 3, borderBottomColor: difficultyColor }]}>
         <Ionicons
           name="trending-up-outline"
-          size={22}
-          color={getDifficultyColor(difficulty, theme)}
+          size={24}
+          color={difficultyColor}
           style={styles.statIcon}
         />
-        <Text style={[styles.statValue, { color: getDifficultyColor(difficulty, theme) }]}>
+        <Text style={[styles.statValue, { color: difficultyColor }]}>
           {t(`tourDetail.${difficulty.toLowerCase()}`)}
         </Text>
         <Text style={styles.statLabel}>{t('tourDetail.difficulty')}</Text>
