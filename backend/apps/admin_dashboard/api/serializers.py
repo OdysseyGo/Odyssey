@@ -47,7 +47,7 @@ class AdminUserDetailSerializer(serializers.ModelSerializer):
             "xp",
             "level",
             "country",
-            "follow_count",
+            "following_count",
             "follower_count",
             "credit",
             "tour_count",

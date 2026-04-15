@@ -22,7 +22,7 @@ interface UserData {
   xp: number;
   level: number;
   date_joined: string;
-  follow_count: number;
+  following_count: number;
   follower_count: number;
   tours_created_count: number;
   tours_completed_count: number;
@@ -216,7 +216,7 @@ export default function UserDetail() {
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Following</dt>
-              <dd className="font-semibold">{user.follow_count}</dd>
+              <dd className="font-semibold">{user.following_count}</dd>
             </div>
           </dl>
         </Card>
