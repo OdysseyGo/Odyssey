@@ -1,7 +1,9 @@
 from rest_framework import serializers
 
+from apps.tours.models import Tour
 from apps.users.models.Follow import Follow
 from apps.users.models.User import User
+from apps.gamification.models import TourProgress
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -52,3 +54,25 @@ class FollowSerializer(serializers.ModelSerializer):
         if Follow.objects.filter(follower=follower, following=following).exists():
             raise serializers.ValidationError("Already following this user.")
         return attrs
+
+
+class FollowingFeedSerializer(serializers.Serializer):
+    """Serializer for completed tours in the following feed."""
+    user = UserSerializer(read_only=True)
+    tour = serializers.SerializerMethodField()
+    completed_at = serializers.DateTimeField(read_only=True)
+
+    def get_tour(self, obj):
+        """Get basic tour information for the feed."""
+        tour = obj.tour
+        return {
+            "id": tour.id,
+            "title": tour.title,
+            "description": tour.description,
+            "category": tour.category,
+            "difficulty": tour.difficulty,
+            "duration_minutes": tour.duration_minutes,
+            "city": tour.city,
+            "cover_image": tour.cover_image.url if tour.cover_image else None,
+            "created_at": tour.created_at,
+        }
