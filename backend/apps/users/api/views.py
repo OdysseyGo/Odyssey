@@ -105,25 +105,28 @@ class UserViewSet(ModelViewSet):
     
     @action(detail=False, methods=["get"], url_path="following-feed")
     def following_feed(self, request):
-        """Get completed tours from users that the current user follows."""
         current_user = request.user
 
-        # Get IDs of users that current user follows
         following_ids = Follow.objects.filter(follower=current_user).values_list(
             "following_id", flat=True
         )
 
-        # Get completed tour progress from followed users
         completed_progress = TourProgress.objects.filter(
             user_id__in=following_ids,
             status=TourProgress.COMPLETED
         ).select_related(
             "user", "tour"
-        ).order_by("-completed_at")[:50]  # Limit to 50 most recent
+        ).order_by("-completed_at")
+
+        page = self.paginate_queryset(completed_progress)
+        
+        if page is not None:
+            serializer = FollowingFeedSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
         serializer = FollowingFeedSerializer(completed_progress, many=True)
         return Response(serializer.data)
- 
+    
     @action(
         detail=False, methods=["post"], url_path="reset-password"
     )  # This is for the demo, no auth password changing!!!
