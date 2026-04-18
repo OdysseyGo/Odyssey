@@ -98,7 +98,7 @@ export async function apiRequest<TResponse = unknown, TBody = Record<string, unk
       );
     } else if (error.message === 'Network Error' || !navigator.onLine) {
       // Network error
-      throw new ApiError('Network error. Please check your internet connection.', undefined, error);
+      throw new ApiError('Network error. Please check your internet connection.' + requestConfig.baseURL, undefined, error);
     } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
       // Server unreachable
       throw new ApiError('Cannot reach the server. Please try again later.', undefined, error);
