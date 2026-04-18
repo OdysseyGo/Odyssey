@@ -13,9 +13,11 @@ import { getMe, User } from '@/api/users';
 import { getMyBadges, Badge } from '@/api/profile';
 import { removeAuthToken } from '@/api/auth';
 import * as SecureStore from 'expo-secure-store';
+import { Ionicons } from '@expo/vector-icons';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { router as routerNav } from 'expo-router';
 
 async function getAccessToken() {
   return await SecureStore.getItemAsync('userToken');
@@ -33,6 +35,11 @@ export default function Profile() {
 
   const theme = useColorTheme();
   const color = Colors[theme];
+
+  const USER_TYPE_LABELS: Record<number, string> = {
+    1: 'Free',
+    2: 'Premium',
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -112,6 +119,9 @@ export default function Profile() {
 
   if (loading || !curUser) return <View />;
 
+  const isPremiumOrCreator = curUser.user_type === 2;
+  const tierLabel = USER_TYPE_LABELS[curUser.user_type] || 'Free';
+
   const profileHeader = {
     title: curUser.username,
     subtitle: curUser.country,
@@ -139,6 +149,60 @@ export default function Profile() {
     <>
       <ScrollView>
         <ProfileHeaderComp {...profileHeader} />
+
+        {/* Tier + credit pills sitting on the seam */}
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'center',
+            gap: Spacing.md,
+            paddingHorizontal: Spacing.lg,
+            marginTop: -Spacing.lg,
+            marginBottom: Spacing.sm,
+            zIndex: 10,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              backgroundColor: isPremiumOrCreator ? '#FF6B6B' : color.subText,
+              paddingHorizontal: 12,
+              paddingVertical: 5,
+              borderRadius: 999,
+              shadowColor: '#000',
+              shadowOpacity: 0.15,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+          >
+            <Ionicons name="star" size={12} color="#FFFFFF" />
+            <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>{tierLabel}</Text>
+          </View>
+
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              backgroundColor: '#FFD93D',
+              paddingHorizontal: 12,
+              paddingVertical: 5,
+              borderRadius: 999,
+              shadowColor: '#000',
+              shadowOpacity: 0.15,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+          >
+            <Ionicons name="diamond" size={12} color="#1a1a1a" />
+            <Text style={{ color: '#1a1a1a', fontSize: 12, fontWeight: '700' }}>
+              {curUser.credit} credits
+            </Text>
+          </View>
+        </View>
+
         <ProfileStatsComp {...profileStats} />
         <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm }}>
           <ProfileAddFriendsButton onPress={handleOpenAddFriendModal} />

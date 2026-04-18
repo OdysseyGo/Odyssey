@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, Alert, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { aiTourCreationStyles } from './ai-tour-creation.styles';
@@ -22,6 +22,7 @@ import {
   createEmptyFormData,
 } from '@/components/AITourCreation';
 import { generateAITour } from '@/api/aiTours';
+import { getAIGenerationAllowance } from '@/api/payments';
 
 export default function AITourCreation() {
   const theme = useColorTheme();
@@ -29,6 +30,17 @@ export default function AITourCreation() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<AITourFormData>(createEmptyFormData());
+  const [aiAllowance, setAiAllowance] = useState<{
+    used: number;
+    limit: number;
+    unlimited: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    getAIGenerationAllowance()
+      .then(setAiAllowance)
+      .catch(() => null);
+  }, []);
 
   const updateFormData = (updates: Partial<AITourFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -91,6 +103,46 @@ export default function AITourCreation() {
         >
           {/* Header Section */}
           <AICreationHeader />
+
+          {/* AI generation quota banner */}
+          {aiAllowance && !aiAllowance.unlimited && (
+            <View
+              style={{
+                marginHorizontal: 0,
+                marginBottom: 12,
+                padding: 12,
+                borderRadius: 10,
+                backgroundColor:
+                  aiAllowance.used >= aiAllowance.limit ? '#FEE2E2' : '#FFF7ED',
+                borderWidth: 1,
+                borderColor:
+                  aiAllowance.used >= aiAllowance.limit ? '#FCA5A5' : '#FED7AA',
+              }}
+            >
+              {aiAllowance.used >= aiAllowance.limit ? (
+                <>
+                  <Text style={{ fontWeight: '700', color: '#DC2626', marginBottom: 4 }}>
+                    Monthly limit reached
+                  </Text>
+                  <Text style={{ color: '#DC2626', fontSize: 13 }}>
+                    You have used all {aiAllowance.limit} free AI generations this month.
+                  </Text>
+                  <Pressable onPress={() => router.push('/subscription')}>
+                    <Text
+                      style={{ color: '#7C3AED', fontWeight: '700', marginTop: 6, fontSize: 13 }}
+                    >
+                      Upgrade to Premium for unlimited →
+                    </Text>
+                  </Pressable>
+                </>
+              ) : (
+                <Text style={{ color: '#92400E', fontSize: 13 }}>
+                  {aiAllowance.limit - aiAllowance.used} of {aiAllowance.limit} free AI generations
+                  remaining this month
+                </Text>
+              )}
+            </View>
+          )}
 
           {/* City Input */}
           <FormInputGroup label="City" required>

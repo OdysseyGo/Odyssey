@@ -34,7 +34,8 @@ export default function TourReviewScreen() {
               duration_minutes: tourData.estimatedDuration,
               city: tourData.city || 'Unknown City',
               status: 'PUBLISHED', // or DRAFT
-              is_premium: false,
+              is_premium: tourData.isPremium ?? false,
+              credit_price: tourData.creditPrice ?? 0,
             });
 
             console.log('Tour created:', tour.id);

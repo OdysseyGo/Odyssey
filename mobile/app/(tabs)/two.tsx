@@ -1,10 +1,11 @@
 import { ScrollView, StyleSheet } from 'react-native';
-import { User, Bell, Shield, Globe, Palette, HelpCircle } from 'lucide-react-native';
+import { User, Bell, Shield, Globe, Palette, HelpCircle, CreditCard, Wallet } from 'lucide-react-native';
 import { Text, View } from '@/components/Themed';
 import { SettingsRowItem } from '@/components/SettingComponents/SettingsRowItem';
 import { SettingsRowGroup } from '@/components/SettingComponents/SettingsRowGroup';
 import type { SettingsItemConfig } from '@/components/SettingComponents/SettingsRowItem.config';
 import { Spacing } from '@/constants/Spacing';
+import { router } from 'expo-router';
 
 type SettingsGroup = {
   title: string;
@@ -45,6 +46,18 @@ export default function TabTwoScreen() {
           label: 'Privacy',
           description: 'Control your privacy settings',
         },
+        {
+          key: 'subscription',
+          icon: CreditCard,
+          label: 'Subscription & Billing',
+          description: 'Manage your plan',
+        },
+        {
+          key: 'credits',
+          icon: Wallet,
+          label: 'Credit Balance',
+          description: 'Buy and manage credits',
+        },
       ],
     },
     {
@@ -78,7 +91,8 @@ export default function TabTwoScreen() {
   ];
 
   const handleItemPress = (groupTitle: string, item: SettingsItemConfig) => {
-    // TODO: wire up navigation or actions based on groupTitle + item.key / item.label
+    if (item.key === 'subscription') router.push('/subscription');
+    if (item.key === 'credits') router.push('/credit-store');
   };
 
   return (

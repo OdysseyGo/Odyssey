@@ -171,3 +171,93 @@ Follow the steps below to configure S3 for your environment:
    ```
 
    The `boto3` and `django-storages` packages (listed in `backend/requirements/base.txt`) will be installed automatically during the Docker build. Once running, any image uploaded through the API (e.g., tour cover images) will be stored in your S3 bucket and served via `https://<bucket>.s3.amazonaws.com/`.
+
+#### Stripe Payments Setup
+
+Odyssey uses **Stripe** for subscription billing and credit pack purchases. The backend handles checkout sessions and webhooks; the mobile app opens Stripe Checkout in the browser.
+
+**1. Create a Stripe Account**
+
+Sign up at [stripe.com](https://stripe.com) and switch to **Test mode** (toggle in the dashboard).
+
+**2. Get API Keys**
+
+Go to **Developers → API keys** and copy:
+- `STRIPE_SECRET_KEY` — starts with `sk_test_`
+- `STRIPE_PUBLISHABLE_KEY` — starts with `pk_test_`
+
+**3. Create Subscription Products**
+
+In **Products → Add product**, create two prices for the premium subscription:
+- Monthly: e.g. $9.99/month — copy the **Price ID** → `STRIPE_MONTHLY_PRICE_ID`
+- Yearly: e.g. $79.99/year — copy the **Price ID** → `STRIPE_YEARLY_PRICE_ID`
+
+**4. Create Credit Pack Products**
+
+For each credit pack, create a one-time price product in Stripe (e.g. 50 credits for $2.99). Then seed the `CreditPack` table via Django admin or the shell with the matching `stripe_price_id`.
+
+**5. Set Up Webhooks (local development)**
+
+Install the Stripe CLI and run:
+
+```bash
+stripe listen --forward-to localhost:8000/api/payments/webhook/
+```
+
+Copy the **webhook signing secret** (starts with `whsec_`) → `STRIPE_WEBHOOK_SECRET`
+
+**6. Update `.env`**
+
+```dotenv
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_MONTHLY_PRICE_ID=price_...
+STRIPE_YEARLY_PRICE_ID=price_...
+```
+
+**7. Run migrations**
+
+```bash
+docker compose exec backend python manage.py migrate
+```
+
+**Payment API Endpoints**
+
+| Endpoint | Method | Auth | Description |
+|---|---|---|---|
+| `/api/payments/plans/` | GET | No | List subscription plans |
+| `/api/payments/subscribe/` | POST | Yes | Create Stripe Checkout for subscription |
+| `/api/payments/subscription/` | GET | Yes | Get current subscription status |
+| `/api/payments/subscription/cancel/` | POST | Yes | Cancel subscription at period end |
+| `/api/payments/subscription/reactivate/` | POST | Yes | Reactivate canceled subscription |
+| `/api/payments/credit-packs/` | GET | No | List available credit packs |
+| `/api/payments/credits/purchase/` | POST | Yes | Create Stripe Checkout for credits |
+| `/api/payments/credits/balance/` | GET | Yes | Get credit balance + transactions |
+| `/api/payments/tours/{id}/unlock/` | POST | Yes | Spend credits to unlock a tour |
+| `/api/payments/tours/{id}/access/` | GET | Yes | Check tour access |
+| `/api/payments/ai-allowance/` | GET | Yes | Get AI generation quota |
+| `/api/payments/webhook/` | POST | No | Stripe webhook (signature verified) |
+
+**End-to-End Flow**
+
+1. User taps **Subscribe** → backend creates a Stripe Checkout Session URL
+2. Mobile opens URL in browser → user pays → Stripe redirects back
+3. Stripe fires `checkout.session.completed` webhook → backend fulfills (sets `user_type=PREMIUM` or adds credits)
+4. User can now access premium tours or spend credits to unlock paid tours
+
+**Test Cards**
+
+| Card | Result |
+|---|---|
+| `4242 4242 4242 4242` | Success |
+| `4000 0000 0000 0002` | Declined |
+| `4000 0025 0000 3155` | 3D Secure required |
+
+Use any future expiry, any CVC, any ZIP.
+
+**Test the payment API**
+
+```bash
+bash test_payments.sh
+```
