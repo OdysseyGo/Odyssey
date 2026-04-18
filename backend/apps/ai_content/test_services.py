@@ -524,3 +524,92 @@ class TestFuzzyMatchPlace(TestCase):
         candidates = _candidate_places()
         result = GeminiService._fuzzy_match_place("", candidates)
         assert result is None
+
+
+# ---------------------------------------------------------------------------
+# AI Generation Quota Tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+class TestAIGenerationQuota(TestCase):
+    """Tests for the AI generation rate limiting in GenerateTourView."""
+
+    def _make_user(self, user_type=1):
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        return User.objects.create_user(
+            username=f"user_{user_type}_{id(self)}",
+            password="pass123",
+            email=f"user_{id(self)}@test.com",
+            user_type=user_type,
+        )
+
+    def test_free_user_blocked_after_limit(self):
+        """Free user exceeding 3 AI generations/month should get 429."""
+        from apps.payments.services.credit_service import CreditService
+
+        user = self._make_user(user_type=1)
+        # Simulate 3 generations already used
+        user.ai_generations_this_month = 3
+        import datetime
+
+        user.ai_generation_reset_date = datetime.date.today()
+        user.save()
+
+        allowance = CreditService.get_ai_generation_allowance(user)
+        assert not allowance["unlimited"]
+        assert allowance["used"] >= allowance["limit"]
+
+    def test_free_user_allowed_within_limit(self):
+        """Free user with fewer than 3 generations should be allowed."""
+        from apps.payments.services.credit_service import CreditService
+
+        user = self._make_user(user_type=1)
+        user.ai_generations_this_month = 1
+        import datetime
+
+        user.ai_generation_reset_date = datetime.date.today()
+        user.save()
+
+        allowance = CreditService.get_ai_generation_allowance(user)
+        assert not allowance["unlimited"]
+        assert allowance["used"] < allowance["limit"]
+
+    def test_premium_user_has_unlimited_generations(self):
+        """Premium user (user_type=2) should have unlimited AI generations."""
+        from apps.payments.services.credit_service import CreditService
+
+        user = self._make_user(user_type=2)
+        allowance = CreditService.get_ai_generation_allowance(user)
+        assert allowance["unlimited"]
+
+    def test_record_generation_increments_counter(self):
+        """record_ai_generation should increment the monthly counter."""
+        from apps.payments.services.credit_service import CreditService
+
+        user = self._make_user(user_type=1)
+        assert user.ai_generations_this_month == 0
+
+        CreditService.record_ai_generation(user)
+        user.refresh_from_db()
+        assert user.ai_generations_this_month == 1
+
+    def test_counter_resets_on_new_month(self):
+        """Counter should reset to 1 when a new month begins."""
+        import datetime
+
+        from apps.payments.services.credit_service import CreditService
+
+        user = self._make_user(user_type=1)
+        # Simulate counter from last month
+        user.ai_generations_this_month = 3
+        user.ai_generation_reset_date = datetime.date.today().replace(day=1) - datetime.timedelta(
+            days=1
+        )
+        user.save()
+
+        CreditService.record_ai_generation(user)
+        user.refresh_from_db()
+        assert user.ai_generations_this_month == 1

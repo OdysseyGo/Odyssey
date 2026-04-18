@@ -151,3 +151,38 @@ class AnalyticsService:
             .distinct()
             .count()
         )
+
+    @staticmethod
+    def get_revenue_summary():
+        from django.db.models import Sum
+
+        from apps.payments.models import Subscription, Transaction
+
+        total_credits_sold = (
+            Transaction.objects.filter(
+                transaction_type=Transaction.PURCHASE
+            ).aggregate(total=Sum("amount"))["total"]
+            or 0
+        )
+        active_subscriptions = Subscription.objects.filter(
+            status=Subscription.ACTIVE
+        ).count()
+        monthly_subs = Subscription.objects.filter(
+            status=Subscription.ACTIVE, plan=Subscription.MONTHLY
+        ).count()
+        yearly_subs = Subscription.objects.filter(
+            status=Subscription.ACTIVE, plan=Subscription.YEARLY
+        ).count()
+        premium_tours = Tour.objects.filter(credit_price__gt=0).count()
+        total_tour_unlocks = Transaction.objects.filter(
+            transaction_type=Transaction.TOUR_UNLOCK
+        ).count()
+
+        return {
+            "total_credits_sold": total_credits_sold,
+            "active_subscriptions": active_subscriptions,
+            "monthly_subscriptions": monthly_subs,
+            "yearly_subscriptions": yearly_subs,
+            "premium_tours": premium_tours,
+            "total_tour_unlocks": total_tour_unlocks,
+        }

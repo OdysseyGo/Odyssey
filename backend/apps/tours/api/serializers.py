@@ -76,6 +76,7 @@ class TourSerializer(serializers.ModelSerializer):
     steps = TourStepSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
     average_rating = serializers.FloatField(read_only=True)
+    has_access = serializers.SerializerMethodField()
 
     class Meta:
         model = Tour
@@ -90,6 +91,7 @@ class TourSerializer(serializers.ModelSerializer):
             "duration_minutes",
             "total_distance",
             "is_premium",
+            "credit_price",
             "city",
             "cover_image",
             "status",
@@ -98,8 +100,16 @@ class TourSerializer(serializers.ModelSerializer):
             "steps",
             "reviews",
             "average_rating",
+            "has_access",
         ]
-        read_only_fields = ["creator", "created_at", "updated_at", "average_rating"]
+        read_only_fields = ["creator", "created_at", "updated_at", "average_rating", "has_access"]
+
+    def get_has_access(self, obj):
+        request = self.context.get("request")
+        if request and request.user and request.user.is_authenticated:
+            from apps.payments.services.credit_service import CreditService
+            return CreditService.has_tour_access(request.user, obj)
+        return obj.credit_price == 0 and not obj.is_premium
 
     def create(self, validated_data):
         # Assign current user as creator

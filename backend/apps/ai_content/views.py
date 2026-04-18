@@ -23,6 +23,20 @@ class GenerateTourView(APIView):
         serializer.is_valid(raise_exception=True)
 
         try:
+            from apps.payments.services.credit_service import CreditService
+
+            allowance = CreditService.get_ai_generation_allowance(request.user)
+            if not allowance["unlimited"] and allowance["used"] >= allowance["limit"]:
+                return Response(
+                    {
+                        "error": "Monthly AI generation limit reached",
+                        "limit": allowance["limit"],
+                        "used": allowance["used"],
+                    },
+                    status=status.HTTP_429_TOO_MANY_REQUESTS,
+                )
+            CreditService.record_ai_generation(request.user)
+
             service = GeminiService()
             tour = service.generate_tour(
                 city=serializer.validated_data["city"],

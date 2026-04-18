@@ -95,6 +95,45 @@ class AdminUserViewSet(ModelViewSet):
 
         return Response(BanRecordSerializer(ban).data, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=["post"], url_path="adjust-credits")
+    def adjust_credits(self, request, pk=None):
+        user = self.get_object()
+        try:
+            amount = int(request.data.get("amount", 0))
+        except (ValueError, TypeError):
+            return Response(
+                {"detail": "amount must be an integer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if amount == 0:
+            return Response(
+                {"detail": "amount must be non-zero."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        reason = request.data.get("reason", "Admin adjustment")
+        from apps.payments.models import Transaction
+        from apps.payments.services.credit_service import CreditService
+
+        if amount > 0:
+            CreditService.add_credits(
+                user=user,
+                amount=amount,
+                transaction_type=Transaction.PURCHASE,
+                description=f"Admin adjustment: {reason}",
+            )
+        else:
+            try:
+                CreditService.deduct_credits(
+                    user=user,
+                    amount=abs(amount),
+                    transaction_type=Transaction.REFUND,
+                    description=f"Admin adjustment: {reason}",
+                )
+            except ValueError as e:
+                return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        user.refresh_from_db()
+        return Response({"detail": f"Credits adjusted by {amount}.", "new_balance": user.credit})
+
     @action(detail=True, methods=["post"], url_path="unban")
     def unban(self, request, pk=None):
         user = self.get_object()
@@ -266,6 +305,11 @@ class AnalyticsViewSet(ViewSet):
         days = int(request.query_params.get("days", 7))
         count = AnalyticsService.get_active_users(days=days)
         return Response({"days": days, "active_users": count})
+
+    @action(detail=False, methods=["get"], url_path="revenue")
+    def revenue(self, request):
+        data = AnalyticsService.get_revenue_summary()
+        return Response(data)
 
 
 # ── Content Moderation ───────────────────────────────────────────────

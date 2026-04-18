@@ -33,6 +33,7 @@ urlpatterns = [
     path("api/", include("apps.gamification.api.urls")),
     path("api/ai/", include("apps.ai_content.urls")),
     path("api/admin/", include("apps.admin_dashboard.api.urls")),
+    path("api/payments/", include("apps.payments.api.urls")),
     path(
         "api/reports/",
         include("apps.admin_dashboard.api.report_urls"),

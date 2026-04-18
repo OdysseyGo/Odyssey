@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "apps.ai_content",
     "storages",
     "apps.admin_dashboard",
+    "apps.payments",
 ]
 
 MIDDLEWARE = [
@@ -205,3 +206,14 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
 }
+
+# Stripe
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_MONTHLY_PRICE_ID = os.getenv("STRIPE_MONTHLY_PRICE_ID", "")
+STRIPE_YEARLY_PRICE_ID = os.getenv("STRIPE_YEARLY_PRICE_ID", "")
+
+# Monetization
+FREE_AI_GENERATIONS_PER_MONTH = 3
+CREATOR_REVENUE_SHARE_PERCENT = 70
