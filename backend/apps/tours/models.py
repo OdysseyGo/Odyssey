@@ -47,6 +47,10 @@ class Tour(models.Model):
         help_text="Estimated duration in minutes"
     )
     is_premium = models.BooleanField(default=False)
+    credit_price = models.PositiveIntegerField(
+        default=0,
+        help_text="Price in credits for non-premium users. 0 = free tour.",
+    )
     city = models.CharField(
         max_length=100, blank=True, help_text="City where the tour is located"
     )
