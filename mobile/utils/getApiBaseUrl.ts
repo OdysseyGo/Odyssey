@@ -4,20 +4,14 @@ import { Platform } from 'react-native';
 export function getApiBaseUrl() {
   try {
     // Needed when testing on external devices.
-    const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+    const envBaseUrl = process.env.EXPO_API_BASE_URL;
     if (envBaseUrl) {
       return envBaseUrl;
     }
 
-    const hostUri = Constants.expoConfig?.hostUri;
-
-    if (hostUri) {
-      const host = hostUri.split(':')[0];
-      return `http://${host}:8000`;
-    }
-    return 'http://127.0.0.1:8000';
+    return 'https://api.odysseygo.quest';
   } catch (e) {
     console.error('Error in getApiBaseUrl:', e);
-    return 'http://127.0.0.1:8000';
+    return 'https://api.odysseygo.quest';
   }
 }
