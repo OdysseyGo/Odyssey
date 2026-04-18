@@ -10,7 +10,7 @@ export type User = {
   xp: number;
   follow_count: number;
   follower_count: number;
-  token: number;
+  credit: number;
   level: number;
   country: string;
   user_type: number;

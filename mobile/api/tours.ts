@@ -47,6 +47,8 @@ export type Tour = {
   duration_minutes: number;
   total_distance?: number;
   is_premium: boolean;
+  credit_price?: number;
+  has_access?: boolean;
   city: string;
   status: TourStatus;
   created_at: string;
@@ -124,7 +126,7 @@ export async function getTour(tourId: number, signal?: AbortSignal): Promise<Tou
   return apiRequest<Tour>({
     method: 'GET',
     url: `/api/tours/${tourId}/`,
-    auth: false, // Public endpoint
+    auth: true,
     signal,
   });
 }
