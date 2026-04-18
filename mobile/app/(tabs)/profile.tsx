@@ -29,6 +29,7 @@ import { removeAuthToken } from '@/api/auth';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { Button } from '@react-navigation/elements';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = 240;
@@ -545,6 +546,7 @@ export default function Profile() {
         {/* ─── Actions ─────────────────────────────── */}
         <View style={styles.actionsRow}>
           <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
+          <Button onPressIn={()=> router.navigate("/profile/following-feed")}> Following feed </Button>
         </View>
 
         {/* ─── Badges ──────────────────────────────── */}

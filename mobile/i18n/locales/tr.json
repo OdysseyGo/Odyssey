@@ -80,7 +80,8 @@
     "followersError": "Takipçiler yüklenemedi",
     "followingError": "Takip edilenler yüklenemedi",
     "unfollow": "Takibi Bırak",
-    "removeFollower": "Kaldır"
+    "removeFollower": "Kaldır",
+    "followingFeedTitle": "Takipçi Akışı"
   },
   "tour": {
     "loading": "Turlar yükleniyor...",

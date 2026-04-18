@@ -78,6 +78,13 @@ export type FeedItem = {
   completed_at: string; 
 };
 
+export type FollowingFeedResponse = {
+  count: number;
+  next?: string;
+  previous?: string;
+  results: FeedItem[];
+};
+
 
 // API functions
 
@@ -235,7 +242,7 @@ export const getUserFollowings = (id: string) =>
  * Get user's following feed, a paginated list of tours completed by people they follow.
  */
 export const getFollowingFeed = (page: number = 1) =>
-  apiRequest<FeedItem[]>({
+  apiRequest<FollowingFeedResponse>({
     url: `/api/users/following-feed/`,
     params: { page } 
   });
