@@ -1,4 +1,5 @@
 import { apiRequest } from './APIClient';
+import { Tour } from './tours';
 
 // Type definitions
 export type User = {
@@ -69,6 +70,14 @@ export type LoginResponse = {
 export type FollowPayload = {
   following: number; //id of the target
 };
+
+export type FeedItem = {
+  id: number; // id of tourProgress, its a better key value then combining userid + tour. 
+  user: User;
+  tour: Tour;
+  completed_at: string; 
+};
+
 
 // API functions
 
@@ -219,4 +228,14 @@ export const getUserFollowers = (id: string) =>
 export const getUserFollowings = (id: string) =>
   apiRequest<User[]>({
     url: `/api/users/${id}/followings/`,
+  });
+
+/**
+ * GET /api/users/following-feed/?page={page}
+ * Get user's following feed, a paginated list of tours completed by people they follow.
+ */
+export const getFollowingFeed = (page: number = 1) =>
+  apiRequest<FeedItem[]>({
+    url: `/api/users/following-feed/`,
+    params: { page } 
   });

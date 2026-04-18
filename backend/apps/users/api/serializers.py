@@ -58,6 +58,7 @@ class FollowSerializer(serializers.ModelSerializer):
 
 class FollowingFeedSerializer(serializers.Serializer):
     """Serializer for completed tours in the following feed."""
+    id = serializers.IntegerField(read_only=True)
     user = UserSerializer(read_only=True)
     tour = serializers.SerializerMethodField()
     completed_at = serializers.DateTimeField(read_only=True)
