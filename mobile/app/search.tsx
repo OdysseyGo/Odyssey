@@ -25,6 +25,7 @@ function mapTourToSearchResult(tour: Tour): SearchResultItemProps {
     duration: `${tour.duration_minutes} min`,
     rating: tour.average_rating?.toFixed(1) || 'N/A',
     location: tour.city || 'Unknown location',
+    creditPrice: tour.credit_price,
   };
 }
 

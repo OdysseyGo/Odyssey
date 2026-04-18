@@ -11,6 +11,7 @@ import {
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { getTour } from '@/api/tours';
 import { isLoggedIn } from '@/api/auth';
+import { checkTourAccess, unlockTour } from '@/api/payments';
 
 export default function TourDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -18,9 +19,6 @@ export default function TourDetailPage() {
   const { startTour } = useActiveTour();
 
   const handleStartTour = async () => {
-    console.log('Starting tour:', id);
-
-    // Check if user is logged in
     const loggedIn = await isLoggedIn();
     if (!loggedIn) {
       Alert.alert(
@@ -34,17 +32,55 @@ export default function TourDetailPage() {
       return;
     }
 
-    try {
-      // Fetch fresh tour data with steps and puzzles
-      if (id) {
-        const tourData = await getTour(parseInt(id, 10));
-        console.log('Tour data:', tourData);
+    if (!id) return;
+    const tourId = parseInt(id, 10);
 
-        // Start the tour in context (this will map API data to internal format)
-        startTour(tourData);
-        // Navigate to the map tab
-        router.replace('/(tabs)/map');
+    try {
+      // Check access for paid tours
+      if (tour && tour.creditPrice > 0) {
+        const access = await checkTourAccess(tourId);
+        if (!access.has_access) {
+          Alert.alert(
+            'Unlock Tour',
+            `This tour costs ${access.credit_price} credits. Do you want to unlock it?`,
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: `Unlock (${access.credit_price} credits)`,
+                onPress: async () => {
+                  try {
+                    await unlockTour(tourId);
+                    Alert.alert('Unlocked!', 'Tour unlocked. Starting now...', [
+                      {
+                        text: 'OK',
+                        onPress: async () => {
+                          const tourData = await getTour(tourId);
+                          startTour(tourData);
+                          router.replace('/(tabs)/map');
+                        },
+                      },
+                    ]);
+                  } catch (err: any) {
+                    Alert.alert(
+                      'Failed to unlock',
+                      err?.response?.data?.error ||
+                        err?.response?.data?.detail ||
+                        err?.message ||
+                        'Could not unlock this tour.'
+                    );
+                  }
+                },
+              },
+            ]
+          );
+          return;
+        }
       }
+
+      // Free tour or already has access — start directly
+      const tourData = await getTour(tourId);
+      startTour(tourData);
+      router.replace('/(tabs)/map');
     } catch (err) {
       console.error('Failed to start tour:', err);
     }

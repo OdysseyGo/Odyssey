@@ -25,6 +25,8 @@ export interface TourDetail {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   stops: TourStop[];
   tags: string[];
+  creditPrice: number;
+  hasAccess: boolean;
 }
 
 export const MOCK_TOUR: TourDetail = {
@@ -75,6 +77,8 @@ export const MOCK_TOUR: TourDetail = {
     },
   ],
   tags: ['History', 'Architecture', 'Walking', 'Culture'],
+  creditPrice: 0,
+  hasAccess: true,
 };
 
 export const getDifficultyColor = (difficulty: TourDetail['difficulty'], theme: ThemeName) => {

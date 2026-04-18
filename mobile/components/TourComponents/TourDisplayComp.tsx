@@ -17,6 +17,8 @@ export default function TourDisplayComp({
   length,
   reviewCount,
   rating,
+  isPremium = false,
+  creditPrice = 0,
 }: TourDisplayProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDisplayCompStyles(theme), [theme]);
@@ -66,6 +68,46 @@ export default function TourDisplayComp({
             <Ionicons name="star" size={14} color="#FFD93D" />
             <Text style={styles.ratingText}>{displayRating}</Text>
           </View>
+
+          {creditPrice > 0 ? (
+            <View
+              style={{
+                position: 'absolute',
+                top: 8,
+                left: 8,
+                backgroundColor: '#FFD93D',
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 6,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 3,
+              }}
+            >
+              <Ionicons name="lock-closed" size={10} color="#1a1a1a" />
+              <Text style={{ color: '#1a1a1a', fontSize: 10, fontWeight: '700' }}>
+                {creditPrice} credits
+              </Text>
+            </View>
+          ) : isPremium ? (
+            <View
+              style={{
+                position: 'absolute',
+                top: 8,
+                left: 8,
+                backgroundColor: color.primary,
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 6,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 3,
+              }}
+            >
+              <Ionicons name="lock-closed" size={10} color="#FFFFFF" />
+              <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>PREMIUM</Text>
+            </View>
+          ) : null}
 
           <View style={styles.durationChip}>
             <Ionicons name="time" size={14} color="#FFFFFF" />

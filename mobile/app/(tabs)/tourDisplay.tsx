@@ -28,6 +28,8 @@ function mapTourToDisplayProps(tour: Tour): TourDisplayProps {
     length: tour.steps?.length ? `${tour.steps.length} stops` : 'N/A',
     reviewCount: `${tour.reviews?.length || 0} reviews`,
     rating: tour.average_rating?.toFixed(1) || '0',
+    isPremium: tour.is_premium,
+    creditPrice: tour.credit_price,
   };
 }
 

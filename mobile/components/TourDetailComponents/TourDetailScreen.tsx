@@ -130,7 +130,11 @@ export function TourDetailScreenContent({ tour, onStartTour }: TourDetailScreenC
         </View>
       </ScrollView>
 
-      <TourDetailBottomBar onStartTour={onStartTour} />
+      <TourDetailBottomBar
+        onStartTour={onStartTour}
+        creditPrice={tour.creditPrice}
+        hasAccess={tour.hasAccess}
+      />
     </>
   );
 }

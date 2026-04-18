@@ -6,6 +6,7 @@ export interface SearchResultItemProps {
   duration: string;
   rating: string;
   location: string;
+  creditPrice?: number;
 }
 
 // Mock data for search results - will be replaced by API

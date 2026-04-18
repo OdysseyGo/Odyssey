@@ -7,6 +7,8 @@ export interface TourDisplayProps {
   length: string;
   reviewCount: string;
   rating: string;
+  isPremium?: boolean;
+  creditPrice?: number;
 }
 
 export const exampleTour: TourDisplayProps = {

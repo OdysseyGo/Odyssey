@@ -41,5 +41,7 @@ export function mapApiTourToDetail(tour: Tour): TourDetail {
     difficulty: difficultyMap[tour.difficulty] || 'Medium',
     stops,
     tags: [tour.category, tour.tour_type, tour.city].filter(Boolean),
+    creditPrice: tour.credit_price || 0,
+    hasAccess: tour.has_access ?? (tour.credit_price || 0) === 0,
   };
 }
