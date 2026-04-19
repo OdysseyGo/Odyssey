@@ -20,7 +20,7 @@ export default {
       backgroundColor: '#ffffff',
     },
     ios: {
-      bundleIdentifier: 'com.app.odyssey.go',
+      bundleIdentifier: 'com.app.odyssey.bilkent',
       supportsTablet: true,
       infoPlist: {
         NSCameraUsageDescription: 'Odyssey needs camera access for AR exploration.',
@@ -35,7 +35,7 @@ export default {
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
-      package: 'com.app.odyssey.go',
+      package: 'com.app.odyssey.bilkent',
     },
     plugins: [
       './scripts/newArchEnabled.js',
