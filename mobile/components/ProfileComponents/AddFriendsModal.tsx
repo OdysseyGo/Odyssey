@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { Modal, Animated, View } from 'react-native';
+import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { addFriendsModalStyles } from './AddFriendsModal.styles';
 import { AddFriendsModalProps } from './AddFriendsModal.config';
@@ -20,6 +21,11 @@ export default function AddFriendsModal({
   const theme = useColorTheme();
   const styles = addFriendsModalStyles(theme);
   const modalScaleAnim = useRef(new Animated.Value(0)).current;
+
+  const handleUserPress = (userId: number) => {
+    onClose();
+    router.push({ pathname: '/profile/[userId]', params: { userId: userId.toString() } });
+  };
 
   React.useEffect(() => {
     if (visible) {
@@ -59,7 +65,7 @@ export default function AddFriendsModal({
               searchFocused={searchFocused}
               onSearchFocus={onSearchFocus}
             />
-            <AddFriendsModalList searchTextVal={searchText} />
+            <AddFriendsModalList searchTextVal={searchText} onUserPress={handleUserPress} />
             <AddFriendsModalProTip />
             <AddFriendsModalActions onCancel={onClose} />
           </View>

@@ -355,6 +355,7 @@ export default function Profile() {
   const [searchFocused, setSearchFocused] = useState(false);
 
   const scrollY = useRef(new Animated.Value(0)).current;
+  const lastRefreshed = useRef<number>(0);
 
   const colorScheme = useColorTheme();
   const theme = Colors[colorScheme];
@@ -386,6 +387,7 @@ export default function Profile() {
         setBadgesCount(badgesResponse.count);
         setBadges(badgesResponse.results);
       });
+      lastRefreshed.current = Date.now();
     } catch (err) {
       console.error('Failed to load profile:', err);
       setFetchError(true);
@@ -396,10 +398,8 @@ export default function Profile() {
 
   useFocusEffect(
     useCallback(() => {
-      // Only show full skeleton on initial load (no existing data)
-      if (!curUser) {
-        setLoading(true);
-      }
+      const hasData = lastRefreshed.current > 0;
+      if (!hasData) setLoading(true);
       refreshProfile();
     }, [retryKey])
   );

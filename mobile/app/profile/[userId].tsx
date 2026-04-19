@@ -19,6 +19,9 @@ import { Spacing } from '@/constants/Spacing';
 import { userProfileStyles } from './[userId].styles';
 import { getAvatarColor, StatItem } from './[userId].config';
 
+// Module-level cache: avoids loading spinner on repeat visits
+const profileCache = new Map<string, { user: User; isFollowing: boolean; currentUserId: number }>();
+
 export default function UserProfilePage() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const theme = useColorTheme();
@@ -27,11 +30,13 @@ export default function UserProfilePage() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isFollowing, setIsFollowing] = useState(false);
+  const cached = userId ? profileCache.get(userId) : undefined;
+
+  const [user, setUser] = useState<User | null>(cached?.user ?? null);
+  const [loading, setLoading] = useState(!cached);
+  const [isFollowing, setIsFollowing] = useState(cached?.isFollowing ?? false);
   const [followLoading, setFollowLoading] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(cached?.currentUserId ?? null);
 
   useEffect(() => {
     if (!userId) return;
@@ -46,10 +51,12 @@ export default function UserProfilePage() {
         getUserById(userId!),
         getUserFollowings(me.id.toString()),
       ]);
+      const following = followings.some((f) => f.id === parseInt(userId!));
+      profileCache.set(userId!, { user: targetUser, isFollowing: following, currentUserId: me.id });
       setUser(targetUser);
-      setIsFollowing(followings.some((f) => f.id === parseInt(userId!)));
+      setIsFollowing(following);
     } catch {
-      setUser(null);
+      if (!user) setUser(null);
     } finally {
       setLoading(false);
     }
@@ -73,6 +80,11 @@ export default function UserProfilePage() {
         await unfollowUser({ following: user.id });
       } else {
         await followUser({ following: user.id });
+      }
+      // Keep cache consistent after follow/unfollow
+      if (userId) {
+        const entry = profileCache.get(userId);
+        if (entry) profileCache.set(userId, { ...entry, isFollowing: !wasFollowing });
       }
     } catch {
       setIsFollowing(wasFollowing);

@@ -21,21 +21,27 @@ function UserRow({ item, theme, onUnfollow, unfollowing }: FollowingUserRowProps
 
   return (
     <View style={[rowStyles.row, { borderBottomColor: theme.borderLight }]}>
-      {item.avatar_url ? (
-        <Image source={{ uri: item.avatar_url }} style={rowStyles.avatar} />
-      ) : (
-        <View style={[rowStyles.avatarPlaceholder, { backgroundColor: theme.primary }]}>
-          <Text style={rowStyles.initials}>{initials}</Text>
-        </View>
-      )}
-      <View style={rowStyles.info}>
-        <Text style={[rowStyles.username, { color: theme.text }]}>{item.username}</Text>
-        {(item.first_name || item.last_name) && (
-          <Text style={[rowStyles.fullName, { color: theme.subText }]}>
-            {[item.first_name, item.last_name].filter(Boolean).join(' ')}
-          </Text>
+      <TouchableOpacity
+        style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}
+        onPress={() => router.push({ pathname: '/profile/[userId]', params: { userId: item.id.toString() } })}
+        activeOpacity={0.7}
+      >
+        {item.avatar_url ? (
+          <Image source={{ uri: item.avatar_url }} style={rowStyles.avatar} />
+        ) : (
+          <View style={[rowStyles.avatarPlaceholder, { backgroundColor: theme.primary }]}>
+            <Text style={rowStyles.initials}>{initials}</Text>
+          </View>
         )}
-      </View>
+        <View style={rowStyles.info}>
+          <Text style={[rowStyles.username, { color: theme.text }]}>{item.username}</Text>
+          {(item.first_name || item.last_name) && (
+            <Text style={[rowStyles.fullName, { color: theme.subText }]}>
+              {[item.first_name, item.last_name].filter(Boolean).join(' ')}
+            </Text>
+          )}
+        </View>
+      </TouchableOpacity>
       <TouchableOpacity
         style={[rowStyles.actionButton, { borderColor: theme.primary }]}
         onPress={() => onUnfollow(item.id)}

@@ -9,7 +9,7 @@ import type { AddFriendsModalListProps } from './AddFriendsModalList.config';
 import { AddFriendUserDisplayDTO } from '@/api/users';
 import { followUser, FollowPayload, getFilteredUsersAddFriend } from '@/api/users';
 
-export default function AddFriendsModalList({ searchTextVal = '' }: AddFriendsModalListProps) {
+export default function AddFriendsModalList({ searchTextVal = '', onUserPress }: AddFriendsModalListProps) {
   const theme = useColorTheme();
   const styles = addFriendsModalListStyles(theme);
   const color = Colors[theme];
@@ -61,7 +61,11 @@ export default function AddFriendsModalList({ searchTextVal = '' }: AddFriendsMo
     const justFollowed = followedIds.has(item.id);
     return (
       <View style={styles.userRow}>
-        <View style={styles.userInfo}>
+        <TouchableOpacity
+          style={styles.userInfo}
+          onPress={() => onUserPress?.(item.id)}
+          activeOpacity={onUserPress ? 0.7 : 1}
+        >
           <View style={styles.avatarPlaceholder}>
             {item.avatar_url ? (
               <Image source={{ uri: item.avatar_url }} style={styles.avatarImage} />
@@ -70,7 +74,7 @@ export default function AddFriendsModalList({ searchTextVal = '' }: AddFriendsMo
             )}
           </View>
           <Text style={styles.username}>{item.username}</Text>
-        </View>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.addButton, justFollowed && { backgroundColor: color.primary }]}
