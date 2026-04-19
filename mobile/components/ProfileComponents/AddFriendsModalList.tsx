@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -63,7 +63,11 @@ export default function AddFriendsModalList({ searchTextVal = '' }: AddFriendsMo
       <View style={styles.userRow}>
         <View style={styles.userInfo}>
           <View style={styles.avatarPlaceholder}>
-            <FontAwesome name="user" size={14} color="white" />
+            {item.avatar_url ? (
+              <Image source={{ uri: item.avatar_url }} style={styles.avatarImage} />
+            ) : (
+              <FontAwesome name="user" size={14} color="white" />
+            )}
           </View>
           <Text style={styles.username}>{item.username}</Text>
         </View>

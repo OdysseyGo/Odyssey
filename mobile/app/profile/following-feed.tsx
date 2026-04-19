@@ -141,7 +141,16 @@ export default function FollowingFeed() {
           {/* Bottom info overlay */}
           <View style={styles.infoOverlay}>
             <View style={styles.userHeader}>
-              <Ionicons name="person-circle" size={20} color={color.white} />
+              <View style={styles.avatarContainer}>
+                {item.user.avatar_url ? (
+                  <Image
+                    source={{ uri: item.user.avatar_url }}
+                    style={styles.avatar}
+                  />
+                ) : (
+                  <Ionicons name="person-circle" size={20} color={color.white} />
+                )}
+              </View>
               <Text style={styles.userName}>{item.user.username}</Text>
               <Text style={styles.completedText}>completed this tour</Text>
             </View>
