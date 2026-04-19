@@ -24,6 +24,7 @@ export type AddFriendUserDisplayDTO = {
   username: string;
   first_name: string;
   last_name: string;
+  avatar_url?: string;
 };
 
 export type AddFriendUserDisplayDTOListResponse = {

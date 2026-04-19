@@ -160,6 +160,22 @@ export const followingFeedStyles = (theme: ThemeName) => {
       fontSize: 11,
       fontWeight: '800',
     },
+    avatarContainer: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: 'rgba(255,255,255,0.18)',
+      overflow: 'hidden',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: Spacing.sm,
+    },
+    avatar: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      resizeMode: 'cover',
+    },
     userName: {
       color: color.white,
       fontSize: 13,
