@@ -18,6 +18,7 @@ import * as SecureStore from 'expo-secure-store';
 import ProfileHeaderComp from '@/components/ProfileComponents/ProfileHeaderComp';
 import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
 import ProfileAddFriendsButton from '@/components/ProfileComponents/ProfileAddFriendsButton';
+import ProfileFollowingFeedButton from '@/components/ProfileComponents/ProfileFollowingFeedButton';
 import ProfileBadgesContainer from '@/components/ProfileComponents/ProfileBadgesContainer';
 import ProfileToursContainer from '@/components/ProfileComponents/ProfileToursContainer';
 import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
@@ -545,28 +546,7 @@ export default function Profile() {
         {/* ─── Actions ─────────────────────────────── */}
         <View style={styles.actionsRow}>
           <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
-          <TouchableOpacity
-            onPress={() => router.navigate('/profile/following-feed')}
-            activeOpacity={0.7}
-            style={{
-              paddingVertical: Spacing.sm + 2,
-              paddingHorizontal: Spacing.lg,
-              borderRadius: 999,
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexDirection: 'row',
-              borderWidth: 1.5,
-              borderColor: theme.primary,
-              backgroundColor: colorScheme === 'light' ? theme.primaryMuted : 'transparent',
-              alignSelf: 'center',
-              gap: Spacing.sm,
-            }}
-          >
-            <Ionicons name="newspaper-outline" size={16} color={theme.primary} />
-            <Text style={{ fontSize: 14, fontWeight: '600', color: theme.primary }}>
-              {t('profile.followingFeedTitle')}
-            </Text>
-          </TouchableOpacity>
+          <ProfileFollowingFeedButton />
         </View>
 
         {/* ─── Badges ──────────────────────────────── */}
