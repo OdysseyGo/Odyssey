@@ -31,20 +31,14 @@ export function haversineDistanceMeters(
   return EARTH_RADIUS_METERS * c;
 }
 
-export function bearingDegrees(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
+export function bearingDegrees(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const phi1 = toRadians(lat1);
   const phi2 = toRadians(lat2);
   const deltaLambda = toRadians(lon2 - lon1);
 
   const y = Math.sin(deltaLambda) * Math.cos(phi2);
   const x =
-    Math.cos(phi1) * Math.sin(phi2) -
-    Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
+    Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
 
   return normalizeDegrees(toDegrees(Math.atan2(y, x)));
 }

@@ -39,7 +39,7 @@ export default function MapScreen() {
   useFocusEffect(
     useCallback(() => {
       const checkLoginAndResume = async () => {
-        if(await isLoggedIn()) {
+        if (await isLoggedIn()) {
           resumeActiveTour();
         }
         return () => {};

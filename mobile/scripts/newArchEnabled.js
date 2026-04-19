@@ -9,7 +9,7 @@ module.exports = (config) => {
     action: async (config) => {
       // Path to the .xcode.env file inside the /ios directory
       const xcodeEnvPath = path.join(config.modRequest.platformProjectRoot, '.xcode.env');
-      
+
       let content = '';
       if (fs.existsSync(xcodeEnvPath)) {
         content = fs.readFileSync(xcodeEnvPath, 'utf8');
@@ -21,7 +21,7 @@ module.exports = (config) => {
         content += '\nexport RCT_NEW_ARCH_ENABLED=1\n';
         fs.writeFileSync(xcodeEnvPath, content);
       }
-      
+
       return config;
     },
   });
