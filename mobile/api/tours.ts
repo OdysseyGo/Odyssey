@@ -267,6 +267,21 @@ export async function addTourReview(
   });
 }
 
+export async function updateTourReview(
+  tourId: number,
+  reviewId: number,
+  reviewData: { rating: number; comment: string },
+  signal?: AbortSignal
+): Promise<Review> {
+  return apiRequest<Review, typeof reviewData>({
+    method: 'PATCH',
+    url: `/api/tours/${tourId}/reviews/${reviewId}/`,
+    data: reviewData,
+    auth: true,
+    signal,
+  });
+}
+
 /**
  * Fetch the current user's tours (requires authentication)
  * @param status - Optional filter by tour status (DRAFT, PUBLISHED, ARCHIVED)

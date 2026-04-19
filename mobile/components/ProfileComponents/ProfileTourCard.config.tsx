@@ -1,8 +1,10 @@
+import { ViewStyle } from 'react-native';
 import { Tour, TourStatus } from '@/api/tours';
 
 export interface ProfileTourCardProps {
   tour: Tour;
   onPress?: () => void;
+  containerStyle?: ViewStyle;
 }
 
 export const STATUS_COLORS: Record<TourStatus, { bg: string; text: string }> = {
