@@ -10,12 +10,12 @@ export default {
     version: "1.0.0",
     platforms: ["ios", "android"],
     orientation: "portrait",
-    icon: "./assets/images/icon.png",
+    icon: "./assets/images/mobile_icon.png",
     scheme: "mobile",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     splash: {
-      image: "./assets/images/splash-icon.png",
+      image: "./assets/images/mobile_icon.png",
       resizeMode: "contain",
       backgroundColor: "#ffffff"
     },
