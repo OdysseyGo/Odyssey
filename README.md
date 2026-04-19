@@ -62,6 +62,7 @@ Install the following:
 - Node.js + npm
 - Xcode (latest stable from App Store)
 - Xcode Command Line Tools
+- iOS SDK and development tools (installed with Xcode verify via Xcode > Settings > Components)
 - Apple ID signed in to Xcode
 
 ### First-time mobile setup
