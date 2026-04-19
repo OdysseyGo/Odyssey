@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   FlatList,
   ActivityIndicator,
-  Alert,
   TouchableOpacity,
   Image,
   RefreshControl,
@@ -26,16 +25,9 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { followingFeedStyles } from './following-feed.styles';
 import { FeedCardProps } from './following-feed.config';
+import { getAvatarColor } from './[userId].config';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-const AVATAR_PALETTE = ['#0284C7', '#D97706', '#16A34A', '#DC2626', '#7C3AED', '#0891B2'];
-
-function getAvatarColor(username: string): string {
-  let h = 0;
-  for (let i = 0; i < username.length; i++) h = username.charCodeAt(i) + ((h << 5) - h);
-  return AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length];
-}
 
 function getDifficultyColor(difficulty: string, color: (typeof Colors)['light']): string {
   const d = difficulty?.toLowerCase();
@@ -44,24 +36,25 @@ function getDifficultyColor(difficulty: string, color: (typeof Colors)['light'])
   return color.medium;
 }
 
+function formatCompletedAt(dateString: string, t: FeedCardProps['t']): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return t('profile.feedToday');
+  if (diffDays === 1) return t('profile.feedYesterday');
+  if (diffDays < 7) return t('profile.feedDaysAgo', { count: diffDays });
+  return date.toLocaleDateString();
+}
+
 // ─── Card ────────────────────────────────────────────────────────────────────
 
-function FeedCard({ item, styles, color, t }: FeedCardProps) {
+const FeedCard = React.memo(function FeedCard({ item, styles, color, t }: FeedCardProps) {
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const [avatarError, setAvatarError] = useState(false);
 
   const handlePressIn = () => (scale.value = withSpring(0.96, { damping: 15, stiffness: 200 }));
   const handlePressOut = () => (scale.value = withSpring(1, { damping: 10, stiffness: 100 }));
-
-  const formatCompletedAt = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return t('profile.feedToday');
-    if (diffDays === 1) return t('profile.feedYesterday');
-    if (diffDays < 7) return t('profile.feedDaysAgo', { count: diffDays });
-    return date.toLocaleDateString();
-  };
 
   const userInitial = item.user.username?.[0]?.toUpperCase() ?? '?';
   const avatarColor = getAvatarColor(item.user.username);
@@ -101,16 +94,16 @@ function FeedCard({ item, styles, color, t }: FeedCardProps) {
         </View>
 
         <View style={styles.infoOverlay}>
-          {/* Tapping the user row navigates to profile; tapping anywhere else goes to tour */}
           <TouchableOpacity
             onPress={() => router.push(`/profile/${item.user.id}`)}
             style={[styles.userHeader, { alignSelf: 'flex-start' }]}
             activeOpacity={0.7}
           >
-            {item.user.avatar_url ? (
+            {item.user.avatar_url && !avatarError ? (
               <Image
                 source={{ uri: item.user.avatar_url }}
                 style={[styles.userAvatar, { borderColor: 'rgba(255,255,255,0.5)' }]}
+                onError={() => setAvatarError(true)}
               />
             ) : (
               <View style={[styles.userAvatar, { backgroundColor: avatarColor }]}>
@@ -145,15 +138,20 @@ function FeedCard({ item, styles, color, t }: FeedCardProps) {
                   </Text>
                 </View>
               ) : null}
-              {item.tour.city ? <Text style={styles.cityText}>📍 {item.tour.city}</Text> : null}
+              {item.tour.city ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                  <Ionicons name="location-outline" size={10} color="rgba(255,255,255,0.75)" />
+                  <Text style={styles.cityText}>{item.tour.city}</Text>
+                </View>
+              ) : null}
             </View>
-            <Text style={styles.completedAt}>{formatCompletedAt(item.completed_at)}</Text>
+            <Text style={styles.completedAt}>{formatCompletedAt(item.completed_at, t)}</Text>
           </View>
         </View>
       </TouchableOpacity>
     </Animated.View>
   );
-}
+});
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
 
@@ -167,8 +165,9 @@ export default function FollowingFeed() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState(false);
+  const pageRef = useRef(1);
 
   useEffect(() => {
     fetchFeed();
@@ -176,15 +175,16 @@ export default function FollowingFeed() {
 
   const fetchFeed = async (pageNum: number = 1) => {
     try {
+      setError(false);
       const response: FollowingFeedResponse = await getFollowingFeed(pageNum);
       if (pageNum === 1) {
         setFeed(response.results);
       } else {
         setFeed((prev) => [...prev, ...response.results]);
       }
-      setHasMore(!!response.next);
+      setHasMore(response.next !== null);
     } catch {
-      Alert.alert(t('profile.feedErrorTitle'), t('profile.feedLoadError'));
+      setError(true);
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -194,8 +194,8 @@ export default function FollowingFeed() {
 
   const loadMore = () => {
     if (!loading && !loadingMore && !refreshing && hasMore) {
-      const nextPage = page + 1;
-      setPage(nextPage);
+      const nextPage = pageRef.current + 1;
+      pageRef.current = nextPage;
       setLoadingMore(true);
       fetchFeed(nextPage);
     }
@@ -203,8 +203,14 @@ export default function FollowingFeed() {
 
   const onRefresh = () => {
     setRefreshing(true);
-    setPage(1);
+    pageRef.current = 1;
     setHasMore(true);
+    fetchFeed(1);
+  };
+
+  const handleRetry = () => {
+    setLoading(true);
+    pageRef.current = 1;
     fetchFeed(1);
   };
 
@@ -226,12 +232,28 @@ export default function FollowingFeed() {
         <View style={styles.backButton} />
       </View>
 
-      {feed.length === 0 ? (
-        <Animated.View entering={FadeIn.duration(400)} style={styles.empty}>
-          <Ionicons name="heart-outline" size={64} color={color.subText} />
-          <Text style={styles.emptyText}>{t('profile.feedEmptyTitle')}</Text>
-          <Text style={styles.emptySubtext}>{t('profile.feedEmptySubtext')}</Text>
+      {error ? (
+        <Animated.View entering={FadeIn.duration(300)} style={styles.empty}>
+          <Ionicons name="cloud-offline-outline" size={56} color={color.subText} />
+          <Text style={styles.emptyText}>{t('profile.feedLoadError')}</Text>
+          <TouchableOpacity onPress={handleRetry} style={{ marginTop: 12 }}>
+            <Text style={{ color: color.primary, fontWeight: '600', fontSize: 15 }}>
+              {t('profile.feedRetry')}
+            </Text>
+          </TouchableOpacity>
         </Animated.View>
+      ) : feed.length === 0 ? (
+        refreshing ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={color.primary} />
+          </View>
+        ) : (
+          <Animated.View entering={FadeIn.duration(400)} style={styles.empty}>
+            <Ionicons name="heart-outline" size={64} color={color.subText} />
+            <Text style={styles.emptyText}>{t('profile.feedEmptyTitle')}</Text>
+            <Text style={styles.emptySubtext}>{t('profile.feedEmptySubtext')}</Text>
+          </Animated.View>
+        )
       ) : (
         <FlatList
           data={feed}

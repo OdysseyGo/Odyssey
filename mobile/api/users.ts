@@ -92,8 +92,8 @@ export type FeedItem = {
 
 export type FollowingFeedResponse = {
   count: number;
-  next?: string;
-  previous?: string;
+  next: string | null;
+  previous: string | null;
   results: FeedItem[];
 };
 
