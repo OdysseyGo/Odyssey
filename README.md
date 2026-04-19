@@ -51,34 +51,61 @@ Log in with a Django staff account (`is_staff=true`). The dashboard proxies all 
 - Analytics: growth charts, user/tour/difficulty distributions, active users
 - Reports: review and action user-submitted reports
 
-## 4. Run the Frontend (Expo / React Native)
+## 4. Frontend Development (Mobile iOS with Expo + Xcode)
 
-Expo runs on your machine (not in Docker):
+This project uses Expo + React Native with native iOS builds for on-device testing.
+
+### Prerequisites (macOS)
+
+Install the following:
+
+- Node.js + npm
+- Xcode (latest stable from App Store)
+- Xcode Command Line Tools
+- Apple ID signed in to Xcode
+
+### First-time mobile setup
+
+From the repository root:
 
 ```bash
 cd mobile
-npm install   # first time only
-npm start
+npm install
 ```
 
-## 5. View the Frontend
+Generate native iOS project files from Expo config:
 
-### On your phone
+```bash
+npx expo prebuild --platform ios
+```
 
-1. Install **Expo Go** on your device.
-2. Connect phone and computer to the same Wi‑Fi.
-3. Scan the QR code shown in the Expo terminal or devtools.
+### iOS signing and certificate setup (Xcode)
 
-### In your browser (web)
+1. Open `mobile/ios/Odyssey.xcworkspace` in Xcode (use `.xcworkspace`, not `.xcodeproj`).
+2. Go to Xcode > Settings > Accounts and sign in with your Apple ID.
+3. Select the `Odyssey` app target > Signing & Capabilities.
+4. Enable `Automatically manage signing`.
+5. Select your Team.
 
-- With Expo running, press **`w`** in the Expo terminal.
+### Physical device requirements (iPhone)
 
-### On iOS simulator (macOS)
+Before first install to device:
 
-- Download IOS Emulator from XCode
-- With Expo running, press **`i`** in the Expo terminal.
+1. Connect iPhone via USB.
+2. On iPhone, tap `Trust This Computer`.
+3. Enable Developer Mode on iOS (Settings > Privacy & Security > Developer Mode), then reboot if prompted.
+4. Keep device unlocked during first build/install.
 
-Changes in `mobile/` are reflected automatically via Fast Refresh.
+### Run and test on iOS device
+
+From `mobile/`:
+
+```bash
+npx expo prebuild --platform ios
+npx expo run:ios --device "<your device name>"
+```
+
+Run prebuild again whenever you change native-relevant app config/plugins (for example in `app.config.js`).
 
 ## 6. Formatting/Linting
 
