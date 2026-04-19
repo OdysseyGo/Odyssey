@@ -23,7 +23,9 @@ function UserRow({ item, theme, onRemove, removing }: FollowersUserRowProps) {
     <View style={[rowStyles.row, { borderBottomColor: theme.borderLight }]}>
       <TouchableOpacity
         style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}
-        onPress={() => router.push({ pathname: '/profile/[userId]', params: { userId: item.id.toString() } })}
+        onPress={() =>
+          router.push({ pathname: '/profile/[userId]', params: { userId: item.id.toString() } })
+        }
         activeOpacity={0.7}
       >
         {item.avatar_url ? (

@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ActivityIndicator,
-  ScrollView,
-} from 'react-native';
+import { View, Text, Image, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -161,16 +154,16 @@ export default function UserProfilePage() {
           {user.avatar_url ? (
             <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
           ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: avatarColor }]}>
+            <View
+              style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: avatarColor }]}
+            >
               <Text style={styles.avatarInitial}>{initial}</Text>
             </View>
           )}
 
           {fullName ? <Text style={styles.fullName}>{fullName}</Text> : null}
 
-          {user.country ? (
-            <Text style={styles.country}>📍 {user.country}</Text>
-          ) : null}
+          {user.country ? <Text style={styles.country}>📍 {user.country}</Text> : null}
 
           {!isSelf && (
             <TouchableOpacity
@@ -179,14 +172,23 @@ export default function UserProfilePage() {
               style={[
                 styles.followButton,
                 isFollowing
-                  ? { backgroundColor: color.foreground, borderWidth: 1.5, borderColor: color.borderLight }
+                  ? {
+                      backgroundColor: color.foreground,
+                      borderWidth: 1.5,
+                      borderColor: color.borderLight,
+                    }
                   : { backgroundColor: color.primary },
               ]}
             >
               {followLoading ? (
                 <ActivityIndicator size="small" color={isFollowing ? color.subText : color.white} />
               ) : (
-                <Text style={[styles.followButtonText, { color: isFollowing ? color.subText : color.white }]}>
+                <Text
+                  style={[
+                    styles.followButtonText,
+                    { color: isFollowing ? color.subText : color.white },
+                  ]}
+                >
                   {isFollowing ? t('profile.userProfileUnfollow') : t('profile.userProfileFollow')}
                 </Text>
               )}

@@ -9,7 +9,10 @@ import type { AddFriendsModalListProps } from './AddFriendsModalList.config';
 import { AddFriendUserDisplayDTO } from '@/api/users';
 import { followUser, FollowPayload, getFilteredUsersAddFriend } from '@/api/users';
 
-export default function AddFriendsModalList({ searchTextVal = '', onUserPress }: AddFriendsModalListProps) {
+export default function AddFriendsModalList({
+  searchTextVal = '',
+  onUserPress,
+}: AddFriendsModalListProps) {
   const theme = useColorTheme();
   const styles = addFriendsModalListStyles(theme);
   const color = Colors[theme];

@@ -1,9 +1,7 @@
 from rest_framework import serializers
 
-from apps.tours.models import Tour
 from apps.users.models.Follow import Follow
 from apps.users.models.User import User
-from apps.gamification.models import TourProgress
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -58,6 +56,7 @@ class FollowSerializer(serializers.ModelSerializer):
 
 class FollowingFeedSerializer(serializers.Serializer):
     """Serializer for completed tours in the following feed."""
+
     id = serializers.IntegerField(read_only=True)
     user = UserSerializer(read_only=True)
     tour = serializers.SerializerMethodField()

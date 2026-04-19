@@ -97,7 +97,6 @@ export type FollowingFeedResponse = {
   results: FeedItem[];
 };
 
-
 // API functions
 
 /**
@@ -256,5 +255,5 @@ export const getUserFollowings = (id: string) =>
 export const getFollowingFeed = (page: number = 1) =>
   apiRequest<FollowingFeedResponse>({
     url: `/api/users/following-feed/`,
-    params: { page } 
+    params: { page },
   });
