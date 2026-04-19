@@ -505,10 +505,8 @@ export default function Profile() {
     //router.push({pathname: '/profile/badges'});
     //alert('deneme');
   };
- 
+
   const handleToursPress = () => {
-    console.log("press");
-    
     router.push('/(tour)/my-completed-tours');
   };
 

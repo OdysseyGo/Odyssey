@@ -4,8 +4,8 @@ from rest_framework import filters, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.tours.models import Review, Tour, TourStep
 from apps.gamification.models import TourProgress
+from apps.tours.models import Review, Tour, TourStep
 
 from ..permissions import IsCreatorOrReadOnly
 from .filters import TourFilter
@@ -89,9 +89,8 @@ class TourViewSet(viewsets.ModelViewSet):
 
         # Get tour IDs that the user has completed
         completed_tour_ids = TourProgress.objects.filter(
-            user=request.user,
-            status=TourProgress.COMPLETED
-        ).values_list('tour_id', flat=True)
+            user=request.user, status=TourProgress.COMPLETED
+        ).values_list("tour_id", flat=True)
 
         queryset = Tour.objects.filter(id__in=completed_tour_ids)
 

@@ -26,7 +26,7 @@ import { Spacing } from '@/constants/Spacing';
 
 type CompletedTourStatus = 'PUBLISHED' | 'ARCHIVED';
 
-const TOUR_TABS: Array<{ key: CompletedTourStatus; label: string }> = [
+const TOUR_TABS: { key: CompletedTourStatus; label: string }[] = [
   { key: 'PUBLISHED', label: 'profile.tabs.published' },
   { key: 'ARCHIVED', label: 'profile.tabs.archived' },
 ];
@@ -118,7 +118,9 @@ export default function MyCompletedToursScreen() {
 
     const parsedRating = Number(reviewRating);
     if (!(parsedRating >= 1 && parsedRating <= 5)) {
-      Alert.alert(t('profile.reviewRatingInvalid', { defaultValue: 'Rating must be between 1 and 5.' }));
+      Alert.alert(
+        t('profile.reviewRatingInvalid', { defaultValue: 'Rating must be between 1 and 5.' })
+      );
       return;
     }
 
@@ -166,14 +168,15 @@ export default function MyCompletedToursScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
-    <Stack.Screen options={{ headerShown: false }} />
+      <Stack.Screen options={{ headerShown: false }} />
       {/* ─── Header ──────────────────────────────── */}
-      <Animated.View style={[styles.header,{ paddingTop: insets.top, backgroundColor: theme.primary, opacity: headerOpacity,
-          },
+      <Animated.View
+        style={[
+          styles.header,
+          { paddingTop: insets.top, backgroundColor: theme.primary, opacity: headerOpacity },
         ]}
       >
         <View style={styles.headerContent}>
-        
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
             <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
           </TouchableOpacity>
@@ -185,7 +188,12 @@ export default function MyCompletedToursScreen() {
       </Animated.View>
 
       {/* ─── Tabs ────────────────────────────────── */}
-      <View style={[styles.tabsContainer, { backgroundColor: theme.background, borderBottomColor: theme.foregroundSecondary }]}>
+      <View
+        style={[
+          styles.tabsContainer,
+          { backgroundColor: theme.background, borderBottomColor: theme.foregroundSecondary },
+        ]}
+      >
         {TOUR_TABS.map((tab) => (
           <TouchableOpacity
             key={tab.key}
@@ -241,9 +249,7 @@ export default function MyCompletedToursScreen() {
       ) : tours.length === 0 ? (
         <View style={styles.centerContainer}>
           <Ionicons name="map-outline" size={48} color={theme.subText} style={{ opacity: 0.5 }} />
-          <Text style={[styles.emptyStateText, { color: theme.subText }]}>
-            {getEmptyMessage()}
-          </Text>
+          <Text style={[styles.emptyStateText, { color: theme.subText }]}>{getEmptyMessage()}</Text>
         </View>
       ) : (
         <Animated.FlatList
@@ -252,7 +258,7 @@ export default function MyCompletedToursScreen() {
           renderItem={({ item }) => {
             const userReview = currentUser ? getUserReview(item) : null;
             return (
-              <View style={[styles.tourItem, { backgroundColor: theme.cardSurface }]}> 
+              <View style={[styles.tourItem, { backgroundColor: theme.cardSurface }]}>
                 <ProfileTourCard
                   tour={item}
                   containerStyle={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
@@ -282,13 +288,18 @@ export default function MyCompletedToursScreen() {
         />
       )}
 
-      <Modal visible={reviewModalVisible} transparent animationType="fade" onRequestClose={closeReviewModal}>
+      <Modal
+        visible={reviewModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeReviewModal}
+      >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: theme.cardSurface }]}> 
-            <Text style={[styles.modalTitle, { color: theme.text }]}> 
+          <View style={[styles.modalCard, { backgroundColor: theme.cardSurface }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>
               {t('profile.leaveReview', { defaultValue: 'Leave a Review' })}
             </Text>
-            <Text style={[styles.modalLabel, { color: theme.subText }]}> 
+            <Text style={[styles.modalLabel, { color: theme.subText }]}>
               {t('profile.reviewRatingLabel', { defaultValue: 'Rating (1-5)' })}
             </Text>
             <TextInput
@@ -300,7 +311,7 @@ export default function MyCompletedToursScreen() {
               placeholderTextColor={theme.subText}
               style={[styles.input, { color: theme.text, borderColor: theme.foregroundSecondary }]}
             />
-            <Text style={[styles.modalLabel, { color: theme.subText }]}> 
+            <Text style={[styles.modalLabel, { color: theme.subText }]}>
               {t('profile.reviewCommentLabel', { defaultValue: 'Comment' })}
             </Text>
             <TextInput
@@ -312,11 +323,14 @@ export default function MyCompletedToursScreen() {
               placeholderTextColor={theme.subText}
               multiline
               maxLength={200}
-              style={[styles.textArea, { color: theme.text, borderColor: theme.foregroundSecondary }]}
+              style={[
+                styles.textArea,
+                { color: theme.text, borderColor: theme.foregroundSecondary },
+              ]}
             />
             <View style={styles.modalFooter}>
               <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: theme.surface } ]}
+                style={[styles.modalButton ]}
                 onPress={closeReviewModal}
                 activeOpacity={0.8}
               >
@@ -330,7 +344,7 @@ export default function MyCompletedToursScreen() {
                 disabled={reviewSubmitting}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.modalButtonText, { color: '#FFFFFF' }]}> 
+                <Text style={[styles.modalButtonText, { color: '#FFFFFF' }]}>
                   {reviewSubmitting
                     ? t('common.submitting', { defaultValue: 'Submitting...' })
                     : t('common.submit', { defaultValue: 'Submit' })}
