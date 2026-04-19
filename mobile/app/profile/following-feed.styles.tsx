@@ -4,7 +4,7 @@ import { Spacing } from '@/constants/Spacing';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - Spacing.md * 2;
-const CARD_HEIGHT = 220;
+const CARD_HEIGHT = 270;
 
 export { CARD_WIDTH, CARD_HEIGHT };
 
@@ -39,8 +39,8 @@ export const followingFeedStyles = (theme: ThemeName) => {
     },
     list: {
       padding: Spacing.md,
+      paddingBottom: Spacing.xl,
     },
-    // Tour card styles adapted from TourDisplayComp
     cardWrapper: {
       width: CARD_WIDTH,
       marginBottom: Spacing.md,
@@ -71,7 +71,7 @@ export const followingFeedStyles = (theme: ThemeName) => {
     },
     imagePlaceholder: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: color.foreground,
+      backgroundColor: color.foregroundSecondary,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -80,7 +80,7 @@ export const followingFeedStyles = (theme: ThemeName) => {
       bottom: 0,
       left: 0,
       right: 0,
-      height: '70%',
+      height: '80%',
     },
     // Completion badge — top right
     completionBadge: {
@@ -89,19 +89,19 @@ export const followingFeedStyles = (theme: ThemeName) => {
       right: Spacing.md,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 3,
-      paddingHorizontal: 8,
+      gap: 4,
+      paddingHorizontal: 9,
       paddingVertical: 5,
-      backgroundColor: 'rgba(0,0,0,0.6)',
+      backgroundColor: 'rgba(0,0,0,0.55)',
       borderRadius: 10,
       borderWidth: 0.5,
-      borderColor: 'rgba(255,255,255,0.15)',
+      borderColor: 'rgba(74,222,128,0.4)',
     },
     completionText: {
-      color: color.white,
-      fontSize: 12,
+      color: '#4ADE80',
+      fontSize: 10,
       fontWeight: '800',
-      letterSpacing: 0.2,
+      letterSpacing: 0.5,
     },
     // Duration pill — top left
     durationPill: {
@@ -111,7 +111,7 @@ export const followingFeedStyles = (theme: ThemeName) => {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      paddingHorizontal: 8,
+      paddingHorizontal: 9,
       paddingVertical: 5,
       backgroundColor: color.primary,
       borderRadius: 10,
@@ -143,63 +143,114 @@ export const followingFeedStyles = (theme: ThemeName) => {
       flexDirection: 'row',
       alignItems: 'center',
       marginBottom: Spacing.sm,
+      gap: 6,
+    },
+    userAvatar: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1.5,
+      borderColor: 'rgba(255,255,255,0.5)',
+      overflow: 'hidden',
+    },
+    userAvatarText: {
+      color: '#fff',
+      fontSize: 11,
+      fontWeight: '800',
     },
     userName: {
       color: color.white,
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: '700',
-      marginLeft: Spacing.sm,
       textShadowColor: 'rgba(0,0,0,0.5)',
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 3,
-    },
-    completedText: {
-      color: 'rgba(255,255,255,0.8)',
-      fontSize: 12,
-      marginLeft: Spacing.sm,
     },
     tourTitle: {
       color: color.white,
-      fontSize: 16,
-      fontWeight: '700',
-      lineHeight: 22,
-      letterSpacing: -0.2,
+      fontSize: 17,
+      fontWeight: '800',
+      lineHeight: 23,
+      letterSpacing: -0.3,
       textShadowColor: 'rgba(0,0,0,0.5)',
       textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 3,
+      textShadowRadius: 4,
       marginBottom: Spacing.xs,
     },
     tourDescription: {
-      color: 'rgba(255,255,255,0.9)',
-      fontSize: 13,
-      lineHeight: 18,
-      marginBottom: Spacing.sm,
+      color: 'rgba(255,255,255,0.8)',
+      fontSize: 12,
+      lineHeight: 17,
+      marginBottom: 7,
     },
     metaRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 4,
+      marginTop: 4,
     },
-    metaText: {
-      color: 'rgba(255,255,255,0.75)',
-      fontSize: 11,
-      fontWeight: '500',
+    metaTags: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
       flexShrink: 1,
+      flexWrap: 'wrap',
+    },
+    categoryChip: {
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      backgroundColor: 'rgba(255,255,255,0.18)',
+      borderRadius: 6,
+      borderWidth: 0.5,
+      borderColor: 'rgba(255,255,255,0.25)',
+    },
+    categoryChipText: {
+      color: 'rgba(255,255,255,0.9)',
+      fontSize: 10,
+      fontWeight: '600',
+      letterSpacing: 0.2,
+    },
+    difficultyChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: 6,
+    },
+    difficultyDot: {
+      width: 5,
+      height: 5,
+      borderRadius: 3,
+    },
+    difficultyChipText: {
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 0.2,
+    },
+    cityText: {
+      color: 'rgba(255,255,255,0.75)',
+      fontSize: 10,
+      fontWeight: '500',
     },
     completedAt: {
-      color: 'rgba(255,255,255,0.6)',
+      color: 'rgba(255,255,255,0.55)',
       fontSize: 10,
       textAlign: 'right',
+      flexShrink: 0,
     },
     empty: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: Spacing.lg,
+      paddingHorizontal: Spacing.xl,
     },
     emptyText: {
-      fontSize: 18,
+      fontSize: 17,
+      fontWeight: '600',
       textAlign: 'center',
       marginTop: Spacing.md,
       color: color.subText,
@@ -209,6 +260,7 @@ export const followingFeedStyles = (theme: ThemeName) => {
       textAlign: 'center',
       marginTop: Spacing.sm,
       color: color.subText,
+      lineHeight: 20,
     },
   });
 };

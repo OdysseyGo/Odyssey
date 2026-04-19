@@ -1,5 +1,4 @@
 import { apiRequest } from './APIClient';
-import { Tour } from './tours';
 
 // Type definitions
 export type User = {
@@ -71,11 +70,23 @@ export type FollowPayload = {
   following: number; //id of the target
 };
 
+export type FeedTour = {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  duration_minutes: number;
+  city?: string;
+  cover_image?: string;
+  created_at: string;
+};
+
 export type FeedItem = {
-  id: number; // id of tourProgress, its a better key value then combining userid + tour. 
+  id: number; // id of tourProgress, its a better key value then combining userid + tour.
   user: User;
-  tour: Tour;
-  completed_at: string; 
+  tour: FeedTour;
+  completed_at: string;
 };
 
 export type FollowingFeedResponse = {

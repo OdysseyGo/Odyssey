@@ -81,7 +81,22 @@
     "followingError": "Could not load following",
     "unfollow": "Unfollow",
     "removeFollower": "Remove",
-    "followingFeedTitle": "Following Feed"
+    "followingFeedTitle": "Following Feed",
+    "feedCompletedBadge": "COMPLETED",
+    "feedCompletedText": "completed this tour",
+    "feedToday": "Today",
+    "feedYesterday": "Yesterday",
+    "feedDaysAgo": "{{count}} days ago",
+    "feedEmptyTitle": "No completed tours from your friends yet.",
+    "feedEmptySubtext": "Follow more users to see their completed tours here!",
+    "feedErrorTitle": "Error",
+    "feedLoadError": "Failed to load following feed",
+    "feedModalViewTour": "View Tour",
+    "feedModalViewProfile": "View Profile",
+    "feedModalCancel": "Cancel",
+    "userProfileFollow": "Follow",
+    "userProfileUnfollow": "Unfollow",
+    "userProfileError": "Could not load this profile"
   },
   "tour": {
     "loading": "Loading tours...",

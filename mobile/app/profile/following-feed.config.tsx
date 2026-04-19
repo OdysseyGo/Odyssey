@@ -1,27 +1,11 @@
-export interface FollowingFeedItem {
-  id: number;
-  user: {
-    id: number;
-    username: string;
-    avatar_url?: string;
-  };
-  tour: {
-    id: number;
-    title: string;
-    description: string;
-    category: string;
-    difficulty: string;
-    duration_minutes: number;
-    city?: string;
-    cover_image?: string;
-    created_at: string;
-  };
-  completed_at: string;
-}
+import Colors from '@/constants/Colors';
+import { FeedItem } from '@/api/users';
+import { followingFeedStyles } from './following-feed.styles';
+import { TFunction } from 'i18next';
 
-export interface FollowingFeedResponse {
-  count: number;
-  next?: string;
-  previous?: string;
-  results: FollowingFeedItem[];
-}
+export type FeedCardProps = {
+  item: FeedItem;
+  styles: ReturnType<typeof followingFeedStyles>;
+  color: (typeof Colors)['light'];
+  t: TFunction;
+};

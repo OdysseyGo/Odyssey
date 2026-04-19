@@ -29,7 +29,6 @@ import { removeAuthToken } from '@/api/auth';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
-import { Button } from '@react-navigation/elements';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = 240;
@@ -546,7 +545,28 @@ export default function Profile() {
         {/* ─── Actions ─────────────────────────────── */}
         <View style={styles.actionsRow}>
           <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
-          <Button onPressIn={()=> router.navigate("/profile/following-feed")}> Following feed </Button>
+          <TouchableOpacity
+            onPress={() => router.navigate('/profile/following-feed')}
+            activeOpacity={0.7}
+            style={{
+              paddingVertical: Spacing.sm + 2,
+              paddingHorizontal: Spacing.lg,
+              borderRadius: 999,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              borderWidth: 1.5,
+              borderColor: theme.primary,
+              backgroundColor: colorScheme === 'light' ? theme.primaryMuted : 'transparent',
+              alignSelf: 'center',
+              gap: Spacing.sm,
+            }}
+          >
+            <Ionicons name="newspaper-outline" size={16} color={theme.primary} />
+            <Text style={{ fontSize: 14, fontWeight: '600', color: theme.primary }}>
+              {t('profile.followingFeedTitle')}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* ─── Badges ──────────────────────────────── */}
@@ -613,8 +633,11 @@ const styles = StyleSheet.create({
 
   // Actions
   actionsRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: Spacing.lg + 2,
+    gap: Spacing.md,
   },
 
   // Logout
