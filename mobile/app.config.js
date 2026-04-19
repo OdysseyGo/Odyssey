@@ -20,7 +20,7 @@ export default {
       backgroundColor: '#ffffff',
     },
     ios: {
-      bundleIdentifier: 'com.sami.odyssey.ar',
+      bundleIdentifier: 'com.app.odyssey.go',
       supportsTablet: true,
       infoPlist: {
         NSCameraUsageDescription: 'Odyssey needs camera access for AR exploration.',
@@ -35,7 +35,7 @@ export default {
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
-      package: 'com.sami.odyssey.ar',
+      package: 'com.app.odyssey.go',
     },
     plugins: [
       './scripts/newArchEnabled.js',
