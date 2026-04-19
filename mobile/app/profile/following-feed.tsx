@@ -104,7 +104,7 @@ function FeedCard({ item, styles, color, t }: FeedCardProps) {
           {/* Tapping the user row navigates to profile; tapping anywhere else goes to tour */}
           <TouchableOpacity
             onPress={() => router.push(`/profile/${item.user.id}`)}
-            style={styles.userHeader}
+            style={[styles.userHeader, { alignSelf: 'flex-start' }]}
             activeOpacity={0.7}
           >
             {item.user.avatar_url ? (
