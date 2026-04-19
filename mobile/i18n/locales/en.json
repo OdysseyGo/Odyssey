@@ -80,7 +80,9 @@
     "followersError": "Could not load followers",
     "followingError": "Could not load following",
     "unfollow": "Unfollow",
-    "removeFollower": "Remove"
+    "removeFollower": "Remove",
+    "completedTours": "Completed Tours",
+    "emptyCompletedTour": "No completed tours yet."
   },
   "tour": {
     "loading": "Loading tours...",

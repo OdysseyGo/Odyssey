@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.tours.models import Review, Tour, TourStep
+from apps.gamification.models import TourProgress
 
 from ..permissions import IsCreatorOrReadOnly
 from .filters import TourFilter
@@ -61,6 +62,40 @@ class TourViewSet(viewsets.ModelViewSet):
         """Return tours created by the current user, optionally filtered by status."""
         queryset = Tour.objects.filter(creator=request.user)
 
+        status = request.query_params.get("status")
+        if status:
+            queryset = queryset.filter(status=status)
+
+        queryset = queryset.annotate(average_rating=Avg("reviews__rating")).order_by(
+            "-updated_at"
+        )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="my-completed-tours",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def my_completed_tours(self, request):
+        """Return tours that the current user has completed."""
+
+        # Get tour IDs that the user has completed
+        completed_tour_ids = TourProgress.objects.filter(
+            user=request.user,
+            status=TourProgress.COMPLETED
+        ).values_list('tour_id', flat=True)
+
+        queryset = Tour.objects.filter(id__in=completed_tour_ids)
+
+        # Optional status filter (PUBLISHED or ARCHIVED)
         status = request.query_params.get("status")
         if status:
             queryset = queryset.filter(status=status)

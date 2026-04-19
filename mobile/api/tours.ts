@@ -288,6 +288,26 @@ export async function getMyTours(
 }
 
 /**
+ * Fetch the current user's completed tours (requires authentication)
+ * @param status - Optional filter by tour status (PUBLISHED or ARCHIVED)
+ */
+export async function getMyCompletedTours(
+  status?: TourStatus,
+  signal?: AbortSignal
+): Promise<ToursResponse> {
+  const params: Record<string, any> = {};
+  if (status) params.status = status;
+
+  return apiRequest<ToursResponse>({
+    method: 'GET',
+    url: '/api/tours/my-completed-tours/',
+    params,
+    auth: true,
+    signal,
+  });
+}
+
+/**
  * Add a step to a tour (requires authentication)
  */
 export async function createTourStep(

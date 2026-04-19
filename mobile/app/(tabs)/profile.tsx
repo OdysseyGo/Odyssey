@@ -503,7 +503,13 @@ export default function Profile() {
 
   const handleBadgesPress = () => {
     //router.push({pathname: '/profile/badges'});
-    alert('deneme');
+    //alert('deneme');
+  };
+ 
+  const handleToursPress = () => {
+    console.log("press");
+    
+    router.push('/(tour)/my-completed-tours');
   };
 
   return (
@@ -540,6 +546,7 @@ export default function Profile() {
           {...profileStats}
           onFollowersPress={handleFollowersPress}
           onFollowingPress={handleFollowingPress}
+          onToursPress={handleToursPress}
         />
 
         {/* ─── Actions ─────────────────────────────── */}
