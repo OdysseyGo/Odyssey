@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
-import { useLocalSearchParams, router, Stack } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -14,11 +14,7 @@ import { FollowersUserRowProps } from './followers.config';
 
 function UserRow({ item, theme, onRemove, removing }: FollowersUserRowProps) {
   const { t } = useTranslation();
-  const initials =
-    item.first_name && item.last_name
-      ? `${item.first_name[0]}${item.last_name[0]}`.toUpperCase()
-      : item.username[0].toUpperCase();
-
+  const [avatarError, setAvatarError] = useState(false);
   return (
     <View style={[rowStyles.row, { borderBottomColor: theme.borderLight }]}>
       <TouchableOpacity
@@ -28,11 +24,15 @@ function UserRow({ item, theme, onRemove, removing }: FollowersUserRowProps) {
         }
         activeOpacity={0.7}
       >
-        {item.avatar_url ? (
-          <Image source={{ uri: item.avatar_url }} style={rowStyles.avatar} />
+        {item.avatar_url && !avatarError ? (
+          <Image
+            source={{ uri: item.avatar_url }}
+            style={rowStyles.avatar}
+            onError={() => setAvatarError(true)}  // add this
+          />
         ) : (
-          <View style={[rowStyles.avatarPlaceholder, { backgroundColor: theme.primary }]}>
-            <Text style={rowStyles.initials}>{initials}</Text>
+          <View style={[rowStyles.avatarPlaceholder, { backgroundColor: theme.white }]}>
+            <Ionicons name="person" size={22} color={theme.subText} />
           </View>
         )}
         <View style={rowStyles.info}>
@@ -97,8 +97,6 @@ export default function FollowersPage() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <Stack.Screen options={{ headerShown: false }} />
-
       {/* Header */}
       <View
         style={[styles.header, { backgroundColor: colors.primary, paddingTop: insets.top + 8 }]}

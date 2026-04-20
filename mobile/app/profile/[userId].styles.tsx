@@ -56,6 +56,9 @@ export const userProfileStyles = (theme: ThemeName) => {
       height: 96,
       borderRadius: 48,
     },
+    avatarImage: {
+      overflow: 'hidden',
+    },
     avatarPlaceholder: {
       alignItems: 'center',
       justifyContent: 'center',

@@ -73,10 +73,7 @@ function RootLayoutNav() {
             <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
             <Stack.Screen name="(tour)" options={{ headerShown: false }} />
             <Stack.Screen name="tour/[id]" options={{ headerShown: false }} />
-            <Stack.Screen name="profile/followers" options={{ headerShown: false }} />
-            <Stack.Screen name="profile/following" options={{ headerShown: false }} />
-            <Stack.Screen name="profile/following-feed" options={{ headerShown: false }} />
-            <Stack.Screen name="profile/[userId]" options={{ headerShown: false }} />
+            <Stack.Screen name="profile" options={{ headerShown: false }} />
             <Stack.Screen
               name="search"
               options={{

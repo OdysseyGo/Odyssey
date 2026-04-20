@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
-import { useLocalSearchParams, router, Stack } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +10,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { userProfileStyles } from './[userId].styles';
-import { getAvatarColor, StatItem } from './[userId].config';
+import { StatItem } from './[userId].config';
 
 // Module-level cache: avoids loading spinner on repeat visits
 const profileCache = new Map<string, { user: User; isFollowing: boolean; currentUserId: number }>();
@@ -30,9 +30,11 @@ export default function UserProfilePage() {
   const [isFollowing, setIsFollowing] = useState(cached?.isFollowing ?? false);
   const [followLoading, setFollowLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(cached?.currentUserId ?? null);
+  const [avatarError, setAvatarError] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
+    setAvatarError(false);
     loadProfile();
   }, [userId]);
 
@@ -107,7 +109,6 @@ export default function UserProfilePage() {
   if (loading) {
     return (
       <View style={styles.root}>
-        <Stack.Screen options={{ headerShown: false }} />
         <Header />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={color.primary} />
@@ -119,7 +120,6 @@ export default function UserProfilePage() {
   if (!user) {
     return (
       <View style={styles.root}>
-        <Stack.Screen options={{ headerShown: false }} />
         <Header />
         <View style={styles.centered}>
           <Ionicons name="alert-circle-outline" size={44} color={color.subText} />
@@ -129,8 +129,6 @@ export default function UserProfilePage() {
     );
   }
 
-  const avatarColor = getAvatarColor(user.username);
-  const initial = user.username[0]?.toUpperCase() ?? '?';
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
   const isSelf = currentUserId === user.id;
 
@@ -143,7 +141,6 @@ export default function UserProfilePage() {
 
   return (
     <View style={styles.root}>
-      <Stack.Screen options={{ headerShown: false }} />
       <Header />
 
       <ScrollView
@@ -151,15 +148,17 @@ export default function UserProfilePage() {
       >
         {/* Avatar + name + follow */}
         <View style={styles.avatarSection}>
-          {user.avatar_url ? (
-            <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
-          ) : (
-            <View
-              style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: avatarColor }]}
-            >
-              <Text style={styles.avatarInitial}>{initial}</Text>
-            </View>
-          )}
+          {user.avatar_url && !avatarError ? (
+          <Image
+            source={{ uri: user.avatar_url }}
+            style={[styles.avatar, styles.avatarImage]}
+            onError={() => setAvatarError(true)}
+          />
+        ) : (
+          <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: color.white }]}>
+            <Ionicons name="person" size={40} color={color.subText} />
+          </View>
+)}
 
           {fullName ? <Text style={styles.fullName}>{fullName}</Text> : null}
 

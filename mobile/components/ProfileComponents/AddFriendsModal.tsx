@@ -24,7 +24,9 @@ export default function AddFriendsModal({
 
   const handleUserPress = (userId: number) => {
     onClose();
-    router.push({ pathname: '/profile/[userId]', params: { userId: userId.toString() } });
+    setTimeout(() => {
+      router.push({ pathname: '/profile/[userId]', params: { userId: userId.toString() } });
+    }, 300);
   };
 
   React.useEffect(() => {

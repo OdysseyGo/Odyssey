@@ -155,6 +155,15 @@ export const followingFeedStyles = (theme: ThemeName) => {
       borderColor: 'rgba(255,255,255,0.5)',
       overflow: 'hidden',
     },
+    userAvatarFallback: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1.5,
+      borderColor: 'rgba(255,255,255,0.5)',
+    },
     userAvatarText: {
       color: '#fff',
       fontSize: 11,

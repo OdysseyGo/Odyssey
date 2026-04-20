@@ -25,7 +25,6 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { followingFeedStyles } from './following-feed.styles';
 import { FeedCardProps } from './following-feed.config';
-import { getAvatarColor } from './[userId].config';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -56,8 +55,6 @@ const FeedCard = React.memo(function FeedCard({ item, styles, color, t }: FeedCa
   const handlePressIn = () => (scale.value = withSpring(0.96, { damping: 15, stiffness: 200 }));
   const handlePressOut = () => (scale.value = withSpring(1, { damping: 10, stiffness: 100 }));
 
-  const userInitial = item.user.username?.[0]?.toUpperCase() ?? '?';
-  const avatarColor = getAvatarColor(item.user.username);
   const difficultyColor = getDifficultyColor(item.tour.difficulty, color);
 
   return (
@@ -84,7 +81,7 @@ const FeedCard = React.memo(function FeedCard({ item, styles, color, t }: FeedCa
         />
 
         <View style={styles.completionBadge}>
-          <Ionicons name="checkmark-circle" size={12} color="#4ADE80" />
+          <Ionicons name="checkmark-circle" size={12} color={color.easy} />
           <Text style={styles.completionText}>{t('profile.feedCompletedBadge')}</Text>
         </View>
 
@@ -102,12 +99,12 @@ const FeedCard = React.memo(function FeedCard({ item, styles, color, t }: FeedCa
             {item.user.avatar_url && !avatarError ? (
               <Image
                 source={{ uri: item.user.avatar_url }}
-                style={[styles.userAvatar, { borderColor: 'rgba(255,255,255,0.5)' }]}
+                style={styles.userAvatar}
                 onError={() => setAvatarError(true)}
               />
             ) : (
-              <View style={[styles.userAvatar, { backgroundColor: avatarColor }]}>
-                <Text style={styles.userAvatarText}>{userInitial}</Text>
+              <View style={[styles.userAvatarFallback, { backgroundColor: color.white }]}>
+                <Ionicons name="person" size={14} color={color.subText} />
               </View>
             )}
             <Text style={styles.userName}>{item.user.username}</Text>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -73,7 +74,7 @@ export default function AddFriendsModalList({
             {item.avatar_url ? (
               <Image source={{ uri: item.avatar_url }} style={styles.avatarImage} />
             ) : (
-              <FontAwesome name="user" size={14} color="white" />
+              <Ionicons name="person" size={14} color={color.white} />
             )}
           </View>
           <Text style={styles.username}>{item.username}</Text>

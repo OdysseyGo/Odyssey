@@ -52,6 +52,7 @@ export const rowStyles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
+    overflow: 'hidden' as const,
   },
   avatarPlaceholder: {
     width: 46,
