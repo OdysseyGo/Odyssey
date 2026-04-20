@@ -239,13 +239,13 @@ export async function getTourSteps(tourId: number, signal?: AbortSignal): Promis
 }
 
 /**
- * Fetch reviews for a specific tour
+ * Fetch reviews for a specific tour (requires authentication)
  */
 export async function getTourReviews(tourId: number, signal?: AbortSignal): Promise<Review[]> {
   return apiRequest<Review[]>({
     method: 'GET',
     url: `/api/tours/${tourId}/reviews/`,
-    auth: false,
+    auth: true,
     signal,
   });
 }
