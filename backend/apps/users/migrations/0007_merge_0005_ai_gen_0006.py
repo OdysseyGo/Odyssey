@@ -4,8 +4,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("tours", "0008_tour_cover_image"),
-        ("tours", "0008_tour_cover_image_tour_credit_price"),
+        ("users", "0005_user_ai_generation_reset_date_and_more"),
+        ("users", "0006_merge_20260410_2235"),
     ]
 
     operations = []

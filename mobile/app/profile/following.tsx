@@ -9,8 +9,8 @@ import { getUserFollowings, unfollowUser, User } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
-import { styles, rowStyles } from './followList.styles';
-import { FollowingUserRowProps } from './following.config';
+import { styles, rowStyles } from './_helpers/followList.styles';
+import { FollowingUserRowProps } from './_helpers/following.config';
 
 function UserRow({ item, theme, onUnfollow, unfollowing }: FollowingUserRowProps) {
   const { t } = useTranslation();

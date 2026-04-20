@@ -8,7 +8,7 @@ import {
   Puzzle,
 } from '@/components/TourStepComponents/TourStep.config';
 
-import { getInProgressTour } from '@/api/tourProgress';
+import { deleteTourProgress, getInProgressTour } from '@/api/tourProgress';
 import { getTour } from '@/api/tours';
 
 interface ActiveTourState {
@@ -188,7 +188,20 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const apiTour = await getTour(activeProgress.tour);
+      let apiTour: ApiTour;
+      try {
+        apiTour = await getTour(activeProgress.tour);
+      } catch (tourErr: any) {
+        // Orphan progress: the referenced tour is gone or unreachable.
+        // Clean up the stale record so the user can start new tours.
+        console.warn('Active tour progress references a missing tour — cleaning up.');
+        try {
+          await deleteTourProgress({ id: activeProgress.id });
+        } catch (cleanupErr) {
+          console.error('Failed to clean up orphan tour progress:', cleanupErr);
+        }
+        return;
+      }
       const internalTour = mapApiTourToInternalTour(apiTour);
 
       let currentStepIdx = 0;

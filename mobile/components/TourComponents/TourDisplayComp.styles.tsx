@@ -78,11 +78,18 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
       letterSpacing: 0.2,
     },
 
-    // Duration pill
-    durationPill: {
+    // Stack holding duration + lock/credit/premium badges in top-left
+    topLeftStack: {
       position: 'absolute',
       top: Spacing.md,
       left: Spacing.md,
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      gap: 6,
+    },
+
+    // Duration pill
+    durationPill: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
@@ -104,6 +111,51 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
       color: color.white,
       fontSize: 11,
       fontWeight: '700',
+    },
+
+    // Credit badge — glassmorphic dark, matches ratingBadge language
+    creditBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      backgroundColor: 'rgba(0,0,0,0.55)',
+      borderRadius: 10,
+      borderWidth: 0.5,
+      borderColor: 'rgba(255,255,255,0.18)',
+    },
+    creditBadgeText: {
+      color: color.star,
+      fontSize: 11,
+      fontWeight: '800',
+      letterSpacing: 0.2,
+    },
+
+    // Premium badge — accent-filled variant
+    premiumBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      backgroundColor: color.secondary ?? color.primary,
+      borderRadius: 10,
+      ...Platform.select({
+        ios: {
+          shadowColor: color.secondary ?? color.primary,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.4,
+          shadowRadius: 6,
+        },
+        android: { elevation: 4 },
+      }),
+    },
+    premiumBadgeText: {
+      color: color.white,
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 0.4,
     },
 
     // Info overlay at bottom

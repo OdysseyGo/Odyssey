@@ -46,19 +46,25 @@ class TourProgressViewSet(
         user = self.request.user
 
         # Check if the user already has an active tour
-        active_progress = TourProgress.objects.filter(
-            user=user, status=TourProgress.IN_PROGRESS
-        ).first()
+        active_progress = (
+            TourProgress.objects.filter(user=user, status=TourProgress.IN_PROGRESS)
+            .select_related("tour")
+            .first()
+        )
 
         if active_progress:
-            # Block creation and tell the frontend about the existing tour
-            raise ValidationError(
-                {
-                    "error": "You already have a tour in progress.",
-                    "active_tour_id": active_progress.tour_id,
-                    "progress_id": active_progress.id,
-                }
-            )
+            # If the referenced tour is gone/unreachable, the progress is orphaned —
+            # clean it up silently and let the user proceed.
+            if active_progress.tour_id is None or active_progress.tour is None:
+                active_progress.delete()
+            else:
+                raise ValidationError(
+                    {
+                        "error": "You already have a tour in progress.",
+                        "active_tour_id": active_progress.tour_id,
+                        "progress_id": active_progress.id,
+                    }
+                )
 
         # If no active tour, create the new one normally
         tour = serializer.validated_data["tour"]
@@ -179,9 +185,20 @@ class TourProgressViewSet(
 
     @action(detail=False, methods=["get"], url_path="in-progress")
     def get_in_progress(self, request):
-        active_progress = TourProgress.objects.filter(
-            user=request.user, status=TourProgress.IN_PROGRESS
-        ).first()
+        active_progress = (
+            TourProgress.objects.filter(
+                user=request.user, status=TourProgress.IN_PROGRESS
+            )
+            .select_related("tour")
+            .first()
+        )
+
+        # Self-heal orphan progress whose tour is gone/unreachable.
+        if active_progress and (
+            active_progress.tour_id is None or active_progress.tour is None
+        ):
+            active_progress.delete()
+            active_progress = None
 
         if not active_progress:
             return Response({"detail": "No active tour found."}, status=200)

@@ -1,15 +1,19 @@
-import React, { useRef, useEffect } from 'react';
-import { TouchableOpacity, Animated, View } from 'react-native';
+import React from 'react';
+import { TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { createTourButtonStyles } from './CreateTourButton.styles';
 import Colors from '@/constants/Colors';
+import { useActiveTour } from '@/contexts/ActiveTourContext';
 
 export default function CreateTourButton() {
   const theme = useColorTheme();
   const styles = createTourButtonStyles(theme);
   const color = Colors[theme];
+  const { isActive, tour } = useActiveTour();
+
+  const activeTourVisible = isActive && !!tour;
 
   const handlePress = () => {
     router.push('/create-tour');
@@ -19,7 +23,7 @@ export default function CreateTourButton() {
     <View
       style={{
         position: 'absolute',
-        bottom: 24,
+        bottom: activeTourVisible ? 96 : 24,
         right: 24,
         alignItems: 'center',
         justifyContent: 'center',
