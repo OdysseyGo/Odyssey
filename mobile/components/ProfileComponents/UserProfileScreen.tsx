@@ -152,7 +152,9 @@ export default function UserProfileScreen() {
               onError={() => setAvatarError(true)}
             />
           ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: color.white }]}>
+            <View
+              style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: color.white }]}
+            >
               <Ionicons name="person" size={40} color={color.subText} />
             </View>
           )}
