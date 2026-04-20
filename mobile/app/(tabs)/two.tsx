@@ -1,5 +1,5 @@
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Modal, View as RNView, Pressable } from 'react-native';
-import { useState } from 'react';
 import { User, Bell, Shield, Globe, Palette, HelpCircle, Check } from 'lucide-react-native';
 import { Text, View } from '@/components/Themed';
 import { SettingsRowItem } from '@/components/SettingComponents/SettingsRowItem';
@@ -121,7 +121,7 @@ export default function TabTwoScreen() {
 
       <Modal visible={showLanguageModal} transparent animationType="fade">
         <RNView style={styles.modalOverlay}>
-          <RNView style={[styles.modalCard, { backgroundColor: colors.card }]}>
+          <RNView style={[styles.modalCard, { backgroundColor: colors.foreground }]}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>
               {t('settings.selectLanguage')}
             </Text>
