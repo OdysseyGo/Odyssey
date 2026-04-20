@@ -67,6 +67,7 @@ class Transaction(models.Model):
     CREATOR_EARNING = "CREATOR_EARNING"
     SUBSCRIPTION_GRANT = "SUBSCRIPTION_GRANT"
     REFUND = "REFUND"
+    ADMIN_ADJUSTMENT = "ADMIN_ADJUSTMENT"
 
     TYPE_CHOICES = [
         (PURCHASE, "Credit Purchase"),
@@ -74,6 +75,7 @@ class Transaction(models.Model):
         (CREATOR_EARNING, "Creator Earning"),
         (SUBSCRIPTION_GRANT, "Subscription Grant"),
         (REFUND, "Refund"),
+        (ADMIN_ADJUSTMENT, "Admin Adjustment"),
     ]
 
     user = models.ForeignKey(

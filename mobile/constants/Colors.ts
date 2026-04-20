@@ -28,6 +28,7 @@ const pressLight = '#E0F2FE'; // Subtle sky-blue tint on press
 const pressDark = '#1E293B'; // Pressed state dark
 
 const errorRed = '#DC2626'; // Clear red — easy to spot on maps/ui
+const premium = '#7C3AED'; // Violet — premium/upgrade CTAs
 
 const gray666 = '#64748B';
 const gray888 = '#94A3B8';
@@ -77,6 +78,12 @@ const Colors = {
     primaryMuted: 'rgba(2, 132, 199, 0.07)',
     headerGradientTop: '#0369A1',
     headerGradientBottom: '#0284C7',
+    errorBannerBg: '#FEE2E2',
+    errorBannerBorder: '#FCA5A5',
+    warningBannerBg: '#FFF7ED',
+    warningBannerBorder: '#FED7AA',
+    warningText: '#92400E',
+    premium,
   },
   dark: {
     white: white,
@@ -112,6 +119,12 @@ const Colors = {
     primaryMuted: 'rgba(56, 189, 248, 0.12)',
     headerGradientTop: '#0C1A2E',
     headerGradientBottom: '#1E2D3D',
+    errorBannerBg: 'rgba(220, 38, 38, 0.15)',
+    errorBannerBorder: 'rgba(220, 38, 38, 0.35)',
+    warningBannerBg: 'rgba(217, 119, 6, 0.15)',
+    warningBannerBorder: 'rgba(217, 119, 6, 0.35)',
+    warningText: '#FBBF24',
+    premium,
   },
 };
 

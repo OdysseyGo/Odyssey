@@ -118,7 +118,7 @@ class AdminUserViewSet(ModelViewSet):
             CreditService.add_credits(
                 user=user,
                 amount=amount,
-                transaction_type=Transaction.PURCHASE,
+                transaction_type=Transaction.ADMIN_ADJUSTMENT,
                 description=f"Admin adjustment: {reason}",
             )
         else:
@@ -126,7 +126,7 @@ class AdminUserViewSet(ModelViewSet):
                 CreditService.deduct_credits(
                     user=user,
                     amount=abs(amount),
-                    transaction_type=Transaction.REFUND,
+                    transaction_type=Transaction.ADMIN_ADJUSTMENT,
                     description=f"Admin adjustment: {reason}",
                 )
             except ValueError as e:

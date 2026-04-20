@@ -532,8 +532,8 @@ class TestFuzzyMatchPlace(TestCase):
 
 
 @pytest.mark.django_db
-class TestAIGenerationQuota(TestCase):
-    """Tests for the AI generation rate limiting in GenerateTourView."""
+class TestAIGenerationQuotaService(TestCase):
+    """Service-level tests for AI generation quota handling in CreditService."""
 
     def _make_user(self, user_type=1):
         from django.contrib.auth import get_user_model
@@ -547,7 +547,7 @@ class TestAIGenerationQuota(TestCase):
         )
 
     def test_free_user_blocked_after_limit(self):
-        """Free user exceeding 3 AI generations/month should get 429."""
+        """Free user exceeding 3 AI generations/month should report used >= limit."""
         from apps.payments.services.credit_service import CreditService
 
         user = self._make_user(user_type=1)

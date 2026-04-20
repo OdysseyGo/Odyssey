@@ -65,5 +65,22 @@ export const searchResultStyles = (theme: ThemeName) => {
       color: color.subText,
       marginLeft: 2,
     },
+    paidBadge: {
+      position: 'absolute',
+      top: 6,
+      left: 6,
+      backgroundColor: color.secondary,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 5,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+    },
+    paidBadgeText: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: color.white,
+    },
   });
 };

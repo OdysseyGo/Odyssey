@@ -4,6 +4,7 @@ from rest_framework import filters, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.payments.models import TourPurchase
 from apps.tours.models import Review, Tour, TourStep
 
 from ..permissions import IsCreatorOrReadOnly
@@ -47,6 +48,23 @@ class TourViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(status=Tour.PUBLISHED)
 
         return queryset
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if self.action in ("list", "my_tours"):
+            user = self.request.user
+            if user and user.is_authenticated:
+                from apps.users.models.User import User
+
+                # Only free-tier users can have per-tour purchases; premium/creator
+                # already short-circuit to True inside has_tour_access with no DB hit.
+                if user.user_type not in (User.PREMIUM, User.CREATOR):
+                    context["purchased_tour_ids"] = set(
+                        TourPurchase.objects.filter(user=user).values_list(
+                            "tour_id", flat=True
+                        )
+                    )
+        return context
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)

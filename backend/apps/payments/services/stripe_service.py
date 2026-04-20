@@ -28,7 +28,7 @@ class StripeService:
         return customer.id
 
     @staticmethod
-    def create_subscription_checkout(user, plan, success_url=None, cancel_url=None):
+    def create_subscription_checkout(user, plan):
         customer_id = StripeService._get_or_create_customer(user)
 
         price_id_map = {
@@ -44,16 +44,14 @@ class StripeService:
             payment_method_types=["card"],
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription",
-            success_url=success_url or settings.STRIPE_SUCCESS_URL,
-            cancel_url=cancel_url or settings.STRIPE_CANCEL_URL,
+            success_url=settings.STRIPE_SUCCESS_URL,
+            cancel_url=settings.STRIPE_CANCEL_URL,
             metadata={"user_id": str(user.id), "plan": plan},
         )
         return session.url
 
     @staticmethod
-    def create_credit_purchase_checkout(
-        user, pack_id, success_url=None, cancel_url=None
-    ):
+    def create_credit_purchase_checkout(user, pack_id):
         pack = CreditPack.objects.get(id=pack_id, is_active=True)
         customer_id = StripeService._get_or_create_customer(user)
 
@@ -62,8 +60,8 @@ class StripeService:
             payment_method_types=["card"],
             line_items=[{"price": pack.stripe_price_id, "quantity": 1}],
             mode="payment",
-            success_url=success_url or settings.STRIPE_SUCCESS_URL,
-            cancel_url=cancel_url or settings.STRIPE_CANCEL_URL,
+            success_url=settings.STRIPE_SUCCESS_URL,
+            cancel_url=settings.STRIPE_CANCEL_URL,
             metadata={
                 "user_id": str(user.id),
                 "type": "credit_purchase",

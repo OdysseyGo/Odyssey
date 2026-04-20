@@ -111,12 +111,20 @@ class TourSerializer(serializers.ModelSerializer):
         ]
 
     def get_has_access(self, obj):
+        if obj.credit_price == 0 and not obj.is_premium:
+            return True
+
         request = self.context.get("request")
         if request and request.user and request.user.is_authenticated:
+            purchased_tour_ids = self.context.get("purchased_tour_ids")
+            if purchased_tour_ids is not None:
+                return obj.id in purchased_tour_ids
+
             from apps.payments.services.credit_service import CreditService
 
             return CreditService.has_tour_access(request.user, obj)
-        return obj.credit_price == 0 and not obj.is_premium
+
+        return False
 
     def create(self, validated_data):
         # Assign current user as creator

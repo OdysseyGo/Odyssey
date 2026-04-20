@@ -36,7 +36,9 @@ export default function TourDetailBottomBar({
           <>
             <Ionicons name={isPaid ? 'lock-closed' : 'compass'} size={20} color="#FFFFFF" />
             <Text style={styles.startButtonText}>
-              {isPaid ? `Unlock for ${creditPrice} credits` : t('tourDetail.startTour')}
+              {isPaid
+                ? t('tourDetail.unlockFor', { count: creditPrice })
+                : t('tourDetail.startTour')}
             </Text>
           </>
         )}

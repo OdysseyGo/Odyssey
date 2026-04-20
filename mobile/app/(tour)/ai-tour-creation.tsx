@@ -130,36 +130,33 @@ export default function AITourCreation() {
           {/* AI generation quota banner */}
           {aiAllowance && !aiAllowance.unlimited && (
             <View
-              style={{
-                marginHorizontal: 0,
-                marginBottom: 12,
-                padding: 12,
-                borderRadius: 10,
-                backgroundColor: aiAllowance.used >= aiAllowance.limit ? '#FEE2E2' : '#FFF7ED',
-                borderWidth: 1,
-                borderColor: aiAllowance.used >= aiAllowance.limit ? '#FCA5A5' : '#FED7AA',
-              }}
+              style={[
+                styles.quotaBanner,
+                aiAllowance.used >= aiAllowance.limit
+                  ? styles.quotaBannerError
+                  : styles.quotaBannerWarning,
+              ]}
             >
               {aiAllowance.used >= aiAllowance.limit ? (
                 <>
-                  <Text style={{ fontWeight: '700', color: '#DC2626', marginBottom: 4 }}>
-                    Monthly limit reached
+                  <Text style={styles.quotaBannerErrorTitle}>
+                    {t('aiTour.quota.limitReachedTitle')}
                   </Text>
-                  <Text style={{ color: '#DC2626', fontSize: 13 }}>
-                    You have used all {aiAllowance.limit} free AI generations this month.
+                  <Text style={styles.quotaBannerErrorText}>
+                    {t('aiTour.quota.limitReachedText', { limit: aiAllowance.limit })}
                   </Text>
                   <Pressable onPress={() => router.push('/subscription')}>
-                    <Text
-                      style={{ color: '#7C3AED', fontWeight: '700', marginTop: 6, fontSize: 13 }}
-                    >
-                      Upgrade to Premium for unlimited →
+                    <Text style={styles.quotaBannerUpgradeLink}>
+                      {t('aiTour.quota.upgradeLink')}
                     </Text>
                   </Pressable>
                 </>
               ) : (
-                <Text style={{ color: '#92400E', fontSize: 13 }}>
-                  {aiAllowance.limit - aiAllowance.used} of {aiAllowance.limit} free AI generations
-                  remaining this month
+                <Text style={styles.quotaBannerWarningText}>
+                  {t('aiTour.quota.remainingText', {
+                    remaining: aiAllowance.limit - aiAllowance.used,
+                    limit: aiAllowance.limit,
+                  })}
                 </Text>
               )}
             </View>

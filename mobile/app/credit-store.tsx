@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  FlatList,
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import * as WebBrowser from 'expo-web-browser';

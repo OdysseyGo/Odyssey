@@ -124,7 +124,9 @@
     "routeMap": "Rota Haritası",
     "easy": "Kolay",
     "medium": "Orta",
-    "hard": "Zor"
+    "hard": "Zor",
+    "unlockFor_one": "{{count}} kredi ile kilidi aç",
+    "unlockFor_other": "{{count}} kredi ile kilidi aç"
   },
   "tabs": {
     "settings": "Ayarlar",
@@ -151,7 +153,17 @@
     "min": "dk",
     "stops": "durak",
     "tourInProgressTitle": "Turun devam etmekte",
-    "tourInProgressMessage": "Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et."
+    "tourInProgressMessage": "Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et.",
+    "errorTitle": "Hata",
+    "errorMessage": "Tur başlatılamadı. Lütfen tekrar deneyin.",
+    "ok": "Tamam",
+    "unlockTitle": "Turu Satın Al",
+    "unlockMessage": "Bu tur {{count}} kredi tutmaktadır. Satın almak ister misiniz?",
+    "unlockButton": "Satın Al ({{count}} kredi)",
+    "unlockedTitle": "Satın Alındı!",
+    "unlockedMessage": "Tur satın alındı. Başlatılıyor...",
+    "unlockFailTitle": "Satın Alma Başarısız",
+    "unlockFailMessage": "Bu tur satın alınamadı."
   },
   "creation": {
     "continue": "Devam Et",
@@ -344,6 +356,12 @@
       "puzzleDesc": "Her konumda etkileşimli meydan okumalar ve bilgi soruları",
       "hybrid": "Hibrit Mod",
       "hybridDesc": "Her ikisinin en iyisi - ilgi çekici hikayeler ve eğlenceli bulmacalar"
+    },
+    "quota": {
+      "limitReachedTitle": "Aylık limite ulaşıldı",
+      "limitReachedText": "Bu ay {{limit}} ücretsiz yapay zeka oluşturmanın tamamını kullandınız.",
+      "upgradeLink": "Sınırsız için Premium'a yükseltin →",
+      "remainingText": "Bu ay {{limit}} ücretsiz yapay zeka oluşturmasının {{remaining}} tanesi kaldı"
     }
   },
   "tourStep": {

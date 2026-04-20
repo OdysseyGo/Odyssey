@@ -277,8 +277,3 @@ docker compose exec backend python manage.py migrate
 
 Use any future expiry, any CVC, any ZIP.
 
-**Test the payment API**
-
-```bash
-bash test_payments.sh
-```

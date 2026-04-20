@@ -81,8 +81,6 @@ class SubscribeView(APIView):
             checkout_url = StripeService.create_subscription_checkout(
                 user=request.user,
                 plan=serializer.validated_data["plan"],
-                success_url=request.data.get("success_url"),
-                cancel_url=request.data.get("cancel_url"),
             )
             return Response({"checkout_url": checkout_url})
         except ValueError as e:
@@ -171,8 +169,6 @@ class CreditPurchaseView(APIView):
             checkout_url = StripeService.create_credit_purchase_checkout(
                 user=request.user,
                 pack_id=serializer.validated_data["pack_id"],
-                success_url=request.data.get("success_url"),
-                cancel_url=request.data.get("cancel_url"),
             )
             return Response({"checkout_url": checkout_url})
         except CreditPack.DoesNotExist:

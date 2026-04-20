@@ -25,6 +25,8 @@ export default function TourDetailPage() {
   const [starting, setStarting] = useState(false);
 
   const handleStartTour = async () => {
+    if (starting) return;
+
     const loggedIn = await isLoggedIn();
     if (!loggedIn) {
       Alert.alert(t('tourId.loginRequired'), t('tourId.loginRequiredMessage'), [
@@ -50,39 +52,47 @@ export default function TourDetailPage() {
 
     if (!id) return;
     const tourId = parseInt(id, 10);
+    setStarting(true);
     try {
       // Check access for paid tours
       if (tour && tour.creditPrice > 0) {
         const access = await checkTourAccess(tourId);
         if (!access.has_access) {
+          setStarting(false);
           Alert.alert(
-            'Unlock Tour',
-            `This tour costs ${access.credit_price} credits. Do you want to unlock it?`,
+            t('tourId.unlockTitle'),
+            t('tourId.unlockMessage', { count: access.credit_price }),
             [
-              { text: 'Cancel', style: 'cancel' },
+              { text: t('tourId.cancel'), style: 'cancel' },
               {
-                text: `Unlock (${access.credit_price} credits)`,
+                text: t('tourId.unlockButton', { count: access.credit_price }),
                 onPress: async () => {
+                  setStarting(true);
                   try {
                     await unlockTour(tourId);
-                    Alert.alert('Unlocked!', 'Tour unlocked. Starting now...', [
+                    Alert.alert(t('tourId.unlockedTitle'), t('tourId.unlockedMessage'), [
                       {
-                        text: 'OK',
+                        text: t('tourId.ok'),
                         onPress: async () => {
-                          const tourData = await getTour(tourId);
-                          const progressResponse = await createTourProgress({ tour_id: tourId });
-                          startTour(tourData, progressResponse.id);
-                          router.replace('/(tabs)/map');
+                          try {
+                            const tourData = await getTour(tourId);
+                            const progressResponse = await createTourProgress({ tour_id: tourId });
+                            startTour(tourData, progressResponse.id);
+                            router.replace('/(tabs)/map');
+                          } catch {
+                            setStarting(false);
+                          }
                         },
                       },
                     ]);
                   } catch (err: any) {
+                    setStarting(false);
                     Alert.alert(
-                      'Failed to unlock',
+                      t('tourId.unlockFailTitle'),
                       err?.response?.data?.error ||
                         err?.response?.data?.detail ||
                         err?.message ||
-                        'Could not unlock this tour.'
+                        t('tourId.unlockFailMessage')
                     );
                   }
                 },
@@ -98,22 +108,14 @@ export default function TourDetailPage() {
       startTour(tourData, progressResponse.id);
       router.replace('/(tabs)/map');
     } catch (err: any) {
+      setStarting(false);
       console.error('Failed to start tour:', err);
 
       // Check if the backend blocked us because a tour is already active
       if (err.response?.data?.active_tour_id) {
-        Alert.alert(
-          t('tourId.tourInProgressTitle', 'Tour in Progress'),
-          t(
-            'tourId.tourInProgressMessage',
-            'You already have an active tour! Please finish or quit it before starting a new one.'
-          )
-        );
+        Alert.alert(t('tourId.tourInProgressTitle'), t('tourId.tourInProgressMessage'));
       } else {
-        Alert.alert(
-          t('tourId.errorTitle', 'Error'),
-          t('tourId.errorMessage', 'Could not start the tour. Please try again.')
-        );
+        Alert.alert(t('tourId.errorTitle'), t('tourId.errorMessage'));
       }
     }
   };

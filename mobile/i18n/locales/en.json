@@ -124,7 +124,9 @@
     "routeMap": "Route Map",
     "easy": "Easy",
     "medium": "Medium",
-    "hard": "Hard"
+    "hard": "Hard",
+    "unlockFor_one": "Unlock for {{count}} credit",
+    "unlockFor_other": "Unlock for {{count}} credits"
   },
   "tabs": {
     "settings": "Settings",
@@ -151,7 +153,17 @@
     "min": "min",
     "stops": "stops",
     "tourInProgressTitle": "Tour in Progress",
-    "tourInProgressMessage": "You already have an active tour! Please finish or quit it before starting a new one."
+    "tourInProgressMessage": "You already have an active tour! Please finish or quit it before starting a new one.",
+    "errorTitle": "Error",
+    "errorMessage": "Could not start the tour. Please try again.",
+    "ok": "OK",
+    "unlockTitle": "Unlock Tour",
+    "unlockMessage": "This tour costs {{count}} credits. Do you want to unlock it?",
+    "unlockButton": "Unlock ({{count}} credits)",
+    "unlockedTitle": "Unlocked!",
+    "unlockedMessage": "Tour unlocked. Starting now...",
+    "unlockFailTitle": "Failed to unlock",
+    "unlockFailMessage": "Could not unlock this tour."
   },
   "creation": {
     "continue": "Continue",
@@ -344,6 +356,12 @@
       "puzzleDesc": "Interactive challenges and trivia at each location",
       "hybrid": "Hybrid Mode",
       "hybridDesc": "Best of both - engaging stories with fun puzzles"
+    },
+    "quota": {
+      "limitReachedTitle": "Monthly limit reached",
+      "limitReachedText": "You have used all {{limit}} free AI generations this month.",
+      "upgradeLink": "Upgrade to Premium for unlimited →",
+      "remainingText": "{{remaining}} of {{limit}} free AI generations remaining this month"
     }
   },
   "tourStep": {

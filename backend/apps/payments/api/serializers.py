@@ -38,7 +38,15 @@ class CreditPackSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     def get_price_display(self, obj):
-        return f"${obj.price_cents / 100:.2f}"
+        amount = obj.price_cents / 100
+        currency_code = (obj.currency or "").upper()
+        symbols = {"USD": "$", "EUR": "€", "GBP": "£"}
+        symbol = symbols.get(currency_code)
+        if symbol:
+            return f"{symbol}{amount:.2f}"
+        if currency_code:
+            return f"{currency_code} {amount:.2f}"
+        return f"{amount:.2f}"
 
 
 class CreditPurchaseRequestSerializer(serializers.Serializer):

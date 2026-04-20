@@ -40,24 +40,9 @@ export default function SearchResult({
       <View>
         <Image source={{ uri: image }} style={styles.image} />
         {creditPrice && creditPrice > 0 ? (
-          <View
-            style={{
-              position: 'absolute',
-              top: 6,
-              left: 6,
-              backgroundColor: '#FFD93D',
-              paddingHorizontal: 6,
-              paddingVertical: 2,
-              borderRadius: 5,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 3,
-            }}
-          >
-            <FontAwesome name="lock" size={9} color="#1a1a1a" />
-            <Text style={{ color: '#1a1a1a', fontSize: 9, fontWeight: '700' }}>
-              {creditPrice} credits
-            </Text>
+          <View style={styles.paidBadge}>
+            <FontAwesome name="lock" size={9} color={colors.white} />
+            <Text style={styles.paidBadgeText}>{creditPrice} credits</Text>
           </View>
         ) : null}
       </View>

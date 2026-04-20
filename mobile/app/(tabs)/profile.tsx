@@ -29,7 +29,6 @@ import { removeAuthToken } from '@/api/auth';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
-import { router as routerNav } from 'expo-router';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = 240;
@@ -395,11 +394,6 @@ export default function Profile() {
     }
   }, []);
 
-  const USER_TYPE_LABELS: Record<number, string> = {
-    1: 'Free',
-    2: 'Premium',
-  };
-
   useFocusEffect(
     useCallback(() => {
       // Only show full skeleton on initial load (no existing data)
@@ -474,9 +468,6 @@ export default function Profile() {
   }
 
   // ─── Profile data ─────────────────────────────────────
-
-  const isPremiumOrCreator = curUser.user_type === 2;
-  const tierLabel = USER_TYPE_LABELS[curUser.user_type] || 'Free';
 
   const profileHeader = {
     title: curUser.username,

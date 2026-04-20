@@ -32,6 +32,39 @@ export const aiTourCreationStyles = (theme: ThemeName) => {
       color: color.subText,
       marginBottom: Spacing.md,
     },
+    quotaBanner: {
+      marginBottom: 12,
+      padding: 12,
+      borderRadius: 10,
+      borderWidth: 1,
+    },
+    quotaBannerError: {
+      backgroundColor: color.errorBannerBg,
+      borderColor: color.errorBannerBorder,
+    },
+    quotaBannerWarning: {
+      backgroundColor: color.warningBannerBg,
+      borderColor: color.warningBannerBorder,
+    },
+    quotaBannerErrorTitle: {
+      fontWeight: '700',
+      color: color.error,
+      marginBottom: 4,
+    },
+    quotaBannerErrorText: {
+      color: color.error,
+      fontSize: 13,
+    },
+    quotaBannerUpgradeLink: {
+      color: color.premium,
+      fontWeight: '700',
+      marginTop: 6,
+      fontSize: 13,
+    },
+    quotaBannerWarningText: {
+      color: color.warningText,
+      fontSize: 13,
+    },
   });
 };
 
