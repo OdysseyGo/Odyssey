@@ -82,7 +82,6 @@ export const followingFeedStyles = (theme: ThemeName) => {
       right: 0,
       height: '80%',
     },
-    // Completion badge — top right
     completionBadge: {
       position: 'absolute',
       top: Spacing.md,
@@ -103,7 +102,6 @@ export const followingFeedStyles = (theme: ThemeName) => {
       fontWeight: '800',
       letterSpacing: 0.5,
     },
-    // Duration pill — top left
     durationPill: {
       position: 'absolute',
       top: Spacing.md,
@@ -130,7 +128,6 @@ export const followingFeedStyles = (theme: ThemeName) => {
       fontSize: 11,
       fontWeight: '700',
     },
-    // Info overlay at bottom
     infoOverlay: {
       position: 'absolute',
       bottom: 0,

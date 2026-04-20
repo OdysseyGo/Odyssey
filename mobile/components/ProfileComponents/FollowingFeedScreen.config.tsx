@@ -1,6 +1,6 @@
 import Colors from '@/constants/Colors';
 import { FeedItem } from '@/api/users';
-import { followingFeedStyles } from './following-feed.styles';
+import { followingFeedStyles } from './FollowingFeedScreen.styles';
 import { TFunction } from 'i18next';
 
 export type FeedCardProps = {
