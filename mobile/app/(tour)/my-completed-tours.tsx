@@ -42,7 +42,7 @@ export default function MyCompletedToursScreen() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [reviewComment, setReviewComment] = useState('');
-  const [reviewRating, setReviewRating] = useState('5');
+  const [reviewRating, setReviewRating] = useState<number>(5);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -100,7 +100,7 @@ export default function MyCompletedToursScreen() {
     const userReview = getUserReview(tour) ?? null;
     setSelectedTour(tour);
     setSelectedReview(userReview);
-    setReviewRating(userReview ? String(userReview.rating) : '5');
+    setReviewRating(userReview ? userReview.rating : 5); // Use number directly
     setReviewComment(userReview ? userReview.comment : '');
     setReviewModalVisible(true);
   };
@@ -110,30 +110,22 @@ export default function MyCompletedToursScreen() {
     setSelectedTour(null);
     setSelectedReview(null);
     setReviewComment('');
-    setReviewRating('5');
+    setReviewRating(5);
   };
 
   const submitReview = async () => {
     if (!selectedTour) return;
 
-    const parsedRating = Number(reviewRating);
-    if (!(parsedRating >= 1 && parsedRating <= 5)) {
-      Alert.alert(
-        t('profile.reviewRatingInvalid', { defaultValue: 'Rating must be between 1 and 5.' })
-      );
-      return;
-    }
-
     setReviewSubmitting(true);
     try {
       if (selectedReview) {
         await updateTourReview(selectedTour.id, selectedReview.id, {
-          rating: parsedRating,
+          rating: reviewRating, // Use the number state directly
           comment: reviewComment.trim(),
         });
       } else {
         await addTourReview(selectedTour.id, {
-          rating: parsedRating,
+          rating: reviewRating, // Use the number state directly
           comment: reviewComment.trim(),
         });
       }
@@ -302,15 +294,22 @@ export default function MyCompletedToursScreen() {
             <Text style={[styles.modalLabel, { color: theme.subText }]}>
               {t('profile.reviewRatingLabel', { defaultValue: 'Rating (1-5)' })}
             </Text>
-            <TextInput
-              value={reviewRating}
-              onChangeText={(value) => setReviewRating(value.replace(/[^0-9]/g, ''))}
-              keyboardType="numeric"
-              maxLength={1}
-              placeholder={t('profile.reviewRatingPlaceholder', { defaultValue: '5' })}
-              placeholderTextColor={theme.subText}
-              style={[styles.input, { color: theme.text, borderColor: theme.foregroundSecondary }]}
-            />
+            <View style={styles.starsContainer}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity
+                  key={star}
+                  onPress={() => setReviewRating(star)}
+                  activeOpacity={0.7}
+                  style={styles.starButton}
+                >
+                  <Ionicons
+                    name={star <= reviewRating ? 'star' : 'star-outline'}
+                    size={36}
+                    color={theme.primary} // or use a gold color like '#FFD700' if you prefer
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
             <Text style={[styles.modalLabel, { color: theme.subText }]}>
               {t('profile.reviewCommentLabel', { defaultValue: 'Comment' })}
             </Text>
@@ -330,7 +329,7 @@ export default function MyCompletedToursScreen() {
             />
             <View style={styles.modalFooter}>
               <TouchableOpacity
-                style={[styles.modalButton ]}
+                style={[styles.modalButton]}
                 onPress={closeReviewModal}
                 activeOpacity={0.8}
               >
@@ -539,5 +538,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm, // Or use marginHorizontal on starButton if gap isn't supported in your RN version
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  starButton: {
+    padding: 2, // Gives a slightly larger tap target
   },
 });

@@ -103,7 +103,7 @@
     "reviewSuccessTitle": "Review submitted",
     "reviewSuccessMessage": "Thank you for your feedback!",
     "reviewErrorTitle": "Could not submit review",
-    "reviewErrorMessage": "Please try again later." 
+    "reviewErrorMessage": "Please try again later."
   },
   "tour": {
     "loading": "Loading tours...",
@@ -140,7 +140,8 @@
     "distance": "Distance",
     "difficulty": "Difficulty",
     "notFound": "Tour not found",
-    "reviews": "reviews",
+    "reviews": "Reviews",
+    "noReviews": "No reviews found for this tour.",
     "aboutThisTour": "About this tour",
     "createdBy": "Created by",
     "tourStops": "Tour Stops",

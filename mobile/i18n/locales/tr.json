@@ -141,6 +141,7 @@
     "difficulty": "Zorluk",
     "notFound": "Tur bulunamadı",
     "reviews": "Yorumlar",
+    "noReviews": "Bu tur hakkında yorum bulunamadı.",
     "aboutThisTour": "Bu tur hakkında",
     "createdBy": "Oluşturan",
     "tourStops": "Tur Durakları",
