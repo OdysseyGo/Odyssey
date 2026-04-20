@@ -4,22 +4,24 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { instructionBannerStyles } from './InstructionBanner.styles';
+import { useTranslation } from 'react-i18next';
 
 type InstructionBannerProps = {
   message?: string;
 };
 
-export default function InstructionBanner({
-  message = 'Tap on the map to add tour stops.',
-}: InstructionBannerProps) {
+export default function InstructionBanner({ message }: InstructionBannerProps) {
   const theme = useColorTheme();
   const styles = instructionBannerStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   return (
     <View style={styles.instructionBanner}>
       <Ionicons name="information-circle" size={24} color={color.primary} />
-      <Text style={styles.instructionText}>{message}</Text>
+      <Text style={styles.instructionText}>
+        {message ?? t('creation.location.instructionBanner')}
+      </Text>
     </View>
   );
 }

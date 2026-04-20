@@ -5,7 +5,7 @@
 -- Create seed user
 INSERT INTO "user" (
     password, last_login, is_superuser, username, first_name, last_name, 
-    email, is_staff, is_active, date_joined, xp, follow_count, follower_count, 
+    email, is_staff, is_active, date_joined, xp, following_count, follower_count, 
     credit, level, country, user_type, tour_count, rating
 ) VALUES (
     '', NULL, false, 'seed_creator', 'Tour', 'Creator',

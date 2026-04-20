@@ -8,9 +8,9 @@ class Follow(models.Model):
     follower = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="followees",
+        related_name="followings",
     )
-    followee = models.ForeignKey(
+    following = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="followers",
@@ -19,7 +19,7 @@ class Follow(models.Model):
 
     class Meta:
         db_table = "follow"
-        unique_together = ("follower", "followee")
+        unique_together = ("follower", "following")
 
     def __str__(self):
-        return f"{self.follower.username} -> {self.followee.username}"
+        return f"{self.follower.username} -> {self.following.username}"

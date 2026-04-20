@@ -17,7 +17,7 @@ class User(AbstractUser):
     # (id, username/first_name/last_name, password)
 
     xp = models.IntegerField(default=0)
-    follow_count = models.IntegerField(default=0)
+    following_count = models.IntegerField(default=0)
     follower_count = models.IntegerField(default=0)
     credit = models.IntegerField(default=0)
     level = models.IntegerField(default=1)
@@ -28,6 +28,12 @@ class User(AbstractUser):
     )
     tour_count = models.IntegerField(default=0)
     rating = models.FloatField(default=0.0)
+    avatar_url = models.URLField(
+        max_length=500,
+        blank=True,
+        default="",
+        help_text="DiceBear avatar URL",
+    )
     is_banned = models.BooleanField(default=False)
     stripe_customer_id = models.CharField(max_length=255, blank=True)
     ai_generations_this_month = models.PositiveIntegerField(default=0)

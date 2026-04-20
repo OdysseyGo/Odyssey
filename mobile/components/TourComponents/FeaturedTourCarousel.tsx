@@ -9,6 +9,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
@@ -119,50 +120,54 @@ export default function FeaturedTourCarousel({
                 style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
               >
                 <View style={styles.imageWrapper}>
-                  <Image source={{ uri: tour.image }} style={styles.image} />
-
-                  {/* Dark overlay for better text readability */}
+                  <Image
+                    source={{ uri: tour.image || `https://picsum.photos/seed/${tour.id}/800/500` }}
+                    style={styles.image}
+                  />
                   <View style={styles.imageOverlay} />
 
-                  {/* Featured Badge with icon */}
+                  {/* Featured badge */}
                   <View style={styles.featuredBadge}>
-                    <Ionicons name="flame" size={14} color={color.white} />
+                    <Ionicons name="flame" size={12} color={color.white} />
                     <Text style={styles.featuredBadgeText}>Featured</Text>
                   </View>
 
-                  {/* Rating Badge */}
+                  {/* Rating */}
                   <View style={styles.ratingBadge}>
                     <Text style={styles.star}>{STAR}</Text>
                     <Text style={styles.ratingText}>{tour.rating}</Text>
                   </View>
 
-                  {/* Info Container with gradient */}
-                  <View style={styles.infoContainer}>
-                    <View style={styles.infoGradient} />
+                  {/* Bottom info */}
+                  <LinearGradient
+                    colors={['transparent', color.overlay]}
+                    locations={[0, 1]}
+                    style={styles.infoGradient}
+                  >
                     <View style={styles.infoContent}>
                       <Text style={styles.title} numberOfLines={2}>
                         {tour.title}
                       </Text>
                       <View style={styles.authorRow}>
-                        <Ionicons name="person-circle" size={16} color="rgba(255,255,255,0.8)" />
+                        <Ionicons name="person-circle" size={15} color={color.white} />
                         <Text style={styles.author}>{tour.author}</Text>
                       </View>
                       <View style={styles.metaRow}>
                         <View style={styles.metaItem}>
-                          <Ionicons name="time-outline" size={14} color={color.white} />
+                          <Ionicons name="time-outline" size={12} color={color.white} />
                           <Text style={styles.metaText}>{tour.duration}</Text>
                         </View>
                         <View style={styles.metaItem}>
-                          <Ionicons name="walk-outline" size={14} color={color.white} />
+                          <Ionicons name="footsteps-outline" size={12} color={color.white} />
                           <Text style={styles.metaText}>{tour.length}</Text>
                         </View>
                         <View style={styles.metaItem}>
-                          <Ionicons name="chatbubbles-outline" size={14} color={color.white} />
+                          <Ionicons name="chatbubble-outline" size={12} color={color.white} />
                           <Text style={styles.metaText}>{tour.reviewCount}</Text>
                         </View>
                       </View>
                     </View>
-                  </View>
+                  </LinearGradient>
                 </View>
               </Pressable>
             </View>

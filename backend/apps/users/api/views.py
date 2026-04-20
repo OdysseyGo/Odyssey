@@ -74,24 +74,32 @@ class UserViewSet(ModelViewSet):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
+    @action(detail=False, methods=["patch"], url_path="me/avatar")
+    def update_avatar(self, request):
+        user = request.user
+        avatar_url = request.data.get("avatar_url", "")
+        user.avatar_url = avatar_url
+        user.save(update_fields=["avatar_url"])
+        return Response({"avatar_url": user.avatar_url})
+
     @action(detail=True, methods=["get"], url_path="followers")
     def followers(self, request, pk=None):
         user = self.get_object()
         followers_qs = User.objects.filter(
-            followees__followee=user,
+            followings__following=user,
         ).distinct()
 
         serializer = self.get_serializer(followers_qs, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["get"], url_path="followees")
-    def followees(self, request, pk=None):
+    @action(detail=True, methods=["get"], url_path="followings")
+    def followings(self, request, pk=None):
         user = self.get_object()
-        followees_qs = User.objects.filter(
+        followings_qs = User.objects.filter(
             followers__follower=user,
         ).distinct()
 
-        serializer = self.get_serializer(followees_qs, many=True)
+        serializer = self.get_serializer(followings_qs, many=True)
         return Response(serializer.data)
 
     @action(
@@ -120,15 +128,46 @@ class UserViewSet(ModelViewSet):
 
         return Response({"detail": "Password updated successfully"}, status=200)
 
+    @action(detail=True, methods=["delete"], url_path="remove-follower")
+    def remove_follower(self, request, pk=None):
+        """Remove a specific user from the current user's followers."""
+        follower_user = self.get_object()  # user to be removed as a follower
+        try:
+            follow = Follow.objects.get(follower=follower_user, following=request.user)
+        except Follow.DoesNotExist:
+            return Response({"error": "Follow relationship not found"}, status=404)
+
+        User.objects.filter(id=follow.following_id).update(
+            follower_count=F("follower_count") - 1
+        )
+        User.objects.filter(id=follow.follower_id).update(
+            following_count=F("following_count") - 1
+        )
+        follow.delete()
+        return Response(status=204)
+
     @action(
-        detail=False, methods=["get"], url_path="get-filtered-users"
-    )  # filter by username
-    def get_filtered_users(self, request):
+        detail=False, methods=["get"], url_path="get-filtered-users-add-friend"
+    )  # filter by username to add friend (excludes itself and already following)
+    def get_filtered_users_add_friend(self, request):
         filter = request.query_params.get("filter")
         if not filter:
             return Response({"error": "filter is required"}, status=400)
 
-        users = User.objects.filter(username__icontains=filter)
+        current_user = request.user
+
+        following_ids = Follow.objects.filter(follower=current_user).values_list(
+            "following_id", flat=True
+        )
+
+        print(following_ids)
+
+        users = (
+            User.objects.filter(username__icontains=filter)
+            .exclude(id=current_user.id)
+            .exclude(id__in=following_ids)
+        )
+
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data)
 
@@ -136,30 +175,30 @@ class UserViewSet(ModelViewSet):
 class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = FollowSerializer
 
-    lookup_field = "followee_id"
+    lookup_field = "following"
 
     def get_queryset(self):
         return Follow.objects.filter(follower=self.request.user).select_related(
-            "followee"
+            "following"
         )
 
     def perform_create(self, serializer):
         follow = serializer.save(follower=self.request.user)
         # increment counters
-        User.objects.filter(id=follow.followee_id).update(
+        User.objects.filter(id=follow.following_id).update(
             follower_count=F("follower_count") + 1
         )
         User.objects.filter(id=follow.follower_id).update(
-            follow_count=F("follow_count") + 1
+            following_count=F("following_count") + 1
         )
 
     def perform_destroy(self, instance):
         # decrement counters safely on unfollow
-        User.objects.filter(id=instance.followee_id).update(
+        User.objects.filter(id=instance.following_id).update(
             follower_count=F("follower_count") - 1
         )
         User.objects.filter(id=instance.follower_id).update(
-            follow_count=F("follow_count") - 1
+            following_count=F("following_count") - 1
         )
 
         instance.delete()

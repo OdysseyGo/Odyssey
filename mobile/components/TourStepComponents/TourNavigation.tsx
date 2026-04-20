@@ -2,6 +2,7 @@ import { View, Text, Pressable } from 'react-native';
 import { useMemo } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import { useTranslation } from 'react-i18next';
 
 import getStyles from './TourNavigation.styles';
 import {
@@ -18,13 +19,14 @@ import Colors from '@/constants/Colors';
 function ProgressBar({ totalSteps, currentStep, solvedSteps, stepIds }: ProgressBarProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   const progressPercent = totalSteps > 1 ? (currentStep / (totalSteps - 1)) * 100 : 0;
 
   return (
     <View style={styles.progressContainer}>
       <View style={styles.progressHeader}>
-        <Text style={styles.progressText}>Tour Progress</Text>
+        <Text style={styles.progressText}>{t('tourStep.tourProgress')}</Text>
         <Text style={styles.progressText}>
           {currentStep + 1} / {totalSteps}
         </Text>
@@ -62,9 +64,11 @@ function NavigationArrows({
   requiresLocation,
   isLocationConfirmed,
   onLocationConfirm,
+  isLastStep,
 }: NavigationArrowsProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   return (
     <View style={styles.navigationContainer}>
@@ -78,7 +82,9 @@ function NavigationArrows({
           size={24}
           color={canGoBack ? Colors[theme].iconActive : Colors[theme].iconDisabled}
         />
-        <Text style={[styles.navButtonText, !canGoBack && styles.navButtonTextDisabled]}>Back</Text>
+        <Text style={[styles.navButtonText, !canGoBack && styles.navButtonTextDisabled]}>
+          {t('tourStep.back')}
+        </Text>
       </Pressable>
 
       {requiresLocation ? (
@@ -110,7 +116,7 @@ function NavigationArrows({
         disabled={!canGoForward}
       >
         <Text style={[styles.navButtonText, !canGoForward && styles.navButtonTextDisabled]}>
-          Next
+          {isLastStep ? t('tourStep.finish', 'Finish') : t('tourStep.next')}
         </Text>
         {isForwardLocked ? (
           <MaterialCommunityIcons
@@ -141,26 +147,33 @@ export default function TourNavigation({
   onStepSolved,
   onLocationConfirm,
   onEndTour,
+  onSkipStep,
 }: TourNavigationProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
-  console.log('Rendering TourNavigation - currentStepIndex:', tour);
+  //console.log('Rendering TourNavigation - currentStepIndex:', tour);
   const currentStep = tour.steps[currentStepIndex];
   const isSolved = solvedSteps.has(currentStep.id);
   const isLocationConfirmed = locationConfirmedSteps.has(currentStep.id);
   const requiresLocation = currentStep.requiresLocationConfirmation === true;
 
+  const isLastStep = currentStepIndex === tour.steps.length - 1;
+
   const canGoBack = canNavigateBackward(currentStepIndex);
-  const canGoForward = canNavigateForward(
-    currentStep,
-    currentStepIndex,
-    tour.steps.length,
-    solvedSteps,
-    locationConfirmedSteps
-  );
+  const { t } = useTranslation();
 
   const isForwardLocked =
     (currentStep.type === 'puzzle' && !isSolved) || (requiresLocation && !isLocationConfirmed);
+
+  const canGoForward = isLastStep
+    ? !isForwardLocked
+    : canNavigateForward(
+        currentStep,
+        currentStepIndex,
+        tour.steps.length,
+        solvedSteps,
+        locationConfirmedSteps
+      );
 
   const handleSolve = () => {
     onStepSolved(currentStep.id);
@@ -180,6 +193,22 @@ export default function TourNavigation({
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
+        <Pressable style={styles.endTourButton} onPress={onSkipStep}>
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <MaterialCommunityIcons name="skip-forward" size={20} color={Colors[theme].primary} />
+
+            <Text
+              style={{
+                fontSize: 10,
+                color: Colors[theme].primary,
+                fontWeight: 'bold',
+                marginTop: -2,
+              }}
+            >
+              {t('map.activeTour.skip')}
+            </Text>
+          </View>
+        </Pressable>
         <ProgressBar
           totalSteps={tour.steps.length}
           currentStep={currentStepIndex}
@@ -210,6 +239,7 @@ export default function TourNavigation({
         requiresLocation={requiresLocation}
         isLocationConfirmed={isLocationConfirmed}
         onLocationConfirm={handleLocationConfirm}
+        isLastStep={isLastStep}
       />
     </View>
   );

@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
@@ -9,46 +9,103 @@ export const tourDetailStopsStyles = (theme: ThemeName) => {
     section: {
       marginBottom: Spacing.xl,
     },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: Spacing.lg,
+    },
     sectionTitle: {
       color: color.text,
       fontSize: 18,
       fontWeight: '700',
-      marginBottom: Spacing.md,
+    },
+    stopCountBadge: {
+      backgroundColor: color.primaryMuted,
+      paddingHorizontal: Spacing.sm + 2,
+      paddingVertical: 3,
+      borderRadius: Spacing.borderRadiusFull,
+    },
+    stopCount: {
+      color: color.primary,
+      fontSize: 13,
+      fontWeight: '700',
     },
     stopItem: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: Spacing.md,
-      marginBottom: Spacing.md,
-      padding: Spacing.md,
-      backgroundColor: color.foreground,
-      borderRadius: Spacing.borderRadius,
+      minHeight: 80,
+    },
+    // Timeline column
+    timelineColumn: {
+      width: 40,
+      alignItems: 'center',
     },
     stopNumber: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      width: 34,
+      height: 34,
+      borderRadius: 17,
       backgroundColor: color.primary,
       justifyContent: 'center',
       alignItems: 'center',
+      zIndex: 1,
+      ...Platform.select({
+        ios: {
+          shadowColor: color.primary,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.35,
+          shadowRadius: 6,
+        },
+        android: { elevation: 4 },
+      }),
+    },
+    stopNumberFirst: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      borderWidth: 3,
+      borderColor: color.primary + '35',
     },
     stopNumberText: {
-      color: '#fff',
-      fontSize: 14,
-      fontWeight: '700',
+      color: color.white,
+      fontSize: 13,
+      fontWeight: '800',
     },
+    connectorLine: {
+      flex: 1,
+      width: 2,
+      backgroundColor: color.primary + '20',
+    },
+    connectorLineDashed: {
+      flex: 1,
+      width: 2,
+      backgroundColor: color.primary + '12',
+    },
+    // Content column
     stopContent: {
       flex: 1,
+      marginLeft: Spacing.md,
+      paddingBottom: Spacing.xl,
+    },
+    stopContentLast: {
+      paddingBottom: Spacing.sm,
+    },
+    stopCard: {
+      backgroundColor: color.foreground,
+      borderRadius: Spacing.borderRadius,
+      padding: Spacing.md + 2,
+      borderLeftWidth: 3,
+      borderLeftColor: color.primary + '40',
     },
     stopTitle: {
       color: color.text,
-      fontSize: 16,
-      fontWeight: '600',
+      fontSize: 15,
+      fontWeight: '700',
       marginBottom: Spacing.xs,
     },
     stopDescription: {
       color: color.subText,
-      fontSize: 14,
+      fontSize: 13,
+      lineHeight: 20,
     },
   });
 };

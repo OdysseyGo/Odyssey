@@ -7,6 +7,7 @@ import PuzzleHint from './PuzzleHint';
 import { puzzleEditorStyles } from './PuzzleEditor.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
+import { useTranslation } from 'react-i18next';
 
 interface PuzzleEditorProps {
   puzzle?: Puzzle;
@@ -18,6 +19,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
   const theme = useColorTheme();
   const color = Colors[theme];
   const styles = puzzleEditorStyles();
+  const { t } = useTranslation();
 
   const currentPuzzle = puzzle || createEmptyPuzzle();
   const options = currentPuzzle.options;
@@ -77,7 +79,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
     <View style={styles.container}>
       {/* Puzzle Type Selector */}
       <View style={styles.section}>
-        <Text style={[styles.label, { color: color.text }]}>Puzzle Type *</Text>
+        <Text style={[styles.label, { color: color.text }]}>{t('creation.puzzle.type')} *</Text>
         <View style={styles.typeContainer}>
           {PUZZLE_TYPE_OPTIONS.map((type) => (
             <TouchableOpacity
@@ -125,7 +127,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
 
       {/* XP Reward Input */}
       <View style={styles.section}>
-        <Text style={[styles.label, { color: color.text }]}>XP Reward</Text>
+        <Text style={[styles.label, { color: color.text }]}>{t('creation.puzzle.xpReward')}</Text>
         <TextInput
           style={[styles.xpInput, { color: color.text, borderColor: color.borderLight }]}
           value={String(currentPuzzle.xp_reward)}
@@ -138,7 +140,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
             }
           }}
           keyboardType="number-pad"
-          placeholder="10"
+          placeholder={t('creation.puzzle.xpPlaceholder')}
           placeholderTextColor={color.placeholder}
         />
       </View>

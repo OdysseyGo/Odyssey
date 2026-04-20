@@ -1,6 +1,7 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { View, Text, Pressable, Modal, Animated, Easing } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -18,6 +19,7 @@ export default function TourCompleteModal({
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const colors = Colors[theme];
+  const { t } = useTranslation();
 
   // Animation values
   const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -87,32 +89,36 @@ export default function TourCompleteModal({
           </Animated.View>
 
           {/* Title */}
-          <Text style={styles.title}>Tour Complete!</Text>
-          <Text style={styles.subtitle}>You've finished {tour.title}</Text>
+          <Text style={styles.title}>{t('map.tourComplete.title')}</Text>
+          <Text style={styles.subtitle}>
+            {t('map.tourComplete.subtitle', { tourName: tour.title })}
+          </Text>
 
           {/* Stats */}
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{completedSteps}</Text>
-              <Text style={styles.statLabel}>Steps</Text>
+              <Text style={styles.statLabel}>{t('map.tourComplete.steps')}</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{completionRate}%</Text>
-              <Text style={styles.statLabel}>Complete</Text>
+              <Text style={styles.statLabel}>{t('map.tourComplete.complete')}</Text>
             </View>
           </View>
 
           {/* XP Earned */}
           <View style={styles.xpEarnedContainer}>
             <MaterialCommunityIcons name="star" size={24} color="#000" />
-            <Text style={styles.xpEarnedText}>+{earnedXP} XP Earned!</Text>
+            <Text style={styles.xpEarnedText}>
+              {t('map.tourComplete.xpEarned', { xp: earnedXP })}
+            </Text>
           </View>
 
           {/* Buttons */}
           <View style={styles.buttonsContainer}>
             <Pressable style={styles.primaryButton} onPress={onClose}>
               <MaterialCommunityIcons name="check-circle" size={20} color={colors.white} />
-              <Text style={styles.primaryButtonText}>Done</Text>
+              <Text style={styles.primaryButtonText}>{t('map.tourComplete.done')}</Text>
             </Pressable>
           </View>
         </Animated.View>

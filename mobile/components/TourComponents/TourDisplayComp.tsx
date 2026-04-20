@@ -1,4 +1,5 @@
 import { View, Text, Image, Pressable, Animated } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { TourDisplayProps } from './TourDisplayComp.config';
 import { tourDisplayCompStyles } from './TourDisplayComp.styles';
@@ -15,22 +16,19 @@ export default function TourDisplayComp({
   author,
   duration,
   length,
-  reviewCount,
   rating,
   isPremium = false,
   creditPrice = 0,
 }: TourDisplayProps) {
   const theme = useColorTheme();
-  const styles = useMemo(() => tourDisplayCompStyles(theme), [theme]);
   const color = Colors[theme];
+  const styles = useMemo(() => tourDisplayCompStyles(theme), [theme]);
 
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const displayRating = typeof rating === 'number' ? 0 : '0.0';
-
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
-      toValue: 0.96,
+      toValue: 0.95,
       useNativeDriver: true,
       friction: 8,
       tension: 100,
@@ -61,87 +59,83 @@ export default function TourDisplayComp({
         onPressOut={handlePressOut}
         style={styles.card}
       >
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: image }} style={styles.image} />
+        {/* Full-bleed image */}
+        <Image
+          source={{ uri: image || `https://picsum.photos/seed/${id}/400/600` }}
+          style={styles.image}
+        />
 
-          <View style={styles.ratingBadge}>
-            <Ionicons name="star" size={14} color="#FFD93D" />
-            <Text style={styles.ratingText}>{displayRating}</Text>
-          </View>
+        {/* Bottom gradient for text readability */}
+        <LinearGradient
+          colors={['transparent', color.overlay]}
+          locations={[0, 1]}
+          style={styles.gradient}
+        />
 
-          {creditPrice > 0 ? (
-            <View
-              style={{
-                position: 'absolute',
-                top: 8,
-                left: 8,
-                backgroundColor: '#FFD93D',
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: 6,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 3,
-              }}
-            >
-              <Ionicons name="lock-closed" size={10} color="#1a1a1a" />
-              <Text style={{ color: '#1a1a1a', fontSize: 10, fontWeight: '700' }}>
-                {creditPrice} credits
-              </Text>
-            </View>
-          ) : isPremium ? (
-            <View
-              style={{
-                position: 'absolute',
-                top: 8,
-                left: 8,
-                backgroundColor: color.primary,
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: 6,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 3,
-              }}
-            >
-              <Ionicons name="lock-closed" size={10} color="#FFFFFF" />
-              <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>PREMIUM</Text>
-            </View>
-          ) : null}
+{/* Lock/Premium/Credits badge — top left */}
+{creditPrice > 0 ? (
+  <View
+    style={{
+      position: 'absolute',
+      top: 8,
+      left: 8,
+      backgroundColor: '#FFD93D',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+    }}
+  >
+    <Ionicons name="lock-closed" size={10} color="#1a1a1a" />
+    <Text style={{ color: '#1a1a1a', fontSize: 10, fontWeight: '700' }}>
+      {creditPrice} credits
+    </Text>
+  </View>
+) : isPremium ? (
+  <View
+    style={{
+      position: 'absolute',
+      top: 8,
+      left: 8,
+      backgroundColor: color.primary,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+    }}
+  >
+    <Ionicons name="lock-closed" size={10} color="#FFFFFF" />
+    <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>PREMIUM</Text>
+  </View>
+) : null}
 
-          <View style={styles.durationChip}>
-            <Ionicons name="time" size={14} color="#FFFFFF" />
-            <Text style={styles.durationText}>{duration}</Text>
-          </View>
-
-          <View style={styles.distanceChip}>
-            <Ionicons name="footsteps" size={14} color="#FFFFFF" />
-            <Text style={styles.distanceText}>{length}</Text>
-          </View>
+{/* Duration pill — top left */}
+<View style={styles.durationPill}>
+  <Ionicons name="time" size={11} color={color.white} />
+  <Text style={styles.durationText}>{duration}</Text>
+</View>
+        {/* Rating badge — top right */}
+        <View style={styles.ratingBadge}>
+          <Ionicons name="star" size={11} color={color.star} />
+          <Text style={styles.ratingText}>{rating || '0.0'}</Text>
         </View>
 
-        <View style={styles.contentContainer}>
-          {/* Title */}
-          <View style={styles.titleContainer}>
-            <Text style={styles.title} numberOfLines={2}>
-              {title}
+        {/* Bottom info overlay */}
+        <View style={styles.infoOverlay}>
+          <Text style={styles.title} numberOfLines={2}>
+            {title}
+          </Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaText} numberOfLines={1}>
+              {author}
             </Text>
-          </View>
-
-          {/* Author & Reviews Row */}
-          <View style={styles.bottomRow}>
-            <View style={styles.authorContainer}>
-              <View style={styles.authorAvatar}>
-                <Ionicons name="person" size={12} color="#FFFFFF" />
-              </View>
-              <Text style={styles.authorText} numberOfLines={1}>
-                {author}
-              </Text>
-            </View>
-
-            <View style={styles.reviewsContainer}>
-              <Ionicons name="chatbubbles" size={14} color={color.primary} />
-              <Text style={styles.reviewsText}>{reviewCount}</Text>
+            <View style={styles.stepsChip}>
+              <Ionicons name="footsteps" size={9} color="rgba(255,255,255,0.9)" />
+              <Text style={styles.stepsText}>{length}</Text>
             </View>
           </View>
         </View>

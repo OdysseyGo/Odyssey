@@ -5,4 +5,5 @@ export type AuthTextInputProps = TextInputProps & {
   error?: string;
   accessibilityLabel?: string;
   accessibilityHint?: string;
+  showPasswordToggle?: boolean;
 };

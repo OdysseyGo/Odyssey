@@ -30,7 +30,28 @@ docker compose up --build
 - Swagger UI: <http://localhost:8000/api/docs/>  
 - ReDoc (Documentation): <http://localhost:8000/api/redoc/>
 
-## 3. Run the Frontend (Expo / React Native)
+## 3. Run the Admin Dashboard
+
+The admin dashboard is a separate React + Vite web app for staff/admin users.
+
+```bash
+cd admin-dashboard
+npm install   # first time only
+npm run dev
+```
+
+- Admin Dashboard: <http://localhost:5173>
+
+Log in with a Django staff account (`is_staff=true`). The dashboard proxies all `/api` requests to `localhost:8000`, so the backend must be running.
+
+**Features:**
+- Overview stats (users, tours, reports)
+- User management: view, ban/unban, change role, toggle staff
+- Tour management: view, approve, reject, archive, delete
+- Analytics: growth charts, user/tour/difficulty distributions, active users
+- Reports: review and action user-submitted reports
+
+## 4. Run the Frontend (Expo / React Native)
 
 Expo runs on your machine (not in Docker):
 
@@ -40,7 +61,7 @@ npm install   # first time only
 npm start
 ```
 
-## 4. View the Frontend
+## 5. View the Frontend
 
 ### On your phone
 
@@ -59,7 +80,7 @@ npm start
 
 Changes in `mobile/` are reflected automatically via Fast Refresh.
 
-## 5. Formatting/Linting
+## 6. Formatting/Linting
 
 ### Backend
 

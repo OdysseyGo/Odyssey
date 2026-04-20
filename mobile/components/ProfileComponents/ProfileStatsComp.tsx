@@ -1,44 +1,65 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { TouchableOpacity, View, Text } from 'react-native';
 import { profileStatsCompStyles } from './ProfileStatsComp.styles';
 import { Props } from './ProfileStatsComp.config';
 import { useColorTheme } from '@/utils/useColorTheme';
+import { useTranslation } from 'react-i18next';
 
-export default function ProfileStatsComp({ xp, tours, badges, followers, following }: Props) {
+export default function ProfileStatsComp({
+  xp,
+  tours,
+  badges,
+  followers,
+  following,
+  onToursPress,
+  onBadgesPress,
+  onFollowersPress,
+  onFollowingPress,
+}: Props) {
   const theme = useColorTheme();
   const styles = profileStatsCompStyles(theme);
+  const { t } = useTranslation();
+
+  const achievementStats = [
+    { value: xp, label: t('profile.xp') },
+    { value: tours, label: t('profile.tours') },
+    { value: badges, label: t('profile.badges') },
+  ];
+
+  const socialStats = [
+    { value: followers, label: t('profile.followers'), onPress: onFollowersPress },
+    { value: following, label: t('profile.following'), onPress: onFollowingPress },
+  ];
+
+  const renderStat = (
+    stat: { value?: number; label: string; onPress?: () => void },
+    index: number
+  ) => (
+    <React.Fragment key={stat.label}>
+      {index > 0 && <View style={styles.vDivider} />}
+      {stat.onPress ? (
+        <TouchableOpacity style={styles.statItem} onPress={stat.onPress} activeOpacity={0.7}>
+          <Text style={styles.statValue}>{stat.value ?? 0}</Text>
+          <Text style={styles.statLabel}>{stat.label}</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{stat.value ?? 0}</Text>
+          <Text style={styles.statLabel}>{stat.label}</Text>
+        </View>
+      )}
+    </React.Fragment>
+  );
 
   return (
     <View style={styles.card}>
-      <View style={styles.topRow}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{xp}</Text>
-          <Text style={styles.statLabel}>XP</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{tours}</Text>
-          <Text style={styles.statLabel}>Tours</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{badges}</Text>
-          <Text style={styles.statLabel}>Badges</Text>
-        </View>
-      </View>
-      <View style={styles.divider} />
+      {/* Achievement row: XP · Tours · Badges */}
+      <View style={styles.row}>{achievementStats.map((s, i) => renderStat(s, i))}</View>
 
-      <View style={styles.bottomRow}>
-        <View style={styles.bottomItem}>
-          <Text style={styles.bottomValue}>{followers}</Text>
-          <Text style={styles.bottomLabel}>Followers</Text>
-        </View>
+      <View style={styles.hDivider} />
 
-        <View style={styles.bottomDivider} />
-
-        <View style={styles.bottomItem}>
-          <Text style={styles.bottomValue}>{following}</Text>
-          <Text style={styles.bottomLabel}>Following</Text>
-        </View>
-      </View>
+      {/* Social row: Followers · Following */}
+      <View style={styles.row}>{socialStats.map((s, i) => renderStat(s, i))}</View>
     </View>
   );
 }

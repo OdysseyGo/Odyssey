@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test script for AI tour generation."""
+
 import json
 import sys
 import time

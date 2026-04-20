@@ -1,6 +1,6 @@
 export interface TourDisplayProps {
   id: string;
-  image: string;
+  image?: string;
   title: string;
   author: string;
   duration: string;
@@ -9,6 +9,7 @@ export interface TourDisplayProps {
   rating: string;
   isPremium?: boolean;
   creditPrice?: number;
+  city?: string;
 }
 
 export const exampleTour: TourDisplayProps = {
@@ -20,4 +21,5 @@ export const exampleTour: TourDisplayProps = {
   length: '10 km',
   reviewCount: '150 reviews',
   rating: '4.5',
+  city: 'Istanbul',
 };

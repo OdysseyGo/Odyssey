@@ -1,51 +1,68 @@
 import { StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
-import { Spacing } from '@/constants/Spacing';
 
-export const tourDetailCoverStyles = (theme: ThemeName, headerHeight: number = 0) => {
+export const tourDetailCoverStyles = (theme: ThemeName) => {
   const color = Colors[theme];
 
   return StyleSheet.create({
     coverContainer: {
-      marginTop: headerHeight,
-      height: 280,
-      position: 'relative',
+      height: 460,
+      borderBottomLeftRadius: 28,
+      borderBottomRightRadius: 28,
+      overflow: 'hidden',
     },
     coverImage: {
       width: '100%',
       height: '100%',
     },
-    coverOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: color.backgroundBlack,
-    },
-    coverContent: {
+    gradient: {
       position: 'absolute',
-      bottom: Spacing.xl,
-      left: Spacing.lg,
-      right: Spacing.lg,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 280,
     },
-    coverTitle: {
-      color: '#fff',
-      fontSize: 24,
-      fontWeight: '700',
-      marginBottom: Spacing.sm,
+    titleOverlay: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      paddingHorizontal: 20,
+      paddingBottom: 26,
+      gap: 6,
+    },
+    overlayTitle: {
+      color: color.white,
+      fontSize: 26,
+      fontWeight: '800',
+      letterSpacing: -0.5,
       textShadowColor: color.textShadowColor,
       textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 3,
+      textShadowRadius: 6,
     },
-    ratingContainer: {
+    ratingRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: Spacing.xs,
+      gap: 5,
     },
-    star: {
+    overlayStar: {
       color: color.star,
-      fontSize: 16,
+      fontSize: 14,
     },
-    ratingText: {
+    overlayRating: {
       color: color.white,
       fontSize: 14,
+      fontWeight: '700',
+    },
+    overlayReviews: {
+      color: color.white,
+      fontSize: 13,
+      opacity: 0.72,
+    },
+    backButton: {
+      position: 'absolute',
+      left: 16,
+      backgroundColor: color.backgroundBlack,
     },
   });
 };
