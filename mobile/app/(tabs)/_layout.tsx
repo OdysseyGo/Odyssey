@@ -8,6 +8,7 @@ import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import ActiveTourFAB from '@/components/MapComponents/ActiveTourFAB';
+import BackButton from '@/components/common/BackButton';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -47,18 +48,17 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="two"
+          name="settings"
           options={{
             title: t('tabs.settings'),
+            href: null,
+            headerLeft: () => (
+              <BackButton
+                color={Colors[colorTheme ?? 'light'].white}
+                onPress={() => router.navigate('/(tabs)/profile')}
+              />
+            ),
             tabBarIcon: ({ color }) => <TabBarIcon name="gear" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="map"
-          options={{
-            title: t('tabs.map'),
-            headerShown: false,
-            tabBarIcon: ({ color }) => <TabBarIcon name="map" color={color} />,
           }}
         />
         <Tabs.Screen
@@ -67,6 +67,14 @@ export default function TabLayout() {
             title: t('tabs.tours'),
             tabBarIcon: ({ color }) => <TabBarIcon name="compass" color={color} />,
             headerShown: false,
+          }}
+        />
+        <Tabs.Screen
+          name="map"
+          options={{
+            title: t('tabs.map'),
+            headerShown: false,
+            tabBarIcon: ({ color }) => <TabBarIcon name="map" color={color} />,
           }}
         />
         <Tabs.Screen

@@ -474,6 +474,8 @@ export default function Profile() {
     subtitle: curUser.country,
     avatarUrl: curUser.avatar_url || undefined,
     onAvatarPress: () => setShowAvatarModal(true),
+    onSettingsPress: () => router.push('/(tabs)/settings'),
+    settingsAccessibilityLabel: t('tabs.settings'),
   };
 
   const profileStats = {

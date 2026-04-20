@@ -21,7 +21,7 @@ type SettingsGroup = {
   items: SettingsItemConfig[];
 };
 
-export default function TabTwoScreen() {
+export default function SettingsScreen() {
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
   const colorTheme = useColorTheme();
@@ -93,7 +93,7 @@ export default function TabTwoScreen() {
     },
   ];
 
-  const handleItemPress = (groupTitle: string, item: SettingsItemConfig) => {
+  const handleItemPress = (_groupTitle: string, item: SettingsItemConfig) => {
     if (item.key === 'language') {
       setShowLanguageModal(true);
     }
@@ -122,7 +122,7 @@ export default function TabTwoScreen() {
       <Modal visible={showLanguageModal} transparent animationType="fade">
         <RNView style={styles.modalOverlay}>
           <RNView style={[styles.modalCard, { backgroundColor: colors.foreground }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}> 
               {t('settings.selectLanguage')}
             </Text>
 
@@ -139,7 +139,7 @@ export default function TabTwoScreen() {
                   setShowLanguageModal(false);
                 }}
               >
-                <Text style={[styles.languageLabel, { color: colors.text }]}>
+                <Text style={[styles.languageLabel, { color: colors.text }]}> 
                   {t(lang.labelKey)}
                 </Text>
                 {language === lang.code && <Check size={18} color={colors.primary} />}
