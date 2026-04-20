@@ -605,9 +605,9 @@ class TestAIGenerationQuota(TestCase):
         user = self._make_user(user_type=1)
         # Simulate counter from last month
         user.ai_generations_this_month = 3
-        user.ai_generation_reset_date = datetime.date.today().replace(day=1) - datetime.timedelta(
-            days=1
-        )
+        user.ai_generation_reset_date = datetime.date.today().replace(
+            day=1
+        ) - datetime.timedelta(days=1)
         user.save()
 
         CreditService.record_ai_generation(user)

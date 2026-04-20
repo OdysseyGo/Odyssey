@@ -132,7 +132,9 @@ class AdminUserViewSet(ModelViewSet):
             except ValueError as e:
                 return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         user.refresh_from_db()
-        return Response({"detail": f"Credits adjusted by {amount}.", "new_balance": user.credit})
+        return Response(
+            {"detail": f"Credits adjusted by {amount}.", "new_balance": user.credit}
+        )
 
     @action(detail=True, methods=["post"], url_path="unban")
     def unban(self, request, pk=None):

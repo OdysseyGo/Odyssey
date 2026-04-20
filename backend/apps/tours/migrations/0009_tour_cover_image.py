@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tours', '0008_tour_cover_image_tour_credit_price'),
+        ("tours", "0008_tour_cover_image_tour_credit_price"),
     ]
 
     # The `cover_image` column already exists in the database (added by an
@@ -17,9 +17,11 @@ class Migration(migrations.Migration):
         migrations.SeparateDatabaseAndState(
             state_operations=[
                 migrations.AddField(
-                    model_name='tour',
-                    name='cover_image',
-                    field=models.ImageField(blank=True, null=True, upload_to='tour_covers/'),
+                    model_name="tour",
+                    name="cover_image",
+                    field=models.ImageField(
+                        blank=True, null=True, upload_to="tour_covers/"
+                    ),
                 ),
             ],
             database_operations=[],

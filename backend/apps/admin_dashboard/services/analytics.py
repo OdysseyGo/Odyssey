@@ -159,9 +159,9 @@ class AnalyticsService:
         from apps.payments.models import Subscription, Transaction
 
         total_credits_sold = (
-            Transaction.objects.filter(
-                transaction_type=Transaction.PURCHASE
-            ).aggregate(total=Sum("amount"))["total"]
+            Transaction.objects.filter(transaction_type=Transaction.PURCHASE).aggregate(
+                total=Sum("amount")
+            )["total"]
             or 0
         )
         active_subscriptions = Subscription.objects.filter(

@@ -6,13 +6,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tours', '0007_alter_tourstep_latitude_alter_tourstep_longitude'),
+        ("tours", "0007_alter_tourstep_latitude_alter_tourstep_longitude"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tour',
-            name='credit_price',
-            field=models.PositiveIntegerField(default=0, help_text='Price in credits for non-premium users. 0 = free tour.'),
+            model_name="tour",
+            name="credit_price",
+            field=models.PositiveIntegerField(
+                default=0,
+                help_text="Price in credits for non-premium users. 0 = free tour.",
+            ),
         ),
     ]
