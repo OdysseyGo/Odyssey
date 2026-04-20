@@ -1,6 +1,16 @@
 import { ScrollView, StyleSheet, Modal, View as RNView, Pressable } from 'react-native';
 import { useState } from 'react';
-import { User, Bell, Shield, Globe, Palette, HelpCircle, CreditCard, Wallet, Check } from 'lucide-react-native';
+import {
+  User,
+  Bell,
+  Shield,
+  Globe,
+  Palette,
+  HelpCircle,
+  CreditCard,
+  Wallet,
+  Check,
+} from 'lucide-react-native';
 import { Text, View } from '@/components/Themed';
 import { SettingsRowItem } from '@/components/SettingComponents/SettingsRowItem';
 import { SettingsRowGroup } from '@/components/SettingComponents/SettingsRowGroup';

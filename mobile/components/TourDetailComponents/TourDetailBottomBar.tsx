@@ -34,15 +34,9 @@ export default function TourDetailBottomBar({
           <ActivityIndicator size="small" color={colors.white} />
         ) : (
           <>
-            <Ionicons
-              name={isPaid ? 'lock-closed' : 'compass'}
-              size={20}
-              color="#FFFFFF"
-            />
+            <Ionicons name={isPaid ? 'lock-closed' : 'compass'} size={20} color="#FFFFFF" />
             <Text style={styles.startButtonText}>
-              {isPaid
-                ? `Unlock for ${creditPrice} credits`
-                : t('tourDetail.startTour')}
+              {isPaid ? `Unlock for ${creditPrice} credits` : t('tourDetail.startTour')}
             </Text>
           </>
         )}

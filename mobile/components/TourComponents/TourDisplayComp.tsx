@@ -72,52 +72,52 @@ export default function TourDisplayComp({
           style={styles.gradient}
         />
 
-{/* Lock/Premium/Credits badge — top left */}
-{creditPrice > 0 ? (
-  <View
-    style={{
-      position: 'absolute',
-      top: 8,
-      left: 8,
-      backgroundColor: '#FFD93D',
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 6,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 3,
-    }}
-  >
-    <Ionicons name="lock-closed" size={10} color="#1a1a1a" />
-    <Text style={{ color: '#1a1a1a', fontSize: 10, fontWeight: '700' }}>
-      {creditPrice} credits
-    </Text>
-  </View>
-) : isPremium ? (
-  <View
-    style={{
-      position: 'absolute',
-      top: 8,
-      left: 8,
-      backgroundColor: color.primary,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 6,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 3,
-    }}
-  >
-    <Ionicons name="lock-closed" size={10} color="#FFFFFF" />
-    <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>PREMIUM</Text>
-  </View>
-) : null}
+        {/* Lock/Premium/Credits badge — top left */}
+        {creditPrice > 0 ? (
+          <View
+            style={{
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              backgroundColor: '#FFD93D',
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              borderRadius: 6,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 3,
+            }}
+          >
+            <Ionicons name="lock-closed" size={10} color="#1a1a1a" />
+            <Text style={{ color: '#1a1a1a', fontSize: 10, fontWeight: '700' }}>
+              {creditPrice} credits
+            </Text>
+          </View>
+        ) : isPremium ? (
+          <View
+            style={{
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              backgroundColor: color.primary,
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              borderRadius: 6,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 3,
+            }}
+          >
+            <Ionicons name="lock-closed" size={10} color="#FFFFFF" />
+            <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>PREMIUM</Text>
+          </View>
+        ) : null}
 
-{/* Duration pill — top left */}
-<View style={styles.durationPill}>
-  <Ionicons name="time" size={11} color={color.white} />
-  <Text style={styles.durationText}>{duration}</Text>
-</View>
+        {/* Duration pill — top left */}
+        <View style={styles.durationPill}>
+          <Ionicons name="time" size={11} color={color.white} />
+          <Text style={styles.durationText}>{duration}</Text>
+        </View>
         {/* Rating badge — top right */}
         <View style={styles.ratingBadge}>
           <Ionicons name="star" size={11} color={color.star} />

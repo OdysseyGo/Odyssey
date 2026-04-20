@@ -1,5 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, Alert, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+} from 'react-native';
 import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { aiTourCreationStyles } from './ai-tour-creation.styles';
@@ -127,11 +135,9 @@ export default function AITourCreation() {
                 marginBottom: 12,
                 padding: 12,
                 borderRadius: 10,
-                backgroundColor:
-                  aiAllowance.used >= aiAllowance.limit ? '#FEE2E2' : '#FFF7ED',
+                backgroundColor: aiAllowance.used >= aiAllowance.limit ? '#FEE2E2' : '#FFF7ED',
                 borderWidth: 1,
-                borderColor:
-                  aiAllowance.used >= aiAllowance.limit ? '#FCA5A5' : '#FED7AA',
+                borderColor: aiAllowance.used >= aiAllowance.limit ? '#FCA5A5' : '#FED7AA',
               }}
             >
               {aiAllowance.used >= aiAllowance.limit ? (
