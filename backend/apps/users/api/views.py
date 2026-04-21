@@ -6,9 +6,10 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken  # login token
 
+from apps.gamification.models import TourProgress
 from apps.users.models import Follow, User
 
-from .serializers import FollowSerializer, UserSerializer
+from .serializers import FollowingFeedSerializer, FollowSerializer, UserSerializer
 
 
 class UserViewSet(ModelViewSet):
@@ -100,6 +101,31 @@ class UserViewSet(ModelViewSet):
         ).distinct()
 
         serializer = self.get_serializer(followings_qs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"], url_path="following-feed")
+    def following_feed(self, request):
+        current_user = request.user
+
+        following_ids = Follow.objects.filter(follower=current_user).values_list(
+            "following_id", flat=True
+        )
+
+        completed_progress = (
+            TourProgress.objects.filter(
+                user_id__in=following_ids, status=TourProgress.COMPLETED
+            )
+            .select_related("user", "tour")
+            .order_by("-completed_at")
+        )
+
+        page = self.paginate_queryset(completed_progress)
+
+        if page is not None:
+            serializer = FollowingFeedSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = FollowingFeedSerializer(completed_progress, many=True)
         return Response(serializer.data)
 
     @action(

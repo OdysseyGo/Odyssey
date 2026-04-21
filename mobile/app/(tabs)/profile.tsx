@@ -18,6 +18,7 @@ import * as SecureStore from 'expo-secure-store';
 import ProfileHeaderComp from '@/components/ProfileComponents/ProfileHeaderComp';
 import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
 import ProfileAddFriendsButton from '@/components/ProfileComponents/ProfileAddFriendsButton';
+import ProfileFollowingFeedButton from '@/components/ProfileComponents/ProfileFollowingFeedButton';
 import ProfileBadgesContainer from '@/components/ProfileComponents/ProfileBadgesContainer';
 import ProfileToursContainer from '@/components/ProfileComponents/ProfileToursContainer';
 import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
@@ -357,6 +358,7 @@ export default function Profile() {
   const lastRetryKeyRef = useRef(retryKey);
 
   const scrollY = useRef(new Animated.Value(0)).current;
+  const lastRefreshed = useRef<number>(0);
 
   const colorScheme = useColorTheme();
   const theme = Colors[colorScheme];
@@ -388,6 +390,7 @@ export default function Profile() {
         setBadgesCount(badgesResponse.count);
         setBadges(badgesResponse.results);
       });
+      lastRefreshed.current = Date.now();
     } catch (err) {
       console.error('Failed to load profile:', err);
       setFetchError(true);
@@ -412,6 +415,8 @@ export default function Profile() {
       if (isInitialLoad) {
         setLoading(true);
       }
+      const hasData = lastRefreshed.current > 0;
+      if (!hasData) setLoading(true);
       refreshProfile();
     }, [curUser, retryKey, refreshProfile])
   );
@@ -559,6 +564,7 @@ export default function Profile() {
         {/* ─── Actions ─────────────────────────────── */}
         <View style={styles.actionsRow}>
           <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
+          <ProfileFollowingFeedButton />
         </View>
 
         {/* ─── Badges ──────────────────────────────── */}
@@ -625,8 +631,11 @@ const styles = StyleSheet.create({
 
   // Actions
   actionsRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: Spacing.lg + 2,
+    gap: Spacing.md,
   },
 
   // Logout
