@@ -93,18 +93,18 @@ function SkeletonLoading({ theme }: { theme: (typeof Colors)['light'] }) {
           paddingBottom: 60,
         }}
       >
-        <ShimmerBlock width={104} height={104} borderRadius={52} color="rgba(255,255,255,0.2)" />
+        <ShimmerBlock width={104} height={104} borderRadius={52} color={theme.profileSkeletonShimmerStrong} />
         <ShimmerBlock
           width={140}
           height={22}
-          color="rgba(255,255,255,0.2)"
+          color={theme.profileSkeletonShimmerStrong}
           style={{ marginTop: 14 }}
         />
         <ShimmerBlock
           width={90}
           height={24}
           borderRadius={999}
-          color="rgba(255,255,255,0.15)"
+          color={theme.profileSkeletonShimmerSoft}
           style={{ marginTop: 10 }}
         />
       </View>
@@ -176,11 +176,11 @@ function GuestScreen({
     <View style={[guestStyles.root, { backgroundColor: theme.headerGradientTop }]}>
       {/* ── Hero ── */}
       <View style={[guestStyles.hero, { paddingTop: insets.top, height: GUEST_HERO_HEIGHT }]}>
-        <View style={guestStyles.iconRing}>
-          <Ionicons name="compass" size={44} color="#FFFFFF" />
+        <View style={[guestStyles.iconRing, { backgroundColor: theme.profileGuestIconRingBackground }]}>
+          <Ionicons name="compass" size={44} color={theme.white} />
         </View>
-        <Text style={guestStyles.appName}>ODYSSEY</Text>
-        <Text style={guestStyles.tagline}>
+        <Text style={[guestStyles.appName, { color: theme.white }]}>ODYSSEY</Text>
+        <Text style={[guestStyles.tagline, { color: theme.profileGuestTaglineText }]}>
           {t('auth.tagline', { defaultValue: 'Your journey begins here' })}
         </Text>
       </View>
@@ -223,7 +223,7 @@ function GuestScreen({
           activeOpacity={0.85}
         >
           <Text style={guestStyles.loginButtonText}>{t('profile.loginButton')}</Text>
-          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+          <Ionicons name="arrow-forward" size={18} color={theme.white} />
         </TouchableOpacity>
 
         {/* Sign up link */}
@@ -255,7 +255,6 @@ const guestStyles = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
@@ -263,12 +262,10 @@ const guestStyles = StyleSheet.create({
   appName: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#FFFFFF',
     letterSpacing: 5,
   },
   tagline: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.70)',
     letterSpacing: 0.3,
     marginTop: 4,
   },
@@ -322,7 +319,6 @@ const guestStyles = StyleSheet.create({
   loginButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
   },
   signUpRow: {
     flexDirection: 'row',
@@ -540,7 +536,7 @@ export default function Profile() {
           },
         ]}
       >
-        <Text style={styles.stickyBarText}>{curUser.username}</Text>
+        <Text style={[styles.stickyBarText, { color: theme.white }]}>{curUser.username}</Text>
       </Animated.View>
 
       <Animated.ScrollView
@@ -625,7 +621,6 @@ const styles = StyleSheet.create({
   stickyBarText: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#FFFFFF',
     letterSpacing: -0.3,
   },
 

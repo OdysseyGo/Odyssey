@@ -88,6 +88,10 @@ const Colors = {
     profileHeaderLocationChipBorder: 'rgba(255,255,255,0.12)',
     profileHeaderLocationText: 'rgba(255,255,255,0.9)',
     profileHeaderLocationIcon: 'rgba(255,255,255,0.85)',
+    profileSkeletonShimmerStrong: 'rgba(255,255,255,0.2)',
+    profileSkeletonShimmerSoft: 'rgba(255,255,255,0.15)',
+    profileGuestIconRingBackground: 'rgba(255,255,255,0.18)',
+    profileGuestTaglineText: 'rgba(255,255,255,0.7)',
   },
   dark: {
     white: white,
@@ -134,6 +138,10 @@ const Colors = {
     profileHeaderLocationChipBorder: 'rgba(255,255,255,0.12)',
     profileHeaderLocationText: 'rgba(255,255,255,0.9)',
     profileHeaderLocationIcon: 'rgba(255,255,255,0.85)',
+    profileSkeletonShimmerStrong: 'rgba(255,255,255,0.2)',
+    profileSkeletonShimmerSoft: 'rgba(255,255,255,0.15)',
+    profileGuestIconRingBackground: 'rgba(255,255,255,0.18)',
+    profileGuestTaglineText: 'rgba(255,255,255,0.7)',
   },
 };
 
