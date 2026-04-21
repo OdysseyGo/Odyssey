@@ -1,14 +1,13 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs, router, usePathname } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import ActiveTourFAB from '@/components/MapComponents/ActiveTourFAB';
-import BackButton from '@/components/common/BackButton';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -45,20 +44,6 @@ export default function TabLayout() {
           name="index"
           options={{
             href: null, // Hide from tab bar
-          }}
-        />
-        <Tabs.Screen
-          name="settings"
-          options={{
-            title: t('tabs.settings'),
-            href: null,
-            headerLeft: () => (
-              <BackButton
-                color={Colors[colorTheme ?? 'light'].white}
-                onPress={() => router.navigate('/(tabs)/profile')}
-              />
-            ),
-            tabBarIcon: ({ color }) => <TabBarIcon name="gear" color={color} />,
           }}
         />
         <Tabs.Screen

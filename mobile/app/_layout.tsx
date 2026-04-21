@@ -10,6 +10,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { ActiveTourProvider } from '@/contexts/ActiveTourContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { ThemeProvider as AppThemeProvider } from '@/contexts/ThemeContext';
 import '@/i18n/i18n';
 
 export {
@@ -50,6 +51,14 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  return (
+    <AppThemeProvider>
+      <RootLayoutNavigator />
+    </AppThemeProvider>
+  );
+}
+
+function RootLayoutNavigator() {
   const colorTheme = useColorTheme();
   const themeKey = colorTheme;
 
@@ -75,6 +84,15 @@ function RootLayoutNav() {
             <Stack.Screen name="tour/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="profile/followers" options={{ headerShown: false }} />
             <Stack.Screen name="profile/following" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="profile/settings"
+              options={{
+                presentation: 'transparentModal',
+                animation: 'fade',
+                headerShown: false,
+                contentStyle: { backgroundColor: 'transparent' },
+              }}
+            />
             <Stack.Screen
               name="search"
               options={{

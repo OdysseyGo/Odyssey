@@ -135,6 +135,32 @@
   "settings": {
     "language": "Dil",
     "selectLanguage": "Dil Seç",
+    "sections": {
+      "profile": "Profil",
+      "account": "Hesap",
+      "preferences": "Tercihler"
+    },
+    "items": {
+      "editProfile": {
+        "label": "Profili Düzenle",
+        "description": "Kişisel bilgilerini güncelle"
+      },
+      "notifications": {
+        "label": "Bildirimler",
+        "description": "Bildirim tercihlerini yönet"
+      },
+      "privacy": {
+        "label": "Gizlilik",
+        "description": "Gizlilik ayarlarını yönet"
+      }
+    },
+    "appearance": {
+      "label": "Görünüm",
+      "mode": {
+        "light": "Açık tema",
+        "dark": "Koyu tema"
+      }
+    },
     "languages": {
       "en": "İngilizce",
       "tr": "Türkçe"
