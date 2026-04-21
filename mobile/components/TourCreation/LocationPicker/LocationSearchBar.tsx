@@ -1,12 +1,11 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { useTranslation } from 'react-i18next';
-
-const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
+import { fetchGoogleMapsApiKey } from '@/api/map';
 
 type LocationSearchBarProps = {
   onLocationAdd: (latitude: number, longitude: number, name: string) => void;
@@ -17,6 +16,12 @@ export default function LocationSearchBar({ onLocationAdd }: LocationSearchBarPr
   const color = Colors[theme];
   const { t } = useTranslation();
   const ref = useRef<any>(null);
+  const [mapsApiKey, setMapsApiKey] = useState('');
+
+  useEffect(() => {
+    fetchGoogleMapsApiKey().then(setMapsApiKey).catch(() => {});
+  }, []);
+
 
   return (
     <View style={styles.container}>
@@ -32,7 +37,7 @@ export default function LocationSearchBar({ onLocationAdd }: LocationSearchBarPr
           ref.current?.clear();
         }}
         query={{
-          key: GOOGLE_MAPS_API_KEY,
+          key: mapsApiKey,
           language: 'en',
           types: 'geocode|establishment',
         }}
@@ -86,6 +91,9 @@ export default function LocationSearchBar({ onLocationAdd }: LocationSearchBarPr
         enablePoweredByContainer={false}
         keepResultsAfterBlur={false}
         keyboardShouldPersistTaps="handled"
+        onFail={(error) => console.error('[LocationSearchBar] API error:', error)}
+        onNotFound={() => console.warn('[LocationSearchBar] No results found')}
+        onTimeout={() => console.warn('[LocationSearchBar] Request timed out')}
       />
     </View>
   );
