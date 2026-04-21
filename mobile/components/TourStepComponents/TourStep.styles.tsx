@@ -74,6 +74,75 @@ export default function getStyles(theme: ThemeName) {
       borderRadius: Spacing.borderRadius,
       marginBottom: Spacing.md,
     },
+    referenceImageButton: {
+      marginBottom: Spacing.md,
+      borderRadius: Spacing.borderRadius,
+      overflow: 'hidden',
+    },
+    referenceImagePreview: {
+      width: '100%',
+      aspectRatio: 1,
+    },
+    referenceImageOverlay: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      paddingVertical: Spacing.xs,
+      paddingHorizontal: Spacing.sm,
+      backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    },
+    referenceImageOverlayText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: color.white,
+      textAlign: 'center',
+    },
+    referenceImageModalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.85)',
+      padding: Spacing.md,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    referenceImageModalContent: {
+      width: '92%',
+      maxHeight: '85%',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    referenceImageFull: {
+      width: '100%',
+      aspectRatio: 1,
+    },
+    sectionLabel: {
+      fontSize: 12,
+      color: color.subText,
+      fontWeight: '600',
+      marginBottom: Spacing.xs,
+    },
+    captureButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: Spacing.sm,
+      borderRadius: Spacing.borderRadius,
+      backgroundColor: color.primary,
+      marginTop: Spacing.xs,
+    },
+    captureButtonDisabled: {
+      opacity: 0.6,
+    },
+    captureButtonText: {
+      color: color.white,
+      fontWeight: '700',
+      fontSize: 14,
+    },
+    feedbackText: {
+      marginTop: Spacing.sm,
+      color: color.subText,
+      fontSize: 13,
+      lineHeight: 18,
+    },
 
     optionsContainer: {
       gap: Spacing.sm,

@@ -95,6 +95,7 @@ export default function EditLocationScreen() {
       puzzle,
       updateLocation,
       setSelectedLocation,
+      isPuzzleMode,
     ]
   );
 
@@ -105,14 +106,28 @@ export default function EditLocationScreen() {
     });
   }, [navigation, t]);
 
+  const isPuzzleValid = (currentPuzzle?: Puzzle) => {
+    if (!currentPuzzle?.question) {
+      return false;
+    }
+
+    if (currentPuzzle.puzzle_type === 'PICTURE_COMPARE') {
+      return !!currentPuzzle.referenceImage;
+    }
+
+    const options = currentPuzzle.options;
+    if (!currentPuzzle.correctAnswer || !options || options.length < 2) {
+      return false;
+    }
+
+    return options.every((opt) => opt.trim().length > 0);
+  };
+
+  const shouldValidatePuzzle = tourData.tourType === 'PUZZLE' || !!puzzle;
   const isValid =
     title.trim().length > 0 &&
     story.trim().length > 0 &&
-    (tourData.tourType !== 'PUZZLE' ||
-      (!!puzzle?.question &&
-        !!puzzle?.correctAnswer &&
-        (puzzle?.options?.length ?? 0) >= 2 &&
-        puzzle!.options.every((opt) => opt.trim().length > 0)));
+    (!shouldValidatePuzzle || isPuzzleValid(puzzle));
 
   const currentIndex = selectedLocation
     ? tourData.locations.findIndex((loc) => loc.id === selectedLocation.id)

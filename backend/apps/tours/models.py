@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -119,11 +120,13 @@ class Puzzle(models.Model):
     TRIVIA = "TRIVIA"
     AR = "AR"
     GYROSCOPE = "GYROSCOPE"
+    PICTURE_COMPARE = "PICTURE_COMPARE"
 
     PUZZLE_TYPE_CHOICES = [
         (TRIVIA, "Trivia"),
         (AR, "Augmented Reality"),
         (GYROSCOPE, "Gyroscope"),
+        (PICTURE_COMPARE, "Picture Compare"),
     ]
 
     step = models.OneToOneField(
@@ -137,9 +140,105 @@ class Puzzle(models.Model):
     correct_answer = models.CharField(max_length=255)
     hint = models.TextField(blank=True)
     xp_reward = models.PositiveIntegerField(default=10)
+    reference_image = models.ImageField(
+        upload_to="puzzle_reference_images/", blank=True, null=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Puzzle for {self.step}"
+
+
+class TriviaPuzzleDetail(models.Model):
+    puzzle = models.OneToOneField(
+        Puzzle, on_delete=models.CASCADE, related_name="trivia_detail"
+    )
+    options = models.JSONField(
+        default=list,
+        help_text="Multiple choice options for TRIVIA puzzles",
+    )
+    correct_answer = models.CharField(max_length=255)
+
+    def clean(self):
+        if self.puzzle.puzzle_type != Puzzle.TRIVIA:
+            raise ValidationError(
+                {
+                    "puzzle": "TriviaPuzzleDetail can only be attached to TRIVIA puzzles."
+                }
+            )
+
+    def __str__(self):
+        return f"Trivia detail for puzzle {self.puzzle.pk}"
+
+
+class PictureComparePuzzleDetail(models.Model):
+    puzzle = models.OneToOneField(
+        Puzzle,
+        on_delete=models.CASCADE,
+        related_name="picture_compare_detail",
+    )
+    reference_image = models.ImageField(upload_to="puzzle_reference_images/")
+    similarity_threshold = models.FloatField(default=0.7)
+
+    def clean(self):
+        if self.puzzle.puzzle_type != Puzzle.PICTURE_COMPARE:
+            raise ValidationError(
+                {
+                    "puzzle": (
+                        "PictureComparePuzzleDetail can only be attached to "
+                        "PICTURE_COMPARE puzzles."
+                    )
+                }
+            )
+
+    def __str__(self):
+        return f"Picture compare detail for puzzle {self.puzzle.pk}"
+
+
+class ArPuzzleDetail(models.Model):
+    puzzle = models.OneToOneField(
+        Puzzle,
+        on_delete=models.CASCADE,
+        related_name="ar_detail",
+    )
+    scene_asset_url = models.URLField(blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+
+    def clean(self):
+        if self.puzzle.puzzle_type != Puzzle.AR:
+            raise ValidationError(
+                {"puzzle": "ArPuzzleDetail can only be attached to AR puzzles."}
+            )
+
+    def __str__(self):
+        return f"AR detail for puzzle {self.puzzle.pk}"
+
+
+class GyroscopePuzzleDetail(models.Model):
+    puzzle = models.OneToOneField(
+        Puzzle,
+        on_delete=models.CASCADE,
+        related_name="gyroscope_detail",
+    )
+    target_pitch = models.FloatField(default=0.0)
+    target_roll = models.FloatField(default=0.0)
+    target_yaw = models.FloatField(default=0.0)
+    tolerance_degrees = models.FloatField(default=15.0)
+
+    def clean(self):
+        if self.puzzle.puzzle_type != Puzzle.GYROSCOPE:
+            raise ValidationError(
+                {
+                    "puzzle": (
+                        "GyroscopePuzzleDetail can only be attached to "
+                        "GYROSCOPE puzzles."
+                    )
+                }
+            )
+
+    def __str__(self):
+        return f"Gyroscope detail for puzzle {self.puzzle.pk}"
 
 
 class Review(models.Model):
@@ -153,3 +252,30 @@ class Review(models.Model):
 
     def __str__(self):
         return f"Review by {self.user} for {self.tour}"
+
+
+class PuzzleAttempt(models.Model):
+    puzzle = models.ForeignKey(
+        Puzzle, on_delete=models.CASCADE, related_name="attempts"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="puzzle_attempts",
+    )
+    progress = models.ForeignKey(
+        "gamification.TourProgress",
+        on_delete=models.CASCADE,
+        related_name="puzzle_attempts",
+    )
+    attempt_image = models.ImageField(upload_to="puzzle_attempts/")
+    similarity_score = models.FloatField(null=True, blank=True)
+    accepted = models.BooleanField(default=False)
+    processing_ms = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Attempt by {self.user} on puzzle {self.puzzle.pk}"

@@ -1,11 +1,29 @@
-import { View, Text, Image, Pressable, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  Pressable,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+  Modal,
+} from 'react-native';
 import { useMemo, useState } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import getStyles from './TourStep.styles';
-import { TourStepProps, StoryStep, PuzzleStep, MultipleChoicePuzzle } from './TourStep.config';
+import {
+  TourStepProps,
+  StoryStep,
+  PuzzleStep,
+  MultipleChoicePuzzle,
+  PictureComparePuzzle,
+} from './TourStep.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
+import { submitPictureCompare } from '@/api/tourProgress';
+import { useActiveTour } from '@/contexts/ActiveTourContext';
+import SquareCameraOverlayCapture from '@/components/common/SquareCameraOverlayCapture';
 
 interface StoryStepViewProps {
   step: StoryStep;
@@ -116,6 +134,143 @@ function MultipleChoiceView({ puzzle, isSolved, onSolve }: MultipleChoiceViewPro
   );
 }
 
+interface PictureCompareViewProps {
+  puzzle: PictureComparePuzzle;
+  isSolved: boolean;
+  onSolve: () => void;
+}
+
+function PictureCompareView({ puzzle, isSolved, onSolve }: PictureCompareViewProps) {
+  const theme = useColorTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+  const { progressId } = useActiveTour();
+
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCameraVisible, setIsCameraVisible] = useState(false);
+  const [fullscreenImageUri, setFullscreenImageUri] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string>('');
+
+  const handleCaptureAndCheck = async () => {
+    if (isSolved || isSubmitting) {
+      return;
+    }
+
+    setIsCameraVisible(true);
+  };
+
+  const handleCapturedImage = async (photoUri: string) => {
+    if (!progressId) {
+      Alert.alert('Progress missing', 'Could not verify puzzle without active tour progress.');
+      return;
+    }
+
+    setPreviewUri(photoUri);
+    setIsSubmitting(true);
+    setFeedback('Checking similarity...');
+
+    try {
+      const response = await submitPictureCompare(progressId, photoUri);
+      const similarityPercent = Math.round((response.similarity_score || 0) * 100);
+
+      if (response.accepted) {
+        setFeedback(`Matched (${similarityPercent}%).`);
+        onSolve();
+      } else {
+        setFeedback(`Not close enough (${similarityPercent}%). Try another angle.`);
+      }
+    } catch (error) {
+      console.error('submit picture compare failed', error);
+      setFeedback('Could not verify image right now. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <View>
+      <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
+
+      <Text style={styles.sectionLabel}>Look around and try to find this!</Text>
+      <Pressable
+        style={styles.referenceImageButton}
+        onPress={() => setFullscreenImageUri(puzzle.referenceImageUri)}
+        accessibilityRole="button"
+        accessibilityLabel="Open reference image full screen"
+      >
+        <Image
+          source={{ uri: puzzle.referenceImageUri }}
+          style={styles.referenceImagePreview}
+          resizeMode="cover"
+        />
+        <View style={styles.referenceImageOverlay}>
+          <Text style={styles.referenceImageOverlayText}>Tap to view full image</Text>
+        </View>
+      </Pressable>
+
+      {previewUri && (
+        <>
+          <Text style={styles.sectionLabel}>Your latest attempt</Text>
+          <Pressable
+            style={styles.referenceImageButton}
+            onPress={() => setFullscreenImageUri(previewUri)}
+            accessibilityRole="button"
+            accessibilityLabel="Open latest attempt full screen"
+          >
+            <Image source={{ uri: previewUri }} style={styles.referenceImagePreview} resizeMode="cover" />
+            <View style={styles.referenceImageOverlay}>
+              <Text style={styles.referenceImageOverlayText}>Tap to view full image</Text>
+            </View>
+          </Pressable>
+        </>
+      )}
+
+      <Pressable
+        style={[styles.captureButton, (isSolved || isSubmitting) && styles.captureButtonDisabled]}
+        onPress={handleCaptureAndCheck}
+        disabled={isSolved || isSubmitting}
+      >
+        {isSubmitting ? (
+          <ActivityIndicator color={Colors[theme].white} />
+        ) : (
+          <Text style={styles.captureButtonText}>{isSolved ? 'Solved' : 'Capture and Check'}</Text>
+        )}
+      </Pressable>
+
+      {feedback ? <Text style={styles.feedbackText}>{feedback}</Text> : null}
+
+      <SquareCameraOverlayCapture
+        visible={isCameraVisible}
+        onClose={() => setIsCameraVisible(false)}
+        onCapture={handleCapturedImage}
+        title="Align your view with the target"
+        subtitle="Only the center square is analyzed for matching."
+        captureLabel="Check Match"
+      />
+
+      <Modal
+        visible={!!fullscreenImageUri}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFullscreenImageUri(null)}
+      >
+        <Pressable
+          style={styles.referenceImageModalOverlay}
+          onPress={() => setFullscreenImageUri(null)}
+        >
+          <Pressable style={styles.referenceImageModalContent} onPress={() => {}}>
+            <Image
+              source={{ uri: fullscreenImageUri ?? '' }}
+              style={styles.referenceImageFull}
+              resizeMode="contain"
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+}
+
 interface PuzzleStepViewProps {
   step: PuzzleStep;
   isSolved: boolean;
@@ -137,12 +292,21 @@ function PuzzleStepView({ step, isSolved, onSolve }: PuzzleStepViewProps) {
 
       {step.description && <Text style={styles.puzzleDescription}>{step.description}</Text>}
 
-      <MultipleChoiceView
-        key={step.id}
-        puzzle={step.puzzle}
-        isSolved={isSolved}
-        onSolve={onSolve}
-      />
+      {step.puzzle.type === 'multiple-choice' ? (
+        <MultipleChoiceView
+          key={step.id}
+          puzzle={step.puzzle}
+          isSolved={isSolved}
+          onSolve={onSolve}
+        />
+      ) : (
+        <PictureCompareView
+          key={step.id}
+          puzzle={step.puzzle}
+          isSolved={isSolved}
+          onSolve={onSolve}
+        />
+      )}
     </ScrollView>
   );
 }

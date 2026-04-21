@@ -160,6 +160,7 @@ class AdminPuzzleSerializer(serializers.ModelSerializer):
             "correct_answer",
             "hint",
             "xp_reward",
+            "reference_image",
         ]
 
 
