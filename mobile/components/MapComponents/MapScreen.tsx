@@ -11,6 +11,7 @@ import EndTourConfirmModal from './EndTourConfirmModal';
 import { getVisibleMarkers, getVisibleRoute } from '../TourStepComponents/TourNavigation.config';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import Colors from '@/constants/Colors';
+import { isLoggedIn } from '@/api/auth';
 
 import { getTourProgress, deleteTourProgress, skipStep } from '@/api/tourProgress';
 import { number } from 'react-i18next/icu.macro';
@@ -37,7 +38,13 @@ export default function MapScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      resumeActiveTour();
+      const checkLoginAndResume = async () => {
+        if (await isLoggedIn()) {
+          resumeActiveTour();
+        }
+        return () => {};
+      };
+      checkLoginAndResume();
 
       return () => {};
     }, [resumeActiveTour])
