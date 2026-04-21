@@ -21,7 +21,9 @@ export default function LocationSearchBar({ onLocationAdd }: LocationSearchBarPr
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
-    fetchGoogleMapsApiKey().then(setMapsApiKey).catch(() => {});
+    fetchGoogleMapsApiKey()
+      .then(setMapsApiKey)
+      .catch(() => {});
 
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -30,7 +32,6 @@ export default function LocationSearchBar({ onLocationAdd }: LocationSearchBarPr
       setUserLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
     })();
   }, []);
-
 
   return (
     <View style={styles.container}>
