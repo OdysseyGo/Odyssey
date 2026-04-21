@@ -4,12 +4,12 @@ import { useOptionalTheme } from '@/contexts/ThemeContext';
 
 export function useColorTheme() {
   const themeContext = useOptionalTheme();
+  const scheme = useColorScheme() ?? 'light';
 
   if (themeContext) {
     return themeContext.theme;
   }
 
-  const scheme = useColorScheme() ?? 'light';
   const theme = scheme as ThemeName;
 
   return theme;
