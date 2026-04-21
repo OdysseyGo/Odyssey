@@ -134,13 +134,17 @@ export default function SettingsScreen() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
 
     if (!editProfileForm.username.trim()) {
-      nextErrors.username = t('auth.errors.usernameRequired', { defaultValue: 'Username is required' });
+      nextErrors.username = t('auth.errors.usernameRequired', {
+        defaultValue: 'Username is required',
+      });
     }
 
     if (!editProfileForm.email.trim()) {
       nextErrors.email = t('auth.errors.emailRequired', { defaultValue: 'Email is required' });
     } else if (!emailRegex.test(editProfileForm.email.trim())) {
-      nextErrors.email = t('auth.errors.emailFormat', { defaultValue: 'Please enter a valid email' });
+      nextErrors.email = t('auth.errors.emailFormat', {
+        defaultValue: 'Please enter a valid email',
+      });
     }
 
     setEditProfileErrors(nextErrors);
@@ -164,7 +168,9 @@ export default function SettingsScreen() {
       });
     } catch {
       setEditProfileGeneralError(
-        t('settings.editProfile.loadError', { defaultValue: 'Could not load your profile details.' })
+        t('settings.editProfile.loadError', {
+          defaultValue: 'Could not load your profile details.',
+        })
       );
     } finally {
       setIsLoadingProfileData(false);
@@ -181,7 +187,9 @@ export default function SettingsScreen() {
     if (!validateEditProfileForm()) return;
     if (!currentUserId) {
       setEditProfileGeneralError(
-        t('settings.editProfile.loadError', { defaultValue: 'Could not load your profile details.' })
+        t('settings.editProfile.loadError', {
+          defaultValue: 'Could not load your profile details.',
+        })
       );
       return;
     }
@@ -241,12 +249,7 @@ export default function SettingsScreen() {
       <View style={styles.popupOverlay}>
         <Pressable style={StyleSheet.absoluteFill} onPress={() => router.back()} />
 
-        <View
-          style={[
-            styles.popupCard,
-            { backgroundColor: colors.background },
-          ]}
-        >
+        <View style={[styles.popupCard, { backgroundColor: colors.background }]}>
           <View style={styles.popupHeader}>
             {isEditProfileView ? (
               <BackButton
@@ -259,7 +262,7 @@ export default function SettingsScreen() {
               <View style={styles.headerBackButtonPlaceholder} />
             )}
 
-            <Text style={[styles.popupTitle, { color: colors.text }]}> 
+            <Text style={[styles.popupTitle, { color: colors.text }]}>
               {isEditProfileView
                 ? t('settings.items.editProfile.label', { defaultValue: 'Edit Profile' })
                 : t('tabs.settings')}
@@ -298,13 +301,13 @@ export default function SettingsScreen() {
                       ]}
                     >
                       <Ionicons name="alert-circle" size={16} color={colors.error} />
-                      <Text style={[styles.errorBannerText, { color: colors.error }]}> 
+                      <Text style={[styles.errorBannerText, { color: colors.error }]}>
                         {editProfileGeneralError}
                       </Text>
                     </View>
                   ) : null}
 
-                  <RNView style={[styles.formFields, { backgroundColor: editProfileSurfaceColor }]}> 
+                  <RNView style={[styles.formFields, { backgroundColor: editProfileSurfaceColor }]}>
                     <Text style={[styles.inputLabel, { color: colors.subText }]}>Username</Text>
                     <TextInput
                       value={editProfileForm.username}
@@ -325,7 +328,7 @@ export default function SettingsScreen() {
                       placeholderTextColor={colors.subText}
                     />
                     {editProfileErrors.username ? (
-                      <Text style={[styles.fieldError, { color: colors.error }]}> 
+                      <Text style={[styles.fieldError, { color: colors.error }]}>
                         {editProfileErrors.username}
                       </Text>
                     ) : null}
@@ -333,7 +336,9 @@ export default function SettingsScreen() {
                     <Text style={[styles.inputLabel, { color: colors.subText }]}>First name</Text>
                     <TextInput
                       value={editProfileForm.first_name}
-                      onChangeText={(text) => setEditProfileForm((prev) => ({ ...prev, first_name: text }))}
+                      onChangeText={(text) =>
+                        setEditProfileForm((prev) => ({ ...prev, first_name: text }))
+                      }
                       autoCapitalize="words"
                       style={[
                         styles.textInput,
@@ -350,7 +355,9 @@ export default function SettingsScreen() {
                     <Text style={[styles.inputLabel, { color: colors.subText }]}>Last name</Text>
                     <TextInput
                       value={editProfileForm.last_name}
-                      onChangeText={(text) => setEditProfileForm((prev) => ({ ...prev, last_name: text }))}
+                      onChangeText={(text) =>
+                        setEditProfileForm((prev) => ({ ...prev, last_name: text }))
+                      }
                       autoCapitalize="words"
                       style={[
                         styles.textInput,
@@ -386,18 +393,20 @@ export default function SettingsScreen() {
                       placeholderTextColor={colors.subText}
                     />
                     {editProfileErrors.email ? (
-                      <Text style={[styles.fieldError, { color: colors.error }]}> 
+                      <Text style={[styles.fieldError, { color: colors.error }]}>
                         {editProfileErrors.email}
                       </Text>
                     ) : null}
                   </RNView>
 
-                  <RNView style={[styles.editActionsRow, { backgroundColor: editProfileSurfaceColor }]}> 
+                  <RNView
+                    style={[styles.editActionsRow, { backgroundColor: editProfileSurfaceColor }]}
+                  >
                     <Pressable
                       onPress={backToSettingsView}
                       style={[styles.secondaryAction, { borderColor: colors.border }]}
                     >
-                      <Text style={[styles.secondaryActionText, { color: colors.text }]}> 
+                      <Text style={[styles.secondaryActionText, { color: colors.text }]}>
                         {t('common.cancel', { defaultValue: 'Cancel' })}
                       </Text>
                     </Pressable>
@@ -414,7 +423,7 @@ export default function SettingsScreen() {
                       {isSavingProfile ? (
                         <ActivityIndicator color={colors.white} />
                       ) : (
-                        <Text style={[styles.primaryActionText, { color: colors.white }]}> 
+                        <Text style={[styles.primaryActionText, { color: colors.white }]}>
                           {t('common.save', { defaultValue: 'Save' })}
                         </Text>
                       )}
@@ -427,7 +436,9 @@ export default function SettingsScreen() {
             <ScrollView style={styles.container} contentContainerStyle={styles.content}>
               {settingsGroups.map((group) => (
                 <View key={group.title} style={styles.section}>
-                  <Text style={[styles.sectionTitle, { color: colors.subText }]}>{group.title}</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.subText }]}>
+                    {group.title}
+                  </Text>
 
                   <SettingsRowGroup>
                     {group.items.map((item) => (

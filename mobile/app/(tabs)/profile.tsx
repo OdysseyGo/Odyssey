@@ -93,7 +93,12 @@ function SkeletonLoading({ theme }: { theme: (typeof Colors)['light'] }) {
           paddingBottom: 60,
         }}
       >
-        <ShimmerBlock width={104} height={104} borderRadius={52} color={theme.profileSkeletonShimmerStrong} />
+        <ShimmerBlock
+          width={104}
+          height={104}
+          borderRadius={52}
+          color={theme.profileSkeletonShimmerStrong}
+        />
         <ShimmerBlock
           width={140}
           height={22}
@@ -176,7 +181,9 @@ function GuestScreen({
     <View style={[guestStyles.root, { backgroundColor: theme.headerGradientTop }]}>
       {/* ── Hero ── */}
       <View style={[guestStyles.hero, { paddingTop: insets.top, height: GUEST_HERO_HEIGHT }]}>
-        <View style={[guestStyles.iconRing, { backgroundColor: theme.profileGuestIconRingBackground }]}>
+        <View
+          style={[guestStyles.iconRing, { backgroundColor: theme.profileGuestIconRingBackground }]}
+        >
           <Ionicons name="compass" size={44} color={theme.white} />
         </View>
         <Text style={[guestStyles.appName, { color: theme.white }]}>ODYSSEY</Text>
