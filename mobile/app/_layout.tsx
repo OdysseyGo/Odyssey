@@ -84,15 +84,6 @@ function RootLayoutNavigator() {
             <Stack.Screen name="tour/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="profile" options={{ headerShown: false }} />
             <Stack.Screen
-              name="profile/settings"
-              options={{
-                presentation: 'transparentModal',
-                animation: 'fade',
-                headerShown: false,
-                contentStyle: { backgroundColor: 'transparent' },
-              }}
-            />
-            <Stack.Screen
               name="search"
               options={{
                 headerShown: false,

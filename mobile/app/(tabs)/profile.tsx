@@ -7,7 +7,9 @@ import {
   Animated,
   Dimensions,
   Alert,
+  Modal,
 } from 'react-native';
+import SettingsScreen from '@/app/profile/settings';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -356,6 +358,7 @@ export default function Profile() {
   const [retryKey, setRetryKey] = useState(0);
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const lastRetryKeyRef = useRef(retryKey);
@@ -494,7 +497,7 @@ export default function Profile() {
     subtitle: curUser.country,
     avatarUrl: curUser.avatar_url || undefined,
     onAvatarPress: () => setShowAvatarModal(true),
-    onSettingsPress: () => router.push('/profile/settings'),
+    onSettingsPress: () => setShowSettings(true),
     settingsAccessibilityLabel: t('tabs.settings'),
   };
 
@@ -605,6 +608,15 @@ export default function Profile() {
         currentAvatarUrl={curUser.avatar_url || undefined}
         onAvatarSaved={(url) => setCurUser((prev) => (prev ? { ...prev, avatar_url: url } : prev))}
       />
+
+      <Modal
+        visible={showSettings}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSettings(false)}
+      >
+        <SettingsScreen onClose={() => setShowSettings(false)} />
+      </Modal>
     </View>
   );
 }

@@ -5,7 +5,6 @@ import {
   Modal,
   View as RNView,
   Pressable,
-  Switch,
   TextInput,
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -47,14 +46,15 @@ type EditProfileForm = {
 
 type PopupView = 'settings' | 'edit-profile';
 
-export default function SettingsScreen() {
+export default function SettingsScreen({ onClose }: { onClose?: () => void }) {
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, themePreference, setThemePreference } = useTheme();
   const colorTheme = useColorTheme();
   const colors = Colors[colorTheme];
   const editProfileSurfaceColor = colors.background;
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showAppearanceModal, setShowAppearanceModal] = useState(false);
   const [popupView, setPopupView] = useState<PopupView>('settings');
   const [editProfileForm, setEditProfileForm] = useState<EditProfileForm>({
     username: '',
@@ -67,7 +67,6 @@ export default function SettingsScreen() {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [isLoadingProfileData, setIsLoadingProfileData] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const isDarkMode = theme === 'dark';
   const isEditProfileView = popupView === 'edit-profile';
 
   const settingsGroups: SettingsGroup[] = [
@@ -108,22 +107,12 @@ export default function SettingsScreen() {
           icon: Palette,
           label: t('settings.appearance.label'),
           labelKey: 'settings.appearance.label',
-          description: isDarkMode
-            ? t('settings.appearance.mode.dark')
-            : t('settings.appearance.mode.light'),
-          descriptionKey: isDarkMode
-            ? 'settings.appearance.mode.dark'
-            : 'settings.appearance.mode.light',
-          showChevron: false,
-          rightContent: (
-            <Switch
-              value={isDarkMode}
-              onValueChange={toggleTheme}
-              trackColor={{ false: colors.foregroundSecondary, true: colors.primary }}
-              thumbColor={colors.white}
-              ios_backgroundColor={colors.foregroundSecondary}
-            />
-          ),
+          description:
+            theme === 'dark'
+              ? t('settings.appearance.mode.dark')
+              : t('settings.appearance.mode.light'),
+          descriptionKey:
+            theme === 'dark' ? 'settings.appearance.mode.dark' : 'settings.appearance.mode.light',
         },
       ],
     },
@@ -240,14 +229,17 @@ export default function SettingsScreen() {
     }
 
     if (item.key === 'appearance') {
-      toggleTheme();
+      setShowAppearanceModal(true);
     }
   };
 
   return (
     <>
       <View style={styles.popupOverlay}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => router.back()} />
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={() => (onClose ? onClose() : router.back())}
+        />
 
         <View style={[styles.popupCard, { backgroundColor: colors.background }]}>
           <View style={styles.popupHeader}>
@@ -269,7 +261,7 @@ export default function SettingsScreen() {
             </Text>
 
             <Pressable
-              onPress={() => router.back()}
+              onPress={() => (onClose ? onClose() : router.back())}
               accessibilityRole="button"
               accessibilityLabel={t('common.close', { defaultValue: 'Close' })}
               style={styles.closeButton}
@@ -433,13 +425,12 @@ export default function SettingsScreen() {
               )}
             </KeyboardAvoidingView>
           ) : (
-            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+            <View style={[styles.container, styles.content]}>
               {settingsGroups.map((group) => (
                 <View key={group.title} style={styles.section}>
                   <Text style={[styles.sectionTitle, { color: colors.subText }]}>
                     {group.title}
                   </Text>
-
                   <SettingsRowGroup>
                     {group.items.map((item) => (
                       <SettingsRowItem
@@ -451,7 +442,7 @@ export default function SettingsScreen() {
                   </SettingsRowGroup>
                 </View>
               ))}
-            </ScrollView>
+            </View>
           )}
         </View>
       </View>
@@ -480,6 +471,36 @@ export default function SettingsScreen() {
                   {t(lang.labelKey)}
                 </Text>
                 {language === lang.code && <Check size={18} color={colors.primary} />}
+              </Pressable>
+            ))}
+          </RNView>
+        </RNView>
+      </Modal>
+
+      <Modal visible={showAppearanceModal} transparent animationType="fade">
+        <RNView style={styles.modalOverlay}>
+          <RNView style={[styles.modalCard, { backgroundColor: colors.foreground }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              {t('settings.appearance.label')}
+            </Text>
+
+            {(['light', 'dark'] as const).map((mode) => (
+              <Pressable
+                key={mode}
+                style={({ pressed }) => [
+                  styles.languageOption,
+                  { borderColor: colors.border },
+                  pressed && { opacity: 0.7 },
+                ]}
+                onPress={() => {
+                  void setThemePreference(mode);
+                  setShowAppearanceModal(false);
+                }}
+              >
+                <Text style={[styles.languageLabel, { color: colors.text }]}>
+                  {t(`settings.appearance.mode.${mode}`)}
+                </Text>
+                {themePreference === mode && <Check size={18} color={colors.primary} />}
               </Pressable>
             ))}
           </RNView>
