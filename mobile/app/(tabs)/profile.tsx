@@ -26,6 +26,7 @@ import AuthButton from '@/components/LoginComponents/AuthButton';
 import { getMe, User } from '@/api/users';
 import { getMyBadges, Badge } from '@/api/profile';
 import { removeAuthToken } from '@/api/auth';
+import { consumeProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -353,6 +354,7 @@ export default function Profile() {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+  const lastRetryKeyRef = useRef(retryKey);
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -396,12 +398,22 @@ export default function Profile() {
 
   useFocusEffect(
     useCallback(() => {
+      const isInitialLoad = !curUser;
+      const isManualRetry = lastRetryKeyRef.current !== retryKey;
+      const hasPendingRefresh = consumeProfileNeedsRefresh();
+
+      if (!isInitialLoad && !isManualRetry && !hasPendingRefresh) {
+        return;
+      }
+
+      lastRetryKeyRef.current = retryKey;
+
       // Only show full skeleton on initial load (no existing data)
-      if (!curUser) {
+      if (isInitialLoad) {
         setLoading(true);
       }
       refreshProfile();
-    }, [retryKey])
+    }, [curUser, retryKey, refreshProfile])
   );
 
   const handleLogout = () => {

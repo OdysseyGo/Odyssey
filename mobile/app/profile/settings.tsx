@@ -20,6 +20,7 @@ import { SettingsRowItem } from '@/components/SettingComponents/SettingsRowItem'
 import { SettingsRowGroup } from '@/components/SettingComponents/SettingsRowGroup';
 import type { SettingsItemConfig } from '@/components/SettingComponents/SettingsRowItem.config';
 import { getMe, partialUpdateUser } from '@/api/users';
+import { markProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { Spacing } from '@/constants/Spacing';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -203,6 +204,7 @@ export default function SettingsScreen() {
         last_name: updated.last_name ?? payload.last_name,
         email: updated.email ?? payload.email,
       });
+      markProfileNeedsRefresh();
       setPopupView('settings');
     } catch (error: any) {
       const serverError =
