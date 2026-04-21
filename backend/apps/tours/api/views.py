@@ -1,7 +1,9 @@
+import os
+
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 
 from apps.tours.models import Review, Tour, TourStep
@@ -10,6 +12,12 @@ from ..permissions import IsCreatorOrReadOnly
 from .filters import TourFilter
 from .pagination import TourPagination
 from .serializers import ReviewSerializer, TourSerializer, TourStepSerializer
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def google_maps_api_key(request):
+    return Response({"key": os.getenv("GOOGLE_MAPS_API_KEY", "")})
 
 
 class TourViewSet(viewsets.ModelViewSet):

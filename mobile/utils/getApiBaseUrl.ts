@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 export function getApiBaseUrl() {
   try {
     // Needed when testing on external devices.
-    const envBaseUrl = process.env.EXPO_API_BASE_URL;
+    const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
     if (envBaseUrl) {
       return envBaseUrl;
     }

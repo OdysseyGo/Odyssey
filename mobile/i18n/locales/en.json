@@ -173,6 +173,9 @@
     "tourInProgressMessage": "You already have an active tour! Please finish or quit it before starting a new one."
   },
   "creation": {
+    "loginRequired": "Login Required",
+    "loginRequiredMessage": "You need to be logged in to create a tour.",
+    "loginButton": "Log In",
     "continue": "Continue",
     "continueWithCount": "Continue ({{count}} locations)",
     "submit": "Submit Tour",
@@ -211,7 +214,9 @@
       "duration": "Estimated Duration"
     },
     "location": {
-      "instructionBanner": "Tap on the map to add tour stops.",
+      "searchPlaceholder": "Search for a location...",
+      "searchNoResults": "No results found",
+      "instructionBanner": "Search for a location above to add it as a tour stop.",
       "empty": "No locations added yet.\nTap on the map to add your first stop!",
       "tapToAddDetails": "Tap to add details",
       "deleteTitle": "Delete Location",

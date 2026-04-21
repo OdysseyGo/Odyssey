@@ -1,6 +1,6 @@
 import React, { RefObject } from 'react';
 import { View } from 'react-native';
-import MapView, { Marker, MapPressEvent } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { mapContainerStyles } from './MapContainer.styles';
@@ -10,7 +10,6 @@ type MapContainerProps = {
   mapRef: RefObject<MapView | null>;
   locations: TourLocation[];
   selectedLocationId: string | null;
-  onMapPress: (event: MapPressEvent) => void;
   onMarkerPress: (location: TourLocation) => void;
   initialRegion: {
     latitude: number;
@@ -24,7 +23,6 @@ export default function MapContainer({
   mapRef,
   locations,
   selectedLocationId,
-  onMapPress,
   onMarkerPress,
   initialRegion,
 }: MapContainerProps) {
@@ -38,7 +36,6 @@ export default function MapContainer({
         ref={mapRef}
         style={styles.map}
         initialRegion={initialRegion}
-        onPress={onMapPress}
         showsUserLocation
         showsMyLocationButton
       >
