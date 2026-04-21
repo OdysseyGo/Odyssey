@@ -177,7 +177,8 @@
       "label": "Appearance",
       "mode": {
         "light": "Light mode",
-        "dark": "Dark mode"
+        "dark": "Dark mode",
+        "system": "System default"
       }
     },
     "languages": {

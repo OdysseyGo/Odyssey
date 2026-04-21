@@ -108,11 +108,17 @@ export default function SettingsScreen({ onClose }: { onClose?: () => void }) {
           label: t('settings.appearance.label'),
           labelKey: 'settings.appearance.label',
           description:
-            theme === 'dark'
-              ? t('settings.appearance.mode.dark')
-              : t('settings.appearance.mode.light'),
+            themePreference === 'system'
+              ? t('settings.appearance.mode.system')
+              : themePreference === 'dark'
+                ? t('settings.appearance.mode.dark')
+                : t('settings.appearance.mode.light'),
           descriptionKey:
-            theme === 'dark' ? 'settings.appearance.mode.dark' : 'settings.appearance.mode.light',
+            themePreference === 'system'
+              ? 'settings.appearance.mode.system'
+              : themePreference === 'dark'
+                ? 'settings.appearance.mode.dark'
+                : 'settings.appearance.mode.light',
         },
       ],
     },
@@ -484,7 +490,7 @@ export default function SettingsScreen({ onClose }: { onClose?: () => void }) {
               {t('settings.appearance.label')}
             </Text>
 
-            {(['light', 'dark'] as const).map((mode) => (
+            {(['system', 'light', 'dark'] as const).map((mode) => (
               <Pressable
                 key={mode}
                 style={({ pressed }) => [

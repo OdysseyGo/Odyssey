@@ -177,7 +177,8 @@
       "label": "Görünüm",
       "mode": {
         "light": "Açık tema",
-        "dark": "Koyu tema"
+        "dark": "Koyu tema",
+        "system": "Sistem varsayılanı"
       }
     },
     "languages": {
