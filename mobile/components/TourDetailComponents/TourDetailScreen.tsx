@@ -268,7 +268,7 @@ export function TourDetailScreenContent({
           </AnimatedSection>
 
           <AnimatedSection delay={160}>
-            <TourDetailAuthor authorAvatar={tour.authorAvatar} authorName={tour.author} />
+            <TourDetailAuthor authorId={tour.authorId} authorAvatar={tour.authorAvatar} authorName={tour.author} />
           </AnimatedSection>
 
           <AnimatedSection delay={240}>
