@@ -28,6 +28,7 @@ import { getMe, User } from '@/api/users';
 import { getMyBadges, Badge } from '@/api/profile';
 import { removeAuthToken } from '@/api/auth';
 import { useColorTheme } from '@/utils/useColorTheme';
+import { consumeProfileNeedsRefresh } from '@/utils/profileRefreshFlag';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
@@ -399,9 +400,12 @@ export default function Profile() {
 
   useFocusEffect(
     useCallback(() => {
+      const now = Date.now();
       const hasData = lastRefreshed.current > 0;
+      const isStale = now - lastRefreshed.current > 30_000;
+      const forceRefresh = consumeProfileNeedsRefresh();
       if (!hasData) setLoading(true);
-      refreshProfile();
+      if (!hasData || isStale || forceRefresh) refreshProfile();
     }, [retryKey])
   );
 

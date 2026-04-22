@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { getUserFollowers, removeFollower, User } from '@/api/users';
+import { setProfileNeedsRefresh } from '@/utils/profileRefreshFlag';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -88,6 +89,7 @@ export default function FollowersScreen() {
     try {
       await removeFollower(followerId);
       setUsers((prev) => prev.filter((u) => u.id !== followerId));
+      setProfileNeedsRefresh();
     } catch {
       // silently ignore — user stays in list if request fails
     } finally {
