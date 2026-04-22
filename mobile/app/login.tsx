@@ -79,7 +79,7 @@ export default function LoginScreen() {
       const response = await login(credentials);
       SecureStore.setItem('userToken', response.access);
       SecureStore.setItem('refreshToken', response.refresh);
-      router.push('/(tabs)/profile');
+      router.replace('/(tabs)/profile');
     } catch (e) {
       console.error(e);
       setErrors({ general: t('auth.errors.loginFailed') });
