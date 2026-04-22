@@ -32,6 +32,7 @@ import { getMe, User } from '@/api/users';
 import { getMyBadges, Badge } from '@/api/profile';
 import { removeAuthToken } from '@/api/auth';
 import { useColorTheme } from '@/utils/useColorTheme';
+import { consumeProfileNeedsRefresh } from '@/utils/profileRefreshFlag';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { Button } from '@react-navigation/elements';
@@ -166,15 +167,15 @@ function GuestScreen({
   const features = [
     {
       icon: 'map-outline' as const,
-      label: t('profile.feature1', { defaultValue: 'Create and join guided tours' }),
+      label: t('profile.feature1'),
     },
     {
       icon: 'trophy-outline' as const,
-      label: t('profile.feature2', { defaultValue: 'Earn badges and XP' }),
+      label: t('profile.feature2'),
     },
     {
       icon: 'people-outline' as const,
-      label: t('profile.feature3', { defaultValue: 'Connect with other travelers' }),
+      label: t('profile.feature3'),
     },
   ];
 
@@ -186,9 +187,7 @@ function GuestScreen({
           <Ionicons name="compass" size={44} color="#FFFFFF" />
         </View>
         <Text style={guestStyles.appName}>ODYSSEY</Text>
-        <Text style={guestStyles.tagline}>
-          {t('auth.tagline', { defaultValue: 'Your journey begins here' })}
-        </Text>
+        <Text style={guestStyles.tagline}>{t('auth.tagline')}</Text>
       </View>
 
       {/* ── Card ── */}
@@ -204,10 +203,10 @@ function GuestScreen({
         ]}
       >
         <Text style={[guestStyles.cardTitle, { color: theme.text }]}>
-          {t('profile.signInToUnlock', { defaultValue: 'Sign in to unlock' })}
+          {t('profile.signInToUnlock')}
         </Text>
         <Text style={[guestStyles.cardSubtitle, { color: theme.subText }]}>
-          {t('profile.signInSubtitle', { defaultValue: 'Join thousands of explorers on Odyssey.' })}
+          {t('profile.signInSubtitle')}
         </Text>
 
         {/* Feature bullets */}
@@ -409,9 +408,12 @@ export default function Profile() {
 
   useFocusEffect(
     useCallback(() => {
+      const now = Date.now();
       const hasData = lastRefreshed.current > 0;
+      const isStale = now - lastRefreshed.current > 30_000;
+      const forceRefresh = consumeProfileNeedsRefresh();
       if (!hasData) setLoading(true);
-      refreshProfile();
+      if (!hasData || isStale || forceRefresh) refreshProfile();
     }, [retryKey])
   );
 

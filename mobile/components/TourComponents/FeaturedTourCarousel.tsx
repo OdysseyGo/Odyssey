@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
+import { useTranslation } from 'react-i18next';
 import { FeaturedTourCarouselProps } from './FeaturedTourCarousel.config';
 import { featuredTourCarouselStyles } from './FeaturedTourCarousel.styles';
 import { STAR } from '@/constants/Symbols';
@@ -25,6 +26,7 @@ export default function FeaturedTourCarousel({
   tours,
   autoPlayInterval = 5000,
 }: FeaturedTourCarouselProps) {
+  const { t } = useTranslation();
   const theme = useColorTheme();
   const styles = useMemo(() => featuredTourCarouselStyles(theme), [theme]);
   const color = Colors[theme];
@@ -129,7 +131,7 @@ export default function FeaturedTourCarousel({
                   {/* Featured badge */}
                   <View style={styles.featuredBadge}>
                     <Ionicons name="flame" size={12} color={color.white} />
-                    <Text style={styles.featuredBadgeText}>Featured</Text>
+                    <Text style={styles.featuredBadgeText}>{t('tour.featured')}</Text>
                   </View>
 
                   {/* Rating */}

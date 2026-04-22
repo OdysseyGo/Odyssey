@@ -146,9 +146,7 @@ export default function ForgotPasswordScreen() {
               <Ionicons name="compass" size={46} color="#FFFFFF" />
             </View>
             <Text style={styles.appName}>ODYSSEY</Text>
-            <Text style={styles.tagline}>
-              {t('auth.resetTagline', { defaultValue: 'Reset your password' })}
-            </Text>
+            <Text style={styles.tagline}>{t('auth.resetTagline')}</Text>
           </View>
         </Animated.View>
 
@@ -165,13 +163,9 @@ export default function ForgotPasswordScreen() {
               },
             ]}
           >
-            <Text style={[styles.cardTitle, { color: theme.text }]}>
-              {t('auth.resetTitle', { defaultValue: 'Forgot password?' })}
-            </Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>{t('auth.resetTitle')}</Text>
             <Text style={[styles.cardSubtitle, { color: theme.subText }]}>
-              {t('auth.resetSubtitle', {
-                defaultValue: "Enter your username and email and we'll verify your account",
-              })}
+              {t('auth.resetSubtitle')}
             </Text>
 
             {/* Error banner */}
@@ -228,11 +222,11 @@ export default function ForgotPasswordScreen() {
 
             <View style={styles.footerRow}>
               <Text style={[styles.footerLabel, { color: theme.subText }]}>
-                {t('auth.remembered', { defaultValue: 'Remember your password?' })}
+                {t('auth.remembered')}
               </Text>
               <TouchableOpacity onPress={() => router.back()} disabled={loading}>
                 <Text style={[styles.footerLink, { color: theme.primary }]}>
-                  {` ${t('auth.signIn', { defaultValue: 'Sign in' })}`}
+                  {` ${t('auth.signIn')}`}
                 </Text>
               </TouchableOpacity>
             </View>
