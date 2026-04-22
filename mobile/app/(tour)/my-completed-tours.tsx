@@ -9,6 +9,8 @@ import {
   Modal,
   TextInput,
   Alert,
+  Keyboard,
+  Pressable,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -286,8 +288,11 @@ export default function MyCompletedToursScreen() {
         animationType="fade"
         onRequestClose={closeReviewModal}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: theme.cardSurface }]}>
+        <Pressable style={styles.modalOverlay} onPress={Keyboard.dismiss}>
+          <Pressable
+            style={[styles.modalCard, { backgroundColor: theme.cardSurface }]}
+            onPress={Keyboard.dismiss}
+          >
             <Text style={[styles.modalTitle, { color: theme.text }]}>
               {t('profile.leaveReview', { defaultValue: 'Leave a Review' })}
             </Text>
@@ -305,7 +310,7 @@ export default function MyCompletedToursScreen() {
                   <Ionicons
                     name={star <= reviewRating ? 'star' : 'star-outline'}
                     size={36}
-                    color={theme.primary} // or use a gold color like '#FFD700' if you prefer
+                    color={theme.primary}
                   />
                 </TouchableOpacity>
               ))}
@@ -322,6 +327,7 @@ export default function MyCompletedToursScreen() {
               placeholderTextColor={theme.subText}
               multiline
               maxLength={200}
+              underlineColorAndroid="transparent"
               style={[
                 styles.textArea,
                 { color: theme.text, borderColor: theme.foregroundSecondary },
@@ -350,8 +356,8 @@ export default function MyCompletedToursScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </View>
   );
@@ -487,6 +493,17 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: Spacing.xl,
     gap: Spacing.md,
+    borderWidth: 0,
+    borderColor: 'transparent',
+    overflow: 'hidden',
+    elevation: 0,
+    shadowColor: 'transparent',
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
   },
   modalTitle: {
     fontSize: 18,
@@ -516,6 +533,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginTop: Spacing.xs,
     textAlignVertical: 'top',
+    backgroundColor: 'transparent',
   },
   modalFooter: {
     flexDirection: 'row',
