@@ -23,6 +23,7 @@ import TourDetailAuthor from './TourDetailAuthor';
 import TourDetailDescription from './TourDetailDescription';
 import TourDetailMap from './TourDetailMap';
 import TourDetailStops from './TourDetailStops';
+import TourDetailReviews from './TourDetailReviews';
 import TourDetailBottomBar from './TourDetailBottomBar';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -280,6 +281,10 @@ export function TourDetailScreenContent({
 
           <AnimatedSection delay={400}>
             <TourDetailStops stops={tour.stops} />
+          </AnimatedSection>
+
+          <AnimatedSection delay={480}>
+            <TourDetailReviews tourId={parseInt(tour.id)} />
           </AnimatedSection>
 
           <View style={styles.bottomSpacer} />

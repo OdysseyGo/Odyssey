@@ -239,13 +239,13 @@ export async function getTourSteps(tourId: number, signal?: AbortSignal): Promis
 }
 
 /**
- * Fetch reviews for a specific tour
+ * Fetch reviews for a specific tour (requires authentication)
  */
 export async function getTourReviews(tourId: number, signal?: AbortSignal): Promise<Review[]> {
   return apiRequest<Review[]>({
     method: 'GET',
     url: `/api/tours/${tourId}/reviews/`,
-    auth: false,
+    auth: true,
     signal,
   });
 }
@@ -267,6 +267,21 @@ export async function addTourReview(
   });
 }
 
+export async function updateTourReview(
+  tourId: number,
+  reviewId: number,
+  reviewData: { rating: number; comment: string },
+  signal?: AbortSignal
+): Promise<Review> {
+  return apiRequest<Review, typeof reviewData>({
+    method: 'PATCH',
+    url: `/api/tours/${tourId}/reviews/${reviewId}/`,
+    data: reviewData,
+    auth: true,
+    signal,
+  });
+}
+
 /**
  * Fetch the current user's tours (requires authentication)
  * @param status - Optional filter by tour status (DRAFT, PUBLISHED, ARCHIVED)
@@ -281,6 +296,26 @@ export async function getMyTours(
   return apiRequest<ToursResponse>({
     method: 'GET',
     url: '/api/tours/my-tours/',
+    params,
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Fetch the current user's completed tours (requires authentication)
+ * @param status - Optional filter by tour status (PUBLISHED or ARCHIVED)
+ */
+export async function getMyCompletedTours(
+  status?: TourStatus,
+  signal?: AbortSignal
+): Promise<ToursResponse> {
+  const params: Record<string, any> = {};
+  if (status) params.status = status;
+
+  return apiRequest<ToursResponse>({
+    method: 'GET',
+    url: '/api/tours/my-completed-tours/',
     params,
     auth: true,
     signal,
