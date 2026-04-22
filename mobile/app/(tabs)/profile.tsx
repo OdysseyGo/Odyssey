@@ -15,6 +15,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
+import { useAutoStartTour } from '@/hooks/useAutoStartHook';
+import { useTutorial } from '@/contexts/TutorialContext';
+
 import ProfileHeaderComp from '@/components/ProfileComponents/ProfileHeaderComp';
 import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
 import ProfileAddFriendsButton from '@/components/ProfileComponents/ProfileAddFriendsButton';
@@ -30,6 +34,7 @@ import { removeAuthToken } from '@/api/auth';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { Button } from '@react-navigation/elements';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = 240;
@@ -38,6 +43,8 @@ const GUEST_HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEI
 async function getAccessToken() {
   return await SecureStore.getItemAsync('userToken');
 }
+
+const WalkthroughableView = walkthroughable(View);
 
 // ─────────────────────────────────────────────────────────
 // Skeleton shimmer
@@ -363,6 +370,9 @@ export default function Profile() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
+  useAutoStartTour('GENERAL_TOUR', !loading && !!curUser)
+  const { startTutorial } = useTutorial();
+
   const stickyOpacity = scrollY.interpolate({
     inputRange: [HEADER_HEIGHT * 0.5, HEADER_HEIGHT * 0.7],
     outputRange: [0, 1],
@@ -539,7 +549,7 @@ export default function Profile() {
       >
         {/* ─── Header ──────────────────────────────── */}
         <ProfileHeaderComp {...profileHeader} scrollY={scrollY} />
-
+      
         {/* ─── Stats (overlaps header) ─────────────── */}
         <ProfileStatsComp
           {...profileStats}
@@ -549,10 +559,15 @@ export default function Profile() {
         />
 
         {/* ─── Actions ─────────────────────────────── */}
-        <View style={styles.actionsRow}>
-          <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
-          <ProfileFollowingFeedButton />
-        </View>
+        <CopilotStep text="Find other travelers to join on your journey." order={3} name="friendsStep">
+          <WalkthroughableView>
+            <View style={styles.actionsRow}>
+              <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
+              <ProfileFollowingFeedButton />
+              <Button onPress={()=> startTutorial('GENERAL_TOUR')}>tutorial</Button>
+            </View>
+          </WalkthroughableView>
+        </CopilotStep>
 
         {/* ─── Badges ──────────────────────────────── */}
         <ProfileBadgesContainer badges={formattedBadges} title={t('profile.badges')} />
@@ -622,6 +637,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: Spacing.lg + 2,
+    marginBottom:  Spacing.sm,
     gap: Spacing.md,
   },
 

@@ -1,16 +1,20 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import CustomTooltip from '@/components/TutorialComponents/CustomTooltip';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import { CopilotProvider } from 'react-native-copilot';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import 'react-native-reanimated';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { ActiveTourProvider } from '@/contexts/ActiveTourContext';
+import { TutorialProvider } from '@/contexts/TutorialContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import '@/i18n/i18n';
+import CustomStepNumber from '@/components/TutorialComponents/CustomStepNumber';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -54,36 +58,53 @@ function RootLayoutNav() {
   const themeKey = colorTheme;
 
   return (
-    <LanguageProvider>
-      <ActiveTourProvider>
-        <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack
-            screenOptions={{
-              headerTitle: '',
-              headerShadowVisible: false,
-              headerStyle: {
-                backgroundColor: Colors[themeKey].primary,
-              },
-            }}
-          >
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="register" options={{ headerShown: false }} />
-            <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
-            <Stack.Screen name="(tour)" options={{ headerShown: false }} />
-            <Stack.Screen name="tour/[id]" options={{ headerShown: false }} />
-            <Stack.Screen name="profile" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="search"
-              options={{
-                headerShown: false,
-                presentation: 'modal',
-              }}
-            />
-          </Stack>
-        </ThemeProvider>
-      </ActiveTourProvider>
-    </LanguageProvider>
+    <TutorialProvider>
+      <CopilotProvider 
+        margin={8}
+        animated={true} 
+        overlay="svg" 
+        tooltipComponent={CustomTooltip}
+        stepNumberComponent= {CustomStepNumber}
+        animationDuration={800}
+        arrowColor={Colors[themeKey].primary}
+        tooltipStyle={{ 
+          backgroundColor: 'transparent', 
+          padding: 0,                     
+          borderRadius: 0,
+        }}
+      >
+        <LanguageProvider>
+          <ActiveTourProvider>
+            <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
+              <Stack
+                screenOptions={{
+                  headerTitle: '',
+                  headerShadowVisible: false,
+                  headerStyle: {
+                    backgroundColor: Colors[themeKey].primary,
+                  },
+                }}
+              >
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="login" options={{ headerShown: false }} />
+                <Stack.Screen name="register" options={{ headerShown: false }} />
+                <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+                <Stack.Screen name="(tour)" options={{ headerShown: false }} />
+                <Stack.Screen name="tour/[id]" options={{ headerShown: false }} />
+                <Stack.Screen name="profile" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="search"
+                  options={{
+                    headerShown: false,
+                    presentation: 'modal',
+                  }}
+                />
+              </Stack>
+            </ThemeProvider>
+          </ActiveTourProvider>
+        </LanguageProvider>
+      </CopilotProvider>
+    </TutorialProvider>
   );
 }

@@ -441,5 +441,11 @@
   },
   "badges": {
     "noBadges": "No badges yet"
+  },
+  "tutorial":{
+    "skip": "Skip",
+    "previous": "Previous",
+    "finish": "Finish",
+    "next": "Next"
   }
 }

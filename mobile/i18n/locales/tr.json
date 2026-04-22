@@ -442,5 +442,11 @@
   },
   "badges": {
     "noBadges": "Henüz rozet yok"
+  },
+  "tutorial":{
+    "skip": "Atla",
+    "previous": "Önceki",
+    "finish": "Bitir",
+    "next": "Sonraki"
   }
 }

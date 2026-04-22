@@ -7,6 +7,9 @@ import Colors from '@/constants/Colors';
 import { profileHeaderCompStyles } from './ProfileHeaderComp.styles';
 import { ProfileHeaderProps } from './ProfileHeaderComp.config';
 import { Spacing } from '@/constants/Spacing';
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
+
+const WalkthroughableView = walkthroughable(View);
 
 const HEADER_HEIGHT = 240;
 
@@ -57,20 +60,24 @@ export default function ProfileHeaderComp({
           transform: [{ scale: avatarScale as any }, { translateY: avatarTranslateY as any }],
         }}
       >
-        <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.7}>
-          <View style={styles.avatarRing}>
-            <View style={styles.avatarCircle}>
-              {avatarUrl ? (
-                <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
-              ) : (
-                <Ionicons name="person" size={48} color={color.subText} />
-              )}
-            </View>
-          </View>
-          <View style={styles.editBadge}>
-            <Ionicons name="camera" size={14} color={color.primary} />
-          </View>
-        </TouchableOpacity>
+        <CopilotStep text="This is your avatar! Tap your avatar to change it." order={1} name="avatarStep">
+          <WalkthroughableView>
+            <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.7}>
+              <View style={styles.avatarRing}>
+                <View style={styles.avatarCircle}>
+                  {avatarUrl ? (
+                    <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                  ) : (
+                    <Ionicons name="person" size={48} color={color.subText} />
+                  )}
+                </View>
+              </View>
+              <View style={styles.editBadge}>
+                <Ionicons name="camera" size={14} color={color.primary} />
+              </View>
+            </TouchableOpacity>
+          </WalkthroughableView>
+        </CopilotStep>
       </Animated.View>
 
       {/* Username + location fade out on scroll */}
@@ -84,5 +91,6 @@ export default function ProfileHeaderComp({
         ) : null}
       </Animated.View>
     </View>
+   
   );
 }
