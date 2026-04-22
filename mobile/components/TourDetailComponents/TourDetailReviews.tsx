@@ -9,26 +9,34 @@ import { TourDetailReviewsProps, TourDetailReviewsState } from './TourDetailRevi
 import { tourDetailReviewsStyles } from './TourDetailReviews.styles';
 
 const STAR_SIZE = 14;
+const HOURS_PER_DAY = 24;
+const MINUTES_PER_HOUR = 60;
+const SECONDS_PER_MINUTE = 60;
+const MS_PER_SECOND = 1000;
+const DAYS_PER_WEEK = 7;
+const DAYS_PER_MONTH = 30;
+const DAYS_PER_YEAR = 365;
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
-  const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  const millisecondsPerDay = MS_PER_SECOND * SECONDS_PER_MINUTE * MINUTES_PER_HOUR * HOURS_PER_DAY;
+  const diffInDays = Math.floor((now.getTime() - date.getTime()) / millisecondsPerDay);
 
   if (diffInDays === 0) {
     return 'Today';
   } else if (diffInDays === 1) {
     return 'Yesterday';
-  } else if (diffInDays < 7) {
+  } else if (diffInDays < DAYS_PER_WEEK) {
     return `${diffInDays} days ago`;
-  } else if (diffInDays < 30) {
-    const weeks = Math.floor(diffInDays / 7);
+  } else if (diffInDays < DAYS_PER_MONTH) {
+    const weeks = Math.floor(diffInDays / DAYS_PER_WEEK);
     return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
-  } else if (diffInDays < 365) {
-    const months = Math.floor(diffInDays / 30);
+  } else if (diffInDays < DAYS_PER_YEAR) {
+    const months = Math.floor(diffInDays / DAYS_PER_MONTH);
     return `${months} month${months > 1 ? 's' : ''} ago`;
   } else {
-    const years = Math.floor(diffInDays / 365);
+    const years = Math.floor(diffInDays / DAYS_PER_YEAR);
     return `${years} year${years > 1 ? 's' : ''} ago`;
   }
 }
@@ -50,8 +58,16 @@ function ReviewSkeletonLoader({ color }: { color: string }) {
   useEffect(() => {
     const anim = Animated.loop(
       Animated.sequence([
-        Animated.timing(opacity, { toValue: 0.7, duration: 750, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.35, duration: 750, useNativeDriver: true }),
+        Animated.timing(opacity, {
+          toValue: 0.7,
+          duration: 750,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.35,
+          duration: 750,
+          useNativeDriver: true,
+        }),
       ])
     );
     anim.start();
