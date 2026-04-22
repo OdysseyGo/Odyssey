@@ -31,6 +31,7 @@ import { getMyBadges, Badge } from '@/api/profile';
 import { removeAuthToken } from '@/api/auth';
 import { consumeProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
+import { consumeProfileNeedsRefresh } from '@/utils/profileRefreshFlag';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
@@ -167,15 +168,15 @@ function GuestScreen({
   const features = [
     {
       icon: 'map-outline' as const,
-      label: t('profile.feature1', { defaultValue: 'Create and join guided tours' }),
+      label: t('profile.feature1'),
     },
     {
       icon: 'trophy-outline' as const,
-      label: t('profile.feature2', { defaultValue: 'Earn badges and XP' }),
+      label: t('profile.feature2'),
     },
     {
       icon: 'people-outline' as const,
-      label: t('profile.feature3', { defaultValue: 'Connect with other travelers' }),
+      label: t('profile.feature3'),
     },
   ];
 
@@ -189,9 +190,7 @@ function GuestScreen({
           <Ionicons name="compass" size={44} color={theme.white} />
         </View>
         <Text style={[guestStyles.appName, { color: theme.white }]}>ODYSSEY</Text>
-        <Text style={[guestStyles.tagline, { color: theme.profileGuestTaglineText }]}>
-          {t('auth.tagline', { defaultValue: 'Your journey begins here' })}
-        </Text>
+        <Text style={[guestStyles.tagline, { color: theme.profileGuestTaglineText }]}>{t('auth.tagline')}</Text>
       </View>
 
       {/* ── Card ── */}
@@ -207,10 +206,10 @@ function GuestScreen({
         ]}
       >
         <Text style={[guestStyles.cardTitle, { color: theme.text }]}>
-          {t('profile.signInToUnlock', { defaultValue: 'Sign in to unlock' })}
+          {t('profile.signInToUnlock')}
         </Text>
         <Text style={[guestStyles.cardSubtitle, { color: theme.subText }]}>
-          {t('profile.signInSubtitle', { defaultValue: 'Join thousands of explorers on Odyssey.' })}
+          {t('profile.signInSubtitle')}
         </Text>
 
         {/* Feature bullets */}
@@ -407,24 +406,13 @@ export default function Profile() {
 
   useFocusEffect(
     useCallback(() => {
-      const isInitialLoad = !curUser;
-      const isManualRetry = lastRetryKeyRef.current !== retryKey;
-      const hasPendingRefresh = consumeProfileNeedsRefresh();
-
-      if (!isInitialLoad && !isManualRetry && !hasPendingRefresh) {
-        return;
-      }
-
-      lastRetryKeyRef.current = retryKey;
-
-      // Only show full skeleton on initial load (no existing data)
-      if (isInitialLoad) {
-        setLoading(true);
-      }
+      const now = Date.now();
       const hasData = lastRefreshed.current > 0;
+      const isStale = now - lastRefreshed.current > 30_000;
+      const forceRefresh = consumeProfileNeedsRefresh();
       if (!hasData) setLoading(true);
-      refreshProfile();
-    }, [curUser, retryKey, refreshProfile])
+      if (!hasData || isStale || forceRefresh) refreshProfile();
+    }, [retryKey])
   );
 
   const handleLogout = () => {
@@ -528,7 +516,11 @@ export default function Profile() {
 
   const handleBadgesPress = () => {
     //router.push({pathname: '/profile/badges'});
-    alert('deneme');
+    //alert('deneme');
+  };
+
+  const handleToursPress = () => {
+    router.push('/(tour)/my-completed-tours');
   };
 
   return (
@@ -565,6 +557,7 @@ export default function Profile() {
           {...profileStats}
           onFollowersPress={handleFollowersPress}
           onFollowingPress={handleFollowingPress}
+          onToursPress={handleToursPress}
         />
 
         {/* ─── Actions ─────────────────────────────── */}

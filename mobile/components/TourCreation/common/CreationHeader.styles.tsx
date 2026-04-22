@@ -10,7 +10,7 @@ export const creationHeaderStyles = (theme: ThemeName) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.md,
+      paddingBottom: Spacing.md,
       backgroundColor: color.foreground,
       borderBottomWidth: 1,
       borderBottomColor: color.foregroundSecondary,

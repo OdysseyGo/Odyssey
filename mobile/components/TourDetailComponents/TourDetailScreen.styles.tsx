@@ -62,5 +62,42 @@ export const tourDetailScreenStyles = (theme: ThemeName) => {
     bottomSpacer: {
       height: 120,
     },
+    // ─── Scroll-aware overlay header
+    overlayHeader: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 10,
+    },
+    overlayHeaderBg: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: color.background,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: color.foregroundSecondary,
+    },
+    overlayHeaderContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.md,
+      paddingBottom: 10,
+      paddingTop: 8,
+    },
+    overlayTitle: {
+      flex: 1,
+      fontSize: 17,
+      fontWeight: '700',
+      textAlign: 'center',
+      paddingHorizontal: Spacing.sm,
+      color: color.text,
+    },
+    overlaySpacer: {
+      width: 38,
+      height: 38,
+    },
+    overlayAbsoluteFill: {
+      ...StyleSheet.absoluteFillObject,
+    },
   });
 };

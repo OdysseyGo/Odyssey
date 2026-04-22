@@ -8,16 +8,17 @@ import { useTranslation } from 'react-i18next';
 
 type InstructionBannerProps = {
   message?: string;
+  topOffset?: number;
 };
 
-export default function InstructionBanner({ message }: InstructionBannerProps) {
+export default function InstructionBanner({ message, topOffset }: InstructionBannerProps) {
   const theme = useColorTheme();
   const styles = instructionBannerStyles(theme);
   const color = Colors[theme];
   const { t } = useTranslation();
 
   return (
-    <View style={styles.instructionBanner}>
+    <View style={[styles.instructionBanner, topOffset !== undefined && { top: topOffset }]}>
       <Ionicons name="information-circle" size={24} color={color.primary} />
       <Text style={styles.instructionText}>
         {message ?? t('creation.location.instructionBanner')}

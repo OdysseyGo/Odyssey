@@ -1,4 +1,11 @@
 {
+  "common": {
+    "retry": "Tekrar Dene",
+    "cancel": "İptal",
+    "submit": "Gönder",
+    "submitting": "Gönderiliyor...",
+    "ok": "Tamam"
+  },
   "auth": {
     "welcomeTitle": "Hoş geldin, kaşif!",
     "welcomeSubtitle": "Yolculuğuna başlamak için giriş yap.",
@@ -31,6 +38,17 @@
     "resetPassword": "Şifre Sıfırla",
     "updatePassword": "Şifreyi Güncelle",
     "cancel": "İptal",
+    "tagline": "Yolculuğun burada başlıyor",
+    "showPassword": "Şifreyi göster",
+    "hidePassword": "Şifreyi gizle",
+    "welcomeBack": "Tekrar hoş geldin",
+    "noAccountLabel": "Hesabın yok mu?",
+    "signUp": "Kayıt ol",
+    "signIn": "Giriş yap",
+    "registerTagline": "Hesabını oluştur",
+    "continue": "Devam Et",
+    "back": "Geri",
+    "resetTagline": "Şifreni sıfırla",
     "errors": {
       "usernameRequired": "Kullanıcı adı gereklidir",
       "passwordRequired": "Şifre gereklidir",
@@ -81,6 +99,22 @@
     "followingError": "Takip edilenler yüklenemedi",
     "unfollow": "Takibi Bırak",
     "removeFollower": "Kaldır",
+    "completedTours": "Tamamlanan Turlar",
+    "emptyCompletedTour": "Henüz tur bulunamadı.",
+    "errorTitle": "Bir şeyler yanlış gitti",
+    "errorMessage": "Turlar yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
+    "editReview": "Değerlendirmeyi Düzenle",
+    "reviewTour": "Turu Değerlendir",
+    "leaveReview": "Yorum Yap",
+    "reviewRatingLabel": "Puan (1-5)",
+    "reviewRatingPlaceholder": "5",
+    "reviewCommentLabel": "Yorum",
+    "reviewCommentPlaceholder": "En fazla 200 karakter yazın",
+    "reviewRatingInvalid": "Puan 1 ile 5 arasında olmalıdır.",
+    "reviewSuccessTitle": "Değerlendirme gönderildi",
+    "reviewSuccessMessage": "Geri bildiriminiz için teşekkürler!",
+    "reviewErrorTitle": "Değerlendirme gönderilemedi",
+    "reviewErrorMessage": "Lütfen daha sonra tekrar deneyin.",
     "followingFeedTitle": "Takipçi Akışı",
     "feedCompletedBadge": "TAMAMLANDI",
     "feedCompletedText": "bu turu tamamladı",
@@ -99,9 +133,18 @@
     "feedModalCancel": "İptal",
     "userProfileFollow": "Takip Et",
     "userProfileUnfollow": "Takibi Bırak",
-    "userProfileError": "Bu profil yüklenemedi"
+    "userProfileError": "Bu profil yüklenemedi",
+    "chooseAvatar": "Avatarını Seç",
+    "avatarStyle": "Stil",
+    "save": "Kaydet",
+    "signInToUnlock": "Keşfetmek için giriş yap",
+    "signInSubtitle": "Odyssey'deki binlerce kaşife katıl.",
+    "feature1": "Rehberli turlar oluştur ve katıl",
+    "feature2": "Rozet ve XP kazan",
+    "feature3": "Diğer gezginlerle bağlantı kur"
   },
   "tour": {
+    "featured": "Öne Çıkan",
     "loading": "Turlar yükleniyor...",
     "retry": "Tekrar denemek için dokun",
     "popular": "Popüler Turlar",
@@ -119,6 +162,10 @@
     }
   },
   "search": {
+    "placeholder": "Tur, destinasyon ara...",
+    "unknownAuthor": "Bilinmiyor",
+    "unknownLocation": "Bilinmeyen konum",
+    "notAvailable": "Yok",
     "noToursFound": "Tur bulunamadı",
     "noToursFoundSub": "Farklı bir destinasyon, tur adı veya rehber aramayı deneyin",
     "searchFailed": "Arama başarısız",
@@ -136,14 +183,18 @@
     "distance": "Mesafe",
     "difficulty": "Zorluk",
     "notFound": "Tur bulunamadı",
-    "reviews": "yorum",
+    "reviews": "Yorumlar",
+    "noReviews": "Bu tur hakkında yorum bulunamadı.",
     "aboutThisTour": "Bu tur hakkında",
     "createdBy": "Oluşturan",
+    "following": "Takip Ediliyor",
     "tourStops": "Tur Durakları",
     "routeMap": "Rota Haritası",
     "easy": "Kolay",
     "medium": "Orta",
-    "hard": "Zor"
+    "hard": "Zor",
+    "readMore": "Daha fazla oku",
+    "readLess": "Daha az göster"
   },
   "tabs": {
     "settings": "Ayarlar",
@@ -183,7 +234,37 @@
     },
     "languages": {
       "en": "İngilizce",
-      "tr": "Türkçe"
+      "tr": "Türkçe",
+      "es": "İspanyolca"
+    },
+    "account": {
+      "title": "Hesap",
+      "editProfile": {
+        "label": "Profili Düzenle",
+        "description": "Kişisel bilgilerinizi güncelleyin"
+      },
+      "notifications": {
+        "label": "Bildirimler",
+        "description": "Bildirim tercihlerini yönetin"
+      },
+      "privacy": {
+        "label": "Gizlilik",
+        "description": "Gizlilik ayarlarınızı kontrol edin"
+      }
+    },
+    "preferences": {
+      "title": "Tercihler",
+      "appearance": {
+        "label": "Görünüm",
+        "description": "Açık mod"
+      }
+    },
+    "support": {
+      "title": "Destek",
+      "help": {
+        "label": "Yardım ve Destek",
+        "description": "Uygulama ile ilgili yardım alın"
+      }
     }
   },
   "tourId": {
@@ -200,6 +281,9 @@
     "tourInProgressMessage": "Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et."
   },
   "creation": {
+    "loginRequired": "Giriş Gerekli",
+    "loginRequiredMessage": "Tur oluşturmak için giriş yapman gerekiyor.",
+    "loginButton": "Giriş Yap",
     "continue": "Devam Et",
     "continueWithCount": "Devam Et ({{count}} konum)",
     "submit": "Turu Gönder",
@@ -238,7 +322,10 @@
       "duration": "Tahmini Süre"
     },
     "location": {
-      "instructionBanner": "Tur durağı eklemek için haritaya dokunun.",
+      "searchPlaceholder": "Konum ara...",
+      "searchNoResults": "Sonuç bulunamadı",
+      "title": "Konum Ekle",
+      "instructionBanner": "Tur durağı eklemek için yukarıdan konum arayın.",
       "empty": "Henüz konum eklenmedi.\nİlk durağınızı eklemek için haritaya dokunun!",
       "tapToAddDetails": "Detay eklemek için dokunun",
       "deleteTitle": "Konumu Sil",
@@ -397,6 +484,10 @@
     "back": "Geri",
     "next": "İleri",
     "finish": "Bitir"
+  },
+  "common": {
+    "error": "Hata",
+    "syncError": "İlerleme sunucuyla senkronize edilemedi."
   },
   "map": {
     "noActiveTour": {
