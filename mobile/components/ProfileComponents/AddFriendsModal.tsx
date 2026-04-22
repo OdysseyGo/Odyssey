@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Modal, Animated, View } from 'react-native';
 import { router } from 'expo-router';
+import { BlurView } from 'expo-blur';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { addFriendsModalStyles } from './AddFriendsModal.styles';
 import { AddFriendsModalProps } from './AddFriendsModal.config';
@@ -44,6 +45,11 @@ export default function AddFriendsModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
+        <BlurView
+          intensity={60}
+          tint={theme === 'dark' ? 'dark' : 'light'}
+          style={styles.blurBackdrop}
+        />
         <Animated.View
           style={[
             styles.container,

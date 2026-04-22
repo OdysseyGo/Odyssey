@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
+import { BlurView } from 'expo-blur';
 
 import ProfileTourCard from '@/components/ProfileComponents/ProfileTourCard';
 import { addTourReview, getMyCompletedTours, Tour, Review, updateTourReview } from '@/api/tours';
@@ -289,6 +290,11 @@ export default function MyCompletedToursScreen() {
         onRequestClose={closeReviewModal}
       >
         <Pressable style={styles.modalOverlay} onPress={Keyboard.dismiss}>
+          <BlurView
+            intensity={60}
+            tint={colorScheme === 'dark' ? 'dark' : 'light'}
+            style={StyleSheet.absoluteFillObject}
+          />
           <Pressable
             style={[styles.modalCard, { backgroundColor: theme.cardSurface }]}
             onPress={Keyboard.dismiss}
@@ -486,7 +492,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.18)',
   },
   modalCard: {
     width: '100%',
