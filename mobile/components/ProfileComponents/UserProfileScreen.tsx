@@ -11,6 +11,7 @@ import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { userProfileStyles } from './UserProfileScreen.styles';
 import { StatItem } from './UserProfileScreen.config';
+import BackButton from '@/components/common/BackButton';
 
 const profileCache = new Map<string, { user: User; isFollowing: boolean; currentUserId: number }>();
 
@@ -96,9 +97,7 @@ export default function UserProfileScreen() {
 
   const Header = () => (
     <View style={[styles.header, { backgroundColor: color.primary, paddingTop: insets.top + 8 }]}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
-        <Ionicons name="chevron-back" size={26} color={color.white} />
-      </TouchableOpacity>
+      <BackButton color={color.white} size={26} style={styles.backButton} />
       <Text style={styles.headerTitle}>{user?.username ?? ''}</Text>
       <View style={styles.backButton} />
     </View>
