@@ -9,6 +9,7 @@ import {
   Pressable,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { avatarSelectionModalStyles } from './AvatarSelectionModal.styles';
@@ -26,6 +27,7 @@ export default function AvatarSelectionModal({
   currentAvatarUrl,
   onAvatarSaved,
 }: AvatarSelectionModalProps) {
+  const { t } = useTranslation();
   const theme = useColorTheme();
   const styles = avatarSelectionModalStyles(theme);
   const color = Colors[theme];
@@ -94,7 +96,7 @@ export default function AvatarSelectionModal({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.container} onPress={() => {}}>
-          <Text style={styles.title}>Choose Your Avatar</Text>
+          <Text style={styles.title}>{t('profile.chooseAvatar')}</Text>
 
           {/* Avatar Preview */}
           <View style={styles.avatarPreview}>
@@ -123,7 +125,7 @@ export default function AvatarSelectionModal({
           </View>
 
           {/* Style navigation */}
-          <Text style={styles.styleLabel}>Style</Text>
+          <Text style={styles.styleLabel}>{t('profile.avatarStyle')}</Text>
           <View style={styles.styleRow}>
             <TouchableOpacity style={styles.smallArrow} onPress={prevStyle}>
               <FontAwesome name="chevron-left" size={14} color={color.white} />
@@ -141,13 +143,13 @@ export default function AvatarSelectionModal({
           {/* Action buttons */}
           <View style={styles.buttonRow}>
             <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={styles.cancelText}>{t('profile.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
               {saving ? (
                 <ActivityIndicator color={color.white} />
               ) : (
-                <Text style={styles.saveText}>Save</Text>
+                <Text style={styles.saveText}>{t('profile.save')}</Text>
               )}
             </TouchableOpacity>
           </View>

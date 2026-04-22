@@ -183,9 +183,7 @@ export default function RegisterScreen() {
               <Ionicons name="compass" size={40} color="#FFFFFF" />
             </View>
             <Text style={styles.appName}>ODYSSEY</Text>
-            <Text style={styles.tagline}>
-              {t('auth.registerTagline', { defaultValue: 'Create your account' })}
-            </Text>
+            <Text style={styles.tagline}>{t('auth.registerTagline')}</Text>
           </View>
         </Animated.View>
 
@@ -202,11 +200,9 @@ export default function RegisterScreen() {
               },
             ]}
           >
-            <Text style={[styles.cardTitle, { color: theme.text }]}>
-              {t('auth.registerTitle', { defaultValue: 'Create account' })}
-            </Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>{t('auth.registerTitle')}</Text>
             <Text style={[styles.cardSubtitle, { color: theme.subText }]}>
-              {t('auth.registerSubtitle', { defaultValue: 'Fill in the details to get started' })}
+              {t('auth.registerSubtitle')}
             </Text>
 
             {/* Step indicator */}
@@ -291,17 +287,14 @@ export default function RegisterScreen() {
                     onSubmitEditing={handleNext}
                     error={errors.username}
                   />
-                  <AuthButton
-                    title={t('auth.continue', { defaultValue: 'Continue' })}
-                    onPress={handleNext}
-                  />
+                  <AuthButton title={t('auth.continue')} onPress={handleNext} />
                   <View style={styles.footerRow}>
                     <Text style={[styles.footerLabel, { color: theme.subText }]}>
-                      {t('auth.alreadyHaveAccount', { defaultValue: 'Already have an account?' })}
+                      {t('auth.alreadyHaveAccount')}
                     </Text>
                     <TouchableOpacity onPress={() => router.back()} disabled={loading}>
                       <Text style={[styles.footerLink, { color: theme.primary }]}>
-                        {` ${t('auth.signIn', { defaultValue: 'Sign in' })}`}
+                        {` ${t('auth.signIn')}`}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -362,7 +355,7 @@ export default function RegisterScreen() {
                   <View style={styles.footerRow}>
                     <TouchableOpacity onPress={() => setStep(1)} disabled={loading}>
                       <Text style={[styles.footerLink, { color: theme.primary }]}>
-                        {`← ${t('auth.back', { defaultValue: 'Back' })}`}
+                        {`← ${t('auth.back')}`}
                       </Text>
                     </TouchableOpacity>
                   </View>

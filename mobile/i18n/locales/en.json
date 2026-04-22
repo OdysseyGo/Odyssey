@@ -38,6 +38,17 @@
     "resetPassword": "Reset Password",
     "updatePassword": "Update Password",
     "cancel": "Cancel",
+    "tagline": "Your journey begins here",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "welcomeBack": "Welcome back",
+    "noAccountLabel": "Don't have an account?",
+    "signUp": "Sign up",
+    "signIn": "Sign in",
+    "registerTagline": "Create your account",
+    "continue": "Continue",
+    "back": "Back",
+    "resetTagline": "Reset your password",
     "errors": {
       "usernameRequired": "Username is required",
       "passwordRequired": "Password is required",
@@ -122,9 +133,18 @@
     "feedModalCancel": "Cancel",
     "userProfileFollow": "Follow",
     "userProfileUnfollow": "Unfollow",
-    "userProfileError": "Could not load this profile"
+    "userProfileError": "Could not load this profile",
+    "chooseAvatar": "Choose Your Avatar",
+    "avatarStyle": "Style",
+    "save": "Save",
+    "signInToUnlock": "Sign in to unlock",
+    "signInSubtitle": "Join thousands of explorers on Odyssey.",
+    "feature1": "Create and join guided tours",
+    "feature2": "Earn badges and XP",
+    "feature3": "Connect with other travelers"
   },
   "tour": {
+    "featured": "Featured",
     "loading": "Loading tours...",
     "retry": "Tap to retry",
     "popular": "Popular Tours",
@@ -142,6 +162,10 @@
     }
   },
   "search": {
+    "placeholder": "Search tours, destinations...",
+    "unknownAuthor": "Unknown",
+    "unknownLocation": "Unknown location",
+    "notAvailable": "N/A",
     "noToursFound": "No tours found",
     "noToursFoundSub": "Try searching for a different destination, tour name, or guide",
     "searchFailed": "Search failed",
@@ -168,7 +192,9 @@
     "routeMap": "Route Map",
     "easy": "Easy",
     "medium": "Medium",
-    "hard": "Hard"
+    "hard": "Hard",
+    "readMore": "Read more",
+    "readLess": "Read less"
   },
   "tabs": {
     "settings": "Settings",
@@ -181,7 +207,37 @@
     "selectLanguage": "Select Language",
     "languages": {
       "en": "English",
-      "tr": "Turkish"
+      "tr": "Turkish",
+      "es": "Spanish"
+    },
+    "account": {
+      "title": "Account",
+      "editProfile": {
+        "label": "Edit Profile",
+        "description": "Update your personal information"
+      },
+      "notifications": {
+        "label": "Notifications",
+        "description": "Manage notification preferences"
+      },
+      "privacy": {
+        "label": "Privacy",
+        "description": "Control your privacy settings"
+      }
+    },
+    "preferences": {
+      "title": "Preferences",
+      "appearance": {
+        "label": "Appearance",
+        "description": "Light mode"
+      }
+    },
+    "support": {
+      "title": "Support",
+      "help": {
+        "label": "Help & Support",
+        "description": "Get help with the app"
+      }
     }
   },
   "tourId": {
@@ -398,7 +454,12 @@
   "tourStep": {
     "tourProgress": "Tour Progress",
     "back": "Back",
-    "next": "Next"
+    "next": "Next",
+    "finish": "Finish"
+  },
+  "common": {
+    "error": "Error",
+    "syncError": "Could not sync progress with server."
   },
   "map": {
     "noActiveTour": {
