@@ -31,6 +31,17 @@
     "resetPassword": "Şifre Sıfırla",
     "updatePassword": "Şifreyi Güncelle",
     "cancel": "İptal",
+    "tagline": "Yolculuğun burada başlıyor",
+    "showPassword": "Şifreyi göster",
+    "hidePassword": "Şifreyi gizle",
+    "welcomeBack": "Tekrar hoş geldin",
+    "noAccountLabel": "Hesabın yok mu?",
+    "signUp": "Kayıt ol",
+    "signIn": "Giriş yap",
+    "registerTagline": "Hesabını oluştur",
+    "continue": "Devam Et",
+    "back": "Geri",
+    "resetTagline": "Şifreni sıfırla",
     "errors": {
       "usernameRequired": "Kullanıcı adı gereklidir",
       "passwordRequired": "Şifre gereklidir",
@@ -99,9 +110,18 @@
     "feedModalCancel": "İptal",
     "userProfileFollow": "Takip Et",
     "userProfileUnfollow": "Takibi Bırak",
-    "userProfileError": "Bu profil yüklenemedi"
+    "userProfileError": "Bu profil yüklenemedi",
+    "chooseAvatar": "Avatarını Seç",
+    "avatarStyle": "Stil",
+    "save": "Kaydet",
+    "signInToUnlock": "Keşfetmek için giriş yap",
+    "signInSubtitle": "Odyssey'deki binlerce kaşife katıl.",
+    "feature1": "Rehberli turlar oluştur ve katıl",
+    "feature2": "Rozet ve XP kazan",
+    "feature3": "Diğer gezginlerle bağlantı kur"
   },
   "tour": {
+    "featured": "Öne Çıkan",
     "loading": "Turlar yükleniyor...",
     "retry": "Tekrar denemek için dokun",
     "popular": "Popüler Turlar",
@@ -119,6 +139,10 @@
     }
   },
   "search": {
+    "placeholder": "Tur, destinasyon ara...",
+    "unknownAuthor": "Bilinmiyor",
+    "unknownLocation": "Bilinmeyen konum",
+    "notAvailable": "Yok",
     "noToursFound": "Tur bulunamadı",
     "noToursFoundSub": "Farklı bir destinasyon, tur adı veya rehber aramayı deneyin",
     "searchFailed": "Arama başarısız",
@@ -143,7 +167,9 @@
     "routeMap": "Rota Haritası",
     "easy": "Kolay",
     "medium": "Orta",
-    "hard": "Zor"
+    "hard": "Zor",
+    "readMore": "Daha fazla oku",
+    "readLess": "Daha az göster"
   },
   "tabs": {
     "settings": "Ayarlar",
@@ -156,7 +182,37 @@
     "selectLanguage": "Dil Seç",
     "languages": {
       "en": "İngilizce",
-      "tr": "Türkçe"
+      "tr": "Türkçe",
+      "es": "İspanyolca"
+    },
+    "account": {
+      "title": "Hesap",
+      "editProfile": {
+        "label": "Profili Düzenle",
+        "description": "Kişisel bilgilerinizi güncelleyin"
+      },
+      "notifications": {
+        "label": "Bildirimler",
+        "description": "Bildirim tercihlerini yönetin"
+      },
+      "privacy": {
+        "label": "Gizlilik",
+        "description": "Gizlilik ayarlarınızı kontrol edin"
+      }
+    },
+    "preferences": {
+      "title": "Tercihler",
+      "appearance": {
+        "label": "Görünüm",
+        "description": "Açık mod"
+      }
+    },
+    "support": {
+      "title": "Destek",
+      "help": {
+        "label": "Yardım ve Destek",
+        "description": "Uygulama ile ilgili yardım alın"
+      }
     }
   },
   "tourId": {
@@ -375,6 +431,10 @@
     "back": "Geri",
     "next": "İleri",
     "finish": "Bitir"
+  },
+  "common": {
+    "error": "Hata",
+    "syncError": "İlerleme sunucuyla senkronize edilemedi."
   },
   "map": {
     "noActiveTour": {

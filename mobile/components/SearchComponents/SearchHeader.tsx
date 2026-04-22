@@ -1,6 +1,7 @@
 import { View, TextInput, Pressable } from 'react-native';
 import { useMemo } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useTranslation } from 'react-i18next';
 
 import { searchHeaderStyles } from './SearchHeader.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -16,6 +17,7 @@ export default function SearchHeader({ searchQuery, onSearchChange, onClear }: S
   const theme = useColorTheme();
   const styles = useMemo(() => searchHeaderStyles(theme), [theme]);
   const colors = Colors[theme];
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
@@ -23,7 +25,7 @@ export default function SearchHeader({ searchQuery, onSearchChange, onClear }: S
         <FontAwesome name="search" size={18} color={colors.placeholder} style={styles.searchIcon} />
         <TextInput
           style={styles.input}
-          placeholder="Search tours, destinations..."
+          placeholder={t('search.placeholder')}
           placeholderTextColor={colors.placeholderTextColor}
           value={searchQuery}
           onChangeText={onSearchChange}

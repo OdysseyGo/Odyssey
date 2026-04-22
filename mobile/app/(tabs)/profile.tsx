@@ -159,15 +159,15 @@ function GuestScreen({
   const features = [
     {
       icon: 'map-outline' as const,
-      label: t('profile.feature1', { defaultValue: 'Create and join guided tours' }),
+      label: t('profile.feature1'),
     },
     {
       icon: 'trophy-outline' as const,
-      label: t('profile.feature2', { defaultValue: 'Earn badges and XP' }),
+      label: t('profile.feature2'),
     },
     {
       icon: 'people-outline' as const,
-      label: t('profile.feature3', { defaultValue: 'Connect with other travelers' }),
+      label: t('profile.feature3'),
     },
   ];
 
@@ -179,9 +179,7 @@ function GuestScreen({
           <Ionicons name="compass" size={44} color="#FFFFFF" />
         </View>
         <Text style={guestStyles.appName}>ODYSSEY</Text>
-        <Text style={guestStyles.tagline}>
-          {t('auth.tagline', { defaultValue: 'Your journey begins here' })}
-        </Text>
+        <Text style={guestStyles.tagline}>{t('auth.tagline')}</Text>
       </View>
 
       {/* ── Card ── */}
@@ -197,10 +195,10 @@ function GuestScreen({
         ]}
       >
         <Text style={[guestStyles.cardTitle, { color: theme.text }]}>
-          {t('profile.signInToUnlock', { defaultValue: 'Sign in to unlock' })}
+          {t('profile.signInToUnlock')}
         </Text>
         <Text style={[guestStyles.cardSubtitle, { color: theme.subText }]}>
-          {t('profile.signInSubtitle', { defaultValue: 'Join thousands of explorers on Odyssey.' })}
+          {t('profile.signInSubtitle')}
         </Text>
 
         {/* Feature bullets */}
@@ -504,7 +502,6 @@ export default function Profile() {
 
   const handleBadgesPress = () => {
     //router.push({pathname: '/profile/badges'});
-    alert('deneme');
   };
 
   return (
