@@ -9,16 +9,6 @@ export function getApiBaseUrl() {
       return envBaseUrl;
     }
 
-    const hostUri = Constants.expoConfig?.hostUri;
-
-    if (hostUri) {
-      const host = hostUri.split(':')[0];
-      console.log(host);
-      
-      return `http://${host}:8000`;
-    }
-    return 'http://localhost:8000';
-
     return 'https://api.odysseygo.quest';
   } catch (e) {
     console.error('Error in getApiBaseUrl:', e);
