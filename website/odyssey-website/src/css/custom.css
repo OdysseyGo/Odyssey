@@ -1,0 +1,109 @@
+/* Add this to the bottom of src/css/custom.css */
+
+.odyssey-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #e0e0e0;
+}
+
+.odyssey-hero {
+  text-align: center;
+  padding-bottom: 60px;
+  border-bottom: 1px solid #333;
+}
+
+.odyssey-app-icon {
+  width: 150px;
+  height: 150px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  object-fit: cover;
+  box-shadow: 0 0 20px rgba(0, 123, 255, 0.2);
+}
+
+.odyssey-title {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  background: -webkit-linear-gradient(#fff, #aaa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.odyssey-intro-text {
+  font-size: 1.1rem;
+  color: #b0b0b0;
+  text-align: left;
+  background: #1e1e1e;
+  padding: 30px;
+  border-radius: 12px;
+  border: 1px solid #333;
+}
+
+.odyssey-highlight {
+  color: #4da3ff;
+  font-weight: bold;
+}
+
+.odyssey-section-title {
+  text-align: left;
+  margin-top: 40px;
+  margin-bottom: 20px;
+  color: #fff;
+}
+
+.odyssey-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.odyssey-card {
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  transition: transform 0.2s, border-color 0.2s;
+  text-align: center;
+}
+
+.odyssey-card:hover {
+  transform: translateY(-5px);
+  border-color: #4da3ff;
+}
+
+.odyssey-card h3 {
+  margin-top: 0;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.odyssey-btn {
+  display: inline-block;
+  margin-top: 15px;
+  text-decoration: none;
+  background-color: #333;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  transition: background 0.2s;
+}
+
+.odyssey-btn:hover {
+  background-color: #4da3ff;
+  color: #000;
+  text-decoration: none;
+}
+
+/* Force dark mode background and text globally just in case, because if local storage saves light it always has light */
+html[data-theme='light'] {
+  background-color: #1b1b1d !important;
+  color: #f5f6f7 !important;
+}
+
+html[data-theme='light'] body {
+  background-color: #1b1b1d !important;
+  color: #f5f6f7 !important;
+}
