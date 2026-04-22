@@ -11,6 +11,7 @@ import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { styles, rowStyles } from './FollowListStyles';
 import { FollowersUserRowProps } from './FollowersScreen.config';
+import BackButton from '@/components/common/BackButton';
 
 function UserRow({ item, theme, onRemove, removing }: FollowersUserRowProps) {
   const { t } = useTranslation();
@@ -100,9 +101,7 @@ export default function FollowersScreen() {
       <View
         style={[styles.header, { backgroundColor: colors.primary, paddingTop: insets.top + 8 }]}
       >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
-          <Ionicons name="chevron-back" size={26} color={colors.white} />
-        </TouchableOpacity>
+        <BackButton color={colors.white} size={26} style={styles.backButton} />
         <Text style={styles.headerTitle}>{t('profile.followersTitle', 'Followers')}</Text>
         <View style={styles.backButton} />
       </View>

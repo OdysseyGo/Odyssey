@@ -216,6 +216,7 @@
     "location": {
       "searchPlaceholder": "Search for a location...",
       "searchNoResults": "No results found",
+      "title": "Add Locations",
       "instructionBanner": "Search for a location above to add it as a tour stop.",
       "empty": "No locations added yet.\nTap on the map to add your first stop!",
       "tapToAddDetails": "Tap to add details",

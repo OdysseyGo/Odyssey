@@ -9,9 +9,11 @@ import {
 } from 'react-native';
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
+import BackButton from '@/components/common/BackButton';
 import { Spacing } from '@/constants/Spacing';
 import { getTour } from '@/api/tours';
 import { TourDetail } from './TourDetail.config';
@@ -235,6 +237,10 @@ function AnimatedSection({ delay, children }: { delay: number; children: React.R
   return <Animated.View style={{ opacity, transform: [{ translateY }] }}>{children}</Animated.View>;
 }
 
+const COVER_HEIGHT = 460;
+const FADE_START = 300;
+const FADE_END = 420;
+
 export function TourDetailScreenContent({
   tour,
   onStartTour,
@@ -242,13 +248,44 @@ export function TourDetailScreenContent({
 }: TourDetailScreenContentProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailScreenStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  const headerBgOpacity = scrollY.interpolate({
+    inputRange: [FADE_START, FADE_END],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
+  const titleOpacity = scrollY.interpolate({
+    inputRange: [FADE_START + 40, FADE_END + 30],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
+  // White button fades out as header solidifies; theme-colored fades in
+  const whiteButtonOpacity = scrollY.interpolate({
+    inputRange: [FADE_START, FADE_END],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
+  const themedButtonOpacity = scrollY.interpolate({
+    inputRange: [FADE_START, FADE_END],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
 
   return (
     <>
-      <ScrollView
+      <Animated.ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="never"
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          useNativeDriver: true,
+        })}
+        scrollEventThrottle={16}
       >
         <TourDetailCover
           coverImage={tour.coverImage}
@@ -284,7 +321,26 @@ export function TourDetailScreenContent({
 
           <View style={styles.bottomSpacer} />
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
+
+      {/* Scroll-aware overlay header */}
+      <View style={[styles.overlayHeader, { paddingTop: insets.top }]} pointerEvents="box-none">
+        <Animated.View style={[styles.overlayHeaderBg, { opacity: headerBgOpacity }]} />
+        <View style={styles.overlayHeaderContent} pointerEvents="box-none">
+          <View style={styles.overlaySpacer}>
+            <Animated.View style={[styles.overlayAbsoluteFill, { opacity: whiteButtonOpacity }]}>
+              <BackButton color={Colors[theme].white} />
+            </Animated.View>
+            <Animated.View style={[styles.overlayAbsoluteFill, { opacity: themedButtonOpacity }]}>
+              <BackButton color={Colors[theme].text} />
+            </Animated.View>
+          </View>
+          <Animated.Text style={[styles.overlayTitle, { opacity: titleOpacity }]} numberOfLines={1}>
+            {tour.title}
+          </Animated.Text>
+          <View style={styles.overlaySpacer} />
+        </View>
+      </View>
 
       <TourDetailBottomBar onStartTour={onStartTour} starting={starting} />
     </>

@@ -23,6 +23,7 @@ import { router } from 'expo-router';
 import { getFollowingFeed, FeedItem, FollowingFeedResponse } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
+import BackButton from '@/components/common/BackButton';
 import { followingFeedStyles } from './FollowingFeedScreen.styles';
 import { FeedCardProps } from './FollowingFeedScreen.config';
 
@@ -216,9 +217,7 @@ export default function FollowingFeedScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { backgroundColor: color.primary, paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
-          <Ionicons name="chevron-back" size={26} color={color.white} />
-        </TouchableOpacity>
+        <BackButton color={color.white} size={26} style={styles.backButton} />
         <Text style={styles.headerTitle}>{t('profile.followingFeedTitle')}</Text>
         <View style={styles.backButton} />
       </View>

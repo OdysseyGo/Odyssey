@@ -216,6 +216,7 @@
     "location": {
       "searchPlaceholder": "Konum ara...",
       "searchNoResults": "Sonuç bulunamadı",
+      "title": "Konum Ekle",
       "instructionBanner": "Tur durağı eklemek için yukarıdan konum arayın.",
       "empty": "Henüz konum eklenmedi.\nİlk durağınızı eklemek için haritaya dokunun!",
       "tapToAddDetails": "Detay eklemek için dokunun",
