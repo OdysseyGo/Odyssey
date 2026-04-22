@@ -10,7 +10,11 @@ import { TourDetailAuthorProps } from './TourDetailAuthor.config';
 import { tourDetailAuthorStyles } from './TourDetailAuthor.styles';
 import { useTranslation } from 'react-i18next';
 
-export default function TourDetailAuthor({ authorId, authorAvatar, authorName }: TourDetailAuthorProps) {
+export default function TourDetailAuthor({
+  authorId,
+  authorAvatar,
+  authorName,
+}: TourDetailAuthorProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailAuthorStyles(theme), [theme]);
   const colors = Colors[theme];
@@ -26,7 +30,10 @@ export default function TourDetailAuthor({ authorId, authorAvatar, authorName }:
       (async () => {
         try {
           const me = await getMe();
-          if (me.id === authorId) { setIsSelf(true); return; }
+          if (me.id === authorId) {
+            setIsSelf(true);
+            return;
+          }
           const followings = await getUserFollowings(me.id.toString());
           setIsFollowing(followings.some((f) => f.id === authorId));
         } catch {}
@@ -52,7 +59,9 @@ export default function TourDetailAuthor({ authorId, authorAvatar, authorName }:
 
       <View style={styles.authorInfo}>
         <Text style={styles.authorLabel}>{t('tourDetail.createdBy')}</Text>
-        <Text style={styles.authorName} numberOfLines={1}>{authorName}</Text>
+        <Text style={styles.authorName} numberOfLines={1}>
+          {authorName}
+        </Text>
       </View>
 
       {!isSelf && isFollowing && (
