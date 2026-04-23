@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'django_q',
     # Third-party
     "rest_framework",
     "rest_framework.authtoken",
@@ -63,6 +64,7 @@ INSTALLED_APPS = [
     "apps.ai_content",
     "storages",
     "apps.admin_dashboard",
+    "apps.notifications",
 ]
 
 MIDDLEWARE = [
@@ -276,3 +278,23 @@ LOGGING = {
         },
     },
 }
+
+# Django Q2 Configuration
+Q_CLUSTER = {
+    'name': 'odyssey',
+    'workers': 4, #kaç tane worker olduğu, değiştirirz belki arkada çalışçak sonuçta
+    'timeout': 500,
+    'retry': 600,
+    'queue_limit': 50,
+    'bulk': 10,
+    'orm': 'default',
+    # For development, use synchronous mode
+    'sync': os.getenv('DEBUG', '1') == '1',
+}
+
+# Apple Push Notification Settings
+APPLE_TEAM_ID = os.getenv('APPLE_TEAM_ID')
+APPLE_KEY_ID = os.getenv('APPLE_KEY_ID')
+APPLE_CERTIFICATE_PATH = os.getenv('APPLE_CERTIFICATE_PATH')
+APNS_BUNDLE_ID = os.getenv('APNS_BUNDLE_ID', 'com.yourcompany.odyssey')
+APNS_USE_SANDBOX = os.getenv('APNS_USE_SANDBOX', 'True') == 'True'

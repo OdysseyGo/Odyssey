@@ -37,6 +37,7 @@ urlpatterns = [
         "api/reports/",
         include("apps.admin_dashboard.api.report_urls"),
     ),
+    path("api/", include("apps.notifications.urls")),
     # OpenAPI schema
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     # Swagger UI
