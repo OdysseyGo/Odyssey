@@ -1,11 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  ActivityIndicator,
+  TouchableOpacity,
+  Image,
+  Alert,
+} from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { getUserFollowings, getMe, followUser, unfollowUser, User } from '@/api/users';
+import { getUserFollowings, followUser, unfollowUser, User } from '@/api/users';
+import { getCurrentUser } from '@/api/auth';
 import { setProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -129,16 +138,26 @@ export default function FollowingScreen() {
   const [myFollowings, setMyFollowings] = useState<Set<number>>(new Set());
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (!userId) return;
-    loadAll();
-  }, [userId]);
-
-  const loadAll = async () => {
+  const loadAll = useCallback(async () => {
     setLoading(true);
     setError(false);
     try {
-      const me = await getMe();
+      const me = await getCurrentUser();
+      if (!me) {
+        Alert.alert(
+          t('profile.socialLoginRequiredTitle', 'Login Required'),
+          t(
+            'profile.socialLoginRequiredMessage',
+            'You need to log in to view followers and following.'
+          ),
+          [
+            { text: t('common.cancel', 'Cancel'), style: 'cancel', onPress: () => router.back() },
+            { text: t('auth.login', 'Log In'), onPress: () => router.replace('/login') },
+          ]
+        );
+        return;
+      }
+
       setCurrentUserId(me.id);
       const own = me.id === parseInt(userId!);
       setIsOwnProfile(own);
@@ -162,7 +181,12 @@ export default function FollowingScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t, userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    loadAll();
+  }, [loadAll, userId]);
 
   const handleUnfollow = async (targetId: number) => {
     if (isOwnProfile) {

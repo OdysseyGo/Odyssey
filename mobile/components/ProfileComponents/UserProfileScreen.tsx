@@ -8,13 +8,13 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import {
   getUserById,
-  getMe,
   getUserFollowings,
   getUserPublishedTours,
   followUser,
   unfollowUser,
   User,
 } from '@/api/users';
+import { getCurrentUser } from '@/api/auth';
 import { Tour } from '@/api/tours';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -162,10 +162,14 @@ export default function UserProfileScreen() {
     try {
       let meId: number | null = null;
       try {
-        const me = await getMe();
-        meId = me.id;
-        setCurrentUserId(me.id);
-        setIsGuest(false);
+        const me = await getCurrentUser();
+        if (!me) {
+          setIsGuest(true);
+        } else {
+          meId = me.id;
+          setCurrentUserId(me.id);
+          setIsGuest(false);
+        }
       } catch {
         setIsGuest(true);
       }
@@ -330,11 +334,23 @@ export default function UserProfileScreen() {
           tours={user.tour_count}
           followers={user.follower_count}
           following={user.following_count}
-          onFollowersPress={() =>
-            router.push({ pathname: '/profile/followers', params: { userId: user.id.toString() } })
+          onFollowersPress={
+            isGuest
+              ? undefined
+              : () =>
+                  router.push({
+                    pathname: '/profile/followers',
+                    params: { userId: user.id.toString() },
+                  })
           }
-          onFollowingPress={() =>
-            router.push({ pathname: '/profile/following', params: { userId: user.id.toString() } })
+          onFollowingPress={
+            isGuest
+              ? undefined
+              : () =>
+                  router.push({
+                    pathname: '/profile/following',
+                    params: { userId: user.id.toString() },
+                  })
           }
         />
 
