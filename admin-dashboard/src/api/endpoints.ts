@@ -68,6 +68,18 @@ export const getDistributions = () =>
 export const getActiveUsers = (params?: Record<string, string | number>) =>
   api.get("/admin/analytics/active-users/", { params });
 
+// Picture compare tuning
+export const simulatePictureCompare = (data: FormData) =>
+  api.post("/admin/picture-compare-tuning/", data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+export const getPictureCompareConfig = () =>
+  api.get("/admin/picture-compare-config/");
+
+export const updatePictureCompareConfig = (data: Record<string, number>) =>
+  api.post("/admin/picture-compare-config/", data);
+
 // Reports
 export const getReports = (params?: Record<string, string | number>) =>
   api.get("/admin/reports/", { params });

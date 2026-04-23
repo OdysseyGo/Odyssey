@@ -4,6 +4,7 @@ import { Puzzle, PuzzleType, PUZZLE_TYPE_OPTIONS, createEmptyPuzzle } from '../T
 import PuzzleQuestion from './PuzzleQuestion';
 import PuzzleOptions from './PuzzleOptions';
 import PuzzleHint from './PuzzleHint';
+import ImageUploadSection from './ImageUploadSection';
 import { puzzleEditorStyles } from './PuzzleEditor.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -22,6 +23,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
   const { t } = useTranslation();
 
   const currentPuzzle = puzzle || createEmptyPuzzle();
+  const isPictureCompare = currentPuzzle.puzzle_type === 'PICTURE_COMPARE';
   const options = currentPuzzle.options;
   const correctAnswer = currentPuzzle.correctAnswer;
 
@@ -75,6 +77,27 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
     handleChange('correctAnswer', option);
   };
 
+  const handleTypeChange = (nextType: PuzzleType) => {
+    if (nextType === 'PICTURE_COMPARE') {
+      onChange({
+        ...currentPuzzle,
+        puzzle_type: nextType,
+        options: [],
+        // Backend serializer injects this for picture compare as fallback as well.
+        correctAnswer: 'PICTURE_COMPARE',
+      });
+      return;
+    }
+
+    onChange({
+      ...currentPuzzle,
+      puzzle_type: nextType,
+      options: currentPuzzle.options.length > 0 ? currentPuzzle.options : ['', ''],
+      correctAnswer:
+        currentPuzzle.correctAnswer === 'PICTURE_COMPARE' ? '' : currentPuzzle.correctAnswer,
+    });
+  };
+
   return (
     <View style={styles.container}>
       {/* Puzzle Type Selector */}
@@ -92,7 +115,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
                   borderColor: color.primary,
                 },
               ]}
-              onPress={() => handleChange('puzzle_type', type.value as PuzzleType)}
+              onPress={() => handleTypeChange(type.value as PuzzleType)}
             >
               <Text
                 style={[
@@ -113,15 +136,30 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
         isRequired={isRequired}
       />
 
-      <PuzzleOptions
-        options={options}
-        correctAnswer={correctAnswer}
-        onOptionChange={handleOptionChange}
-        onRemoveOption={handleRemoveOption}
-        onAddOption={handleAddOption}
-        onSelectCorrect={handleSelectCorrect}
-        isRequired={isRequired}
-      />
+      {isPictureCompare ? (
+        <ImageUploadSection
+          image={currentPuzzle.referenceImage}
+          onImageChange={(value) => handleChange('referenceImage', value)}
+          label="Pick your target image"
+          required
+          useReferenceImageUI
+          infoMessage={[
+            'Pick something that is not temporary.',
+            'Appropriate.',
+            "Has good lighting and doesn't depend much on the time of day.",
+          ].join('\n')}
+        />
+      ) : (
+        <PuzzleOptions
+          options={options}
+          correctAnswer={correctAnswer}
+          onOptionChange={handleOptionChange}
+          onRemoveOption={handleRemoveOption}
+          onAddOption={handleAddOption}
+          onSelectCorrect={handleSelectCorrect}
+          isRequired={isRequired}
+        />
+      )}
 
       <PuzzleHint hint={currentPuzzle.hint} onChange={(text) => handleChange('hint', text)} />
 

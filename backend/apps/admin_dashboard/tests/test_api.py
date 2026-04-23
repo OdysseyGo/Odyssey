@@ -1,11 +1,24 @@
+from io import BytesIO
+
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.admin_dashboard.models import BanRecord, Report
+from apps.gamification.models import PictureCompareConfig
 from apps.tours.models import Review, Tour, TourStep
 
 User = get_user_model()
+
+
+def image_file(name="image.jpg", color=(30, 80, 120)):
+    image = Image.new("RGB", (120, 120), color=color)
+    buffer = BytesIO()
+    image.save(buffer, format="JPEG")
+    buffer.seek(0)
+    return SimpleUploadedFile(name, buffer.read(), content_type="image/jpeg")
 
 
 class AdminUserViewSetTests(APITestCase):
@@ -218,6 +231,85 @@ class AdminTourViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("avg_rating", response.data)
         self.assertIn("completion_count", response.data)
+
+
+class PictureCompareTuningViewSetTests(APITestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username="admin",
+            email="admin@example.com",
+            password="adminpass123",
+            is_staff=True,
+        )
+        self.user = User.objects.create_user(
+            username="user",
+            email="user@example.com",
+            password="userpass123",
+        )
+        self.client.force_authenticate(user=self.admin)
+
+    def test_staff_can_simulate_picture_compare_tuning(self):
+        response = self.client.post(
+            "/api/admin/picture-compare-tuning/",
+            {
+                "reference_image": image_file("reference.jpg"),
+                "attempt_image": image_file("attempt.jpg"),
+                "threshold": 0.7,
+                "base_weight": 0.5,
+                "edge_weight": 0.2,
+                "histogram_weight": 0.15,
+                "grid_weight": 0.15,
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("similarity_score", response.data)
+        self.assertIn("accepted", response.data)
+        self.assertIn("breakdown", response.data)
+        self.assertIn("base_similarity", response.data["breakdown"])
+
+    def test_picture_compare_tuning_requires_staff(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "/api/admin/picture-compare-tuning/",
+            {
+                "reference_image": image_file("reference.jpg"),
+                "attempt_image": image_file("attempt.jpg"),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_staff_can_read_and_update_live_picture_compare_config(self):
+        response = self.client.get("/api/admin/picture-compare-config/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["similarity_threshold"], 0.7)
+
+        response = self.client.post(
+            "/api/admin/picture-compare-config/",
+            {
+                "similarity_threshold": 0.83,
+                "base_weight": 0.55,
+                "edge_weight": 0.2,
+                "histogram_weight": 0.15,
+                "grid_weight": 0.1,
+                "fast_max_shift": 10,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["similarity_threshold"], 0.83)
+        config = PictureCompareConfig.load()
+        self.assertEqual(config.similarity_threshold, 0.83)
+        self.assertEqual(config.fast_max_shift, 10)
+
+    def test_picture_compare_config_requires_staff(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get("/api/admin/picture-compare-config/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class AnalyticsViewSetTests(APITestCase):

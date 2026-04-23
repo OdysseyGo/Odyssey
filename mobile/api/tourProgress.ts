@@ -24,6 +24,13 @@ export type StepActionResponse = {
   new_step_id: number | null;
 };
 
+export type PictureCompareResponse = StepActionResponse & {
+  accepted: boolean;
+  similarity_score: number;
+  threshold_used: number;
+  processing_ms: number;
+};
+
 export type DeleteTourProgressRequest = {
   id: number;
 };
@@ -106,6 +113,30 @@ export async function skipStep(id: number, signal?: AbortSignal): Promise<StepAc
   return apiRequest<StepActionResponse, void>({
     method: 'POST',
     url: `/api/tour-progress/${id}/skip-step/`,
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Submit a captured image for backend-verified picture-compare puzzle checking.
+ */
+export async function submitPictureCompare(
+  id: number,
+  imageUri: string,
+  signal?: AbortSignal
+): Promise<PictureCompareResponse> {
+  const formData = new FormData();
+  formData.append('image', {
+    uri: imageUri,
+    name: 'picture_compare_attempt.jpg',
+    type: 'image/jpeg',
+  } as any);
+
+  return apiRequest<PictureCompareResponse, FormData>({
+    method: 'POST',
+    url: `/api/tour-progress/${id}/submit-picture-compare/`,
+    data: formData,
     auth: true,
     signal,
   });

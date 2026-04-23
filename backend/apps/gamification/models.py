@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 
+from apps.gamification.picture_compare import DEFAULT_COMPARE_CONFIG
+
 
 class Badge(models.Model):
     name = models.CharField(max_length=100)
@@ -58,3 +60,77 @@ class TourProgress(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.tour} ({self.status})"
+
+
+class PictureCompareConfig(models.Model):
+    singleton_id = models.PositiveSmallIntegerField(
+        default=1, unique=True, editable=False
+    )
+    similarity_threshold = models.FloatField(default=0.7)
+    fast_reject_threshold = models.FloatField(
+        default=DEFAULT_COMPARE_CONFIG["fast_reject_threshold"]
+    )
+    base_weight = models.FloatField(default=DEFAULT_COMPARE_CONFIG["base_weight"])
+    edge_weight = models.FloatField(default=DEFAULT_COMPARE_CONFIG["edge_weight"])
+    histogram_weight = models.FloatField(
+        default=DEFAULT_COMPARE_CONFIG["histogram_weight"]
+    )
+    grid_weight = models.FloatField(default=DEFAULT_COMPARE_CONFIG["grid_weight"])
+    histogram_penalty_threshold = models.FloatField(
+        default=DEFAULT_COMPARE_CONFIG["histogram_penalty_threshold"]
+    )
+    grid_penalty_threshold = models.FloatField(
+        default=DEFAULT_COMPARE_CONFIG["grid_penalty_threshold"]
+    )
+    histogram_penalty_multiplier = models.FloatField(
+        default=DEFAULT_COMPARE_CONFIG["histogram_penalty_multiplier"]
+    )
+    grid_penalty_multiplier = models.FloatField(
+        default=DEFAULT_COMPARE_CONFIG["grid_penalty_multiplier"]
+    )
+    fast_max_shift = models.PositiveSmallIntegerField(
+        default=DEFAULT_COMPARE_CONFIG["fast_max_shift"]
+    )
+    fast_step = models.PositiveSmallIntegerField(
+        default=DEFAULT_COMPARE_CONFIG["fast_step"]
+    )
+    final_max_shift = models.PositiveSmallIntegerField(
+        default=DEFAULT_COMPARE_CONFIG["final_max_shift"]
+    )
+    final_step = models.PositiveSmallIntegerField(
+        default=DEFAULT_COMPARE_CONFIG["final_step"]
+    )
+    edge_max_shift = models.PositiveSmallIntegerField(
+        default=DEFAULT_COMPARE_CONFIG["edge_max_shift"]
+    )
+    edge_step = models.PositiveSmallIntegerField(
+        default=DEFAULT_COMPARE_CONFIG["edge_step"]
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def load(cls):
+        config, _ = cls.objects.get_or_create(singleton_id=1)
+        return config
+
+    def tuning_config(self):
+        return {
+            "fast_reject_threshold": self.fast_reject_threshold,
+            "base_weight": self.base_weight,
+            "edge_weight": self.edge_weight,
+            "histogram_weight": self.histogram_weight,
+            "grid_weight": self.grid_weight,
+            "histogram_penalty_threshold": self.histogram_penalty_threshold,
+            "grid_penalty_threshold": self.grid_penalty_threshold,
+            "histogram_penalty_multiplier": self.histogram_penalty_multiplier,
+            "grid_penalty_multiplier": self.grid_penalty_multiplier,
+            "fast_max_shift": self.fast_max_shift,
+            "fast_step": self.fast_step,
+            "final_max_shift": self.final_max_shift,
+            "final_step": self.final_step,
+            "edge_max_shift": self.edge_max_shift,
+            "edge_step": self.edge_step,
+        }
+
+    def __str__(self):
+        return "Picture compare live config"
