@@ -85,7 +85,9 @@
     "tabs": {
       "published": "Yayınlandı",
       "drafts": "Taslaklar",
-      "archived": "Arşivlendi"
+      "archived": "Arşivlendi",
+      "settings":"Ayarlar",
+      "tutorials":"Rehberler"
     },
     "emptyPublished": "Henüz yayınlanmış tur yok. Topluluğa katılmak için bir tur yayınla!",
     "emptyDraft": "Taslak tur yok. Yeni bir tur oluşturmaya başla!",
@@ -532,10 +534,27 @@
   "badges": {
     "noBadges": "Henüz rozet yok"
   },
-  "tutorial":{
-    "skip": "Atla",
+  "tutorial": {
+    "title": "Yardım ve Rehberler",
+    "section": "Mevcut Rehberler",
+    "skip": "Geç",
     "previous": "Önceki",
     "finish": "Bitir",
-    "next": "Sonraki"
+    "next": "İleri",
+    "profile": {
+      "label": "Profil Rehberi",
+      "desc": "İstatistiklerini nasıl kontrol edeceğini, geçmiş turları nasıl inceleyeceğini, arkadaşlarını ve avatarını nasıl yöneteceğini öğren.",
+      "step1text": "Profil rehberine hoş geldin!",
+      "step2text": "Bu senin avatarın! Değiştirmek için avatarına dokun.",
+      "step3text": "Odyssey XP'ni takip et, tamamlanan turları puanla ve takipçilerini kontrol et!",
+      "step4text": "Diğer gezginleri takip et ve gezilerini paylaş!",
+      "step5text": "Kazandığın rozetlere göz at!",
+      "step6text": "Oluşturduğun (yayınlanmış, taslak ve arşivlenmiş) turları bu sekmeden kontrol et.",
+      "step7text": "Hesap ayarlarını veya uygulama tercihlerini ayarlar sekmesinden değiştirebilirsin."
+    },
+    "tours": {
+      "label": "Turlar Rehberi",
+      "desc": "Turlar arasında nasıl gezineceğini ve etkileşimde bulunacağını öğren."
+    }
   }
 }

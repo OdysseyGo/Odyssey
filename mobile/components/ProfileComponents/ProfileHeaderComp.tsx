@@ -8,6 +8,7 @@ import { profileHeaderCompStyles } from './ProfileHeaderComp.styles';
 import { ProfileHeaderProps } from './ProfileHeaderComp.config';
 import { Spacing } from '@/constants/Spacing';
 import { CopilotStep, walkthroughable } from 'react-native-copilot';
+import { useTranslation } from 'react-i18next';
 
 const WalkthroughableView = walkthroughable(View);
 
@@ -20,12 +21,15 @@ export default function ProfileHeaderComp({
   onAvatarPress,
   onSettingsPress,
   settingsAccessibilityLabel,
+  onTutorialsPress,
+  tutorialsAccessibilityLabel,
   scrollY,
 }: ProfileHeaderProps) {
   const theme = useColorTheme();
   const styles = profileHeaderCompStyles(theme);
   const color = Colors[theme];
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const avatarScale = scrollY
     ? scrollY.interpolate({
@@ -57,20 +61,39 @@ export default function ProfileHeaderComp({
       <View style={styles.bottomGlow} />
 
       <TouchableOpacity
-        onPress={onSettingsPress}
+        onPress={onTutorialsPress}
         activeOpacity={0.7}
         accessibilityRole="button"
-        accessibilityLabel={settingsAccessibilityLabel}
+        accessibilityLabel={tutorialsAccessibilityLabel}
         style={[
+          styles.settingsButton,
+          {
+            top: insets.top + Spacing.md,
+            left: Spacing.lg,
+          },
+        ]}
+      >
+        <Ionicons name="help-outline" size={Spacing.xl} color={color.primary} />
+      </TouchableOpacity>
+
+      <CopilotStep text= {t('tutorial.profile.step7text')} order={7} name="settingsStep">
+      <WalkthroughableView style={[
           styles.settingsButton,
           {
             top: insets.top + Spacing.md,
             right: Spacing.lg,
           },
-        ]}
+        ]}>
+      <TouchableOpacity
+        onPress={onSettingsPress}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={settingsAccessibilityLabel}
       >
         <Ionicons name="settings-outline" size={Spacing.lg} color={color.primary} />
       </TouchableOpacity>
+      </WalkthroughableView>
+      </CopilotStep>
 
       {/* Avatar with parallax + scale animation */}
       <Animated.View
@@ -78,7 +101,7 @@ export default function ProfileHeaderComp({
           transform: [{ scale: avatarScale as any }, { translateY: avatarTranslateY as any }],
         }}
       >
-        <CopilotStep text="This is your avatar! Tap your avatar to change it." order={1} name="avatarStep">
+        <CopilotStep text={t('tutorial.profile.step2text')} order={2} name="avatarStep">  
           <WalkthroughableView>
             <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.7}>
               <View style={styles.avatarRing}>

@@ -1,4 +1,11 @@
 {
+  "common": {
+    "retry": "Reintentar",
+    "cancel": "Cancelar",
+    "submit": "Enviar",
+    "submitting": "Enviando...",
+    "ok": "Aceptar"
+  },
   "auth": {
     "welcomeTitle": "¡Bienvenido, aventurero!",
     "welcomeSubtitle": "Inicia sesión para comenzar tu viaje.",
@@ -78,7 +85,9 @@
     "tabs": {
       "published": "Publicados",
       "drafts": "Borradores",
-      "archived": "Archivados"
+      "archived": "Archivados",
+      "settings": "Ajustes",
+      "tutorials": "Tutoriales"
     },
     "emptyPublished": "Aún no hay tours publicados. ¡Publica uno para compartirlo con la comunidad!",
     "emptyDraft": "No hay borradores. ¡Empieza a crear un nuevo tour!",
@@ -160,11 +169,13 @@
     "distance": "Distancia",
     "difficulty": "Dificultad",
     "notFound": "Tour no encontrado",
-    "reviews": "reseñas",
+    "reviews": "Reseñas",
+    "noReviews": "No se encontraron reseñas para este tour.",
     "aboutThisTour": "Sobre este tour",
     "createdBy": "Creado por",
+    "following": "Siguiendo",
     "tourStops": "Paradas del tour",
-    "routeMap": "Mapa de ruta",
+    "routeMap": "Mapa de la ruta",
     "easy": "Fácil",
     "medium": "Medio",
     "hard": "Difícil",
@@ -179,7 +190,34 @@
   },
   "settings": {
     "language": "Idioma",
-    "selectLanguage": "Seleccionar idioma",
+    "selectLanguage": "Seleccionar Idioma",
+    "sections": {
+      "profile": "Perfil",
+      "account": "Cuenta",
+      "preferences": "Preferencias"
+    },
+    "items": {
+      "editProfile": {
+        "label": "Editar Perfil",
+        "description": "Actualiza tu información personal"
+      },
+      "notifications": {
+        "label": "Notificaciones",
+        "description": "Gestiona tus preferencias de notificaciones"
+      },
+      "privacy": {
+        "label": "Privacidad",
+        "description": "Controla tus ajustes de privacidad"
+      }
+    },
+    "appearance": {
+      "label": "Apariencia",
+      "mode": {
+        "light": "Modo claro",
+        "dark": "Modo oscuro",
+        "system": "Por defecto del sistema"
+      }
+    },
     "languages": {
       "en": "Inglés",
       "tr": "Turco",
@@ -188,16 +226,16 @@
     "account": {
       "title": "Cuenta",
       "editProfile": {
-        "label": "Editar perfil",
+        "label": "Editar Perfil",
         "description": "Actualiza tu información personal"
       },
       "notifications": {
         "label": "Notificaciones",
-        "description": "Administrar preferencias de notificaciones"
+        "description": "Gestiona tus preferencias de notificaciones"
       },
       "privacy": {
         "label": "Privacidad",
-        "description": "Controla tu configuración de privacidad"
+        "description": "Controla tus ajustes de privacidad"
       }
     },
     "preferences": {
@@ -210,7 +248,7 @@
     "support": {
       "title": "Soporte",
       "help": {
-        "label": "Ayuda y soporte",
+        "label": "Ayuda y Soporte",
         "description": "Obtén ayuda con la aplicación"
       }
     }
@@ -219,14 +257,14 @@
     "loading": "Cargando...",
     "error": "Error",
     "loginRequired": "Inicio de sesión requerido",
-    "loginRequiredMessage": "Debes iniciar sesión para iniciar un tour. Por favor inicia sesión e inténtalo de nuevo.",
+    "loginRequiredMessage": "Debes iniciar sesión para comenzar un tour. Por favor, inicia sesión e inténtalo de nuevo.",
     "cancel": "Cancelar",
     "login": "Iniciar sesión",
-    "review": "Reseña",
+    "review": "Reseñar",
     "min": "min",
     "stops": "paradas",
     "tourInProgressTitle": "Tour en curso",
-    "tourInProgressMessage": "¡Ya tienes un tour activo! Por favor termínalo o abandónalo antes de iniciar uno nuevo."
+    "tourInProgressMessage": "¡Ya tienes un tour activo! Por favor, termínalo o sal de él antes de empezar uno nuevo."
   },
   "creation": {
     "loginRequired": "Inicio de sesión requerido",
@@ -234,48 +272,49 @@
     "loginButton": "Iniciar sesión",
     "continue": "Continuar",
     "continueWithCount": "Continuar ({{count}} ubicaciones)",
-    "submit": "Enviar tour",
+    "submit": "Enviar Tour",
     "submitting": "Enviando...",
-    "submitTitle": "Enviar tour",
+    "submitTitle": "Enviar Tour",
     "submitMessage": "¿Estás listo para enviar tu tour para revisión?",
     "cancel": "Cancelar",
     "submitConfirm": "Enviar",
     "successTitle": "Éxito",
     "successMessage": "¡Tu tour ha sido creado!",
-    "ok": "OK",
+    "ok": "Aceptar",
     "errorTitle": "Error",
-    "errorMessage": "Error al enviar el tour. Por favor, inténtalo de nuevo.",
+    "errorMessage": "No se pudo enviar el tour. Por favor, inténtalo de nuevo.",
     "method": {
-      "title": "Crea tu tour",
+      "title": "Crea tu Tour",
       "subtitle": "Elige cómo quieres crear tu experiencia de tour",
-      "personal": "Creación personal",
+      "personal": "Creación Personal",
       "personalDescription": "Selecciona ubicaciones manualmente, añade historias y personaliza cada detalle de tu tour",
       "ai": "Creación con IA",
-      "aiDescription": "Deja que la IA te ayude a generar contenido, historias y sugerencias según tus preferencias",
+      "aiDescription": "Deja que la IA te ayude a generar contenido de tour, historias y sugerencias basadas en tus preferencias",
       "skip": "No importa, buscaré un tour",
       "comingSoon": "PRÓXIMAMENTE"
     },
     "details": {
-      "title": "Detalles del tour",
+      "title": "Detalles del Tour",
       "subtitle": "Proporciona información básica sobre tu tour",
-      "tourTitle": "Título del tour",
-      "tourTitlePlaceholder": "ej. Joyas ocultas del casco antiguo",
+      "tourTitle": "Título del Tour",
+      "tourTitlePlaceholder": "Ej. Las joyas ocultas del casco antiguo",
       "description": "Descripción",
       "descriptionPlaceholder": "Describe qué hace especial a tu tour...",
       "city": "Ciudad",
-      "cityPlaceholder": "ej. Madrid, Tokio, París",
+      "cityPlaceholder": "Ej. Estambul, Tokio, París",
       "category": "Categoría",
       "difficulty": "Dificultad",
-      "tourType": "Tipo de tour",
-      "duration": "Duración estimada"
+      "tourType": "Tipo de Tour",
+      "duration": "Duración Estimada"
     },
     "location": {
-      "searchPlaceholder": "Buscar una ubicación...",
+      "searchPlaceholder": "Busca una ubicación...",
       "searchNoResults": "No se encontraron resultados",
+      "title": "Añadir Ubicaciones",
       "instructionBanner": "Busca una ubicación arriba para añadirla como parada del tour.",
-      "empty": "Aún no hay ubicaciones.\n¡Toca el mapa para añadir tu primera parada!",
+      "empty": "Aún no se han añadido ubicaciones.\n¡Toca en el mapa para añadir tu primera parada!",
       "tapToAddDetails": "Toca para añadir detalles",
-      "deleteTitle": "Eliminar ubicación",
+      "deleteTitle": "Eliminar Ubicación",
       "deleteMessage": "¿Estás seguro de que quieres eliminar esta ubicación?",
       "cancel": "Cancelar",
       "delete": "Eliminar",
@@ -284,54 +323,54 @@
     },
     "review": {
       "tourStopsTitle": "Paradas del tour ({{count}})",
-      "title": "Revisa tu tour",
-      "subtitle": "Asegúrate de que todo esté bien antes de enviar",
+      "title": "Revisa tu Tour",
+      "subtitle": "Asegúrate de que todo esté bien antes de enviarlo",
       "untitledTour": "Tour sin título",
-      "noDescription": "Sin descripción."
+      "noDescription": "No se proporcionó descripción."
     },
     "stories": {
-      "empty": "Aún no hay ubicaciones.\nVuelve atrás y añade algunas ubicaciones primero.",
-      "title": "Escribe tus historias",
+      "empty": "Aún no se han añadido ubicaciones.\nVuelve atrás y añade algunas ubicaciones primero.",
+      "title": "Escribe tus Historias",
       "subtitle": "Añade una historia atractiva para cada ubicación de tu tour",
       "untitledLocation": "Ubicación sin título",
-      "tapToAddStory": "Toca para añadir una historia a esta ubicación"
+      "tapToAddStory": "Toca para añadir una historia para esta ubicación"
     },
     "storyEditor": {
       "locationTitle": "Título de la ubicación *",
-      "locationTitlePlaceholder": "ej. Entrada al Gran Bazar",
-      "address": "Dirección (opcional)",
-      "addressPlaceholder": "ej. Calle Mayor 123, Madrid",
+      "locationTitlePlaceholder": "Ej. La entrada del Gran Bazar",
+      "address": "Dirección (Opcional)",
+      "addressPlaceholder": "Ej. Calle Principal 123, Estambul",
       "story": "Historia *",
       "storyPlaceholder": "Cuenta la historia de esta ubicación...",
-      "storyHint": "Escribe el relato que los visitantes leerán o escucharán en esta ubicación"
+      "storyHint": "Escribe la narrativa que los visitantes leerán o escucharán en esta ubicación"
     },
     "difficulty": {
       "easy": "Fácil",
-      "easyDesc": "Adecuado para todas las edades y niveles físicos",
+      "easyDesc": "Apto para todas las edades y niveles de forma física",
       "medium": "Medio",
-      "mediumDesc": "Caminata moderada, algo de desnivel",
+      "mediumDesc": "Caminata moderada, algo de elevación",
       "hard": "Difícil",
-      "hardDesc": "Terreno desafiante o largas distancias"
+      "hardDesc": "Terreno difícil o largas distancias"
     },
     "tourType": {
-      "story": "Modo historia",
-      "storyDesc": "Experiencia de tour basada en narrativa",
-      "puzzle": "Modo puzle",
+      "story": "Modo Historia",
+      "storyDesc": "Experiencia de tour basada en la narrativa",
+      "puzzle": "Modo Puzzle",
       "puzzleDesc": "Desafíos interactivos en cada parada",
-      "hybrid": "Modo híbrido",
-      "hybridDesc": "Mezcla de historias y puzles"
+      "hybrid": "Modo Híbrido",
+      "hybridDesc": "Mezcla de historias y puzzles"
     },
     "categories": {
       "history": "Historia",
       "nature": "Naturaleza",
       "art": "Arte",
-      "food": "Gastronomía",
+      "food": "Comida",
       "architecture": "Arquitectura",
       "adventure": "Aventura",
       "culture": "Cultura",
       "religious": "Religioso",
       "shopping": "Compras",
-      "nightlife": "Vida nocturna"
+      "nightlife": "Vida Nocturna"
     },
     "stats": {
       "locations": "Ubicaciones",
@@ -339,98 +378,98 @@
       "difficulty": "Dificultad"
     },
     "story": {
-      "coverImage": "Imagen de portada (opcional)",
-      "imagePickerTitle": "Selector de imagen",
-      "imagePickerMessage": "El selector de imágenes requiere que expo-image-picker esté instalado.",
-      "ok": "OK",
+      "coverImage": "Imagen de Portada (Opcional)",
+      "imagePickerTitle": "Selector de Imágenes",
+      "imagePickerMessage": "La funcionalidad del selector de imágenes requiere que expo-image-picker esté instalado.",
+      "ok": "Aceptar",
       "tapToAddImage": "Toca para añadir una imagen",
       "stopOf": "Parada {{current}} de {{total}}",
-      "writingTipsTitle": "💡 Consejos de escritura",
-      "writingTip1": "Establece la escena: describe qué verán y sentirán los visitantes en esta ubicación.",
+      "writingTipsTitle": "💡 Consejos de Escritura",
+      "writingTip1": "Prepara la escena: Describe lo que los visitantes verán y sentirán en este lugar.",
       "writingTip2": "Incluye contexto histórico o datos interesantes.",
       "writingTip3": "Añade detalles sensoriales: sonidos, olores, texturas.",
       "writingTip4": "Conecta esta parada con la narrativa general del tour.",
-      "writingTip5": "Mantén el interés pero sé conciso (ideal: 200-500 palabras).",
+      "writingTip5": "Mantenlo atractivo pero conciso (200-500 palabras es lo ideal).",
       "characters": "{{count}} caracteres",
-      "saveLocation": "Guardar ubicación",
+      "saveLocation": "Guardar Ubicación",
       "previous": "Anterior",
       "next": "Siguiente",
-      "editLocation": "Editar ubicación",
+      "editLocation": "Editar Ubicación",
       "save": "Guardar"
     },
     "puzzle": {
-      "type": "Tipo de puzle *",
-      "xpReward": "Recompensa XP",
+      "type": "Tipo de Puzzle *",
+      "xpReward": "Recompensa de XP",
       "xpPlaceholder": "10",
-      "challenge": "Desafío del puzle",
+      "challenge": "Desafío del Puzzle",
       "question": "Pregunta / Desafío",
       "questionRequired": "Pregunta / Desafío *",
-      "questionPlaceholder": "ej. ¿En qué año se construyó la torre?",
+      "questionPlaceholder": "Ej. ¿En qué año se construyó la torre?",
       "questionHint": "La pregunta que los usuarios deben responder.",
-      "options": "Opciones (marca la respuesta correcta)",
-      "optionsRequired": "Opciones (marca la respuesta correcta) *",
+      "options": "Opciones (Marca la respuesta correcta)",
+      "optionsRequired": "Opciones (Marca la respuesta correcta) *",
       "optionPlaceholder": "Opción {{number}}",
-      "addOption": "Añadir opción",
-      "hintLabel": "Pista (opcional)",
-      "hintPlaceholder": "ej. Mira la placa sobre la puerta.",
-      "hintText": "Una pista útil si el usuario se queda atascado."
+      "addOption": "Añadir Opción",
+      "hintLabel": "Pista (Opcional)",
+      "hintPlaceholder": "Ej. Mira la placa sobre la puerta.",
+      "hintText": "Una pista útil si el usuario se atasca."
     },
     "editLocation": {
-      "header": "Editar ubicación",
+      "header": "Editar Ubicación",
       "titleLabel": "Título de la ubicación *",
-      "titlePlaceholder": "ej. Entrada al Gran Bazar",
-      "addressLabel": "Dirección (opcional)",
-      "addressPlaceholder": "ej. Calle Mayor 123, Madrid",
+      "titlePlaceholder": "Ej. La entrada del Gran Bazar",
+      "addressLabel": "Dirección (Opcional)",
+      "addressPlaceholder": "Ej. Calle Principal 123, Estambul",
       "storyLabel": "Historia *",
       "storyPlaceholder": "Cuenta la historia de esta ubicación...",
-      "storyHint": "Escribe el relato que los visitantes leerán o escucharán en esta ubicación"
+      "storyHint": "Escribe la narrativa que los visitantes leerán o escucharán en esta ubicación"
     }
   },
   "aiTour": {
     "city": "Ciudad",
-    "cityPlaceholder": "ej. Madrid, París, Tokio",
-    "theme": "Tema del tour",
-    "themePlaceholder": "ej. Historia oscura, Joyas escondidas",
-    "mode": "Modo de tour",
+    "cityPlaceholder": "Ej. Estambul, París, Tokio",
+    "theme": "Tema del Tour",
+    "themePlaceholder": "Ej. Historia Embrujada, Joyas Ocultas",
+    "mode": "Modo de Tour",
     "modeSubtitle": "Elige el tipo de experiencia",
-    "duration": "Duración estimada",
+    "duration": "Duración Estimada",
     "durationInfo": "Los tours más largos tendrán más paradas. La IA creará aproximadamente una ubicación cada 15 minutos.",
-    "additionalDetails": "Detalles adicionales (opcional)",
-    "additionalDetailsPlaceholder": "¿Alguna preferencia específica? ej. 'Centra en arquitectura medieval', 'Incluye cafés para descansar', 'Evita cuestas pronunciadas'...",
-    "missingInfoTitle": "Información incompleta",
-    "missingInfoMessage": "Por favor proporciona una ciudad y un tema para tu tour.",
-    "successTitle": "¡Tour creado! 🎉",
-    "viewTour": "Ver tour",
-    "createAnother": "Crear otro",
-    "failedTitle": "Error de generación",
+    "additionalDetails": "Detalles Adicionales (Opcional)",
+    "additionalDetailsPlaceholder": "¿Alguna preferencia específica? Ej. 'Céntrate en la arquitectura medieval', 'Incluye cafeterías para descansar', 'Evita colinas empinadas'...",
+    "missingInfoTitle": "Falta Información",
+    "missingInfoMessage": "Por favor, proporciona tanto una ciudad como un tema para tu tour.",
+    "successTitle": "¡Tour Creado! 🎉",
+    "viewTour": "Ver Tour",
+    "createAnother": "Crear Otro",
+    "failedTitle": "Error de Generación",
     "failedMessage": "Algo salió mal al generar tu tour. Por favor, inténtalo de nuevo.",
-    "generateButton": "Generar tour",
+    "generateButton": "Generar Tour",
     "header": {
       "title": "Crear con IA",
-      "subtitle": "Cuéntanos sobre el tour de tus sueños y deja que la IA cree una experiencia única con ubicaciones reales, historias atractivas y contenido interactivo."
+      "subtitle": "Cuéntanos sobre tu tour soñado y deja que la IA cree una experiencia única con ubicaciones reales, historias atractivas y contenido interactivo."
     },
     "loading": {
-      "title": "Creando tu tour...",
-      "subtitle": "La IA está buscando las mejores ubicaciones y creando contenido atractivo para ti"
+      "title": "Creando tu Tour...",
+      "subtitle": "La IA está buscando las mejores ubicaciones y elaborando contenido atractivo para ti"
     },
     "languageSelector": {
-      "title": "Idioma del contenido",
+      "title": "Idioma del Contenido",
       "subtitle": "Selecciona el idioma para el contenido del tour"
     },
     "modes": {
-      "story": "Modo historia",
-      "storyDesc": "Experiencia de tour narrativa con historias históricas y temáticas",
-      "puzzle": "Modo puzle",
-      "puzzleDesc": "Desafíos interactivos y preguntas en cada ubicación",
-      "hybrid": "Modo híbrido",
-      "hybridDesc": "Lo mejor de ambos: historias atractivas con puzles divertidos"
+      "story": "Modo Historia",
+      "storyDesc": "Rica experiencia de tour basada en la narrativa con narración histórica y temática",
+      "puzzle": "Modo Puzzle",
+      "puzzleDesc": "Desafíos interactivos y curiosidades en cada ubicación",
+      "hybrid": "Modo Híbrido",
+      "hybridDesc": "Lo mejor de ambos: historias atractivas con puzzles divertidos"
     }
   },
   "tourStep": {
-    "tourProgress": "Progreso del tour",
-    "back": "Atrás",
+    "tourProgress": "Progreso del Tour",
+    "back": "Volver",
     "next": "Siguiente",
-    "finish": "Finalizar"
+    "finish": "Terminar"
   },
   "common": {
     "error": "Error",
@@ -438,45 +477,68 @@
   },
   "map": {
     "noActiveTour": {
-      "title": "Sin tour activo",
-      "subtitle": "¡Inicia un tour para ver la navegación interactiva con paradas, puzles y emocionantes descubrimientos!",
-      "browseTours": "Explorar tours",
-      "tip": "Consejo: encuentra un tour que te guste y toca \"Iniciar tour\" para comenzar tu aventura."
+      "title": "Sin Tour Activo",
+      "subtitle": "¡Inicia un tour para ver la navegación del mapa interactivo con paradas, puzzles y emocionantes descubrimientos en el camino!",
+      "browseTours": "Explorar Tours",
+      "tip": "Consejo: ¡Encuentra un tour que te guste y toca \"Comenzar Tour\" para empezar tu aventura!"
     },
     "endTour": {
-      "title": "¿Salir del tour?",
+      "title": "¿Salir del Tour?",
       "message": "¿Estás seguro de que quieres salir? Volverás al mapa y este tour no se marcará como completado.",
       "completed": "Completado",
       "remaining": "Restante",
-      "xpEarned": "XP ganado",
-      "stepsRemaining_one": "¡Todavía tienes {{count}} paso por explorar!",
-      "stepsRemaining_other": "¡Todavía tienes {{count}} pasos por explorar!",
-      "continueTour": "Continuar tour",
-      "exitTour": "Salir del tour"
+      "xpEarned": "XP Ganada",
+      "stepsRemaining_one": "¡Aún te queda {{count}} paso por explorar!",
+      "stepsRemaining_other": "¡Aún te quedan {{count}} pasos por explorar!",
+      "continueTour": "Continuar Tour",
+      "exitTour": "Salir del Tour"
     },
     "tourComplete": {
-      "title": "¡Tour completado!",
+      "title": "¡Tour Completado!",
       "subtitle": "Has terminado {{tourName}}",
       "steps": "Pasos",
       "complete": "Completado",
-      "xpEarned": "+{{xp}} XP ganado",
+      "xpEarned": "¡+{{xp}} XP ganados!",
       "done": "Hecho"
     },
     "activeTour": {
       "stepOf": "Paso {{current}} de {{total}}",
-      "end": "Finalizar",
+      "end": "Terminar",
       "skip": "SALTAR"
     }
   },
   "friends": {
-    "discoverTitle": "Descubrir amigos",
+    "discoverTitle": "Descubrir Amigos",
     "discoverSubtitle": "Busca y conecta con nuevos amigos",
-    "proTipTitle": "Consejo pro",
-    "proTipDescription": "Empieza a escribir para encontrar amigos por su nombre de usuario o nombre completo",
-    "searchPlaceholder": "Buscar por usuario o nombre...",
-    "addFriend": "Añadir amigo"
+    "proTipTitle": "Consejo de Experto",
+    "proTipDescription": "Empieza a escribir para buscar amigos por su nombre de usuario o nombre completo",
+    "searchPlaceholder": "Buscar por nombre de usuario o nombre...",
+    "addFriend": "Añadir Amigo"
   },
   "badges": {
     "noBadges": "Aún no hay insignias"
+  },
+  "tutorial": {
+    "title": "Ayuda y Tutoriales",
+    "section": "Tutoriales Disponibles",
+    "skip": "Omitir",
+    "previous": "Anterior",
+    "finish": "Terminar",
+    "next": "Siguiente",
+    "profile": {
+      "label": "Tutorial del Perfil",
+      "desc": "Aprende a revisar tus estadísticas, revisar tours pasados, gestionar amigos y tu avatar.",
+      "step1text": "¡Bienvenido al tutorial del perfil!",
+      "step2text": "¡Este es tu avatar! Toca tu avatar para cambiarlo.",
+      "step3text": "¡Haz un seguimiento de tus Odyssey XP, revisa y califica tours completados, y comprueba tus seguidores!",
+      "step4text": "¡Encuentra a otros viajeros para que se unan a tu viaje!",
+      "step5text": "¡Mira las insignias que has ganado!",
+      "step6text": "¡Revisa tus tours creados (publicados, borradores y archivados) en esta pestaña!",
+      "step7text": "Puedes cambiar los ajustes de tu cuenta o las preferencias de la aplicación en la pestaña de ajustes."
+    },
+    "tours": {
+      "label": "Tutorial de Tours",
+      "desc": "Aprende a navegar e interactuar con los tours."
+    }
   }
 }

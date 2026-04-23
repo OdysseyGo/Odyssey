@@ -18,8 +18,6 @@ import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 
 import { CopilotStep, walkthroughable } from 'react-native-copilot';
-import { useAutoStartTour } from '@/hooks/useAutoStartHook';
-import { useTutorial } from '@/contexts/TutorialContext';
 
 import ProfileHeaderComp from '@/components/ProfileComponents/ProfileHeaderComp';
 import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
@@ -37,7 +35,9 @@ import { consumeProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
-import { Button } from '@react-navigation/elements';
+import { ScrollView } from 'react-native';
+import { useAutoStartTour } from '@/hooks/useAutoStartHook';
+import TutorialsModal from '../profile/tutorials';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = 240;
@@ -366,6 +366,7 @@ export default function Profile() {
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showTutorials, setShowTutorials] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const lastRetryKeyRef = useRef(retryKey);
@@ -378,8 +379,8 @@ export default function Profile() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
-  useAutoStartTour('GENERAL_TOUR', !loading && !!curUser)
-  const { startTutorial } = useTutorial();
+  const scrollViewRef = useRef<ScrollView>(null);
+  useAutoStartTour('PROFILE_TUTORIAL', !loading && !!curUser, scrollViewRef)
 
   const stickyOpacity = scrollY.interpolate({
     inputRange: [HEADER_HEIGHT * 0.5, HEADER_HEIGHT * 0.7],
@@ -498,6 +499,8 @@ export default function Profile() {
     onAvatarPress: () => setShowAvatarModal(true),
     onSettingsPress: () => setShowSettings(true),
     settingsAccessibilityLabel: t('tabs.settings'),
+    onTutorialsPress: () => setShowTutorials(true),
+    tutorialsAccessibilityLabel: t('tabs.tutorials'), //TODO: add this to translations
   };
 
   const profileStats = {
@@ -553,6 +556,7 @@ export default function Profile() {
       </Animated.View>
 
       <Animated.ScrollView
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: Spacing.xxl + insets.bottom }}
         scrollEventThrottle={16}
@@ -560,9 +564,13 @@ export default function Profile() {
           useNativeDriver: false,
         })}
       >
+        <CopilotStep text={t('tutorial.profile.step1text')} order={1} name="profileIntro">
+        <WalkthroughableView>
         {/* ─── Header ──────────────────────────────── */}
         <ProfileHeaderComp {...profileHeader} scrollY={scrollY} />
-      
+         </WalkthroughableView>
+        </CopilotStep>
+
         {/* ─── Stats (overlaps header) ─────────────── */}
         <ProfileStatsComp
           {...profileStats}
@@ -572,21 +580,29 @@ export default function Profile() {
         />
 
         {/* ─── Actions ─────────────────────────────── */}
-        <CopilotStep text="Find other travelers to join on your journey." order={3} name="friendsStep">
+        <CopilotStep text= {t('tutorial.profile.step4text')} order={4} name="friendsStep">
           <WalkthroughableView>
             <View style={styles.actionsRow}>
               <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
               <ProfileFollowingFeedButton />
-              <Button onPress={()=> startTutorial('GENERAL_TOUR')}>tutorial</Button>
             </View>
           </WalkthroughableView>
         </CopilotStep>
 
         {/* ─── Badges ──────────────────────────────── */}
-        <ProfileBadgesContainer badges={formattedBadges} title={t('profile.badges')} />
+        <CopilotStep text= {t('tutorial.profile.step5text')} order={5} name="badgeStep">
+          <WalkthroughableView>
+            <ProfileBadgesContainer badges={formattedBadges} title={t('profile.badges')} />
+          </WalkthroughableView>
+        </CopilotStep>
 
         {/* ─── My Tours ────────────────────────────── */}
-        <ProfileToursContainer />
+        <CopilotStep text= {t('tutorial.profile.step6text')} order={6} name="tourCreatorStep">
+          <WalkthroughableView>
+            <ProfileToursContainer />
+          </WalkthroughableView>
+        </CopilotStep>
+        
 
         {/* ─── Logout ──────────────────────────────── */}
         <TouchableOpacity
@@ -625,6 +641,10 @@ export default function Profile() {
         onRequestClose={() => setShowSettings(false)}
       >
         <SettingsScreen onClose={() => setShowSettings(false)} />
+      </Modal>
+
+      <Modal visible={showTutorials} transparent animationType="fade">
+        <TutorialsModal onClose={() => setShowTutorials(false)} />
       </Modal>
     </View>
   );

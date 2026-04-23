@@ -85,7 +85,9 @@
     "tabs": {
       "published": "Published",
       "drafts": "Drafts",
-      "archived": "Archived"
+      "archived": "Archived",
+      "settings":"Settings",
+      "tutorials":"Tutorials"
     },
     "emptyPublished": "No published tours yet. Publish a tour to share it with the community!",
     "emptyDraft": "No draft tours. Start creating a new tour!",
@@ -533,9 +535,26 @@
     "noBadges": "No badges yet"
   },
   "tutorial":{
+    "title":"Help & Tutorials",
+    "section":"Available Tutorials",
     "skip": "Skip",
     "previous": "Previous",
     "finish": "Finish",
-    "next": "Next"
+    "next": "Next",
+    "profile": {
+      "label":"Profile Tutorial",
+      "desc":"Learn how to check your stats, review past tours, manage friends and avatar.",
+      "step1text":"Welcome to the profile tutorial!",
+      "step2text":"This is your avatar! Tap your avatar to change it.",
+      "step3text":"Track your Odyssey XP, review and rate completed tours, and check your followers!",
+      "step4text":"Find other travelers to join on your journey!",
+      "step5text":"Check out the badges you earned!",
+      "step6text":"Check your created (published, draft and archived) tours on this tab!",
+      "step7text":"You can change your account settings or your app preferences in the settings tab."
+    },
+    "tours": {
+      "label":"Tours Tutorial",
+      "desc":"Learn how to navigate and interact with tours."
+    }
   }
 }

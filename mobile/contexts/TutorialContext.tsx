@@ -1,8 +1,8 @@
 // TutorialContext.tsx
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
-// different types of tours, might add more
-export type TutorialType = 'GENERAL_TOUR' | 'PROFILE_TUTORIAL' | 'NONE';
+// different types of tours, might add more 
+export type TutorialType = 'GENERAL_TOUR' | 'PROFILE_TUTORIAL' | 'TOURS_TUTORIAL' | 'NONE';
 
 interface TutorialContextProps {
   activeTutorial: TutorialType;

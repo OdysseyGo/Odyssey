@@ -55,7 +55,7 @@ export default function ProfileStatsComp({
   );
 
   return (
-    <CopilotStep text="Track your Odyssey XP, tours, and earned badges here." order={2} name="statsStep">
+    <CopilotStep text={t('tutorial.profile.step3text')} order={3} name="statsStep">
       <WalkthroughableView style={styles.card}>
           {/* Achievement row */}
           <View style={styles.row}>
