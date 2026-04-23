@@ -525,6 +525,23 @@
       "stepOf": "Step {{current}} of {{total}}",
       "end": "End",
       "skip": "SKIP"
+    },
+    "nearby": {
+      "title_one": "{{count}} tour nearby",
+      "title_other": "{{count}} tours nearby",
+      "areaTitle_one": "{{count}} tour in this area",
+      "areaTitle_other": "{{count}} tours in this area",
+      "searching": "Searching nearby...",
+      "radius": "Within 500 m of your tap",
+      "areaSubtitle": "Tours starting in the visible map area",
+      "emptyTitle": "No tours here",
+      "emptySubtitle": "Try tapping a different spot or explore a busier area.",
+      "duration_one": "{{count}} min",
+      "duration_other": "{{count}} min"
+    },
+    "searchMode": {
+      "searchHere": "Search here",
+      "zoomIn": "Zoom in to search"
     }
   },
   "friends": {

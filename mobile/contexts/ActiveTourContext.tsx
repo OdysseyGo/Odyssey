@@ -195,7 +195,6 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
       const activeProgress = await getInProgressTour();
       //console.log(activeProgress);
       if (!activeProgress || !activeProgress.id) {
-        console.log('No active tour found in background check.');
         return;
       }
 

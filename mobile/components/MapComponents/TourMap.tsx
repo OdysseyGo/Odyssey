@@ -20,12 +20,13 @@ export default function TourMap({
   initialRegion = defaultRegion,
   currentStepIndex,
   tour,
+  onRegionChangeComplete,
+  nearbyMarkers,
 }: TourMapProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const mapRef = useRef<MapView>(null);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const hasAnimatedToTour = useRef(false);
 
   // Get user location on mount (but don't animate if there's an active tour)
   useEffect(() => {
@@ -38,7 +39,6 @@ export default function TourMap({
       let currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      // Only animate to user location if there's no active tour
       if (mapRef.current && !tour) {
         mapRef.current.animateToRegion(
           {
@@ -79,6 +79,7 @@ export default function TourMap({
       showsUserLocation={true}
       showsMyLocationButton={true}
       followsUserLocation={false}
+      onRegionChangeComplete={onRegionChangeComplete}
     >
       {markers.map((marker) => (
         <MapMarker
@@ -92,7 +93,21 @@ export default function TourMap({
           opacity={marker.opacity}
         />
       ))}
-      <Polyline coordinates={route} strokeWidth={4} />
+
+      {nearbyMarkers?.map((marker) => (
+        <MapMarker
+          key={marker.id}
+          id={marker.id}
+          coordinate={marker.coordinate}
+          title={marker.title}
+          iconType={marker.iconType}
+          circleSize={marker.circleSize}
+          circleColor={marker.circleColor}
+          opacity={marker.opacity}
+        />
+      ))}
+
+      {route.length >= 2 && <Polyline coordinates={route} strokeWidth={4} />}
     </MapView>
   );
 }
