@@ -10,6 +10,7 @@ from apps.tours.models import (
     TourStep,
     TriviaPuzzleDetail,
 )
+from apps.tours.utils import GoogleMapsFacade
 from apps.users.api.serializers import UserSerializer
 
 DEFAULT_PICTURE_COMPARE_THRESHOLD = 0.7
