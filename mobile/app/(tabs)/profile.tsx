@@ -190,7 +190,9 @@ function GuestScreen({
           <Ionicons name="compass" size={44} color={theme.white} />
         </View>
         <Text style={[guestStyles.appName, { color: theme.white }]}>ODYSSEY</Text>
-        <Text style={[guestStyles.tagline, { color: theme.profileGuestTaglineText }]}>{t('auth.tagline')}</Text>
+        <Text style={[guestStyles.tagline, { color: theme.profileGuestTaglineText }]}>
+          {t('auth.tagline')}
+        </Text>
       </View>
 
       {/* ── Card ── */}
