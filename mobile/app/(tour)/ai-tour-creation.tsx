@@ -9,6 +9,7 @@ import {
   FormTextArea,
   FormOptionCard,
   FormDurationPicker,
+  FormGooglePlacesSelect,
 } from '@/components/TourCreation';
 import {
   AICreationHeader,
@@ -53,7 +54,8 @@ export default function AITourCreation() {
     setFormData((prev) => ({ ...prev, ...updates }));
   };
 
-  const isFormValid = formData.city.trim() !== '' && formData.theme.trim() !== '';
+  const isFormValid =
+    formData.country.trim() !== '' && formData.city.trim() !== '' && formData.theme.trim() !== '';
 
   const handleGenerate = async () => {
     if (!isFormValid) {
@@ -66,6 +68,8 @@ export default function AITourCreation() {
     try {
       const response = await generateAITour({
         city: formData.city.trim(),
+        country: formData.country.trim(),
+        country_code: formData.countryCode.trim(),
         theme: formData.theme.trim(),
         mode: formData.mode,
         duration: formData.duration,
@@ -101,15 +105,42 @@ export default function AITourCreation() {
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
+          keyboardDismissMode="on-drag"
         >
           <AICreationHeader />
 
+          <FormInputGroup label={t('creation.details.country', { defaultValue: 'Country' })} required>
+            <FormGooglePlacesSelect
+              value={formData.country}
+              placeholder={t('creation.details.countryPlaceholder', {
+                defaultValue: 'Search countries...',
+              })}
+              types="(regions)"
+              onSelect={(selectedCountry) =>
+                updateFormData({
+                  country: selectedCountry.value,
+                  countryCode: selectedCountry.countryCode || '',
+                  city: '',
+                })
+              }
+            />
+          </FormInputGroup>
+
           <FormInputGroup label={t('aiTour.city')} required>
-            <FormTextInput
+            <FormGooglePlacesSelect
               value={formData.city}
-              onChangeText={(text) => updateFormData({ city: text })}
-              placeholder={t('aiTour.cityPlaceholder')}
-              autoCapitalize="words"
+              disabled={!formData.countryCode}
+              placeholder={
+                formData.countryCode
+                  ? t('creation.details.cityPlaceholder')
+                  : t('creation.details.cityDisabledPlaceholder', {
+                      defaultValue: 'Select a country first',
+                    })
+              }
+              types="(cities)"
+              countryCode={formData.countryCode}
+              onSelect={(selectedCity) => updateFormData({ city: selectedCity.value })}
             />
           </FormInputGroup>
 

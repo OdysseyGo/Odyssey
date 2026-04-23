@@ -1,15 +1,24 @@
 import React from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
-import { createTour, createTourStep } from '@/api/tours';
+import { createTour, createTourStep, updateTour } from '@/api/tours';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { useTourCreation } from '@/contexts/TourCreationContext';
 import { TourReviewStep } from '@/components/TourCreation/steps';
 import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
+import { ApiError } from '@/api/APIClient';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
+
+function getSubmitErrorMessage(error: unknown, fallbackMessage: string, cityMismatchMessage: string) {
+  if (!(error instanceof ApiError)) return fallbackMessage;
+  if (error.statusCode === 400 && /^server error/i.test(error.message)) {
+    return cityMismatchMessage;
+  }
+  return error.message;
+}
 
 export default function TourReviewScreen() {
   const theme = useColorTheme();
@@ -34,7 +43,9 @@ export default function TourReviewScreen() {
               difficulty: tourData.difficulty,
               duration_minutes: tourData.estimatedDuration,
               city: tourData.city || 'Unknown City',
-              status: 'PUBLISHED',
+              country: tourData.country || '',
+              country_code: tourData.countryCode || '',
+              status: 'DRAFT',
               is_premium: false,
             });
 
@@ -60,6 +71,12 @@ export default function TourReviewScreen() {
             );
 
             await Promise.all(createStepPromises);
+            await updateTour(tour.id, {
+              city: tourData.city || 'Unknown City',
+              country: tourData.country || '',
+              country_code: tourData.countryCode || '',
+              status: 'PUBLISHED',
+            });
 
             Alert.alert(t('creation.successTitle'), t('creation.successMessage'), [
               {
@@ -71,8 +88,16 @@ export default function TourReviewScreen() {
               },
             ]);
           } catch (error) {
-            console.error('Failed to create tour:', error);
-            Alert.alert(t('creation.errorTitle'), t('creation.errorMessage'));
+            Alert.alert(
+              t('creation.errorTitle'),
+              getSubmitErrorMessage(
+                error,
+                t('creation.errorMessage'),
+                t('creation.cityStopsMismatch', {
+                  defaultValue: 'At least one tour stop must be inside the selected city.',
+                })
+              )
+            );
           } finally {
             setIsSubmitting(false);
           }

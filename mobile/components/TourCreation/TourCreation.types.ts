@@ -44,6 +44,8 @@ export interface TourCreationData {
   tourType: 'STORY' | 'PUZZLE' | 'HYBRID';
   estimatedDuration: number; // in minutes
   locations: TourLocation[];
+  country?: string;
+  countryCode?: string;
   city?: string;
 }
 
@@ -80,6 +82,8 @@ export const createEmptyTourData = (): TourCreationData => ({
   tourType: 'STORY',
   estimatedDuration: 60,
   locations: [],
+  country: '',
+  countryCode: '',
   city: '',
 });
 

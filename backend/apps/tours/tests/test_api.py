@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
+from unittest.mock import patch
 
 from apps.tours.models import Tour
 
@@ -24,7 +25,9 @@ class TourCreationApiTests(APITestCase):
             "difficulty": "EASY",
             "duration_minutes": 60,
             "city": "Paris",
-            "status": "PUBLISHED",
+            "country": "France",
+            "country_code": "FR",
+            "status": "DRAFT",
             "is_premium": False,
         }
         response = self.client.post("/api/tours/", tour_data, format="json")
@@ -57,8 +60,19 @@ class TourCreationApiTests(APITestCase):
         )
         self.assertEqual(response_step2.status_code, status.HTTP_201_CREATED)
 
-        # 3. Verify Data
+        # 3. Publish after at least one stop is confirmed inside the selected city.
+        with patch(
+            "apps.tours.api.serializers.GoogleMapsFacade.tour_has_step_in_city",
+            return_value=True,
+        ):
+            response_publish = self.client.patch(
+                f"/api/tours/{tour_id}/", {"status": "PUBLISHED"}, format="json"
+            )
+        self.assertEqual(response_publish.status_code, status.HTTP_200_OK)
+
+        # 4. Verify Data
         tour = Tour.objects.get(pk=tour_id)
+        self.assertEqual(tour.status, Tour.PUBLISHED)
         self.assertEqual(tour.steps.count(), 2)
         step1 = tour.steps.get(order=0)
         self.assertEqual(step1.title, "Eiffel Tower")

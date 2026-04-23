@@ -122,7 +122,12 @@ export default function EditLocationScreen() {
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContainer}>
+        <ScrollView
+          style={styles.scrollContent}
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
           <LocationBadge
             currentStop={selectedLocation.order}
             totalStops={tourData.locations.length}

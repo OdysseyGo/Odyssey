@@ -48,6 +48,8 @@ export type Tour = {
   total_distance?: number;
   is_premium: boolean;
   city: string;
+  country?: string;
+  country_code?: string;
   status: TourStatus;
   created_at: string;
   updated_at: string;
@@ -66,6 +68,8 @@ export type ToursResponse = {
 export type TourFilters = {
   search?: string;
   city?: string;
+  country?: string;
+  country_code?: string;
   difficulty?: Difficulty;
   tour_type?: TourType;
   is_premium?: boolean;
@@ -94,6 +98,8 @@ export async function getTours(
   if (filters) {
     if (filters.search) params.search = filters.search;
     if (filters.city) params.city = filters.city;
+    if (filters.country) params.country = filters.country;
+    if (filters.country_code) params.country_code = filters.country_code;
     if (filters.difficulty) params.difficulty = filters.difficulty;
     if (filters.tour_type) params.tour_type = filters.tour_type;
     if (filters.is_premium !== undefined) params.is_premium = filters.is_premium;

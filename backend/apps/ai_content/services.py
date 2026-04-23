@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+from typing import Optional
 
 import google.generativeai as genai
 from django.db import transaction
@@ -46,6 +47,8 @@ class GeminiService:
         language: str,
         creator,
         custom_prompt: str = "",
+        country: str = "",
+        country_code: str = "",
     ) -> Tour:
         """
         Generate a complete tour with steps and puzzles using RAG.
@@ -68,17 +71,18 @@ class GeminiService:
         """
         # ---- Step 1: Discover real places from Google Maps ----
         num_steps = max(3, duration // 15)
-        candidate_places = self._discover_places(city, theme, num_steps)
+        location_query = self._format_location(city, country)
+        candidate_places = self._discover_places(location_query, theme, num_steps)
 
         if not candidate_places:
             raise ValueError(
                 f"Could not find any real places for theme '{theme}' in "
-                f"'{city}'. Please try a different city or theme."
+                f"'{location_query}'. Please try a different city or theme."
             )
 
         # ---- Step 2: Build RAG prompt with verified places ----
         prompt = self._build_prompt(
-            city,
+            location_query,
             theme,
             mode,
             duration,
@@ -165,7 +169,7 @@ class GeminiService:
                     maps_facade = GoogleMapsFacade()
                     verified_lat, verified_lng = maps_facade.geocode_location(
                         name=step_data["title"],
-                        city=city,
+                        city=location_query,
                         fallback_lat=step_data.get("latitude", 0),
                         fallback_lng=step_data.get("longitude", 0),
                     )
@@ -183,6 +187,8 @@ class GeminiService:
                 difficulty=tour_data.get("difficulty", "MEDIUM"),
                 duration_minutes=duration,
                 city=city,
+                country=country,
+                country_code=country_code,
                 status=Tour.ARCHIVED,
             )
 
@@ -233,6 +239,10 @@ class GeminiService:
     # Place Discovery (RAG — Retrieval Step)
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _format_location(city: str, country: str = "") -> str:
+        return ", ".join(part for part in (city, country) if part)
+
     def _discover_places(self, city: str, theme: str, num_steps: int) -> list[dict]:
         """
         Retrieve real, verified places from Google Maps.
@@ -253,7 +263,7 @@ class GeminiService:
     @staticmethod
     def _fuzzy_match_place(
         ai_name: str, candidates: list[dict], threshold: float = 0.6
-    ) -> dict | None:
+    ) -> Optional[dict]:
         """
         Find the best matching candidate place for an AI-generated name.
 

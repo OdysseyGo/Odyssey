@@ -1,10 +1,12 @@
 import math
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import googlemaps
 
 from .models import TourStep
+
+GOOGLE_MAPS_TIMEOUT_SECONDS = 5
 
 
 class GoogleMapsFacade:
@@ -17,7 +19,11 @@ class GoogleMapsFacade:
         self.api_key = os.getenv("GOOGLE_MAPS_API_KEY")
         self.client = None
         if self.api_key:
-            self.client = googlemaps.Client(key=self.api_key)
+            self.client = googlemaps.Client(
+                key=self.api_key,
+                timeout=GOOGLE_MAPS_TIMEOUT_SECONDS,
+                retry_timeout=GOOGLE_MAPS_TIMEOUT_SECONDS,
+            )
 
     def geocode_location(
         self,
@@ -45,6 +51,53 @@ class GoogleMapsFacade:
             print(f"Geocoding failed for '{name}, {city}': {e}")
 
         return (fallback_lat, fallback_lng)
+
+    def tour_has_step_in_city(
+        self, tour, city: Optional[str] = None, country: Optional[str] = None
+    ) -> bool:
+        steps = list(tour.steps.all())
+        if not steps:
+            return False
+        if not self.client:
+            return False
+
+        city = city if city is not None else tour.city
+        country = country if country is not None else getattr(tour, "country", "")
+        query_parts = [city]
+        if country:
+            query_parts.append(country)
+        query = ", ".join(part for part in query_parts if part)
+
+        try:
+            results = self.client.geocode(query)
+        except Exception as e:
+            print(f"City validation geocoding failed for '{query}': {e}")
+            return False
+
+        if not results:
+            return False
+
+        geometry = results[0].get("geometry", {})
+        bounds = geometry.get("bounds") or geometry.get("viewport")
+        if not bounds:
+            return False
+
+        northeast = bounds.get("northeast", {})
+        southwest = bounds.get("southwest", {})
+        min_lat = southwest.get("lat")
+        max_lat = northeast.get("lat")
+        min_lng = southwest.get("lng")
+        max_lng = northeast.get("lng")
+        if None in (min_lat, max_lat, min_lng, max_lng):
+            return False
+
+        for step in steps:
+            lat = float(step.latitude)
+            lng = float(step.longitude)
+            if min_lat <= lat <= max_lat and min_lng <= lng <= max_lng:
+                return True
+
+        return False
 
     def search_places(
         self,

@@ -37,6 +37,8 @@ export const THEME_SUGGESTIONS = [
 export type TourMode = 'STORY' | 'PUZZLE' | 'HYBRID';
 
 export type AITourFormData = {
+  country: string;
+  countryCode: string;
   city: string;
   theme: string;
   mode: TourMode;
@@ -46,6 +48,8 @@ export type AITourFormData = {
 };
 
 export const createEmptyFormData = (): AITourFormData => ({
+  country: '',
+  countryCode: '',
   city: '',
   theme: '',
   mode: 'HYBRID',

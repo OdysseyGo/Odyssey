@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
+from unittest.mock import patch
 
 from apps.admin_dashboard.models import BanRecord, Report
 from apps.tours.models import Review, Tour, TourStep
@@ -154,6 +155,8 @@ class AdminTourViewSetTests(APITestCase):
             difficulty=Tour.EASY,
             duration_minutes=60,
             city="Istanbul",
+            country="Turkey",
+            country_code="TR",
             status=Tour.DRAFT,
         )
         self.step = TourStep.objects.create(
@@ -187,7 +190,11 @@ class AdminTourViewSetTests(APITestCase):
         self.assertEqual(len(response.data["steps"]), 1)
 
     def test_approve_tour(self):
-        response = self.client.post(f"/api/admin/tours/{self.tour.id}/approve/")
+        with patch(
+            "apps.admin_dashboard.api.views.GoogleMapsFacade.tour_has_step_in_city",
+            return_value=True,
+        ):
+            response = self.client.post(f"/api/admin/tours/{self.tour.id}/approve/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.tour.refresh_from_db()
         self.assertEqual(self.tour.status, Tour.PUBLISHED)

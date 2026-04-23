@@ -5,11 +5,12 @@ import { tourDetailsStepStyles } from './TourDetailsStep.styles';
 import { TourCreationData, TOUR_CATEGORIES } from '../TourCreation.types';
 import {
   FormInputGroup,
-  FormTextInput,
   FormTextArea,
+  FormTextInput,
   FormChipSelect,
   FormOptionCard,
   FormDurationPicker,
+  FormGooglePlacesSelect,
 } from '../inputs';
 import { useTranslation } from 'react-i18next';
 
@@ -81,7 +82,11 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
   const selectedTranslatedCategory = t(`creation.categories.${tourData.category.toLowerCase()}`);
 
   return (
-    <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+    <ScrollView
+      style={styles.content}
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="always"
+    >
       <Text style={styles.sectionTitle}>{t('creation.details.title')}</Text>
       <Text style={styles.sectionSubtitle}>{t('creation.details.subtitle')}</Text>
 
@@ -101,11 +106,37 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
         />
       </FormInputGroup>
 
-      <FormInputGroup label={t('creation.details.city')}>
-        <FormTextInput
+      <FormInputGroup label={t('creation.details.country', { defaultValue: 'Country' })} required>
+        <FormGooglePlacesSelect
+          value={tourData.country}
+          placeholder={t('creation.details.countryPlaceholder', {
+            defaultValue: 'Search countries...',
+          })}
+          types="(regions)"
+          onSelect={(selectedCountry) =>
+            onUpdate({
+              country: selectedCountry.value,
+              countryCode: selectedCountry.countryCode || '',
+              city: '',
+            })
+          }
+        />
+      </FormInputGroup>
+
+      <FormInputGroup label={t('creation.details.city')} required>
+        <FormGooglePlacesSelect
           value={tourData.city}
-          onChangeText={(text) => onUpdate({ city: text })}
-          placeholder={t('creation.details.cityPlaceholder')}
+          disabled={!tourData.countryCode}
+          placeholder={
+            tourData.countryCode
+              ? t('creation.details.cityPlaceholder')
+              : t('creation.details.cityDisabledPlaceholder', {
+                  defaultValue: 'Select a country first',
+                })
+          }
+          types="(cities)"
+          countryCode={tourData.countryCode}
+          onSelect={(selectedCity) => onUpdate({ city: selectedCity.value })}
         />
       </FormInputGroup>
 

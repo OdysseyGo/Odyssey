@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.tours.models import Puzzle, Review, Tour, TourStep
+from apps.tours.utils import GoogleMapsFacade
 from apps.users.api.serializers import UserSerializer
 
 
@@ -91,6 +92,8 @@ class TourSerializer(serializers.ModelSerializer):
             "total_distance",
             "is_premium",
             "city",
+            "country",
+            "country_code",
             "cover_image",
             "status",
             "created_at",
@@ -100,6 +103,48 @@ class TourSerializer(serializers.ModelSerializer):
             "average_rating",
         ]
         read_only_fields = ["creator", "created_at", "updated_at", "average_rating"]
+
+    def validate(self, attrs):
+        instance = self.instance
+        current_status = getattr(instance, "status", Tour.DRAFT)
+        status_value = attrs.get("status", current_status)
+        city = attrs.get("city", getattr(instance, "city", ""))
+        country = attrs.get("country", getattr(instance, "country", ""))
+        is_publishing = (
+            status_value == Tour.PUBLISHED and current_status != Tour.PUBLISHED
+        )
+        is_location_update = any(
+            field in attrs for field in ("city", "country", "country_code")
+        )
+
+        if status_value == Tour.PUBLISHED and (is_publishing or is_location_update):
+            if not city:
+                raise serializers.ValidationError(
+                    {"city": "City is required before publishing a tour."}
+                )
+
+            if instance is None:
+                raise serializers.ValidationError(
+                    {"steps": "At least one tour stop is required before publishing."}
+                )
+
+            if not instance.steps.exists():
+                raise serializers.ValidationError(
+                    {"steps": "At least one tour stop is required before publishing."}
+                )
+
+            if not GoogleMapsFacade().tour_has_step_in_city(
+                instance, city=city, country=country
+            ):
+                raise serializers.ValidationError(
+                    {
+                        "city": (
+                            "At least one tour stop must be inside the selected city."
+                        )
+                    }
+                )
+
+        return attrs
 
     def create(self, validated_data):
         # Assign current user as creator

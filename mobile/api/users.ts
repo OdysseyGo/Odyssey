@@ -79,6 +79,8 @@ export type FeedTour = {
   difficulty: string;
   duration_minutes: number;
   city?: string;
+  country?: string;
+  country_code?: string;
   cover_image?: string;
   created_at: string;
 };

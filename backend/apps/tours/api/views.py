@@ -16,7 +16,7 @@ from .serializers import ReviewSerializer, TourSerializer, TourStepSerializer
 
 
 @api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.AllowAny])
 def google_maps_api_key(request):
     return Response({"key": os.getenv("GOOGLE_MAPS_API_KEY", "")})
 
@@ -36,7 +36,7 @@ class TourViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter,
     ]
     filterset_class = TourFilter
-    search_fields = ["title", "description", "category", "city"]
+    search_fields = ["title", "description", "category", "city", "country"]
     ordering_fields = [
         "created_at",
         "average_rating",

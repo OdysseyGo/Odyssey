@@ -14,10 +14,20 @@ class TourFilter(filters.FilterSet):
     )
     difficulty = filters.ChoiceFilter(choices=Tour.DIFFICULTY_CHOICES)
     city = filters.CharFilter(lookup_expr="icontains")
+    country = filters.CharFilter(lookup_expr="icontains")
+    country_code = filters.CharFilter(lookup_expr="iexact")
     min_accessibility = filters.NumberFilter(
         field_name="accessibility_rating", lookup_expr="gte"
     )
 
     class Meta:
         model = Tour
-        fields = ["city", "difficulty", "tour_type", "is_premium", "status"]
+        fields = [
+            "city",
+            "country",
+            "country_code",
+            "difficulty",
+            "tour_type",
+            "is_premium",
+            "status",
+        ]
