@@ -5,16 +5,78 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { getUserFollowings, unfollowUser, User } from '@/api/users';
+import { getUserFollowings, getMe, followUser, unfollowUser, User } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { styles, rowStyles } from './FollowListStyles';
 import { FollowingUserRowProps } from './FollowingScreen.config';
 
-function UserRow({ item, theme, onUnfollow, unfollowing }: FollowingUserRowProps) {
+function UserRow({
+  item,
+  theme,
+  isOwnProfile,
+  isFollowingItem,
+  currentUserId,
+  onUnfollow,
+  unfollowing,
+  onFollow,
+  actionLoadingId,
+}: FollowingUserRowProps) {
   const { t } = useTranslation();
   const [avatarError, setAvatarError] = useState(false);
+
+  const isSelf = item.id === currentUserId;
+  const actionLoading = actionLoadingId === item.id || unfollowing;
+
+  const renderAction = () => {
+    if (isSelf) return null;
+
+    if (isOwnProfile) {
+      return (
+        <TouchableOpacity
+          style={[rowStyles.actionButton, { borderColor: theme.primary }]}
+          onPress={() => onUnfollow(item.id)}
+          disabled={unfollowing}
+        >
+          {unfollowing ? (
+            <ActivityIndicator size="small" color={theme.primary} />
+          ) : (
+            <Text style={[rowStyles.actionButtonText, { color: theme.primary }]}>
+              {t('profile.unfollow', 'Unfollow')}
+            </Text>
+          )}
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <TouchableOpacity
+        style={[
+          rowStyles.actionButton,
+          isFollowingItem
+            ? { borderColor: theme.borderLight }
+            : { borderColor: theme.primary },
+        ]}
+        onPress={() => isFollowingItem ? onUnfollow(item.id) : onFollow(item.id)}
+        disabled={actionLoading}
+      >
+        {actionLoading ? (
+          <ActivityIndicator size="small" color={isFollowingItem ? theme.subText : theme.primary} />
+        ) : (
+          <Text
+            style={[
+              rowStyles.actionButtonText,
+              { color: isFollowingItem ? theme.subText : theme.primary },
+            ]}
+          >
+            {isFollowingItem ? t('profile.unfollow', 'Unfollow') : t('profile.userProfileFollow', 'Follow')}
+          </Text>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={[rowStyles.row, { borderBottomColor: theme.borderLight }]}>
       <TouchableOpacity
@@ -31,7 +93,7 @@ function UserRow({ item, theme, onUnfollow, unfollowing }: FollowingUserRowProps
             onError={() => setAvatarError(true)}
           />
         ) : (
-          <View style={[rowStyles.avatarPlaceholder, { backgroundColor: theme.white }]}>
+          <View style={[rowStyles.avatarPlaceholder, { backgroundColor: theme.foreground }]}>
             <Ionicons name="person" size={22} color={theme.subText} />
           </View>
         )}
@@ -44,19 +106,7 @@ function UserRow({ item, theme, onUnfollow, unfollowing }: FollowingUserRowProps
           )}
         </View>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={[rowStyles.actionButton, { borderColor: theme.primary }]}
-        onPress={() => onUnfollow(item.id)}
-        disabled={unfollowing}
-      >
-        {unfollowing ? (
-          <ActivityIndicator size="small" color={theme.primary} />
-        ) : (
-          <Text style={[rowStyles.actionButtonText, { color: theme.primary }]}>
-            {t('profile.unfollow', 'Unfollow')}
-          </Text>
-        )}
-      </TouchableOpacity>
+      {renderAction()}
     </View>
   );
 }
@@ -72,26 +122,80 @@ export default function FollowingScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [unfollowingId, setUnfollowingId] = useState<number | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [myFollowings, setMyFollowings] = useState<Set<number>>(new Set());
+  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!userId) return;
-    setLoading(true);
-    setError(false);
-    getUserFollowings(userId)
-      .then(setUsers)
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+    loadAll();
   }, [userId]);
 
-  const handleUnfollow = async (targetId: number) => {
-    setUnfollowingId(targetId);
+  const loadAll = async () => {
+    setLoading(true);
+    setError(false);
     try {
-      await unfollowUser({ following: targetId });
-      setUsers((prev) => prev.filter((u) => u.id !== targetId));
+      const me = await getMe();
+      setCurrentUserId(me.id);
+      const own = me.id === parseInt(userId!);
+      setIsOwnProfile(own);
+
+      // If own profile, the listed users ARE the followings — reuse them for myFollowings.
+      // If another profile, fetch both in parallel.
+      if (own) {
+        const following = await getUserFollowings(userId!);
+        setUsers(following);
+        setMyFollowings(new Set(following.map((u) => u.id)));
+      } else {
+        const [following, myFollowing] = await Promise.all([
+          getUserFollowings(userId!),
+          getUserFollowings(me.id.toString()),
+        ]);
+        setUsers(following);
+        setMyFollowings(new Set(myFollowing.map((u) => u.id)));
+      }
     } catch {
-      // silently ignore — user stays in list if request fails
+      setError(true);
     } finally {
-      setUnfollowingId(null);
+      setLoading(false);
+    }
+  };
+
+  const handleUnfollow = async (targetId: number) => {
+    if (isOwnProfile) {
+      setUnfollowingId(targetId);
+      setMyFollowings((prev) => { const s = new Set(prev); s.delete(targetId); return s; });
+      try {
+        await unfollowUser({ following: targetId });
+        setUsers((prev) => prev.filter((u) => u.id !== targetId));
+      } catch {
+        setMyFollowings((prev) => new Set([...prev, targetId]));
+      } finally {
+        setUnfollowingId(null);
+      }
+    } else {
+      setActionLoadingId(targetId);
+      setMyFollowings((prev) => { const s = new Set(prev); s.delete(targetId); return s; });
+      try {
+        await unfollowUser({ following: targetId });
+      } catch {
+        setMyFollowings((prev) => new Set([...prev, targetId]));
+      } finally {
+        setActionLoadingId(null);
+      }
+    }
+  };
+
+  const handleFollow = async (targetId: number) => {
+    setActionLoadingId(targetId);
+    setMyFollowings((prev) => new Set([...prev, targetId]));
+    try {
+      await followUser({ following: targetId });
+    } catch {
+      setMyFollowings((prev) => { const s = new Set(prev); s.delete(targetId); return s; });
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
@@ -126,8 +230,13 @@ export default function FollowingScreen() {
             <UserRow
               item={item}
               theme={colors}
+              isOwnProfile={isOwnProfile}
+              isFollowingItem={myFollowings.has(item.id)}
+              currentUserId={currentUserId}
               onUnfollow={handleUnfollow}
               unfollowing={unfollowingId === item.id}
+              onFollow={handleFollow}
+              actionLoadingId={actionLoadingId}
             />
           )}
           contentContainerStyle={

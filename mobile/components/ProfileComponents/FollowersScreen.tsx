@@ -5,16 +5,79 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { getUserFollowers, removeFollower, User } from '@/api/users';
+import { getUserFollowers, getMe, getUserFollowings, followUser, unfollowUser, removeFollower, User } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { styles, rowStyles } from './FollowListStyles';
 import { FollowersUserRowProps } from './FollowersScreen.config';
 
-function UserRow({ item, theme, onRemove, removing }: FollowersUserRowProps) {
+function UserRow({
+  item,
+  theme,
+  isOwnProfile,
+  isFollowingItem,
+  currentUserId,
+  onRemove,
+  removing,
+  onFollow,
+  onUnfollow,
+  actionLoadingId,
+}: FollowersUserRowProps) {
   const { t } = useTranslation();
   const [avatarError, setAvatarError] = useState(false);
+
+  const isSelf = item.id === currentUserId;
+  const actionLoading = actionLoadingId === item.id || removing;
+
+  const renderAction = () => {
+    if (isSelf) return null;
+
+    if (isOwnProfile) {
+      return (
+        <TouchableOpacity
+          style={[rowStyles.actionButton, { borderColor: theme.error }]}
+          onPress={() => onRemove(item.id)}
+          disabled={removing}
+        >
+          {removing ? (
+            <ActivityIndicator size="small" color={theme.error} />
+          ) : (
+            <Text style={[rowStyles.actionButtonText, { color: theme.error }]}>
+              {t('profile.removeFollower', 'Remove')}
+            </Text>
+          )}
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <TouchableOpacity
+        style={[
+          rowStyles.actionButton,
+          isFollowingItem
+            ? { borderColor: theme.borderLight }
+            : { borderColor: theme.primary },
+        ]}
+        onPress={() => isFollowingItem ? onUnfollow(item.id) : onFollow(item.id)}
+        disabled={actionLoading}
+      >
+        {actionLoading ? (
+          <ActivityIndicator size="small" color={isFollowingItem ? theme.subText : theme.primary} />
+        ) : (
+          <Text
+            style={[
+              rowStyles.actionButtonText,
+              { color: isFollowingItem ? theme.subText : theme.primary },
+            ]}
+          >
+            {isFollowingItem ? t('profile.unfollow', 'Unfollow') : t('profile.userProfileFollow', 'Follow')}
+          </Text>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={[rowStyles.row, { borderBottomColor: theme.borderLight }]}>
       <TouchableOpacity
@@ -31,7 +94,7 @@ function UserRow({ item, theme, onRemove, removing }: FollowersUserRowProps) {
             onError={() => setAvatarError(true)}
           />
         ) : (
-          <View style={[rowStyles.avatarPlaceholder, { backgroundColor: theme.white }]}>
+          <View style={[rowStyles.avatarPlaceholder, { backgroundColor: theme.foreground }]}>
             <Ionicons name="person" size={22} color={theme.subText} />
           </View>
         )}
@@ -44,19 +107,7 @@ function UserRow({ item, theme, onRemove, removing }: FollowersUserRowProps) {
           )}
         </View>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={[rowStyles.actionButton, { borderColor: theme.error }]}
-        onPress={() => onRemove(item.id)}
-        disabled={removing}
-      >
-        {removing ? (
-          <ActivityIndicator size="small" color={theme.error} />
-        ) : (
-          <Text style={[rowStyles.actionButtonText, { color: theme.error }]}>
-            {t('profile.removeFollower', 'Remove')}
-          </Text>
-        )}
-      </TouchableOpacity>
+      {renderAction()}
     </View>
   );
 }
@@ -72,16 +123,37 @@ export default function FollowersScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [removingId, setRemovingId] = useState<number | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [myFollowings, setMyFollowings] = useState<Set<number>>(new Set());
+  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!userId) return;
+    loadAll();
+  }, [userId]);
+
+  const loadAll = async () => {
     setLoading(true);
     setError(false);
-    getUserFollowers(userId)
-      .then(setUsers)
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, [userId]);
+    try {
+      const me = await getMe();
+      setCurrentUserId(me.id);
+      const own = me.id === parseInt(userId!);
+      setIsOwnProfile(own);
+
+      const [followers, followings] = await Promise.all([
+        getUserFollowers(userId!),
+        getUserFollowings(me.id.toString()),
+      ]);
+      setUsers(followers);
+      setMyFollowings(new Set(followings.map((u) => u.id)));
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRemove = async (followerId: number) => {
     setRemovingId(followerId);
@@ -89,9 +161,33 @@ export default function FollowersScreen() {
       await removeFollower(followerId);
       setUsers((prev) => prev.filter((u) => u.id !== followerId));
     } catch {
-      // silently ignore — user stays in list if request fails
+      // silently ignore
     } finally {
       setRemovingId(null);
+    }
+  };
+
+  const handleFollow = async (targetId: number) => {
+    setActionLoadingId(targetId);
+    setMyFollowings((prev) => new Set([...prev, targetId]));
+    try {
+      await followUser({ following: targetId });
+    } catch {
+      setMyFollowings((prev) => { const s = new Set(prev); s.delete(targetId); return s; });
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleUnfollow = async (targetId: number) => {
+    setActionLoadingId(targetId);
+    setMyFollowings((prev) => { const s = new Set(prev); s.delete(targetId); return s; });
+    try {
+      await unfollowUser({ following: targetId });
+    } catch {
+      setMyFollowings((prev) => new Set([...prev, targetId]));
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
@@ -126,8 +222,14 @@ export default function FollowersScreen() {
             <UserRow
               item={item}
               theme={colors}
+              isOwnProfile={isOwnProfile}
+              isFollowingItem={myFollowings.has(item.id)}
+              currentUserId={currentUserId}
               onRemove={handleRemove}
               removing={removingId === item.id}
+              onFollow={handleFollow}
+              onUnfollow={handleUnfollow}
+              actionLoadingId={actionLoadingId}
             />
           )}
           contentContainerStyle={

@@ -57,7 +57,7 @@ export default function ProfileHeaderComp({
           transform: [{ scale: avatarScale as any }, { translateY: avatarTranslateY as any }],
         }}
       >
-        <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.7}>
+        <TouchableOpacity onPress={onAvatarPress} activeOpacity={onAvatarPress ? 0.7 : 1}>
           <View style={styles.avatarRing}>
             <View style={styles.avatarCircle}>
               {avatarUrl ? (
@@ -67,9 +67,11 @@ export default function ProfileHeaderComp({
               )}
             </View>
           </View>
-          <View style={styles.editBadge}>
-            <Ionicons name="camera" size={14} color={color.primary} />
-          </View>
+          {onAvatarPress && (
+            <View style={styles.editBadge}>
+              <Ionicons name="camera" size={14} color={color.primary} />
+            </View>
+          )}
         </TouchableOpacity>
       </Animated.View>
 

@@ -51,6 +51,10 @@ class TourViewSet(viewsets.ModelViewSet):
         if status:
             queryset = queryset.filter(status=status)
 
+        creator = self.request.query_params.get("creator")
+        if creator:
+            queryset = queryset.filter(creator_id=creator)
+
         # If not creator/staff, only show published tours
         if self.action == "list" and not self.request.user.is_staff:
             queryset = queryset.filter(status=Tour.PUBLISHED)

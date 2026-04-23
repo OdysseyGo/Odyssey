@@ -4,25 +4,37 @@ import { Spacing } from '@/constants/Spacing';
 
 export const userProfileStyles = (theme: ThemeName) => {
   const color = Colors[theme];
+  const isLight = theme === 'light';
 
   return StyleSheet.create({
     root: {
       flex: 1,
       backgroundColor: color.background,
     },
-    header: {
-      flexDirection: 'row',
+
+    // ── Sticky bar ────────────────────────────────────────────────────
+    stickyBar: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 10,
       alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: Spacing.md,
-      paddingBottom: Spacing.sm,
+      justifyContent: 'flex-end',
+      paddingBottom: 10,
     },
-    headerTitle: {
-      fontSize: 18,
-      fontWeight: '600',
+    stickyBarText: {
+      fontSize: 17,
+      fontWeight: '700',
       color: color.white,
-      textAlign: 'center',
-      flex: 1,
+      letterSpacing: -0.3,
+    },
+
+    // ── Back button (always visible overlay) ──────────────────────────
+    backButtonOverlay: {
+      position: 'absolute',
+      left: Spacing.md,
+      zIndex: 20,
     },
     backButton: {
       width: 40,
@@ -30,92 +42,103 @@ export const userProfileStyles = (theme: ThemeName) => {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    centered: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: Spacing.md,
-      padding: Spacing.xl,
-    },
-    errorText: {
-      fontSize: 15,
-      textAlign: 'center',
-      color: color.subText,
-    },
-    content: {
-      paddingTop: Spacing.xl,
-      gap: Spacing.lg,
-    },
-    avatarSection: {
-      alignItems: 'center',
-      gap: Spacing.sm,
-      paddingHorizontal: Spacing.xl,
-    },
-    avatar: {
-      width: 96,
-      height: 96,
-      borderRadius: 48,
-    },
-    avatarImage: {
-      overflow: 'hidden',
-    },
-    avatarPlaceholder: {
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    avatarInitial: {
-      fontSize: 36,
-      fontWeight: '800',
-      color: '#fff',
-    },
-    fullName: {
-      fontSize: 20,
-      fontWeight: '700',
-      marginTop: Spacing.xs,
-      color: color.text,
-    },
-    country: {
-      fontSize: 13,
-      color: color.subText,
-    },
+
+    // ── Follow button ─────────────────────────────────────────────────
     followButton: {
-      marginTop: Spacing.sm,
-      paddingHorizontal: Spacing.xl,
-      paddingVertical: 11,
-      borderRadius: 999,
-      minWidth: 130,
+      flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
+      gap: Spacing.xs + 2,
+      marginTop: Spacing.lg,
+      marginHorizontal: Spacing.xl,
+      paddingVertical: Spacing.md + 2,
+      borderRadius: Spacing.borderRadiusFull,
+    },
+    followButtonFollow: {
+      backgroundColor: color.primary,
+    },
+    followButtonUnfollow: {
+      backgroundColor: color.foreground,
+      borderWidth: 1.5,
+      borderColor: color.borderLight,
     },
     followButtonText: {
       fontSize: 15,
       fontWeight: '700',
     },
-    statsRow: {
-      flexDirection: 'row',
+
+    // ── Section ───────────────────────────────────────────────────────
+    section: {
+      marginTop: Spacing.xl,
       marginHorizontal: Spacing.lg,
-      borderRadius: 18,
-      paddingVertical: Spacing.md,
-      backgroundColor: color.foreground,
     },
-    statItem: {
-      flex: 1,
+    sectionHeader: {
+      flexDirection: 'row',
       alignItems: 'center',
-      gap: 2,
-      paddingVertical: Spacing.sm,
+      gap: Spacing.sm + 2,
+      marginBottom: Spacing.md,
     },
-    statValue: {
-      fontSize: 18,
+    accentBar: {
+      width: 3.5,
+      height: 20,
+      borderRadius: 2,
+      backgroundColor: color.secondary,
+    },
+    sectionTitle: {
+      fontSize: 19,
+      fontWeight: '700',
+      color: color.text,
+      letterSpacing: -0.3,
+    },
+    sectionLoader: {
+      paddingVertical: Spacing.xl,
+    },
+    emptyText: {
+      fontSize: 14,
+      color: color.subText,
+      textAlign: 'center',
+      paddingVertical: Spacing.xl,
+    },
+    toursList: {
+      gap: Spacing.sm,
+    },
+
+    // ── Error state ───────────────────────────────────────────────────
+    errorRoot: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: Spacing.xl,
+    },
+    errorCard: {
+      alignItems: 'center',
+      padding: Spacing.xxl,
+      borderRadius: 26,
+      gap: Spacing.md,
+      maxWidth: 320,
+      width: '100%',
+      backgroundColor: isLight ? color.cardSurface : color.foreground,
+    },
+    errorIconWrap: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: Spacing.xs,
+    },
+    errorTitle: {
+      fontSize: 20,
       fontWeight: '800',
+      letterSpacing: -0.3,
+      textAlign: 'center',
       color: color.text,
     },
-    statLabel: {
-      fontSize: 11,
-      fontWeight: '500',
+    errorSubtitle: {
+      fontSize: 14,
+      textAlign: 'center',
+      lineHeight: 21,
       color: color.subText,
-    },
-    statDivider: {
-      borderRightWidth: StyleSheet.hairlineWidth,
-      borderRightColor: color.borderLight,
     },
   });
 };

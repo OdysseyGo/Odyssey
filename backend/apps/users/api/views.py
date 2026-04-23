@@ -6,7 +6,11 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken  # login token
 
+from django.db.models import Avg
+
 from apps.gamification.models import TourProgress
+from apps.tours.models import Tour
+from apps.tours.api.serializers import TourSerializer
 from apps.users.models import Follow, User
 
 from .serializers import FollowingFeedSerializer, FollowSerializer, UserSerializer
@@ -153,6 +157,17 @@ class UserViewSet(ModelViewSet):
         user.save()
 
         return Response({"detail": "Password updated successfully"}, status=200)
+
+    @action(detail=True, methods=["get"], url_path="published-tours", permission_classes=[])
+    def published_tours(self, request, pk=None):
+        """Return published tours created by a specific user."""
+        tours = (
+            Tour.objects.filter(creator_id=pk, status=Tour.PUBLISHED)
+            .annotate(average_rating=Avg("reviews__rating"))
+            .order_by("-created_at")
+        )
+        serializer = TourSerializer(tours, many=True, context={"request": request})
+        return Response(serializer.data)
 
     @action(detail=True, methods=["delete"], url_path="remove-follower")
     def remove_follower(self, request, pk=None):
