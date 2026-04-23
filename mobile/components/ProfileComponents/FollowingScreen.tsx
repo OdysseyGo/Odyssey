@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { getUserFollowings, unfollowUser, User } from '@/api/users';
-import { setProfileNeedsRefresh } from '@/utils/profileRefreshFlag';
+import { setProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';

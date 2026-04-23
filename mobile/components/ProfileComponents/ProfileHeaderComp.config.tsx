@@ -5,6 +5,8 @@ export type ProfileHeaderProps = {
   subtitle?: string;
   avatarUrl?: string;
   onAvatarPress?: () => void;
+  onSettingsPress?: () => void;
+  settingsAccessibilityLabel?: string;
   scrollY?: Animated.Value;
 };
 
