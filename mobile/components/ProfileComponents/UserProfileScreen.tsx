@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, View, Text, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 
 import {
   getUserById,
@@ -105,10 +106,6 @@ function SkeletonLoading({ theme }: { theme: (typeof Colors)['light'] }) {
 }
 
 // ─────────────────────────────────────────────────────────
-// Cache + main component
-// ─────────────────────────────────────────────────────────
-import BackButton from '@/components/common/BackButton';
-
 const profileCache = new Map<string, { user: User; isFollowing: boolean; currentUserId: number }>();
 
 export default function UserProfileScreen() {
@@ -124,11 +121,12 @@ export default function UserProfileScreen() {
   const cached = userId ? profileCache.get(userId) : undefined;
 
   const [user, setUser] = useState<User | null>(cached?.user ?? null);
-  const [loading, setLoading] = useState(!cached);
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(cached?.isFollowing ?? false);
+  const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<number | null>(cached?.currentUserId ?? null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [isGuest, setIsGuest] = useState(true);
   const [tours, setTours] = useState<Tour[]>([]);
   const [toursLoading, setToursLoading] = useState(false);
 
@@ -138,22 +136,52 @@ export default function UserProfileScreen() {
     extrapolate: 'clamp',
   });
 
-  useEffect(() => {
+  const loadTours = useCallback(async () => {
     if (!userId) return;
-    loadProfile();
+
+    setToursLoading(true);
+    try {
+      const results = await getUserPublishedTours(userId);
+      setTours(results);
+    } catch {
+      setTours([]);
+    } finally {
+      setToursLoading(false);
+    }
   }, [userId]);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
+    if (!userId) return;
+
+    setLoading(true);
     setLoadError(false);
+    setCurrentUserId(null);
+    setIsFollowing(false);
+    setIsGuest(true);
+
     try {
-      const me = await getMe();
-      setCurrentUserId(me.id);
-      const [targetUser, followings] = await Promise.all([
-        getUserById(userId!),
-        getUserFollowings(me.id.toString()),
-      ]);
-      const following = followings.some((f) => f.id === parseInt(userId!));
-      profileCache.set(userId!, { user: targetUser, isFollowing: following, currentUserId: me.id });
+      let meId: number | null = null;
+      try {
+        const me = await getMe();
+        meId = me.id;
+        setCurrentUserId(me.id);
+        setIsGuest(false);
+      } catch {
+        setIsGuest(true);
+      }
+
+      const fetchFollowings =
+        meId !== null ? getUserFollowings(meId.toString()) : Promise.resolve([]);
+      const [targetUser, followings] = await Promise.all([getUserById(userId), fetchFollowings]);
+
+      const following = meId !== null && followings.some((f) => f.id === parseInt(userId, 10));
+      if (meId !== null) {
+        profileCache.set(userId, {
+          user: targetUser,
+          isFollowing: following,
+          currentUserId: meId,
+        });
+      }
       setUser(targetUser);
       setIsFollowing(following);
       loadTours();
@@ -162,19 +190,13 @@ export default function UserProfileScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadTours, userId]);
 
-  const loadTours = async () => {
-    setToursLoading(true);
-    try {
-      const results = await getUserPublishedTours(userId!);
-      setTours(results);
-    } catch {
-      setTours([]);
-    } finally {
-      setToursLoading(false);
-    }
-  };
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+    }, [loadProfile])
+  );
 
   const handleFollowToggle = async () => {
     if (!user || followLoading) return;
@@ -316,37 +338,59 @@ export default function UserProfileScreen() {
           }
         />
 
-        {/* Follow / Unfollow */}
-        {!isSelf && (
-          <TouchableOpacity
-            onPress={handleFollowToggle}
-            disabled={followLoading}
-            style={[
-              styles.followButton,
-              isFollowing ? styles.followButtonUnfollow : styles.followButtonFollow,
-            ]}
-          >
-            {followLoading ? (
-              <ActivityIndicator size="small" color={isFollowing ? color.subText : color.white} />
-            ) : (
-              <>
-                <Ionicons
-                  name={isFollowing ? 'person-remove-outline' : 'person-add-outline'}
-                  size={16}
-                  color={isFollowing ? color.subText : color.white}
-                />
-                <Text
-                  style={[
-                    styles.followButtonText,
-                    { color: isFollowing ? color.subText : color.white },
-                  ]}
-                >
-                  {isFollowing ? t('profile.userProfileUnfollow') : t('profile.userProfileFollow')}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        )}
+        {/* Follow / Unfollow / Login to Follow */}
+        {!isSelf &&
+          (isGuest ? (
+            <TouchableOpacity
+              onPress={() =>
+                Alert.alert(
+                  t('profile.loginToFollowTitle', 'Login Required'),
+                  t('profile.loginToFollowMessage', 'You need to log in to follow this user.'),
+                  [
+                    { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                    { text: t('auth.login', 'Log In'), onPress: () => router.push('/login') },
+                  ]
+                )
+              }
+              style={[styles.followButton, styles.followButtonFollow]}
+            >
+              <Ionicons name="log-in-outline" size={16} color={color.white} />
+              <Text style={[styles.followButtonText, { color: color.white }]}>
+                {t('profile.loginToFollow', 'Log in to follow')}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={handleFollowToggle}
+              disabled={followLoading}
+              style={[
+                styles.followButton,
+                isFollowing ? styles.followButtonUnfollow : styles.followButtonFollow,
+              ]}
+            >
+              {followLoading ? (
+                <ActivityIndicator size="small" color={isFollowing ? color.subText : color.white} />
+              ) : (
+                <>
+                  <Ionicons
+                    name={isFollowing ? 'person-remove-outline' : 'person-add-outline'}
+                    size={16}
+                    color={isFollowing ? color.subText : color.white}
+                  />
+                  <Text
+                    style={[
+                      styles.followButtonText,
+                      { color: isFollowing ? color.subText : color.white },
+                    ]}
+                  >
+                    {isFollowing
+                      ? t('profile.userProfileUnfollow')
+                      : t('profile.userProfileFollow')}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          ))}
 
         {/* Published tours */}
         <View style={styles.section}>

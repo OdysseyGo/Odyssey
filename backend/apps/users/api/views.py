@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate  # login direkt
 from django.db.models import Avg, F, QuerySet  # F dbden çıkarmadan yazıyon
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken  # login token
@@ -72,7 +73,12 @@ class UserViewSet(ModelViewSet):
         except Exception:
             return Response({"detail": "Invalid refresh token"}, status=400)
 
-    @action(detail=False, methods=["get"], url_path="me")
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="me",
+        permission_classes=[IsAuthenticated],
+    )
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
@@ -215,6 +221,7 @@ class UserViewSet(ModelViewSet):
 
 class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = FollowSerializer
+    permission_classes = [IsAuthenticated]
 
     lookup_field = "following"
 
