@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime, timedelta, timezone
 import jwt
-import requests
+import httpx
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -82,12 +82,13 @@ class APNsService:
             
             url = f"{self.base_url}/3/device/{device_token}"
             
-            response = requests.post(
-                url,
-                json=payload,
-                headers=headers,
-                timeout=10
-            )
+            with httpx.Client(http2=True) as client:
+                response = client.post(
+                    url,
+                    json=payload,
+                    headers=headers,
+                    timeout=10
+                )
             
             if response.status_code == 200:
                 logger.info(f"Notification sent successfully to {device_token}")
