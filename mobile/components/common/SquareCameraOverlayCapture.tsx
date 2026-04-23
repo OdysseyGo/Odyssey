@@ -56,6 +56,7 @@ export default function SquareCameraOverlayCapture({
   const squareSize = Math.min(width * 0.72, height * 0.52);
   const frameTop = (height - squareSize) / 2;
   const frameLeft = (width - squareSize) / 2;
+  const maskBleed = Math.max(width, height);
 
   const handleTakePhoto = async () => {
     if (isCapturing || !cameraRef.current) return;
@@ -122,33 +123,19 @@ export default function SquareCameraOverlayCapture({
           </View>
         )}
 
-        <View style={[styles.mask, { top: 0, left: 0, right: 0, height: frameTop }]} />
-        <View
-          style={[styles.mask, { top: frameTop, left: 0, width: frameLeft, height: squareSize }]}
-        />
         <View
           style={[
-            styles.mask,
+            styles.spotlightMask,
             {
-              top: frameTop,
-              left: frameLeft + squareSize,
-              right: 0,
-              height: squareSize,
+              width: squareSize + maskBleed * 2,
+              height: squareSize + maskBleed * 2,
+              top: frameTop - maskBleed,
+              left: frameLeft - maskBleed,
+              borderWidth: maskBleed,
+              borderRadius: maskBleed + Spacing.borderRadius,
             },
           ]}
         />
-        <View
-          style={[
-            styles.mask,
-            {
-              top: frameTop + squareSize,
-              left: 0,
-              right: 0,
-              bottom: 0,
-            },
-          ]}
-        />
-
         <View
           style={[
             styles.squareFrame,
@@ -201,15 +188,15 @@ function getStyles(theme: 'light' | 'dark') {
       flex: 1,
       backgroundColor: '#000',
     },
-    mask: {
-      position: 'absolute',
-      backgroundColor: 'rgba(0, 0, 0, 0.56)',
-    },
     squareFrame: {
       position: 'absolute',
       borderWidth: 2,
       borderColor: color.white,
       borderRadius: Spacing.borderRadius,
+    },
+    spotlightMask: {
+      position: 'absolute',
+      borderColor: 'rgba(0, 0, 0, 0.56)',
     },
     topBar: {
       position: 'absolute',
