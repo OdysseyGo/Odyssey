@@ -26,6 +26,7 @@ export const createEmptyPuzzle = (): Puzzle => ({
 
 export interface TourLocation {
   id: string;
+  backendStepId?: number;
   latitude: number;
   longitude: number;
   title: string;

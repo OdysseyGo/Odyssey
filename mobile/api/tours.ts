@@ -322,6 +322,35 @@ export async function getMyCompletedTours(
   });
 }
 
+function prepareTourStepPayload(stepData: Partial<TourStep>): Partial<TourStep> | FormData {
+  const isNewFileUpload =
+    typeof stepData.image === 'string' && stepData.image.startsWith('file://');
+
+  if (isNewFileUpload) {
+    const formData = new FormData();
+    Object.keys(stepData).forEach((key) => {
+      const k = key as keyof TourStep;
+      const value = stepData[k];
+      if (value === undefined || value === null) return;
+      if (k === 'image') {
+        formData.append('image', {
+          uri: value as string,
+          name: 'step_image.jpg',
+          type: 'image/jpeg',
+        } as any);
+      } else {
+        formData.append(k, String(value));
+      }
+    });
+    return formData;
+  }
+
+  // Strip `image` when it is empty/null OR a remote URL: Django's ImageField rejects
+  // empty strings and re-posting an existing URL is a no-op at best, an error at worst.
+  const { image, ...rest } = stepData;
+  return rest;
+}
+
 /**
  * Add a step to a tour (requires authentication)
  */
@@ -330,36 +359,44 @@ export async function createTourStep(
   stepData: Partial<TourStep>,
   signal?: AbortSignal
 ): Promise<TourStep> {
-  let data: Partial<TourStep> | FormData = stepData;
-
-  if (stepData.image && stepData.image.startsWith('file://')) {
-    const formData = new FormData();
-    Object.keys(stepData).forEach((key) => {
-      const k = key as keyof TourStep;
-      if (stepData[k] !== undefined && stepData[k] !== null) {
-        if (k === 'image') {
-          formData.append('image', {
-            uri: stepData.image,
-            name: 'step_image.jpg',
-            type: 'image/jpeg',
-          } as any);
-        } else {
-          formData.append(k, String(stepData[k]));
-        }
-      }
-    });
-    data = formData;
-  } else if (!stepData.image) {
-    // If image is empty string or undefined/null, ensure we don't send it to avoid backend validation error (400)
-    // because Django ImageField doesn't like empty strings.
-    const { image, ...rest } = stepData;
-    data = rest;
-  }
-
-  return apiRequest<TourStep, typeof data>({
+  return apiRequest<TourStep, Partial<TourStep> | FormData>({
     method: 'POST',
     url: `/api/tours/${tourId}/steps/`,
-    data,
+    data: prepareTourStepPayload(stepData),
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Update a step in a tour (requires authentication)
+ */
+export async function updateTourStep(
+  tourId: number,
+  stepId: number,
+  stepData: Partial<TourStep>,
+  signal?: AbortSignal
+): Promise<TourStep> {
+  return apiRequest<TourStep, Partial<TourStep> | FormData>({
+    method: 'PATCH',
+    url: `/api/tours/${tourId}/steps/${stepId}/`,
+    data: prepareTourStepPayload(stepData),
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Delete a step from a tour (requires authentication)
+ */
+export async function deleteTourStep(
+  tourId: number,
+  stepId: number,
+  signal?: AbortSignal
+): Promise<void> {
+  return apiRequest<void>({
+    method: 'DELETE',
+    url: `/api/tours/${tourId}/steps/${stepId}/`,
     auth: true,
     signal,
   });

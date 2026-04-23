@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from apps.gamification.models import TourProgress
 from apps.tours.models import Review, Tour, TourStep
 
-from ..permissions import IsCreatorOrReadOnly
+from ..permissions import IsCreatorOrReadOnly, IsTourCreatorOrReadOnly
 from .filters import TourFilter
 from .pagination import TourPagination
 from .serializers import ReviewSerializer, TourSerializer, TourStepSerializer
@@ -122,7 +122,9 @@ class TourViewSet(viewsets.ModelViewSet):
 
 class TourStepViewSet(viewsets.ModelViewSet):
     serializer_class = TourStepSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    # IsTourCreatorOrReadOnly already handles the auth/anonymous-read case,
+    # so we don't stack IsAuthenticatedOrReadOnly with it.
+    permission_classes = [IsTourCreatorOrReadOnly]
 
     def get_queryset(self):
         return TourStep.objects.filter(tour_id=self.kwargs["tour_pk"]).order_by("order")

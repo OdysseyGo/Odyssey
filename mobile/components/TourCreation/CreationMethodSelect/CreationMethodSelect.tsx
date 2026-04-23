@@ -7,6 +7,7 @@ import { creationMethodStyles } from './CreationMethodSelect.styles';
 import { CreationHeader } from '@/components/TourCreation/common';
 import Colors from '@/constants/Colors';
 import { useTranslation } from 'react-i18next';
+import { useTourCreation } from '@/contexts/TourCreationContext';
 
 type OptionCardProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -47,14 +48,16 @@ function OptionCard({ icon, title, description, onPress, disabled, comingSoon }:
 export default function CreationMethodSelect() {
   const theme = useColorTheme();
   const styles = creationMethodStyles(theme);
-  const color = Colors[theme];
   const { t } = useTranslation();
+  const { resetTourData } = useTourCreation();
 
   const handlePersonalCreate = () => {
+    resetTourData();
     router.push('/tour-details');
   };
 
   const handleAICreate = () => {
+    resetTourData();
     router.push('/ai-tour-creation');
   };
 

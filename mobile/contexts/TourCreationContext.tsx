@@ -7,25 +7,36 @@ import {
 
 interface TourCreationContextType {
   tourData: TourCreationData;
+  setTourData: (tourData: TourCreationData) => void;
   updateTourData: (updates: Partial<TourCreationData>) => void;
   updateLocation: (updatedLocation: TourLocation) => void;
   resetTourData: () => void;
   selectedLocation: TourLocation | null;
   setSelectedLocation: (location: TourLocation | null) => void;
+  editingTourId: number | null;
+  originalStepIds: number[];
+  setEditingContext: (tourId: number | null, stepIds: number[]) => void;
 }
 
 const TourCreationContext = createContext<TourCreationContextType | undefined>(undefined);
 
 export function TourCreationProvider({ children }: { children: ReactNode }) {
-  const [tourData, setTourData] = useState<TourCreationData>(createEmptyTourData());
+  const [tourData, setTourDataState] = useState<TourCreationData>(createEmptyTourData());
   const [selectedLocation, setSelectedLocation] = useState<TourLocation | null>(null);
+  const [editingTourId, setEditingTourId] = useState<number | null>(null);
+  const [originalStepIds, setOriginalStepIds] = useState<number[]>([]);
+
+  const setTourData = useCallback((nextTourData: TourCreationData) => {
+    setTourDataState(nextTourData);
+    setSelectedLocation(null);
+  }, []);
 
   const updateTourData = useCallback((updates: Partial<TourCreationData>) => {
-    setTourData((prev) => ({ ...prev, ...updates }));
+    setTourDataState((prev) => ({ ...prev, ...updates }));
   }, []);
 
   const updateLocation = useCallback((updatedLocation: TourLocation) => {
-    setTourData((prev) => ({
+    setTourDataState((prev) => ({
       ...prev,
       locations: prev.locations.map((loc) =>
         loc.id === updatedLocation.id ? updatedLocation : loc
@@ -33,20 +44,31 @@ export function TourCreationProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const setEditingContext = useCallback((tourId: number | null, stepIds: number[]) => {
+    setEditingTourId(tourId);
+    setOriginalStepIds(stepIds);
+  }, []);
+
   const resetTourData = useCallback(() => {
-    setTourData(createEmptyTourData());
+    setTourDataState(createEmptyTourData());
     setSelectedLocation(null);
+    setEditingTourId(null);
+    setOriginalStepIds([]);
   }, []);
 
   return (
     <TourCreationContext.Provider
       value={{
         tourData,
+        setTourData,
         updateTourData,
         updateLocation,
         resetTourData,
         selectedLocation,
         setSelectedLocation,
+        editingTourId,
+        originalStepIds,
+        setEditingContext,
       }}
     >
       {children}
