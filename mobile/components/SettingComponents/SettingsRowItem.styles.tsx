@@ -37,6 +37,9 @@ export const rowItemStyle = (theme: ThemeName) => {
     icon: {
       color: color.tabIconDefault,
     },
+    iconDestructive: {
+      color: color.error,
+    },
 
     textContainer: {
       flex: 1,
@@ -46,15 +49,25 @@ export const rowItemStyle = (theme: ThemeName) => {
       fontSize: 15,
       color: color.text,
     },
+    labelDestructive: {
+      color: color.error,
+    },
 
     description: {
       marginTop: 2,
       fontSize: 12,
       color: color.subText,
     },
+    descriptionDestructive: {
+      color: color.error,
+      opacity: 0.85,
+    },
 
     chevron: {
       color: color.text,
+    },
+    chevronDestructive: {
+      color: color.error,
     },
 
     rightContent: {

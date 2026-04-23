@@ -24,7 +24,9 @@ export default function LocationsListReview({ locations }: LocationsListReviewPr
         <View key={location.id} style={styles.locationCard}>
           <View style={styles.locationHeader}>
             <Text style={styles.locationOrder}>{location.order}.</Text>
-            <Text style={styles.locationTitle}>{location.title}</Text>
+            <Text style={styles.locationTitle} numberOfLines={2} ellipsizeMode="tail">
+              {location.title}
+            </Text>
           </View>
           <Text style={styles.locationStory} numberOfLines={3}>
             {location.story}

@@ -34,6 +34,20 @@ export const profileToursContainerStyles = (theme: ThemeName) => {
       color: color.text,
       letterSpacing: -0.3,
     },
+    completedToursButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      paddingVertical: Spacing.xs,
+      paddingHorizontal: Spacing.sm,
+      borderRadius: Spacing.borderRadiusFull,
+      backgroundColor: isLight ? color.primaryMuted : color.foreground,
+    },
+    completedToursButtonText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: color.primary,
+    },
 
     // Segmented control
     tabsContainer: {

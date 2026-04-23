@@ -14,5 +14,6 @@ export interface SettingsItemConfig {
   onPressKey?: string;
   imageUri?: string;
   showChevron?: boolean;
+  destructive?: boolean;
   rightContent?: ReactNode;
 }

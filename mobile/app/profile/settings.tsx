@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { User, Bell, Globe, Palette, Check } from 'lucide-react-native';
+import { User, Bell, Globe, Palette, Check, LogOut } from 'lucide-react-native';
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -46,10 +46,16 @@ type EditProfileForm = {
 
 type PopupView = 'settings' | 'edit-profile';
 
-export default function SettingsScreen({ onClose }: { onClose?: () => void }) {
+export default function SettingsScreen({
+  onClose,
+  onLogout,
+}: {
+  onClose?: () => void;
+  onLogout?: () => void;
+}) {
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
-  const { theme, themePreference, setThemePreference } = useTheme();
+  const { themePreference, setThemePreference } = useTheme();
   const colorTheme = useColorTheme();
   const colors = Colors[colorTheme];
   const editProfileSurfaceColor = colors.background;
@@ -88,6 +94,18 @@ export default function SettingsScreen({ onClose }: { onClose?: () => void }) {
           labelKey: 'settings.items.notifications.label',
           description: t('settings.items.notifications.description'),
           descriptionKey: 'settings.items.notifications.description',
+        },
+        {
+          key: 'logout',
+          icon: LogOut,
+          label: t('settings.items.logout.label', { defaultValue: 'Logout' }),
+          labelKey: 'settings.items.logout.label',
+          description: t('settings.items.logout.description', {
+            defaultValue: 'Sign out of your account',
+          }),
+          descriptionKey: 'settings.items.logout.description',
+          showChevron: false,
+          destructive: true,
         },
       ],
     },
@@ -236,6 +254,12 @@ export default function SettingsScreen({ onClose }: { onClose?: () => void }) {
 
     if (item.key === 'appearance') {
       setShowAppearanceModal(true);
+      return;
+    }
+
+    if (item.key === 'logout') {
+      onClose?.();
+      setTimeout(() => onLogout?.(), 0);
     }
   };
 

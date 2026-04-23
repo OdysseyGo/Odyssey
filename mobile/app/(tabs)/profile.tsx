@@ -520,10 +520,6 @@ export default function Profile() {
     //alert('deneme');
   };
 
-  const handleToursPress = () => {
-    router.push('/(tour)/my-completed-tours');
-  };
-
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       {/* ─── Sticky mini-header (fades in on scroll) ─ */}
@@ -558,7 +554,6 @@ export default function Profile() {
           {...profileStats}
           onFollowersPress={handleFollowersPress}
           onFollowingPress={handleFollowingPress}
-          onToursPress={handleToursPress}
         />
 
         {/* ─── Actions ─────────────────────────────── */}
@@ -572,16 +567,6 @@ export default function Profile() {
 
         {/* ─── My Tours ────────────────────────────── */}
         <ProfileToursContainer />
-
-        {/* ─── Logout ──────────────────────────────── */}
-        <TouchableOpacity
-          style={[styles.logoutButton, { borderColor: theme.error }]}
-          onPress={handleLogout}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="log-out-outline" size={18} color={theme.error} />
-          <Text style={[styles.logoutText, { color: theme.error }]}>{t('profile.logout')}</Text>
-        </TouchableOpacity>
       </Animated.ScrollView>
 
       {/* ─── Modals ────────────────────────────────── */}
@@ -609,7 +594,7 @@ export default function Profile() {
         animationType="fade"
         onRequestClose={() => setShowSettings(false)}
       >
-        <SettingsScreen onClose={() => setShowSettings(false)} />
+        <SettingsScreen onClose={() => setShowSettings(false)} onLogout={handleLogout} />
       </Modal>
     </View>
   );
@@ -644,23 +629,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: Spacing.lg + 2,
     gap: Spacing.md,
-  },
-
-  // Logout
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    marginTop: Spacing.xxl,
-    marginHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: Spacing.borderRadiusFull,
-    borderWidth: 1.5,
-  },
-  logoutText: {
-    fontSize: 15,
-    fontWeight: '600',
   },
 });
 
