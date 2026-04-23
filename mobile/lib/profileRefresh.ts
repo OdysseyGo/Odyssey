@@ -1,6 +1,6 @@
 let profileNeedsRefresh = false;
 
-export function markProfileNeedsRefresh() {
+export function setProfileNeedsRefresh() {
   profileNeedsRefresh = true;
 }
 

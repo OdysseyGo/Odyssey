@@ -31,7 +31,6 @@ import { getMyBadges, Badge } from '@/api/profile';
 import { removeAuthToken } from '@/api/auth';
 import { consumeProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
-import { consumeProfileNeedsRefresh } from '@/utils/profileRefreshFlag';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
