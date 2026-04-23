@@ -524,7 +524,14 @@
     "activeTour": {
       "stepOf": "Adım {{current}} / {{total}}",
       "end": "Bitir",
-      "skip": "ATLA"
+      "skip": "ATLA",
+      "route": "Rota",
+      "directions": "Yol Tarifi",
+      "openIn": "Bu durağı burada aç",
+      "appleMaps": "Apple Maps",
+      "googleMaps": "Google Maps",
+      "yandexMaps": "Yandex Maps",
+      "directionsUnavailableMessage": "Yol tarifi şu anda açılamadı. Lütfen tekrar deneyin."
     },
     "nearby": {
       "title_one": "{{count}} yakın tur",

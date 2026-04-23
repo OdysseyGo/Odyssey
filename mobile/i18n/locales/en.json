@@ -524,7 +524,14 @@
     "activeTour": {
       "stepOf": "Step {{current}} of {{total}}",
       "end": "End",
-      "skip": "SKIP"
+      "skip": "SKIP",
+      "route": "Route",
+      "directions": "Directions",
+      "openIn": "Open this stop in",
+      "appleMaps": "Apple Maps",
+      "googleMaps": "Google Maps",
+      "yandexMaps": "Yandex Maps",
+      "directionsUnavailableMessage": "Could not open directions right now. Please try again."
     },
     "nearby": {
       "title_one": "{{count}} tour nearby",
