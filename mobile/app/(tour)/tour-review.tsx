@@ -93,7 +93,27 @@ export default function TourReviewScreen() {
               }
 
               if (loc.puzzle.puzzle_type === 'AR') {
-                await setStepArPuzzle(tour.id, createdStep.id, basePayload);
+                if (!loc.puzzle.arConfig) {
+                  throw new Error('AR puzzles require a selected model, code, and anchor.');
+                }
+
+                await setStepArPuzzle(tour.id, createdStep.id, {
+                  ...basePayload,
+                  scene_asset_url: loc.puzzle.arConfig.sceneAssetUrl,
+                  metadata: {
+                    version: 1,
+                    model_id: loc.puzzle.arConfig.modelId,
+                    anchor_id: loc.puzzle.arConfig.anchorId,
+                    placement_mode: loc.puzzle.arConfig.placementMode,
+                    secret_code: loc.puzzle.arConfig.secretCode,
+                    model_scale_meters: loc.puzzle.arConfig.modelScaleMeters,
+                    anchor_position: {
+                      x: loc.puzzle.arConfig.anchorPosition.x,
+                      y: loc.puzzle.arConfig.anchorPosition.y,
+                      z: loc.puzzle.arConfig.anchorPosition.z,
+                    },
+                  },
+                });
                 continue;
               }
 

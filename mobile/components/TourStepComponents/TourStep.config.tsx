@@ -1,6 +1,6 @@
 import { markerColors } from '@/constants/Colors';
 
-export type PuzzleType = 'multiple-choice' | 'picture-compare';
+export type PuzzleType = 'multiple-choice' | 'picture-compare' | 'ar-code';
 
 export interface MultipleChoiceOption {
   id: string;
@@ -21,7 +21,20 @@ export interface PictureComparePuzzle {
   referenceImageUri?: string;
 }
 
-export type Puzzle = MultipleChoicePuzzle | PictureComparePuzzle;
+export interface ArCodePuzzle {
+  type: 'ar-code';
+  question: string;
+  sceneAssetUrl?: string;
+  secretCode?: string;
+  anchorPosition?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  modelScaleMeters?: number;
+}
+
+export type Puzzle = MultipleChoicePuzzle | PictureComparePuzzle | ArCodePuzzle;
 
 export type TourStepType = 'story' | 'puzzle';
 

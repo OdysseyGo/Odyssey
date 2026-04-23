@@ -9,6 +9,7 @@ from rest_framework.response import Response
 
 from apps.gamification.models import TourProgress
 from apps.tours.models import (
+    ARModel,
     ArPuzzleDetail,
     GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
@@ -25,6 +26,7 @@ from .pagination import TourPagination
 from .serializers import (
     DEFAULT_PICTURE_COMPARE_THRESHOLD,
     ArPuzzleUpsertSerializer,
+    ARModelSerializer,
     GyroscopePuzzleUpsertSerializer,
     PictureComparePuzzleUpsertSerializer,
     PuzzleSerializer,
@@ -79,6 +81,21 @@ class TourViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="ar-models",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def ar_models(self, request):
+        queryset = ARModel.objects.filter(is_active=True).order_by("sort_order", "id")
+        serializer = ARModelSerializer(
+            queryset,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data)
 
     @action(
         detail=False,
@@ -377,7 +394,10 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        payload = ArPuzzleUpsertSerializer(data=request.data)
+        payload = ArPuzzleUpsertSerializer(
+            data=request.data,
+            context={"request": request},
+        )
         payload.is_valid(raise_exception=True)
         data = payload.validated_data
 

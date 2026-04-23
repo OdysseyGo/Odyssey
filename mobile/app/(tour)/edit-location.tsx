@@ -106,6 +106,14 @@ export default function EditLocationScreen() {
       return !!currentPuzzle.referenceImage;
     }
 
+    if (currentPuzzle.puzzle_type === 'AR') {
+      return !!currentPuzzle.arConfig;
+    }
+
+    if (currentPuzzle.puzzle_type === 'GYROSCOPE') {
+      return true;
+    }
+
     const options = currentPuzzle.options;
     if (!currentPuzzle.correctAnswer || !options || options.length < 2) {
       return false;
