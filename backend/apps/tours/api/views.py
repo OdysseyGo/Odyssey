@@ -438,6 +438,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
             update_fields=["options", "correct_answer", "reference_image", "updated_at"]
         )
 
+        self._clear_other_puzzle_details(puzzle, Puzzle.GYROSCOPE)
         GyroscopePuzzleDetail.objects.update_or_create(
             puzzle=puzzle,
             defaults={
@@ -447,7 +448,6 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 "tolerance_degrees": data.get("tolerance_degrees", 15.0),
             },
         )
-        self._clear_other_puzzle_details(puzzle, Puzzle.GYROSCOPE)
 
         serializer = PuzzleSerializer(puzzle, context={"request": request})
         return Response(

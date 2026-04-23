@@ -269,13 +269,13 @@ function PictureCompareView({ puzzle, isSolved, onSolve }: PictureCompareViewPro
           style={styles.referenceImageModalOverlay}
           onPress={() => setFullscreenImageUri(null)}
         >
-          <Pressable style={styles.referenceImageModalContent} onPress={() => {}}>
+          <View style={styles.referenceImageModalContent} pointerEvents="box-none">
             <Image
               source={{ uri: fullscreenImageUri ?? '' }}
               style={styles.referenceImageFull}
               resizeMode="contain"
             />
-          </Pressable>
+          </View>
         </Pressable>
       </Modal>
     </View>
