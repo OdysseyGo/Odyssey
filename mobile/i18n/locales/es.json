@@ -465,7 +465,14 @@
     "activeTour": {
       "stepOf": "Paso {{current}} de {{total}}",
       "end": "Finalizar",
-      "skip": "SALTAR"
+      "skip": "SALTAR",
+      "route": "Ruta",
+      "directions": "Indicaciones",
+      "openIn": "Abrir esta parada en",
+      "appleMaps": "Apple Maps",
+      "googleMaps": "Google Maps",
+      "yandexMaps": "Yandex Maps",
+      "directionsUnavailableMessage": "No se pudieron abrir las indicaciones ahora mismo. Inténtalo de nuevo."
     }
   },
   "friends": {

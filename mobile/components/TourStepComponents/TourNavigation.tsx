@@ -1,5 +1,5 @@
-import { View, Text, Pressable } from 'react-native';
-import { useMemo } from 'react';
+import { View, Text, Pressable, Modal, Alert, Platform } from 'react-native';
+import { useMemo, useState, useCallback } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +15,10 @@ import {
 import TourStepComponent from './TourStep';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
+import {
+  openExternalMapsDirections,
+  type ExternalMapsProvider,
+} from '@/utils/externalMaps';
 
 function ProgressBar({ totalSteps, currentStep, solvedSteps, stepIds }: ProgressBarProps) {
   const theme = useColorTheme();
@@ -151,6 +155,7 @@ export default function TourNavigation({
 }: TourNavigationProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const [isDirectionsModalVisible, setIsDirectionsModalVisible] = useState(false);
   //console.log('Rendering TourNavigation - currentStepIndex:', tour);
   const currentStep = tour.steps[currentStepIndex];
   const isSolved = solvedSteps.has(currentStep.id);
@@ -190,6 +195,49 @@ export default function TourNavigation({
     }
   };
 
+  const handleOpenDirections = useCallback(
+    async (provider: ExternalMapsProvider) => {
+      setIsDirectionsModalVisible(false);
+
+      let originLatitude: number | undefined;
+      let originLongitude: number | undefined;
+
+      try {
+        const permission = await Location.getForegroundPermissionsAsync();
+        const status =
+          permission.status === 'granted'
+            ? permission.status
+            : (await Location.requestForegroundPermissionsAsync()).status;
+
+        if (status === 'granted') {
+          const location = await Location.getCurrentPositionAsync({});
+          originLatitude = location.coords.latitude;
+          originLongitude = location.coords.longitude;
+        }
+      } catch (error) {
+        console.warn('Could not get current location for directions:', error);
+      }
+
+      try {
+        await openExternalMapsDirections({
+          provider,
+          destinationLat: currentStep.coordinate.latitude,
+          destinationLng: currentStep.coordinate.longitude,
+          originLat: originLatitude,
+          originLng: originLongitude,
+          mode: 'walking',
+        });
+      } catch (error) {
+        console.error('Failed to open directions:', error);
+        Alert.alert(
+          t('tourId.error'),
+          t('map.activeTour.directionsUnavailableMessage')
+        );
+      }
+    },
+    [currentStep.coordinate.latitude, currentStep.coordinate.longitude, t]
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
@@ -206,6 +254,27 @@ export default function TourNavigation({
               }}
             >
               {t('map.activeTour.skip')}
+            </Text>
+          </View>
+        </Pressable>
+        <Pressable
+          style={styles.endTourButton}
+          onPress={() => setIsDirectionsModalVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel={t('map.activeTour.directions')}
+        >
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <MaterialCommunityIcons name="directions" size={20} color={Colors[theme].primary} />
+
+            <Text
+              style={{
+                fontSize: 10,
+                color: Colors[theme].primary,
+                fontWeight: 'bold',
+                marginTop: -2,
+              }}
+            >
+              {t('map.activeTour.route')}
             </Text>
           </View>
         </Pressable>
@@ -241,6 +310,73 @@ export default function TourNavigation({
         onLocationConfirm={handleLocationConfirm}
         isLastStep={isLastStep}
       />
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isDirectionsModalVisible}
+        onRequestClose={() => setIsDirectionsModalVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <Pressable
+            style={styles.modalDismissArea}
+            onPress={() => setIsDirectionsModalVisible(false)}
+          />
+
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{t('map.activeTour.directions')}</Text>
+            <Text style={styles.modalSubtitle}>{t('map.activeTour.openIn')}</Text>
+
+            {Platform.OS === 'ios' && (
+              <Pressable
+                style={styles.providerButton}
+                onPress={() => handleOpenDirections('apple')}
+              >
+                <MaterialCommunityIcons
+                  name="apple"
+                  size={20}
+                  color={Colors[theme].text}
+                  style={styles.providerIcon}
+                />
+                <Text style={styles.providerButtonText}>{t('map.activeTour.appleMaps')}</Text>
+              </Pressable>
+            )}
+
+            <Pressable
+              style={styles.providerButton}
+              onPress={() => handleOpenDirections('google')}
+            >
+              <MaterialCommunityIcons
+                name="google-maps"
+                size={20}
+                color={Colors[theme].text}
+                style={styles.providerIcon}
+              />
+              <Text style={styles.providerButtonText}>{t('map.activeTour.googleMaps')}</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.providerButton}
+              onPress={() => handleOpenDirections('yandex')}
+            >
+              <MaterialCommunityIcons
+                name="map-search-outline"
+                size={20}
+                color={Colors[theme].text}
+                style={styles.providerIcon}
+              />
+              <Text style={styles.providerButtonText}>{t('map.activeTour.yandexMaps')}</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.modalCancelButton}
+              onPress={() => setIsDirectionsModalVisible(false)}
+            >
+              <Text style={styles.modalCancelText}>{t('auth.cancel')}</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
