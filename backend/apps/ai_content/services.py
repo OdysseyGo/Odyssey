@@ -6,7 +6,7 @@ import re
 import google.generativeai as genai
 from django.db import transaction
 
-from apps.tours.models import Puzzle, Tour, TourStep
+from apps.tours.models import Puzzle, Tour, TourStep, TriviaPuzzleDetail
 from apps.tours.utils import GoogleMapsFacade
 
 logger = logging.getLogger(__name__)
@@ -199,7 +199,7 @@ class GeminiService:
                 # Create puzzle if present (for PUZZLE and HYBRID modes)
                 puzzle_data = step_data.get("puzzle")
                 if puzzle_data:
-                    Puzzle.objects.create(
+                    puzzle = Puzzle.objects.create(
                         step=step,
                         puzzle_type=puzzle_data.get("type", "TRIVIA"),
                         question=puzzle_data["question"],
@@ -208,8 +208,16 @@ class GeminiService:
                         hint=puzzle_data.get("hint", ""),
                         xp_reward=puzzle_data.get("xp", 25),
                     )
+                    if puzzle.puzzle_type == Puzzle.TRIVIA:
+                        TriviaPuzzleDetail.objects.update_or_create(
+                            puzzle=puzzle,
+                            defaults={
+                                "options": puzzle.options or [],
+                                "correct_answer": puzzle.correct_answer,
+                            },
+                        )
                 elif mode in ("PUZZLE", "HYBRID"):
-                    Puzzle.objects.create(
+                    puzzle = Puzzle.objects.create(
                         step=step,
                         puzzle_type="TRIVIA",
                         question="What is the name of this location?",
@@ -222,6 +230,13 @@ class GeminiService:
                         correct_answer=step_data["title"],
                         hint="Look at the sign or landmark nearby.",
                         xp_reward=10,
+                    )
+                    TriviaPuzzleDetail.objects.update_or_create(
+                        puzzle=puzzle,
+                        defaults={
+                            "options": puzzle.options or [],
+                            "correct_answer": puzzle.correct_answer,
+                        },
                     )
 
         # ---- Step 6: Calculate real-world metrics ----

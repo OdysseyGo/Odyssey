@@ -14,7 +14,8 @@ import {
   removeFollower,
   User,
 } from '@/api/users';
-import { setProfileNeedsRefresh } from '@/utils/profileRefreshFlag';
+
+import { setProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';

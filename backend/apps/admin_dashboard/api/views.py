@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import CreateAPIView
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ViewSet
@@ -27,6 +28,8 @@ from apps.admin_dashboard.api.serializers import (
     BanUserSerializer,
     BulkUserActionSerializer,
     DashboardSummarySerializer,
+    PictureCompareConfigSerializer,
+    PictureCompareTuningSerializer,
     ReportActionSerializer,
     ReportCreateSerializer,
     ReportSerializer,
@@ -35,7 +38,8 @@ from apps.admin_dashboard.api.serializers import (
 )
 from apps.admin_dashboard.models import BanRecord, Report
 from apps.admin_dashboard.services.analytics import AnalyticsService
-from apps.gamification.models import TourProgress
+from apps.gamification.models import PictureCompareConfig, TourProgress
+from apps.gamification.picture_compare import compare_picture_similarity
 from apps.tours.models import Review, Tour
 from apps.users.models import User
 
@@ -267,6 +271,48 @@ class AnalyticsViewSet(ViewSet):
         days = int(request.query_params.get("days", 7))
         count = AnalyticsService.get_active_users(days=days)
         return Response({"days": days, "active_users": count})
+
+
+# ── Picture Compare Tuning ───────────────────────────────────────────
+
+
+class PictureCompareTuningViewSet(ViewSet):
+    permission_classes = [IsStaffUser]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def create(self, request):
+        serializer = PictureCompareTuningSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        result = compare_picture_similarity(
+            reference_image_file=data["reference_image"],
+            attempt_image_file=data["attempt_image"],
+            threshold=data["threshold"],
+            tuning_config=serializer.tuning_config(),
+            include_breakdown=True,
+        )
+        result["threshold"] = data["threshold"]
+        return Response(result)
+
+
+class PictureCompareConfigViewSet(ViewSet):
+    permission_classes = [IsStaffUser]
+
+    def list(self, request):
+        serializer = PictureCompareConfigSerializer(PictureCompareConfig.load())
+        return Response(serializer.data)
+
+    def create(self, request):
+        config = PictureCompareConfig.load()
+        serializer = PictureCompareConfigSerializer(
+            config,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 # ── Content Moderation ───────────────────────────────────────────────

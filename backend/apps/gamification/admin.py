@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Badge, TourProgress, UserBadge
+from .models import Badge, PictureCompareConfig, TourProgress, UserBadge
 
 
 @admin.register(Badge)
@@ -25,3 +25,8 @@ class TourProgressAdmin(admin.ModelAdmin):
         "completed_at",
     )
     list_filter = ("status",)
+
+
+@admin.register(PictureCompareConfig)
+class PictureCompareConfigAdmin(admin.ModelAdmin):
+    list_display = ("singleton_id", "similarity_threshold", "updated_at")

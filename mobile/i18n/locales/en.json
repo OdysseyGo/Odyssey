@@ -205,6 +205,33 @@
   "settings": {
     "language": "Language",
     "selectLanguage": "Select Language",
+    "sections": {
+      "profile": "Profile",
+      "account": "Account",
+      "preferences": "Preferences"
+    },
+    "items": {
+      "editProfile": {
+        "label": "Edit Profile",
+        "description": "Update your personal information"
+      },
+      "notifications": {
+        "label": "Notifications",
+        "description": "Manage notification preferences"
+      },
+      "privacy": {
+        "label": "Privacy",
+        "description": "Control your privacy settings"
+      }
+    },
+    "appearance": {
+      "label": "Appearance",
+      "mode": {
+        "light": "Light mode",
+        "dark": "Dark mode",
+        "system": "System default"
+      }
+    },
     "languages": {
       "en": "English",
       "tr": "Turkish",

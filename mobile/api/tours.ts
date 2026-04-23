@@ -6,14 +6,71 @@ export type TourType = 'STORY' | 'PUZZLE' | 'HYBRID';
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type TourStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
+export type TriviaPuzzleDetail = {
+  options: string[];
+  correct_answer: string;
+};
+
+export type PictureComparePuzzleDetail = {
+  reference_image: string;
+  similarity_threshold: number;
+};
+
+export type ArPuzzleDetail = {
+  scene_asset_url?: string;
+  metadata?: Record<string, any>;
+};
+
+export type GyroscopePuzzleDetail = {
+  target_pitch: number;
+  target_roll: number;
+  target_yaw: number;
+  tolerance_degrees: number;
+};
+
 export type Puzzle = {
   id?: number;
-  puzzle_type: 'TRIVIA' | 'AR' | 'GYROSCOPE';
+  puzzle_type: 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE';
   question: string;
-  options?: string[];
-  correct_answer?: string; // Used when creating/updating, hidden in response
   hint: string;
   xp_reward: number;
+  // Normalized detail payloads from backend
+  trivia?: TriviaPuzzleDetail;
+  picture_compare?: PictureComparePuzzleDetail;
+  ar?: ArPuzzleDetail;
+  gyroscope?: GyroscopePuzzleDetail;
+  // Backward-compatible fallbacks
+  options?: string[];
+  correct_answer?: string;
+  reference_image?: string;
+};
+
+export type PuzzleBaseUpsertPayload = {
+  question: string;
+  hint?: string;
+  xp_reward?: number;
+};
+
+export type TriviaPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  options: string[];
+  correct_answer: string;
+};
+
+export type PictureComparePuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  referenceImageUri: string;
+  similarity_threshold?: number;
+};
+
+export type ArPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  scene_asset_url?: string;
+  metadata?: Record<string, any>;
+};
+
+export type GyroscopePuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  target_pitch?: number;
+  target_roll?: number;
+  target_yaw?: number;
+  tolerance_degrees?: number;
 };
 
 export type TourStep = {
@@ -362,6 +419,104 @@ export async function createTourStep(
     method: 'POST',
     url: `/api/tours/${tourId}/steps/`,
     data,
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Set or update the reference image for a picture-compare puzzle on a step.
+ */
+export async function setStepPictureReference(
+  tourId: number,
+  stepId: number,
+  referenceImageUri: string,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  const formData = new FormData();
+  formData.append('reference_image', {
+    uri: referenceImageUri,
+    name: 'reference_image.jpg',
+    type: 'image/jpeg',
+  } as any);
+
+  return apiRequest<Puzzle, FormData>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-picture-reference/`,
+    data: formData,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepTriviaPuzzle(
+  tourId: number,
+  stepId: number,
+  payload: TriviaPuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, TriviaPuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-trivia-puzzle/`,
+    data: payload,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepPictureComparePuzzle(
+  tourId: number,
+  stepId: number,
+  payload: PictureComparePuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  const formData = new FormData();
+  formData.append('question', payload.question);
+  formData.append('hint', payload.hint || '');
+  formData.append('xp_reward', String(payload.xp_reward ?? 10));
+  if (payload.similarity_threshold !== undefined) {
+    formData.append('similarity_threshold', String(payload.similarity_threshold));
+  }
+  formData.append('reference_image', {
+    uri: payload.referenceImageUri,
+    name: 'reference_image.jpg',
+    type: 'image/jpeg',
+  } as any);
+
+  return apiRequest<Puzzle, FormData>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-picture-compare-puzzle/`,
+    data: formData,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepArPuzzle(
+  tourId: number,
+  stepId: number,
+  payload: ArPuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, ArPuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-ar-puzzle/`,
+    data: payload,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepGyroscopePuzzle(
+  tourId: number,
+  stepId: number,
+  payload: GyroscopePuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, GyroscopePuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-gyroscope-puzzle/`,
+    data: payload,
     auth: true,
     signal,
   });

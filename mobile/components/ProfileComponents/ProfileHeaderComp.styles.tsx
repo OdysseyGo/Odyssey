@@ -26,18 +26,39 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
       opacity: isLight ? 0.55 : 0,
     },
 
+    settingsButton: {
+      position: 'absolute',
+      width: Spacing.iconButtonSmall,
+      height: Spacing.iconButtonSmall,
+      borderRadius: Spacing.borderRadiusFull,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: color.profileHeaderButtonBackground,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: color.profileHeaderButtonBorder,
+      ...Platform.select({
+        ios: {
+          shadowColor: color.profileHeaderShadow,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.15,
+          shadowRadius: 8,
+        },
+        android: { elevation: 6 },
+      }),
+    },
+
     // Avatar
     avatarRing: {
       width: 112,
       height: 112,
       borderRadius: 56,
       borderWidth: isLight ? 3.5 : 3,
-      borderColor: isLight ? 'rgba(255,255,255,0.9)' : color.white,
+      borderColor: color.profileHeaderAvatarRingBorder,
       alignItems: 'center',
       justifyContent: 'center',
       ...Platform.select({
         ios: {
-          shadowColor: 'rgba(0,0,0,0.35)',
+          shadowColor: color.profileHeaderAvatarShadow,
           shadowOffset: { width: 0, height: 8 },
           shadowOpacity: isLight ? 0.25 : 0.2,
           shadowRadius: 16,
@@ -49,7 +70,7 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
       width: 104,
       height: 104,
       borderRadius: 52,
-      backgroundColor: color.white,
+      backgroundColor: color.profileHeaderAvatarBackground,
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
@@ -72,7 +93,7 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
       borderColor: isLight ? color.headerGradientTop : color.primary,
       ...Platform.select({
         ios: {
-          shadowColor: '#000',
+          shadowColor: color.profileHeaderShadow,
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.15,
           shadowRadius: 4,
@@ -90,7 +111,7 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
       letterSpacing: -0.3,
       ...Platform.select({
         ios: {
-          textShadowColor: 'rgba(0,0,0,0.12)',
+          textShadowColor: color.profileHeaderTextShadow,
           textShadowOffset: { width: 0, height: 1 },
           textShadowRadius: 4,
         },
@@ -103,15 +124,15 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
       marginTop: Spacing.sm,
       paddingHorizontal: Spacing.md,
       paddingVertical: 5,
-      backgroundColor: 'rgba(255,255,255,0.18)',
+      backgroundColor: color.profileHeaderLocationChipBackground,
       borderRadius: Spacing.borderRadiusFull,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(255,255,255,0.12)',
+      borderColor: color.profileHeaderLocationChipBorder,
     },
     locationText: {
       fontSize: 13,
       fontWeight: '500',
-      color: 'rgba(255,255,255,0.9)',
+      color: color.profileHeaderLocationText,
     },
   });
 };
