@@ -1,5 +1,6 @@
 import { View, Pressable, Animated, PanResponder, useWindowDimensions, Alert } from 'react-native';
 import { useMemo, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import getStyles from './BottomSlider.styles';
 import { BottomSliderProps } from './BottomSlider.config';
@@ -16,6 +17,7 @@ export default function BottomSlider({
   onEndTour,
   onTourComplete,
 }: BottomSliderProps & { onTourComplete?: () => void }) {
+  const { t } = useTranslation();
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const { height: screenHeight } = useWindowDimensions();
@@ -63,7 +65,7 @@ export default function BottomSlider({
       }
     } catch (error) {
       console.error('Failed to navigate next:', error);
-      Alert.alert('Error', 'Could not sync progress with server.');
+      Alert.alert(t('common.error'), t('common.syncError'));
     }
   }, [
     tour,
@@ -74,6 +76,7 @@ export default function BottomSlider({
     setCurrentStepIndex,
     setHighestStepIndex,
     onTourComplete,
+    t,
   ]);
 
   const handleSkip = useCallback(async () => {
@@ -104,7 +107,7 @@ export default function BottomSlider({
       }
     } catch (error) {
       console.error('Failed to navigate next:', error);
-      Alert.alert('Error', 'Could not sync progress with server.');
+      Alert.alert(t('common.error'), t('common.syncError'));
     }
   }, [
     tour,
@@ -115,6 +118,7 @@ export default function BottomSlider({
     setCurrentStepIndex,
     setHighestStepIndex,
     onTourComplete,
+    t,
   ]);
 
   const handleNavigatePrev = useCallback(() => {

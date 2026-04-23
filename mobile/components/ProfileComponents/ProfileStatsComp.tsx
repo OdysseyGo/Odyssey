@@ -22,7 +22,7 @@ export default function ProfileStatsComp({
 
   const achievementStats = [
     { value: xp, label: t('profile.xp') },
-    { value: tours, label: t('profile.tours') },
+    { value: tours, label: t('profile.tours'), onPress: onToursPress },
     { value: badges, label: t('profile.badges') },
   ];
 

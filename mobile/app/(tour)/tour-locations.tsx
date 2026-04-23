@@ -6,7 +6,7 @@ import Colors from '@/constants/Colors';
 import { useTourCreation } from '@/contexts/TourCreationContext';
 import { TourLocation } from '@/components/TourCreation/TourCreation.types';
 import LocationPicker from '@/components/TourCreation/LocationPicker';
-import { StepIndicator, CreationFooter } from '@/components/TourCreation/common';
+import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
@@ -40,6 +40,7 @@ export default function TourLocationsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: color.foreground }]}>
+      <CreationHeader title={t('creation.location.title')} />
       <StepIndicator steps={STEPS} currentStepIndex={1} />
       <View style={styles.content}>
         <LocationPicker

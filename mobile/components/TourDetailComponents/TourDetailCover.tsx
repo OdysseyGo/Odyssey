@@ -1,12 +1,10 @@
 import { View, Image, Text } from 'react-native';
 import { useMemo } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { TourDetailCoverProps } from './TourDetailCover.config';
 import { tourDetailCoverStyles } from './TourDetailCover.styles';
-import BackButton from '@/components/common/BackButton';
 import { STAR } from '@/constants/Symbols';
 import { useTranslation } from 'react-i18next';
 
@@ -19,14 +17,20 @@ export default function TourDetailCover({
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailCoverStyles(theme), [theme]);
   const color = Colors[theme];
-  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
   return (
     <View style={styles.coverContainer}>
       <Image source={{ uri: coverImage }} style={styles.coverImage} resizeMode="cover" />
 
-      {/* True gradient: transparent at top → solid black at bottom */}
+      {/* Top gradient: dark → transparent (keeps white header icons readable) */}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.40)', 'transparent']}
+        locations={[0, 1]}
+        style={styles.topGradient}
+      />
+
+      {/* Bottom gradient: transparent → dark (title overlay) */}
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.18)', 'rgba(0,0,0,0.72)']}
         locations={[0, 0.45, 1]}
@@ -46,8 +50,6 @@ export default function TourDetailCover({
           </Text>
         </View>
       </View>
-
-      <BackButton color={color.white} style={[styles.backButton, { top: insets.top + 8 }]} />
     </View>
   );
 }

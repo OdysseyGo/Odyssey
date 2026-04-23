@@ -24,6 +24,7 @@ export type AddFriendUserDisplayDTO = {
   username: string;
   first_name: string;
   last_name: string;
+  avatar_url?: string;
 };
 
 export type AddFriendUserDisplayDTOListResponse = {
@@ -68,6 +69,32 @@ export type LoginResponse = {
 
 export type FollowPayload = {
   following: number; //id of the target
+};
+
+export type FeedTour = {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  duration_minutes: number;
+  city?: string;
+  cover_image?: string;
+  created_at: string;
+};
+
+export type FeedItem = {
+  id: number; // id of tourProgress, its a better key value then combining userid + tour.
+  user: User;
+  tour: FeedTour;
+  completed_at: string;
+};
+
+export type FollowingFeedResponse = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: FeedItem[];
 };
 
 // API functions
@@ -219,4 +246,14 @@ export const getUserFollowers = (id: string) =>
 export const getUserFollowings = (id: string) =>
   apiRequest<User[]>({
     url: `/api/users/${id}/followings/`,
+  });
+
+/**
+ * GET /api/users/following-feed/?page={page}
+ * Get user's following feed, a paginated list of tours completed by people they follow.
+ */
+export const getFollowingFeed = (page: number = 1) =>
+  apiRequest<FollowingFeedResponse>({
+    url: `/api/users/following-feed/`,
+    params: { page },
   });

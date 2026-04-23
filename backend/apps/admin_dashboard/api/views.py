@@ -216,9 +216,10 @@ class AdminTourViewSet(ModelViewSet):
             completion_count=Count(
                 "progress",
                 filter=Q(progress__status=TourProgress.COMPLETED),
+                distinct=True,
             ),
-            review_count=Count("reviews"),
-            step_count=Count("steps"),
+            review_count=Count("reviews", distinct=True),
+            step_count=Count("steps", distinct=True),
         )
 
     def get_serializer_class(self):

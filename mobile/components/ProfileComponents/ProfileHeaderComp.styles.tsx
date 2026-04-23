@@ -49,7 +49,7 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
       width: 104,
       height: 104,
       borderRadius: 52,
-      backgroundColor: isLight ? 'rgba(255,255,255,0.92)' : color.foreground,
+      backgroundColor: color.white,
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',

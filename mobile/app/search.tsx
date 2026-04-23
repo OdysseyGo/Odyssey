@@ -17,15 +17,15 @@ import Colors from '@/constants/Colors';
 import { searchTours, Tour } from '@/api/tours';
 
 // Convert API Tour to SearchResultItemProps
-function mapTourToSearchResult(tour: Tour): SearchResultItemProps {
+function mapTourToSearchResult(tour: Tour, t: (key: string) => string): SearchResultItemProps {
   return {
     id: tour.id.toString(),
     image: tour.steps?.[0]?.image || `https://picsum.photos/400/320?random=${tour.id}`,
     title: tour.title,
-    author: tour.creator?.username || 'Unknown',
-    duration: `${tour.duration_minutes} min`,
-    rating: tour.average_rating?.toFixed(1) || 'N/A',
-    location: tour.city || 'Unknown location',
+    author: tour.creator?.username || t('search.unknownAuthor'),
+    duration: `${tour.duration_minutes} ${t('tourId.min')}`,
+    rating: tour.average_rating?.toFixed(1) || t('search.notAvailable'),
+    location: tour.city || t('search.unknownLocation'),
     creditPrice: tour.credit_price,
   };
 }
@@ -56,7 +56,7 @@ export default function SearchScreen() {
       setError(null);
       try {
         const response = await searchTours(searchQuery, { page_size: 20 }, abortController.signal);
-        setSearchResults(response.results.map(mapTourToSearchResult));
+        setSearchResults(response.results.map((tour) => mapTourToSearchResult(tour, t)));
       } catch (err: any) {
         if (err.name !== 'AbortError') {
           setError(err.message || 'Search failed');
@@ -71,7 +71,7 @@ export default function SearchScreen() {
       clearTimeout(timer);
       abortController.abort();
     };
-  }, [searchQuery]);
+  }, [searchQuery, t]);
 
   const handleSearchChange = useCallback((query: string) => {
     setSearchQuery(query);

@@ -30,6 +30,7 @@ import {
 } from '@/components/AITourCreation';
 import { generateAITour } from '@/api/aiTours';
 import { getAIGenerationAllowance } from '@/api/payments';
+import { CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
 
 export default function AITourCreation() {
@@ -109,12 +110,9 @@ export default function AITourCreation() {
     }
   };
 
-  const handleBack = () => {
-    router.back();
-  };
-
   return (
     <View style={styles.container}>
+      <CreationHeader title={t('aiTour.header.title')} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -124,7 +122,6 @@ export default function AITourCreation() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header Section */}
           <AICreationHeader />
 
           {/* AI generation quota banner */}
@@ -172,7 +169,6 @@ export default function AITourCreation() {
             />
           </FormInputGroup>
 
-          {/* Theme Input */}
           <FormInputGroup label={t('aiTour.theme')} required>
             <FormTextInput
               value={formData.theme}
@@ -186,7 +182,6 @@ export default function AITourCreation() {
 
           <View style={styles.sectionDivider} />
 
-          {/* Tour Mode */}
           <View>
             <Text style={styles.sectionTitle}>{t('aiTour.mode')}</Text>
             <Text style={styles.sectionSubtitle}>{t('aiTour.modeSubtitle')}</Text>
@@ -199,7 +194,6 @@ export default function AITourCreation() {
 
           <View style={styles.sectionDivider} />
 
-          {/* Duration */}
           <FormInputGroup label={t('aiTour.duration')}>
             <FormDurationPicker
               value={formData.duration}
@@ -213,7 +207,6 @@ export default function AITourCreation() {
 
           <View style={styles.sectionDivider} />
 
-          {/* Language Selection */}
           <LanguageSelector
             selectedLanguage={formData.language}
             onSelect={(language) => updateFormData({ language })}
@@ -221,7 +214,6 @@ export default function AITourCreation() {
 
           <View style={styles.sectionDivider} />
 
-          {/* Additional Details */}
           <FormInputGroup label={t('aiTour.additionalDetails')}>
             <FormTextArea
               value={formData.additionalDetails}
@@ -232,11 +224,9 @@ export default function AITourCreation() {
           </FormInputGroup>
         </ScrollView>
 
-        {/* Footer with Generate Button */}
         <GenerateButton onPress={handleGenerate} disabled={!isFormValid} isLoading={isLoading} />
       </KeyboardAvoidingView>
 
-      {/* Loading Overlay */}
       <LoadingOverlay visible={isLoading} />
     </View>
   );

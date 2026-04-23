@@ -15,6 +15,13 @@ export const tourDetailCoverStyles = (theme: ThemeName) => {
       width: '100%',
       height: '100%',
     },
+    topGradient: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 130,
+    },
     gradient: {
       position: 'absolute',
       bottom: 0,
@@ -58,11 +65,6 @@ export const tourDetailCoverStyles = (theme: ThemeName) => {
       color: color.white,
       fontSize: 13,
       opacity: 0.72,
-    },
-    backButton: {
-      position: 'absolute',
-      left: 16,
-      backgroundColor: color.backgroundBlack,
     },
   });
 };

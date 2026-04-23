@@ -29,7 +29,8 @@ export function mapApiTourToDetail(tour: Tour, t: (key: string) => string): Tour
     title: tour.title,
     description: tour.description,
     author: tour.creator?.username || 'Unknown',
-    authorAvatar: `https://picsum.photos/100/100?random=${tour.creator?.id || tour.id}`,
+    authorId: tour.creator?.id || 0,
+    authorAvatar: tour.creator?.avatar_url || '',
     coverImage: tour.steps?.[0]?.image || `https://picsum.photos/800/400?random=${tour.id}`,
     duration: `${tour.duration_minutes} ${t('tourId.min')}`,
     distance:

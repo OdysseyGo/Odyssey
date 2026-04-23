@@ -7,10 +7,13 @@ export const addFriendsModalStyles = (theme: ThemeName) => {
   return StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: color.background,
       justifyContent: 'center',
       alignItems: 'center',
       paddingHorizontal: Spacing.lg,
+      backgroundColor: 'rgba(0, 0, 0, 0.18)',
+    },
+    blurBackdrop: {
+      ...StyleSheet.absoluteFillObject,
     },
     container: {
       width: '100%',

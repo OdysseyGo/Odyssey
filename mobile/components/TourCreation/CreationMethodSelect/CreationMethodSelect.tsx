@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { creationMethodStyles } from './CreationMethodSelect.styles';
+import { CreationHeader } from '@/components/TourCreation/common';
 import Colors from '@/constants/Colors';
 import { useTranslation } from 'react-i18next';
 
@@ -63,6 +64,7 @@ export default function CreationMethodSelect() {
 
   return (
     <View style={styles.container}>
+      <CreationHeader title={t('creation.method.title')} />
       <View style={styles.content}>
         <Text style={styles.title}>{t('creation.method.title')}</Text>
         <Text style={styles.subtitle}>{t('creation.method.subtitle')}</Text>
