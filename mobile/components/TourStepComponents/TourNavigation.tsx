@@ -15,10 +15,7 @@ import {
 import TourStepComponent from './TourStep';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
-import {
-  openExternalMapsDirections,
-  type ExternalMapsProvider,
-} from '@/utils/externalMaps';
+import { openExternalMapsDirections, type ExternalMapsProvider } from '@/utils/externalMaps';
 
 function ProgressBar({ totalSteps, currentStep, solvedSteps, stepIds }: ProgressBarProps) {
   const theme = useColorTheme();
@@ -229,10 +226,7 @@ export default function TourNavigation({
         });
       } catch (error) {
         console.error('Failed to open directions:', error);
-        Alert.alert(
-          t('tourId.error'),
-          t('map.activeTour.directionsUnavailableMessage')
-        );
+        Alert.alert(t('tourId.error'), t('map.activeTour.directionsUnavailableMessage'));
       }
     },
     [currentStep.coordinate.latitude, currentStep.coordinate.longitude, t]
@@ -342,10 +336,7 @@ export default function TourNavigation({
               </Pressable>
             )}
 
-            <Pressable
-              style={styles.providerButton}
-              onPress={() => handleOpenDirections('google')}
-            >
+            <Pressable style={styles.providerButton} onPress={() => handleOpenDirections('google')}>
               <MaterialCommunityIcons
                 name="google-maps"
                 size={20}
@@ -355,10 +346,7 @@ export default function TourNavigation({
               <Text style={styles.providerButtonText}>{t('map.activeTour.googleMaps')}</Text>
             </Pressable>
 
-            <Pressable
-              style={styles.providerButton}
-              onPress={() => handleOpenDirections('yandex')}
-            >
+            <Pressable style={styles.providerButton} onPress={() => handleOpenDirections('yandex')}>
               <MaterialCommunityIcons
                 name="map-search-outline"
                 size={20}
