@@ -7,8 +7,7 @@ import {
   TouchableOpacity,
   Platform,
   Animated,
-  Dimensions,
-  Modal,
+  Dimensions
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
@@ -30,8 +29,6 @@ import { useAutoStartTour } from '@/hooks/useAutoStartHook';
 import CustomStepNumber from '@/components/TutorialComponents/CustomStepNumber';
 import CustomTooltip from '@/components/TutorialComponents/CustomTooltip';
 import { useIsFocused } from '@react-navigation/native';
-import TutorialsModal from '../profile/tutorials';
-import { Button } from '@react-navigation/elements';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -197,7 +194,6 @@ function TourDisplayContent() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [showTutorials, setShowTutorials] = useState(false);
   // Tracks the rendered height of the floating header so scroll content starts below it
   const [headerHeight, setHeaderHeight] = useState(insets.top + 130);
 
@@ -227,11 +223,9 @@ function TourDisplayContent() {
     }
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchTours();
-    }, [fetchTours])
-  );
+  useEffect(() => {
+    fetchTours();
+  }, [fetchTours]);
 
   // ─── Continent logic ──────────────────────────────────
 
@@ -513,12 +507,6 @@ function TourDisplayContent() {
       </BlurView>
 
       <CreateTourButton />
-      <Button onPress={()=>setShowTutorials(true)}>ccc</Button>
-
-
-      <Modal visible={showTutorials} transparent animationType="fade">
-              <TutorialsModal onClose={() => setShowTutorials(false)} />
-      </Modal>
     </View>
   );
 }
