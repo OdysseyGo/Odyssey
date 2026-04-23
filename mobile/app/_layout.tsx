@@ -65,13 +65,14 @@ function RootLayoutNav() {
         overlay="svg" 
         tooltipComponent={CustomTooltip}
         stepNumberComponent= {CustomStepNumber}
-        animationDuration={800}
+        animationDuration={600}
         arrowColor={Colors[themeKey].primary}
         tooltipStyle={{ 
           backgroundColor: 'transparent', 
           padding: 0,                     
           borderRadius: 0,
         }}
+        backdropColor="rgba(10, 20, 40, 0.9)"
       >
         <LanguageProvider>
           <ActiveTourProvider>
