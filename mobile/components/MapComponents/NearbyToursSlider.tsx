@@ -8,7 +8,7 @@ import {
   ScrollView,
   useWindowDimensions,
 } from 'react-native';
-import { useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
@@ -57,13 +57,6 @@ export default function NearbyToursSlider({ tours, loading, onTourPress }: Nearb
   const translateY = useRef(new Animated.Value(PEEK)).current;
   const currentOffset = useRef(PEEK);
   const previousOffset = useRef(PEEK);
-
-  useEffect(() => {
-    // If tours show up for the first time, give a subtle nudge up to HALF so the user notices
-    if (tours.length > 0 && currentOffset.current === PEEK) {
-      // no auto-expand — keep at peek so the map stays in focus
-    }
-  }, [tours.length, PEEK]);
 
   const animateTo = (toValue: number) => {
     Animated.timing(translateY, {

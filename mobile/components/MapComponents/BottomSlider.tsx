@@ -56,7 +56,6 @@ export default function BottomSlider({
 
     try {
       const response = await completeStep(progressId);
-      console.log('[BottomSlider] completeStep response:', response);
 
       if (response.is_tour_complete) {
         await onTourComplete?.();
@@ -106,7 +105,6 @@ export default function BottomSlider({
 
     try {
       const response = await skipStep(progressId);
-      console.log('[BottomSlider] skipStep response:', response);
 
       if (response.is_tour_complete) {
         await onTourComplete?.();
@@ -151,7 +149,6 @@ export default function BottomSlider({
   const handleLocationConfirm = useCallback(
     async (stepId: string, latitude: number, longitude: number) => {
       confirmLocation(stepId);
-      console.log(`Location confirmed for step ${stepId} at:`, { latitude, longitude });
     },
     [confirmLocation]
   );

@@ -164,7 +164,6 @@ export default function MapScreen() {
     setShowEndConfirmModal(false);
     if (!progressId) return;
     try {
-      console.log('Deleting tour progress with ID:', progressId);
       await deleteTourProgress({ id: Number(progressId) });
       endTour();
     } catch (error) {
@@ -201,7 +200,6 @@ export default function MapScreen() {
       spinLoop.current?.stop();
       spinAnim.setValue(0);
       setIsCoolingDown(false);
-      setNearbyLoading(false);
       setShowSearchButton(false);
     }, 2500);
 
@@ -214,8 +212,10 @@ export default function MapScreen() {
         controller.signal
       );
       if (!controller.signal.aborted) setNearbyTours(tours);
-    } catch (e: any) {
-      if (e?.name !== 'AbortError') setNearbyTours([]);
+    } catch (e) {
+      if (e instanceof Error && e.name !== 'AbortError') setNearbyTours([]);
+    } finally {
+      setNearbyLoading(false);
     }
   }, []);
 

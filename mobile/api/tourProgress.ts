@@ -124,7 +124,6 @@ export async function getInProgressTour(signal?: AbortSignal): Promise<TourProgr
 }
 
 export async function deleteTourProgress(request: DeleteTourProgressRequest, signal?: AbortSignal) {
-  console.log('deleteTourProgress called with request:', request);
   return apiRequest<void, void>({
     method: 'DELETE',
     url: `/api/tour-progress/${request.id}/`,

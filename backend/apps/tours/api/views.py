@@ -1,6 +1,6 @@
 import os
 
-from django.db.models import Avg
+from django.db.models import Avg, OuterRef, Subquery
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -78,23 +78,34 @@ class TourViewSet(viewsets.ModelViewSet):
                 {"error": "north, south, east, west are required."}, status=400
             )
 
+        first_lat = Subquery(
+            TourStep.objects.filter(tour=OuterRef("pk"))
+            .order_by("order")
+            .values("latitude")[:1]
+        )
+        first_lng = Subquery(
+            TourStep.objects.filter(tour=OuterRef("pk"))
+            .order_by("order")
+            .values("longitude")[:1]
+        )
+
         tours = (
             Tour.objects.filter(status=Tour.PUBLISHED)
-            .annotate(average_rating=Avg("reviews__rating"))
+            .annotate(
+                average_rating=Avg("reviews__rating"),
+                first_lat=first_lat,
+                first_lng=first_lng,
+            )
+            .filter(
+                first_lat__gte=south,
+                first_lat__lte=north,
+                first_lng__gte=west,
+                first_lng__lte=east,
+            )
             .prefetch_related("steps", "reviews__user", "creator")
         )
 
-        result = []
-        for tour in tours:
-            first_step = tour.steps.order_by("order").first()
-            if not first_step:
-                continue
-            lat = float(first_step.latitude)
-            lng = float(first_step.longitude)
-            if south <= lat <= north and west <= lng <= east:
-                result.append(tour)
-
-        serializer = self.get_serializer(result, many=True)
+        serializer = self.get_serializer(tours, many=True)
         return Response(serializer.data)
 
     @action(
