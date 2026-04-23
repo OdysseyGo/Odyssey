@@ -1,6 +1,14 @@
+import os
+import uuid
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+
+
+def puzzle_reference_image_upload_to(instance, filename):
+    ext = os.path.splitext(filename or "")[1].lower() or ".jpg"
+    return f"puzzle_reference_images/{uuid.uuid4().hex}{ext}"
 
 
 class Tour(models.Model):
@@ -141,7 +149,7 @@ class Puzzle(models.Model):
     hint = models.TextField(blank=True)
     xp_reward = models.PositiveIntegerField(default=10)
     reference_image = models.ImageField(
-        upload_to="puzzle_reference_images/", blank=True, null=True
+        upload_to=puzzle_reference_image_upload_to, blank=True, null=True
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -176,7 +184,7 @@ class PictureComparePuzzleDetail(models.Model):
         on_delete=models.CASCADE,
         related_name="picture_compare_detail",
     )
-    reference_image = models.ImageField(upload_to="puzzle_reference_images/")
+    reference_image = models.ImageField(upload_to=puzzle_reference_image_upload_to)
     similarity_threshold = models.FloatField(default=0.7)
 
     def clean(self):
