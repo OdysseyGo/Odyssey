@@ -219,7 +219,7 @@ class PaymentEndpointTests(APITestCase):
             credits=100,
             price_cents=499,
             currency="usd",
-            stripe_price_id="price_test_starter",
+            apple_product_id="com.odyssey.credits.starter",
             is_active=True,
         )
         self.client.force_authenticate(user=self.user)

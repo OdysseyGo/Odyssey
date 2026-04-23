@@ -221,51 +221,49 @@ Follow the steps below to configure S3 for your environment:
 
    The `boto3` and `django-storages` packages (listed in `backend/requirements/base.txt`) will be installed automatically during the Docker build. Once running, any image uploaded through the API (e.g., tour cover images) will be stored in your S3 bucket and served via `https://<bucket>.s3.amazonaws.com/`.
 
-#### Stripe Payments Setup
+#### Apple In-App Purchase Setup
 
-Odyssey uses **Stripe** for subscription billing and credit pack purchases. The backend handles checkout sessions and webhooks; the mobile app opens Stripe Checkout in the browser.
+Odyssey uses **Apple In-App Purchases (IAP)** for subscription billing and credit pack purchases. The mobile app presents the native StoreKit purchase sheet; the backend verifies signed transactions with the App Store Server API and listens to App Store Server Notifications V2.
 
-**1. Create a Stripe Account**
+**1. Configure Products in App Store Connect**
 
-Sign up at [stripe.com](https://stripe.com) and switch to **Test mode** (toggle in the dashboard).
+In **App Store Connect → Your App → In-App Purchases**, create:
 
-**2. Get API Keys**
+- **Auto-renewable subscriptions** (group: `odyssey_premium`):
+  - `com.odyssey.subscription.monthly`
+  - `com.odyssey.subscription.yearly`
+- **Consumable** products for each credit pack (e.g. `com.odyssey.credits.50`, `com.odyssey.credits.150`). The `product_id` of each `CreditPack` row must match the App Store product ID.
 
-Go to **Developers → API keys** and copy:
-- `STRIPE_SECRET_KEY` — starts with `sk_test_`
-- `STRIPE_PUBLISHABLE_KEY` — starts with `pk_test_`
+**2. Generate an App Store Server API Key**
 
-**3. Create Subscription Products**
+In **App Store Connect → Users and Access → Integrations → In-App Purchase**, create a key with the *In-App Purchase* role and download the `.p8` file. Record the **Key ID** and **Issuer ID**.
 
-In **Products → Add product**, create two prices for the premium subscription:
-- Monthly: e.g. $9.99/month — copy the **Price ID** → `STRIPE_MONTHLY_PRICE_ID`
-- Yearly: e.g. $79.99/year — copy the **Price ID** → `STRIPE_YEARLY_PRICE_ID`
-
-**4. Create Credit Pack Products**
-
-For each credit pack, create a one-time price product in Stripe (e.g. 50 credits for $2.99). Then seed the `CreditPack` table via Django admin or the shell with the matching `stripe_price_id`.
-
-**5. Set Up Webhooks (local development)**
-
-Install the Stripe CLI and run:
-
-```bash
-stripe listen --forward-to localhost:8000/api/payments/webhook/
-```
-
-Copy the **webhook signing secret** (starts with `whsec_`) → `STRIPE_WEBHOOK_SECRET`
-
-**6. Update `.env`**
+**3. Update `.env`**
 
 ```dotenv
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_MONTHLY_PRICE_ID=price_...
-STRIPE_YEARLY_PRICE_ID=price_...
+APPLE_BUNDLE_ID=com.odyssey.app
+APPLE_ISSUER_ID=your-issuer-id
+APPLE_KEY_ID=your-key-id
+APPLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+APPLE_ENVIRONMENT=Sandbox   # or Production
+APPLE_APP_APPLE_ID=your-numeric-app-id
 ```
 
-**7. Run migrations**
+**4. Configure App Store Server Notifications V2**
+
+In App Store Connect, set the **Production/Sandbox Server URL** for notifications to:
+
+```
+https://<your-backend-host>/api/payments/iap/notifications/
+```
+
+This endpoint verifies the signed payload and updates subscription state (renewals, cancellations, refunds) automatically.
+
+**5. Seed credit packs**
+
+Create `CreditPack` rows via Django admin with `product_id` set to the matching App Store consumable product ID.
+
+**6. Run migrations**
 
 ```bash
 docker compose exec backend python manage.py migrate
@@ -276,32 +274,27 @@ docker compose exec backend python manage.py migrate
 | Endpoint | Method | Auth | Description |
 |---|---|---|---|
 | `/api/payments/plans/` | GET | No | List subscription plans |
-| `/api/payments/subscribe/` | POST | Yes | Create Stripe Checkout for subscription |
 | `/api/payments/subscription/` | GET | Yes | Get current subscription status |
-| `/api/payments/subscription/cancel/` | POST | Yes | Cancel subscription at period end |
-| `/api/payments/subscription/reactivate/` | POST | Yes | Reactivate canceled subscription |
+| `/api/payments/subscription/manage/` | GET | Yes | Get the App Store subscription management URL |
 | `/api/payments/credit-packs/` | GET | No | List available credit packs |
-| `/api/payments/credits/purchase/` | POST | Yes | Create Stripe Checkout for credits |
 | `/api/payments/credits/balance/` | GET | Yes | Get credit balance + transactions |
 | `/api/payments/tours/{id}/unlock/` | POST | Yes | Spend credits to unlock a tour |
 | `/api/payments/tours/{id}/access/` | GET | Yes | Check tour access |
 | `/api/payments/ai-allowance/` | GET | Yes | Get AI generation quota |
-| `/api/payments/webhook/` | POST | No | Stripe webhook (signature verified) |
+| `/api/payments/creator/earnings/` | GET | Yes | Get creator earnings breakdown |
+| `/api/payments/iap/verify/` | POST | Yes | Verify a signed StoreKit transaction (subscription or credit pack) |
+| `/api/payments/iap/notifications/` | POST | No | App Store Server Notifications V2 endpoint (signature verified) |
 
 **End-to-End Flow**
 
-1. User taps **Subscribe** → backend creates a Stripe Checkout Session URL
-2. Mobile opens URL in browser → user pays → Stripe redirects back
-3. Stripe fires `checkout.session.completed` webhook → backend fulfills (sets `user_type=PREMIUM` or adds credits)
-4. User can now access premium tours or spend credits to unlock paid tours
+1. User taps **Subscribe** or **Buy credits** → mobile app calls StoreKit to complete the purchase natively.
+2. App sends the resulting signed `JWSTransaction` to `/api/payments/iap/verify/`.
+3. Backend verifies the signature with `appstoreserverlibrary`, then either activates/upgrades the `Subscription` or credits the user's balance.
+4. Lifecycle events (renewal, cancellation, refund, billing retry) are delivered to `/api/payments/iap/notifications/` and applied server-side.
 
-**Test Cards**
+**Sandbox Testing**
 
-| Card | Result |
-|---|---|
-| `4242 4242 4242 4242` | Success |
-| `4000 0000 0000 0002` | Declined |
-| `4000 0025 0000 3155` | 3D Secure required |
-
-Use any future expiry, any CVC, any ZIP.
+- Create a **Sandbox Tester** in App Store Connect and sign in on the device via *Settings → App Store → Sandbox Account*.
+- Set `APPLE_ENVIRONMENT=Sandbox` in the backend `.env`.
+- Use the sandbox tester to make purchases — no real charges occur.
 

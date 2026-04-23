@@ -10,16 +10,13 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "id",
             "plan",
             "status",
+            "apple_product_id",
             "current_period_start",
             "current_period_end",
             "cancel_at_period_end",
             "created_at",
         ]
         read_only_fields = fields
-
-
-class SubscribeRequestSerializer(serializers.Serializer):
-    plan = serializers.ChoiceField(choices=Subscription.PLAN_CHOICES)
 
 
 class CreditPackSerializer(serializers.ModelSerializer):
@@ -34,6 +31,7 @@ class CreditPackSerializer(serializers.ModelSerializer):
             "price_cents",
             "currency",
             "price_display",
+            "apple_product_id",
         ]
         read_only_fields = fields
 
@@ -49,8 +47,14 @@ class CreditPackSerializer(serializers.ModelSerializer):
         return f"{amount:.2f}"
 
 
-class CreditPurchaseRequestSerializer(serializers.Serializer):
-    pack_id = serializers.IntegerField()
+class IapVerifyRequestSerializer(serializers.Serializer):
+    jws_signed_transaction = serializers.CharField()
+
+
+class IapVerifyResponseSerializer(serializers.Serializer):
+    kind = serializers.ChoiceField(choices=["subscription", "consumable"])
+    balance = serializers.IntegerField(required=False)
+    subscription = SubscriptionSerializer(required=False)
 
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -93,6 +97,7 @@ class PlanInfoSerializer(serializers.Serializer):
     price_display = serializers.CharField()
     interval = serializers.CharField()
     features = serializers.ListField(child=serializers.CharField())
+    apple_product_id = serializers.CharField()
 
 
 class CreditBalanceSerializer(serializers.Serializer):
@@ -110,3 +115,7 @@ class AIGenerationAllowanceSerializer(serializers.Serializer):
     used = serializers.IntegerField()
     limit = serializers.IntegerField()
     unlimited = serializers.BooleanField()
+
+
+class ManageSubscriptionSerializer(serializers.Serializer):
+    manage_url = serializers.CharField()

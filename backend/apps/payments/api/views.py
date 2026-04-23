@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models import Sum
 from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status
@@ -5,8 +7,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.payments.models import CreditPack, Subscription, TourPurchase, Transaction
+from apps.payments.services.apple_iap_service import (
+    SUBSCRIPTION_PRODUCT_MAP,
+    AppleIapService,
+)
 from apps.payments.services.credit_service import CreditService
-from apps.payments.services.stripe_service import StripeService
 from apps.tours.models import Tour
 from apps.users.models.User import User  # noqa: F811
 
@@ -16,13 +21,19 @@ from .serializers import (
     CreatorEarningsSerializer,
     CreditBalanceSerializer,
     CreditPackSerializer,
-    CreditPurchaseRequestSerializer,
+    IapVerifyRequestSerializer,
+    IapVerifyResponseSerializer,
+    ManageSubscriptionSerializer,
     PlanInfoSerializer,
-    SubscribeRequestSerializer,
     SubscriptionSerializer,
     TourAccessSerializer,
     TransactionSerializer,
 )
+
+logger = logging.getLogger(__name__)
+
+
+APPLE_MANAGE_SUBSCRIPTION_URL = "https://apps.apple.com/account/subscriptions"
 
 
 class PlansView(APIView):
@@ -39,6 +50,7 @@ class PlansView(APIView):
                 "name": "Premium Monthly",
                 "price_display": "$9.99/month",
                 "interval": "month",
+                "apple_product_id": "com.odyssey.subscription.monthly",
                 "features": [
                     "Unlimited AI tour generation",
                     "Access all premium tours",
@@ -51,6 +63,7 @@ class PlansView(APIView):
                 "name": "Premium Yearly",
                 "price_display": "$79.99/year",
                 "interval": "year",
+                "apple_product_id": "com.odyssey.subscription.yearly",
                 "features": [
                     "Unlimited AI tour generation",
                     "Access all premium tours",
@@ -63,28 +76,74 @@ class PlansView(APIView):
         return Response(plans)
 
 
-class SubscribeView(APIView):
+class IapVerifyView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
-        request=SubscribeRequestSerializer,
-        responses={
-            200: {"type": "object", "properties": {"checkout_url": {"type": "string"}}}
-        },
-        description="Create a Stripe Checkout Session for subscription.",
+        request=IapVerifyRequestSerializer,
+        responses={200: IapVerifyResponseSerializer},
+        description="Verify an Apple IAP JWS transaction and fulfill the purchase.",
     )
     def post(self, request):
-        serializer = SubscribeRequestSerializer(data=request.data)
+        serializer = IapVerifyRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         try:
-            checkout_url = StripeService.create_subscription_checkout(
-                user=request.user,
-                plan=serializer.validated_data["plan"],
+            payload = AppleIapService.verify_transaction(
+                serializer.validated_data["jws_signed_transaction"]
             )
-            return Response({"checkout_url": checkout_url})
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            result = AppleIapService.fulfill_transaction(request.user, payload)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if payload.productId in SUBSCRIPTION_PRODUCT_MAP:
+            return Response(
+                {
+                    "kind": "subscription",
+                    "subscription": SubscriptionSerializer(result).data,
+                }
+            )
+
+        request.user.refresh_from_db()
+        return Response(
+            {
+                "kind": "consumable",
+                "balance": request.user.credit,
+            }
+        )
+
+
+class IapNotificationsView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    @extend_schema(
+        request={"type": "object", "properties": {"signedPayload": {"type": "string"}}},
+        responses={200: {"type": "object"}},
+        description="App Store Server Notifications V2 endpoint.",
+    )
+    def post(self, request):
+        signed_payload = request.data.get("signedPayload")
+        if not signed_payload:
+            return Response(
+                {"error": "Missing signedPayload."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            AppleIapService.handle_server_notification(signed_payload)
+        except ValueError as e:
+            logger.warning("Apple notification verification failed: %s", e)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error("Apple notification processing error: %s", e)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class SubscriptionDetailView(APIView):
@@ -106,36 +165,15 @@ class SubscriptionDetailView(APIView):
             )
 
 
-class CancelSubscriptionView(APIView):
+class ManageSubscriptionView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
-        responses={200: SubscriptionSerializer},
-        description="Cancel subscription at period end.",
+        responses={200: ManageSubscriptionSerializer},
+        description="Return the Apple URL where the user can manage or cancel their subscription.",
     )
-    def post(self, request):
-        try:
-            sub = StripeService.cancel_subscription(request.user)
-            serializer = SubscriptionSerializer(sub)
-            return Response(serializer.data)
-        except ValueError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ReactivateSubscriptionView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    @extend_schema(
-        responses={200: SubscriptionSerializer},
-        description="Reactivate a canceled subscription before period end.",
-    )
-    def post(self, request):
-        try:
-            sub = StripeService.reactivate_subscription(request.user)
-            serializer = SubscriptionSerializer(sub)
-            return Response(serializer.data)
-        except ValueError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request):
+        return Response({"manage_url": APPLE_MANAGE_SUBSCRIPTION_URL})
 
 
 class CreditPackListView(APIView):
@@ -149,35 +187,6 @@ class CreditPackListView(APIView):
         packs = CreditPack.objects.filter(is_active=True)
         serializer = CreditPackSerializer(packs, many=True)
         return Response(serializer.data)
-
-
-class CreditPurchaseView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    @extend_schema(
-        request=CreditPurchaseRequestSerializer,
-        responses={
-            200: {"type": "object", "properties": {"checkout_url": {"type": "string"}}}
-        },
-        description="Create a Stripe Checkout Session for credit purchase.",
-    )
-    def post(self, request):
-        serializer = CreditPurchaseRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        try:
-            checkout_url = StripeService.create_credit_purchase_checkout(
-                user=request.user,
-                pack_id=serializer.validated_data["pack_id"],
-            )
-            return Response({"checkout_url": checkout_url})
-        except CreditPack.DoesNotExist:
-            return Response(
-                {"error": "Credit pack not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        except ValueError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CreditBalanceView(APIView):

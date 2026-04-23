@@ -35,7 +35,6 @@ class User(AbstractUser):
         help_text="DiceBear avatar URL",
     )
     is_banned = models.BooleanField(default=False)
-    stripe_customer_id = models.CharField(max_length=255, blank=True)
     ai_generations_this_month = models.PositiveIntegerField(default=0)
     ai_generation_reset_date = models.DateField(null=True, blank=True)
 

@@ -44,6 +44,7 @@ class TourProgressViewSet(
 
     def perform_create(self, serializer):
         user = self.request.user
+        tour = serializer.validated_data["tour"]
 
         # Check if the user already has an active tour
         active_progress = (
@@ -66,8 +67,12 @@ class TourProgressViewSet(
                     }
                 )
 
-        # If no active tour, create the new one normally
-        tour = serializer.validated_data["tour"]
+        # Remove any prior completed progress for this tour so the user can restart.
+        # The (user, tour) unique constraint would otherwise cause an IntegrityError.
+        TourProgress.objects.filter(
+            user=user, tour=tour, status=TourProgress.COMPLETED
+        ).delete()
+
         first_step = TourStep.objects.filter(tour=tour).order_by("order").first()
 
         serializer.save(

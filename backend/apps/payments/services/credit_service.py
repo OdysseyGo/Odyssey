@@ -17,7 +17,7 @@ class CreditService:
         transaction_type,
         description,
         tour=None,
-        stripe_payment_intent_id="",
+        apple_transaction_id="",
         related_user=None,
     ):
         with db_transaction.atomic():
@@ -31,7 +31,7 @@ class CreditService:
                 balance_after=user.credit,
                 description=description,
                 tour=tour,
-                stripe_payment_intent_id=stripe_payment_intent_id,
+                apple_transaction_id=apple_transaction_id,
                 related_user=related_user,
             )
 

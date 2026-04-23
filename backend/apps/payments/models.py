@@ -21,13 +21,23 @@ class Subscription(models.Model):
         (PAST_DUE, "Past Due"),
     ]
 
+    SANDBOX = "Sandbox"
+    PRODUCTION = "Production"
+    ENVIRONMENT_CHOICES = [
+        (SANDBOX, "Sandbox"),
+        (PRODUCTION, "Production"),
+    ]
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="subscription",
     )
-    stripe_customer_id = models.CharField(max_length=255)
-    stripe_subscription_id = models.CharField(max_length=255, unique=True)
+    apple_original_transaction_id = models.CharField(max_length=255, unique=True)
+    apple_product_id = models.CharField(max_length=255)
+    apple_environment = models.CharField(
+        max_length=20, choices=ENVIRONMENT_CHOICES, default=PRODUCTION
+    )
     plan = models.CharField(max_length=20, choices=PLAN_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ACTIVE)
     current_period_start = models.DateTimeField()
@@ -50,7 +60,7 @@ class CreditPack(models.Model):
         help_text="Price in cents (e.g. 499 = $4.99)"
     )
     currency = models.CharField(max_length=3, default="usd")
-    stripe_price_id = models.CharField(max_length=255, unique=True)
+    apple_product_id = models.CharField(max_length=255, unique=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -96,7 +106,7 @@ class Transaction(models.Model):
         blank=True,
         related_name="transactions",
     )
-    stripe_payment_intent_id = models.CharField(max_length=255, blank=True)
+    apple_transaction_id = models.CharField(max_length=255, blank=True, db_index=True)
     related_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

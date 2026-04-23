@@ -240,14 +240,13 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
-# Stripe
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
-STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-STRIPE_MONTHLY_PRICE_ID = os.getenv("STRIPE_MONTHLY_PRICE_ID", "")
-STRIPE_YEARLY_PRICE_ID = os.getenv("STRIPE_YEARLY_PRICE_ID", "")
-STRIPE_SUCCESS_URL = os.getenv("STRIPE_SUCCESS_URL", "odyssey://payment/success")
-STRIPE_CANCEL_URL = os.getenv("STRIPE_CANCEL_URL", "odyssey://payment/cancel")
+# Apple In-App Purchase
+APPLE_BUNDLE_ID = os.getenv("APPLE_BUNDLE_ID", "com.odyssey.app")
+APPLE_ISSUER_ID = os.getenv("APPLE_ISSUER_ID", "")
+APPLE_KEY_ID = os.getenv("APPLE_KEY_ID", "")
+APPLE_PRIVATE_KEY = os.getenv("APPLE_PRIVATE_KEY", "")
+APPLE_ENVIRONMENT = os.getenv("APPLE_ENVIRONMENT", "Sandbox")
+APPLE_APP_APPLE_ID = int(os.getenv("APPLE_APP_APPLE_ID", "0")) or None
 
 # Monetization
 FREE_AI_GENERATIONS_PER_MONTH = 3
