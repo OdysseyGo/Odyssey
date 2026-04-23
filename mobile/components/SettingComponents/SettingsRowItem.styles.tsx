@@ -50,11 +50,15 @@ export const rowItemStyle = (theme: ThemeName) => {
     description: {
       marginTop: 2,
       fontSize: 12,
-      color: color.text,
+      color: color.subText,
     },
 
     chevron: {
       color: color.text,
+    },
+
+    rightContent: {
+      marginRight: Spacing.sm,
     },
 
     profileImage: {
