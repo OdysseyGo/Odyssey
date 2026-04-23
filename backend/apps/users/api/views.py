@@ -1,16 +1,14 @@
 from django.contrib.auth import authenticate  # login direkt
-from django.db.models import F, QuerySet  # F dbden çıkarmadan yazıyon
+from django.db.models import Avg, F, QuerySet  # F dbden çıkarmadan yazıyon
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken  # login token
 
-from django.db.models import Avg
-
 from apps.gamification.models import TourProgress
-from apps.tours.models import Tour
 from apps.tours.api.serializers import TourSerializer
+from apps.tours.models import Tour
 from apps.users.models import Follow, User
 
 from .serializers import FollowingFeedSerializer, FollowSerializer, UserSerializer
@@ -158,7 +156,9 @@ class UserViewSet(ModelViewSet):
 
         return Response({"detail": "Password updated successfully"}, status=200)
 
-    @action(detail=True, methods=["get"], url_path="published-tours", permission_classes=[])
+    @action(
+        detail=True, methods=["get"], url_path="published-tours", permission_classes=[]
+    )
     def published_tours(self, request, pk=None):
         """Return published tours created by a specific user."""
         tours = (

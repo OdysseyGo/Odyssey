@@ -5,7 +5,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { getUserFollowers, getMe, getUserFollowings, followUser, unfollowUser, removeFollower, User } from '@/api/users';
+import {
+  getUserFollowers,
+  getMe,
+  getUserFollowings,
+  followUser,
+  unfollowUser,
+  removeFollower,
+  User,
+} from '@/api/users';
 import { setProfileNeedsRefresh } from '@/utils/profileRefreshFlag';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -57,11 +65,9 @@ function UserRow({
       <TouchableOpacity
         style={[
           rowStyles.actionButton,
-          isFollowingItem
-            ? { borderColor: theme.borderLight }
-            : { borderColor: theme.primary },
+          isFollowingItem ? { borderColor: theme.borderLight } : { borderColor: theme.primary },
         ]}
-        onPress={() => isFollowingItem ? onUnfollow(item.id) : onFollow(item.id)}
+        onPress={() => (isFollowingItem ? onUnfollow(item.id) : onFollow(item.id))}
         disabled={actionLoading}
       >
         {actionLoading ? (
@@ -73,7 +79,9 @@ function UserRow({
               { color: isFollowingItem ? theme.subText : theme.primary },
             ]}
           >
-            {isFollowingItem ? t('profile.unfollow', 'Unfollow') : t('profile.userProfileFollow', 'Follow')}
+            {isFollowingItem
+              ? t('profile.unfollow', 'Unfollow')
+              : t('profile.userProfileFollow', 'Follow')}
           </Text>
         )}
       </TouchableOpacity>
@@ -177,7 +185,11 @@ export default function FollowersScreen() {
       await followUser({ following: targetId });
       setProfileNeedsRefresh();
     } catch {
-      setMyFollowings((prev) => { const s = new Set(prev); s.delete(targetId); return s; });
+      setMyFollowings((prev) => {
+        const s = new Set(prev);
+        s.delete(targetId);
+        return s;
+      });
     } finally {
       setActionLoadingId(null);
     }
@@ -185,7 +197,11 @@ export default function FollowersScreen() {
 
   const handleUnfollow = async (targetId: number) => {
     setActionLoadingId(targetId);
-    setMyFollowings((prev) => { const s = new Set(prev); s.delete(targetId); return s; });
+    setMyFollowings((prev) => {
+      const s = new Set(prev);
+      s.delete(targetId);
+      return s;
+    });
     try {
       await unfollowUser({ following: targetId });
       setProfileNeedsRefresh();

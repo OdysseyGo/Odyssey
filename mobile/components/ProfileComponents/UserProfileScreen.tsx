@@ -5,7 +5,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { getUserById, getMe, getUserFollowings, getUserPublishedTours, followUser, unfollowUser, User } from '@/api/users';
+import {
+  getUserById,
+  getMe,
+  getUserFollowings,
+  getUserPublishedTours,
+  followUser,
+  unfollowUser,
+  User,
+} from '@/api/users';
 import { Tour } from '@/api/tours';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -49,7 +57,10 @@ function ShimmerBlock({
 
   return (
     <Animated.View
-      style={[{ width: width as any, height, borderRadius, backgroundColor: color, opacity }, style]}
+      style={[
+        { width: width as any, height, borderRadius, backgroundColor: color, opacity },
+        style,
+      ]}
     />
   );
 }
@@ -172,7 +183,10 @@ export default function UserProfileScreen() {
     setIsFollowing(!wasFollowing);
     setUser((prev) =>
       prev
-        ? { ...prev, follower_count: wasFollowing ? prev.follower_count - 1 : prev.follower_count + 1 }
+        ? {
+            ...prev,
+            follower_count: wasFollowing ? prev.follower_count - 1 : prev.follower_count + 1,
+          }
         : prev
     );
     try {
@@ -189,7 +203,10 @@ export default function UserProfileScreen() {
       setIsFollowing(wasFollowing);
       setUser((prev) =>
         prev
-          ? { ...prev, follower_count: wasFollowing ? prev.follower_count + 1 : prev.follower_count - 1 }
+          ? {
+              ...prev,
+              follower_count: wasFollowing ? prev.follower_count + 1 : prev.follower_count - 1,
+            }
           : prev
       );
     } finally {
@@ -205,10 +222,15 @@ export default function UserProfileScreen() {
 
   if (loadError || !user) {
     return (
-      <View style={[styles.errorRoot, { backgroundColor: color.background, paddingTop: insets.top }]}>
+      <View
+        style={[styles.errorRoot, { backgroundColor: color.background, paddingTop: insets.top }]}
+      >
         <TouchableOpacity
           onPress={() => router.back()}
-          style={[styles.backButton, { position: 'absolute', top: insets.top + 8, left: Spacing.md }]}
+          style={[
+            styles.backButton,
+            { position: 'absolute', top: insets.top + 8, left: Spacing.md },
+          ]}
           hitSlop={8}
         >
           <Ionicons name="chevron-back" size={26} color={color.text} />
@@ -220,7 +242,10 @@ export default function UserProfileScreen() {
           <Text style={styles.errorTitle}>{t('profile.errorTitle')}</Text>
           <Text style={styles.errorSubtitle}>{t('profile.userProfileError')}</Text>
           <TouchableOpacity
-            onPress={() => { setLoading(true); loadProfile(); }}
+            onPress={() => {
+              setLoading(true);
+              loadProfile();
+            }}
             style={[styles.followButton, styles.followButtonFollow, { marginHorizontal: 0 }]}
           >
             <Text style={[styles.followButtonText, { color: color.white }]}>
@@ -265,10 +290,9 @@ export default function UserProfileScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: Spacing.xxl * 2 + insets.bottom }}
         scrollEventThrottle={16}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          useNativeDriver: false,
+        })}
       >
         {/* Header — reuses exact same component as own profile */}
         <ProfileHeaderComp
@@ -303,10 +327,7 @@ export default function UserProfileScreen() {
             ]}
           >
             {followLoading ? (
-              <ActivityIndicator
-                size="small"
-                color={isFollowing ? color.subText : color.white}
-              />
+              <ActivityIndicator size="small" color={isFollowing ? color.subText : color.white} />
             ) : (
               <>
                 <Ionicons
