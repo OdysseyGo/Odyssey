@@ -1,7 +1,7 @@
 import os
 
-from django.db.models import Avg
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -264,7 +264,9 @@ class TourStepViewSet(viewsets.ModelViewSet):
         puzzle.options = data["options"]
         puzzle.correct_answer = data["correct_answer"]
         puzzle.reference_image = None
-        puzzle.save(update_fields=["options", "correct_answer", "reference_image", "updated_at"])
+        puzzle.save(
+            update_fields=["options", "correct_answer", "reference_image", "updated_at"]
+        )
 
         self._clear_other_puzzle_details(puzzle, Puzzle.TRIVIA)
         TriviaPuzzleDetail.objects.update_or_create(
@@ -314,14 +316,18 @@ class TourStepViewSet(viewsets.ModelViewSet):
 
         puzzle.options = []
         puzzle.correct_answer = "PICTURE_COMPARE"
-        puzzle.save(update_fields=["options", "correct_answer", "reference_image", "updated_at"])
+        puzzle.save(
+            update_fields=["options", "correct_answer", "reference_image", "updated_at"]
+        )
 
         self._clear_other_puzzle_details(puzzle, Puzzle.PICTURE_COMPARE)
         current_detail = getattr(puzzle, "picture_compare_detail", None)
         detail_reference_image = (
             reference_image
             if reference_image is not None
-            else (current_detail.reference_image if current_detail is not None else None)
+            else (
+                current_detail.reference_image if current_detail is not None else None
+            )
         )
 
         if detail_reference_image is None:
@@ -383,7 +389,9 @@ class TourStepViewSet(viewsets.ModelViewSet):
         puzzle.options = None
         puzzle.correct_answer = ""
         puzzle.reference_image = None
-        puzzle.save(update_fields=["options", "correct_answer", "reference_image", "updated_at"])
+        puzzle.save(
+            update_fields=["options", "correct_answer", "reference_image", "updated_at"]
+        )
 
         ArPuzzleDetail.objects.update_or_create(
             puzzle=puzzle,
@@ -426,7 +434,9 @@ class TourStepViewSet(viewsets.ModelViewSet):
         puzzle.options = None
         puzzle.correct_answer = ""
         puzzle.reference_image = None
-        puzzle.save(update_fields=["options", "correct_answer", "reference_image", "updated_at"])
+        puzzle.save(
+            update_fields=["options", "correct_answer", "reference_image", "updated_at"]
+        )
 
         GyroscopePuzzleDetail.objects.update_or_create(
             puzzle=puzzle,
@@ -456,7 +466,9 @@ class TourStepViewSet(viewsets.ModelViewSet):
 
         if not self._user_can_edit_step_puzzle(request, step):
             return Response(
-                {"error": "Only the tour creator can update the puzzle reference image."},
+                {
+                    "error": "Only the tour creator can update the puzzle reference image."
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -473,7 +485,9 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        reference_image = request.FILES.get("reference_image") or request.FILES.get("image")
+        reference_image = request.FILES.get("reference_image") or request.FILES.get(
+            "image"
+        )
         if not reference_image:
             return Response(
                 {"error": "Provide reference_image or image file."},
@@ -484,7 +498,9 @@ class TourStepViewSet(viewsets.ModelViewSet):
         puzzle.correct_answer = "PICTURE_COMPARE"
 
         try:
-            puzzle.save(update_fields=["reference_image", "correct_answer", "updated_at"])
+            puzzle.save(
+                update_fields=["reference_image", "correct_answer", "updated_at"]
+            )
             detail = getattr(puzzle, "picture_compare_detail", None)
             threshold = (
                 detail.similarity_threshold
@@ -504,6 +520,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
 
         serializer = PuzzleSerializer(puzzle, context={"request": request})
         return Response(serializer.data)
+
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer

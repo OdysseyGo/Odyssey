@@ -69,31 +69,26 @@ export default function TourReviewScreen() {
               };
 
               if (loc.puzzle.puzzle_type === 'TRIVIA') {
-                await setStepTriviaPuzzle(
-                  tour.id,
-                  createdStep.id,
-                  {
-                    ...basePayload,
-                    options: loc.puzzle.options,
-                    correct_answer: loc.puzzle.correctAnswer,
-                  },
-                );
+                await setStepTriviaPuzzle(tour.id, createdStep.id, {
+                  ...basePayload,
+                  options: loc.puzzle.options,
+                  correct_answer: loc.puzzle.correctAnswer,
+                });
                 continue;
               }
 
               if (loc.puzzle.puzzle_type === 'PICTURE_COMPARE') {
-                if (!loc.puzzle.referenceImage || !loc.puzzle.referenceImage.startsWith('file://')) {
+                if (
+                  !loc.puzzle.referenceImage ||
+                  !loc.puzzle.referenceImage.startsWith('file://')
+                ) {
                   throw new Error('PICTURE_COMPARE puzzles require a local reference image.');
                 }
 
-                await setStepPictureComparePuzzle(
-                  tour.id,
-                  createdStep.id,
-                  {
-                    ...basePayload,
-                    referenceImageUri: loc.puzzle.referenceImage,
-                  },
-                );
+                await setStepPictureComparePuzzle(tour.id, createdStep.id, {
+                  ...basePayload,
+                  referenceImageUri: loc.puzzle.referenceImage,
+                });
                 continue;
               }
 

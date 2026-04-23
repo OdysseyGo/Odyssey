@@ -101,8 +101,7 @@ function mapApiPuzzleToInternal(apiPuzzle: ApiTour['steps'][0]['puzzle']): Puzzl
   // Prefer normalized detail payloads, with fallback to old flattened fields.
   const triviaOptions = apiPuzzle.trivia?.options || apiPuzzle.options;
   const triviaAnswer = apiPuzzle.trivia?.correct_answer || apiPuzzle.correct_answer;
-  const pictureReference =
-    apiPuzzle.picture_compare?.reference_image || apiPuzzle.reference_image;
+  const pictureReference = apiPuzzle.picture_compare?.reference_image || apiPuzzle.reference_image;
 
   if (
     apiPuzzle.puzzle_type === 'TRIVIA' &&

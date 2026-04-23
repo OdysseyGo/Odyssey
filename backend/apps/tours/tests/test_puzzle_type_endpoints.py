@@ -6,7 +6,13 @@ from PIL import Image
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.tours.models import PictureComparePuzzleDetail, Puzzle, Tour, TourStep, TriviaPuzzleDetail
+from apps.tours.models import (
+    PictureComparePuzzleDetail,
+    Puzzle,
+    Tour,
+    TourStep,
+    TriviaPuzzleDetail,
+)
 
 User = get_user_model()
 
@@ -20,7 +26,9 @@ class PuzzleTypeEndpointTests(APITestCase):
         return SimpleUploadedFile(name, buffer.read(), content_type="image/jpeg")
 
     def setUp(self):
-        self.user = User.objects.create_user(username="puzzle_owner", password="password")
+        self.user = User.objects.create_user(
+            username="puzzle_owner", password="password"
+        )
         self.client.force_authenticate(user=self.user)
 
         self.tour = Tour.objects.create(

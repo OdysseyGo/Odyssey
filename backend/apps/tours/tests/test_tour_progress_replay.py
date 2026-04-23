@@ -11,7 +11,9 @@ User = get_user_model()
 
 class TourProgressReplayTests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="replay_user", password="password")
+        self.user = User.objects.create_user(
+            username="replay_user", password="password"
+        )
         self.client.force_authenticate(user=self.user)
 
         self.tour = Tour.objects.create(

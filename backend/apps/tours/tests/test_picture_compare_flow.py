@@ -7,7 +7,13 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.gamification.models import TourProgress
-from apps.tours.models import PictureComparePuzzleDetail, Puzzle, PuzzleAttempt, Tour, TourStep
+from apps.tours.models import (
+    PictureComparePuzzleDetail,
+    Puzzle,
+    PuzzleAttempt,
+    Tour,
+    TourStep,
+)
 
 User = get_user_model()
 
@@ -112,7 +118,9 @@ class PictureCompareFlowTests(APITestCase):
 
         self.progress.refresh_from_db()
         self.assertEqual(self.progress.current_step_id, self.step_one.id)
-        self.assertEqual(PuzzleAttempt.objects.filter(progress=self.progress).count(), 1)
+        self.assertEqual(
+            PuzzleAttempt.objects.filter(progress=self.progress).count(), 1
+        )
 
     def test_submit_picture_compare_mismatch_does_not_advance(self):
         response = self.client.post(

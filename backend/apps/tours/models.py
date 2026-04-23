@@ -163,9 +163,7 @@ class TriviaPuzzleDetail(models.Model):
     def clean(self):
         if self.puzzle.puzzle_type != Puzzle.TRIVIA:
             raise ValidationError(
-                {
-                    "puzzle": "TriviaPuzzleDetail can only be attached to TRIVIA puzzles."
-                }
+                {"puzzle": "TriviaPuzzleDetail can only be attached to TRIVIA puzzles."}
             )
 
     def __str__(self):

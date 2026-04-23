@@ -12,7 +12,6 @@ from apps.tours.models import (
 )
 from apps.users.api.serializers import UserSerializer
 
-
 DEFAULT_PICTURE_COMPARE_THRESHOLD = 0.7
 
 
@@ -186,6 +185,7 @@ class TourStepSerializer(serializers.ModelSerializer):
             "audio",
             "puzzle",
         ]
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

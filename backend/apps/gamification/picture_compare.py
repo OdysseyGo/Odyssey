@@ -2,7 +2,6 @@ import time
 
 from PIL import Image, ImageChops, ImageFilter, ImageOps, ImageStat
 
-
 FAST_SIZE = (160, 160)
 FINAL_SIZE = (224, 224)
 
@@ -109,8 +108,12 @@ def _grid_mean_similarity(reference, attempt, grid=6):
             right = width if col == grid - 1 else (col + 1) * block_w
             bottom = height if row == grid - 1 else (row + 1) * block_h
 
-            ref_mean = ImageStat.Stat(reference.crop((left, top, right, bottom))).mean[0]
-            attempt_mean = ImageStat.Stat(attempt.crop((left, top, right, bottom))).mean[0]
+            ref_mean = ImageStat.Stat(reference.crop((left, top, right, bottom))).mean[
+                0
+            ]
+            attempt_mean = ImageStat.Stat(
+                attempt.crop((left, top, right, bottom))
+            ).mean[0]
 
             score_sum += 1.0 - (abs(ref_mean - attempt_mean) / 255.0)
             count += 1

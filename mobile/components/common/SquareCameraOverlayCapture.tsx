@@ -122,10 +122,7 @@ export default function SquareCameraOverlayCapture({
 
         <View style={[styles.mask, { top: 0, left: 0, right: 0, height: frameTop }]} />
         <View
-          style={[
-            styles.mask,
-            { top: frameTop, left: 0, width: frameLeft, height: squareSize },
-          ]}
+          style={[styles.mask, { top: frameTop, left: 0, width: frameLeft, height: squareSize }]}
         />
         <View
           style={[
@@ -175,7 +172,10 @@ export default function SquareCameraOverlayCapture({
 
         <View style={styles.bottomBar}>
           <Pressable
-            style={[styles.captureButton, (!hasPermission || isCapturing) && styles.captureDisabled]}
+            style={[
+              styles.captureButton,
+              (!hasPermission || isCapturing) && styles.captureDisabled,
+            ]}
             disabled={!hasPermission || isCapturing}
             onPress={handleTakePhoto}
           >

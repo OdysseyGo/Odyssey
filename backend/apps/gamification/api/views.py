@@ -1,13 +1,13 @@
-from PIL import UnidentifiedImageError
 from django.db import transaction
 from django.utils import timezone
+from PIL import UnidentifiedImageError
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from apps.gamification.picture_compare import compare_picture_similarity
 from apps.gamification.models import Badge, TourProgress, UserBadge
+from apps.gamification.picture_compare import compare_picture_similarity
 from apps.gamification.services import BadgeService
 from apps.tours.models import Puzzle, PuzzleAttempt, TourStep
 
@@ -131,7 +131,9 @@ class TourProgressViewSet(
             .first()
         )
 
-    def _advance_progress(self, *, progress, user, award_xp, step_action_word="completed"):
+    def _advance_progress(
+        self, *, progress, user, award_xp, step_action_word="completed"
+    ):
         current_step = progress.current_step
         next_step = self._get_next_step(progress)
 
@@ -196,7 +198,9 @@ class TourProgressViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        result = self._advance_progress(progress=progress, user=request.user, award_xp=True)
+        result = self._advance_progress(
+            progress=progress, user=request.user, award_xp=True
+        )
         return Response(result)
 
     @action(detail=True, methods=["post"], url_path="skip-step")

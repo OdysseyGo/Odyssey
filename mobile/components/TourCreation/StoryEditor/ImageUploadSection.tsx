@@ -98,7 +98,11 @@ export default function ImageUploadSection({
               accessibilityRole="button"
               accessibilityLabel="Open target image full screen"
             >
-              <Image source={{ uri: image }} style={styles.referenceImagePreview} resizeMode="cover" />
+              <Image
+                source={{ uri: image }}
+                style={styles.referenceImagePreview}
+                resizeMode="cover"
+              />
               <View style={styles.referenceImageOverlay}>
                 <Text style={styles.referenceImageOverlayText}>Tap to view full image</Text>
               </View>
@@ -132,7 +136,10 @@ export default function ImageUploadSection({
         animationType="fade"
         onRequestClose={() => setFullscreenImageUri(null)}
       >
-        <Pressable style={styles.referenceImageModalOverlay} onPress={() => setFullscreenImageUri(null)}>
+        <Pressable
+          style={styles.referenceImageModalOverlay}
+          onPress={() => setFullscreenImageUri(null)}
+        >
           <Pressable style={styles.referenceImageModalContent} onPress={() => {}}>
             <Image
               source={{ uri: fullscreenImageUri ?? '' }}

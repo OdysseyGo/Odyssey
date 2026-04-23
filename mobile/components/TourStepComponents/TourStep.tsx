@@ -217,7 +217,11 @@ function PictureCompareView({ puzzle, isSolved, onSolve }: PictureCompareViewPro
             accessibilityRole="button"
             accessibilityLabel="Open latest attempt full screen"
           >
-            <Image source={{ uri: previewUri }} style={styles.referenceImagePreview} resizeMode="cover" />
+            <Image
+              source={{ uri: previewUri }}
+              style={styles.referenceImagePreview}
+              resizeMode="cover"
+            />
             <View style={styles.referenceImageOverlay}>
               <Text style={styles.referenceImageOverlayText}>Tap to view full image</Text>
             </View>
