@@ -11,7 +11,7 @@ import WritingTips from '@/components/TourCreation/StoryEditor/WritingTips';
 import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditorFooter';
 import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
 import { CreationHeader } from '@/components/TourCreation/common';
-import { Puzzle } from '@/components/TourCreation';
+import { Puzzle, doesLocationMeetTourRequirements } from '@/components/TourCreation';
 import { useTranslation } from 'react-i18next';
 
 export default function EditLocationScreen() {
@@ -97,28 +97,14 @@ export default function EditLocationScreen() {
     ]
   );
 
-  const isPuzzleValid = (currentPuzzle?: Puzzle) => {
-    if (!currentPuzzle?.question) {
-      return false;
-    }
-
-    if (currentPuzzle.puzzle_type === 'PICTURE_COMPARE') {
-      return !!currentPuzzle.referenceImage;
-    }
-
-    const options = currentPuzzle.options;
-    if (!currentPuzzle.correctAnswer || !options || options.length < 2) {
-      return false;
-    }
-
-    return options.every((opt) => opt.trim().length > 0);
-  };
-
-  const shouldValidatePuzzle = tourData.tourType === 'PUZZLE' || !!puzzle;
-  const isValid =
-    title.trim().length > 0 &&
-    story.trim().length > 0 &&
-    (!shouldValidatePuzzle || isPuzzleValid(puzzle));
+  const isValid = doesLocationMeetTourRequirements(
+    {
+      title,
+      story,
+      puzzle,
+    },
+    tourData.tourType
+  );
 
   const currentIndex = selectedLocation
     ? tourData.locations.findIndex((loc) => loc.id === selectedLocation.id)

@@ -102,3 +102,41 @@ export const createNewLocation = (
   story: '',
   order,
 });
+
+export const isPuzzleValid = (puzzle?: Puzzle): boolean => {
+  if (!puzzle?.question.trim()) {
+    return false;
+  }
+
+  if (puzzle.puzzle_type === 'PICTURE_COMPARE') {
+    return !!puzzle.referenceImage;
+  }
+
+  if (puzzle.puzzle_type === 'TRIVIA') {
+    const options = puzzle.options.map((option) => option.trim()).filter(Boolean);
+    return options.length >= 2 && options.includes(puzzle.correctAnswer.trim());
+  }
+
+  return true;
+};
+
+export const doesLocationMeetTourRequirements = (
+  location: Pick<TourLocation, 'title' | 'story' | 'puzzle'>,
+  tourType: TourCreationData['tourType']
+): boolean => {
+  const hasCoreContent = location.title.trim().length > 0 && location.story.trim().length > 0;
+
+  if (!hasCoreContent) {
+    return false;
+  }
+
+  if (tourType === 'PUZZLE') {
+    return isPuzzleValid(location.puzzle);
+  }
+
+  if (tourType === 'HYBRID') {
+    return !location.puzzle || isPuzzleValid(location.puzzle);
+  }
+
+  return true;
+};

@@ -219,6 +219,10 @@
         "label": "Notifications",
         "description": "Manage notification preferences"
       },
+      "logout": {
+        "label": "Logout",
+        "description": "Sign out of your account"
+      },
       "privacy": {
         "label": "Privacy",
         "description": "Control your privacy settings"
@@ -297,6 +301,8 @@
     "ok": "OK",
     "errorTitle": "Error",
     "errorMessage": "Failed to submit tour. Please try again.",
+    "incompletePuzzleTitle": "Complete required puzzles",
+    "incompletePuzzleMessage": "Puzzle tours need a valid puzzle at every location before submission.",
     "method": {
       "title": "Create Your Tour",
       "subtitle": "Choose how you want to create your tour experience",

@@ -219,6 +219,10 @@
         "label": "Bildirimler",
         "description": "Bildirim tercihlerini yönet"
       },
+      "logout": {
+        "label": "Çıkış Yap",
+        "description": "Hesabından çıkış yap"
+      },
       "privacy": {
         "label": "Gizlilik",
         "description": "Gizlilik ayarlarını yönet"
@@ -297,6 +301,8 @@
     "ok": "Tamam",
     "errorTitle": "Hata",
     "errorMessage": "Tur gönderilemedi. Lütfen tekrar deneyin.",
+    "incompletePuzzleTitle": "Zorunlu bulmacaları tamamla",
+    "incompletePuzzleMessage": "Bulmaca turunda göndermeden önce her konumda geçerli bir bulmaca olmalı.",
     "method": {
       "title": "Turunuzu Oluşturun",
       "subtitle": "Tur deneyiminizi nasıl oluşturmak istediğinizi seçin",

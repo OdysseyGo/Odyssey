@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { Tour as ApiTour, TourStep as ApiTourStep } from '@/api/tours';
+import { Tour as ApiTour } from '@/api/tours';
 import {
   Tour,
   TourStep,
@@ -8,6 +8,7 @@ import {
   Puzzle,
 } from '@/components/TourStepComponents/TourStep.config';
 
+import { ApiError } from '@/api/APIClient';
 import { getInProgressTour } from '@/api/tourProgress';
 import { getTour } from '@/api/tours';
 
@@ -231,6 +232,11 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         earnedXP: activeProgress.total_xp,
       });
     } catch (error: any) {
+      if (error instanceof ApiError && error.statusCode === 401) {
+        setState(initialState);
+        return;
+      }
+
       console.error("Couldn't fetch current active tour ", error);
     }
   }, [state.isActive]);
