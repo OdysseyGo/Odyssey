@@ -93,27 +93,38 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
 }
 
 /**
- * Maps an API puzzle to the internal Puzzle format (only multiple-choice supported)
+ * Maps API puzzle payloads to internal puzzle formats used by step renderer.
  */
 function mapApiPuzzleToInternal(apiPuzzle: ApiTour['steps'][0]['puzzle']): Puzzle | null {
   if (!apiPuzzle) return null;
 
-  // Only TRIVIA puzzles with multiple choice options are supported
+  // Prefer normalized detail payloads, with fallback to old flattened fields.
+  const triviaOptions = apiPuzzle.trivia?.options || apiPuzzle.options;
+  const triviaAnswer = apiPuzzle.trivia?.correct_answer || apiPuzzle.correct_answer;
+  const pictureReference = apiPuzzle.picture_compare?.reference_image || apiPuzzle.reference_image;
 
   if (
     apiPuzzle.puzzle_type === 'TRIVIA' &&
-    apiPuzzle.options &&
-    Array.isArray(apiPuzzle.options) &&
-    apiPuzzle.options.length > 0
+    triviaOptions &&
+    Array.isArray(triviaOptions) &&
+    triviaOptions.length > 0
   ) {
     return {
       type: 'multiple-choice',
       question: apiPuzzle.question,
-      options: apiPuzzle.options.map((option: string, idx: number) => ({
+      options: triviaOptions.map((option: string, idx: number) => ({
         id: String.fromCharCode(97 + idx), // a, b, c, d
         text: option,
-        isCorrect: option === apiPuzzle.correct_answer,
+        isCorrect: option === triviaAnswer,
       })),
+    };
+  }
+
+  if (apiPuzzle.puzzle_type === 'PICTURE_COMPARE' && pictureReference) {
+    return {
+      type: 'picture-compare',
+      question: apiPuzzle.question,
+      referenceImageUri: pictureReference,
     };
   }
 

@@ -194,9 +194,11 @@ export default function Analytics() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ label, percent }: { label: string; percent: number }) =>
-                    `${label} (${(percent * 100).toFixed(0)}%)`
-                  }
+                  label={(props) => {
+                    const payload = props.payload as Distribution | undefined;
+                    const percent = typeof props.percent === "number" ? props.percent : 0;
+                    return `${payload?.label ?? ""} (${(percent * 100).toFixed(0)}%)`;
+                  }}
                   outerRadius={100}
                   dataKey="count"
                   nameKey="label"
