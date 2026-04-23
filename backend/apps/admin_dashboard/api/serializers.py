@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.admin_dashboard.models import BanRecord, Report
+from apps.gamification.models import PictureCompareConfig
 from apps.tours.models import Puzzle, Review, Tour, TourStep
 from apps.users.models import User
 
@@ -105,6 +106,107 @@ class BulkUserActionSerializer(serializers.Serializer):
 class BanUserSerializer(serializers.Serializer):
     reason = serializers.CharField()
     expires_at = serializers.DateTimeField(required=False, allow_null=True)
+
+
+class PictureCompareTuningSerializer(serializers.Serializer):
+    reference_image = serializers.ImageField()
+    attempt_image = serializers.ImageField()
+    threshold = serializers.FloatField(min_value=0.0, max_value=1.0, default=0.7)
+    fast_reject_threshold = serializers.FloatField(
+        min_value=0.0, max_value=1.0, required=False
+    )
+    histogram_penalty_threshold = serializers.FloatField(
+        min_value=0.0, max_value=1.0, required=False
+    )
+    grid_penalty_threshold = serializers.FloatField(
+        min_value=0.0, max_value=1.0, required=False
+    )
+    histogram_penalty_multiplier = serializers.FloatField(
+        min_value=0.0, max_value=1.0, required=False
+    )
+    grid_penalty_multiplier = serializers.FloatField(
+        min_value=0.0, max_value=1.0, required=False
+    )
+    base_weight = serializers.FloatField(min_value=0.0, max_value=1.0, required=False)
+    edge_weight = serializers.FloatField(min_value=0.0, max_value=1.0, required=False)
+    histogram_weight = serializers.FloatField(
+        min_value=0.0, max_value=1.0, required=False
+    )
+    grid_weight = serializers.FloatField(min_value=0.0, max_value=1.0, required=False)
+    fast_max_shift = serializers.IntegerField(min_value=1, max_value=32, required=False)
+    fast_step = serializers.IntegerField(min_value=1, max_value=8, required=False)
+    final_max_shift = serializers.IntegerField(
+        min_value=1, max_value=48, required=False
+    )
+    final_step = serializers.IntegerField(min_value=1, max_value=8, required=False)
+    edge_max_shift = serializers.IntegerField(min_value=1, max_value=48, required=False)
+    edge_step = serializers.IntegerField(min_value=1, max_value=8, required=False)
+
+    def tuning_config(self):
+        image_fields = {"reference_image", "attempt_image", "threshold"}
+        return {
+            key: value
+            for key, value in self.validated_data.items()
+            if key not in image_fields
+        }
+
+
+class PictureCompareConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PictureCompareConfig
+        fields = [
+            "similarity_threshold",
+            "fast_reject_threshold",
+            "base_weight",
+            "edge_weight",
+            "histogram_weight",
+            "grid_weight",
+            "histogram_penalty_threshold",
+            "grid_penalty_threshold",
+            "histogram_penalty_multiplier",
+            "grid_penalty_multiplier",
+            "fast_max_shift",
+            "fast_step",
+            "final_max_shift",
+            "final_step",
+            "edge_max_shift",
+            "edge_step",
+            "updated_at",
+        ]
+        read_only_fields = ["updated_at"]
+
+    def validate(self, attrs):
+        ratio_fields = [
+            "similarity_threshold",
+            "fast_reject_threshold",
+            "base_weight",
+            "edge_weight",
+            "histogram_weight",
+            "grid_weight",
+            "histogram_penalty_threshold",
+            "grid_penalty_threshold",
+            "histogram_penalty_multiplier",
+            "grid_penalty_multiplier",
+        ]
+        for field in ratio_fields:
+            if field in attrs and not 0.0 <= attrs[field] <= 1.0:
+                raise serializers.ValidationError({field: "Must be between 0 and 1."})
+
+        int_bounds = {
+            "fast_max_shift": (1, 32),
+            "fast_step": (1, 8),
+            "final_max_shift": (1, 48),
+            "final_step": (1, 8),
+            "edge_max_shift": (1, 48),
+            "edge_step": (1, 8),
+        }
+        for field, (minimum, maximum) in int_bounds.items():
+            if field in attrs and not minimum <= attrs[field] <= maximum:
+                raise serializers.ValidationError(
+                    {field: f"Must be between {minimum} and {maximum}."}
+                )
+
+        return attrs
 
 
 # ── Tour Management ──────────────────────────────────────────────────

@@ -18,7 +18,7 @@ export interface MultipleChoicePuzzle {
 export interface PictureComparePuzzle {
   type: 'picture-compare';
   question: string;
-  referenceImageUri: string;
+  referenceImageUri?: string;
 }
 
 export type Puzzle = MultipleChoicePuzzle | PictureComparePuzzle;

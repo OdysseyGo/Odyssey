@@ -6,7 +6,12 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from apps.gamification.models import Badge, TourProgress, UserBadge
+from apps.gamification.models import (
+    Badge,
+    PictureCompareConfig,
+    TourProgress,
+    UserBadge,
+)
 from apps.gamification.picture_compare import compare_picture_similarity
 from apps.gamification.services import BadgeService
 from apps.tours.models import Puzzle, PuzzleAttempt, TourStep
@@ -45,8 +50,14 @@ class TourProgressViewSet(
     def _picture_compare_config(puzzle):
         detail = getattr(puzzle, "picture_compare_detail", None)
         if detail is None:
-            return None, None
-        return detail.reference_image, detail.similarity_threshold
+            return None, None, None
+
+        live_config = PictureCompareConfig.load()
+        return (
+            detail.reference_image,
+            live_config.similarity_threshold,
+            live_config.tuning_config(),
+        )
 
     def get_queryset(self):
         return TourProgress.objects.filter(user=self.request.user).order_by(
@@ -240,7 +251,7 @@ class TourProgressViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        reference_image, threshold = self._picture_compare_config(puzzle)
+        reference_image, threshold, tuning_config = self._picture_compare_config(puzzle)
         if not reference_image:
             return Response(
                 {"error": "Reference image is not configured for this puzzle."},
@@ -268,6 +279,7 @@ class TourProgressViewSet(
                 reference_image_file=reference_image,
                 attempt_image_file=attempt_image,
                 threshold=threshold,
+                tuning_config=tuning_config,
             )
         except (OSError, UnidentifiedImageError, ValueError):
             return Response(

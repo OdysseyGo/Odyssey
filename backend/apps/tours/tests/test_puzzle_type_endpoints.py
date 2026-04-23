@@ -7,6 +7,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.tours.models import (
+    ArPuzzleDetail,
+    GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
     Puzzle,
     Tour,
@@ -111,3 +113,49 @@ class PuzzleTypeEndpointTests(APITestCase):
             TriviaPuzzleDetail.objects.filter(puzzle=puzzle).exists(),
             "Switching puzzle type should remove stale TRIVIA detail rows.",
         )
+
+    def test_set_ar_puzzle_creates_ar_detail(self):
+        response = self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-ar-puzzle/",
+            {
+                "question": "Find the hidden object",
+                "hint": "Look up",
+                "xp_reward": 20,
+                "scene_asset_url": "https://example.com/scene.glb",
+                "metadata": {"target": "statue"},
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["puzzle_type"], Puzzle.AR)
+        self.assertEqual(
+            response.data["ar"]["scene_asset_url"], "https://example.com/scene.glb"
+        )
+
+        puzzle = Puzzle.objects.get(step=self.step)
+        detail = ArPuzzleDetail.objects.get(puzzle=puzzle)
+        self.assertEqual(detail.metadata, {"target": "statue"})
+
+    def test_set_gyroscope_puzzle_creates_gyroscope_detail(self):
+        response = self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-gyroscope-puzzle/",
+            {
+                "question": "Face the marker",
+                "hint": "Turn slowly",
+                "xp_reward": 18,
+                "target_pitch": 1.5,
+                "target_roll": 2.5,
+                "target_yaw": 90.0,
+                "tolerance_degrees": 12.0,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["puzzle_type"], Puzzle.GYROSCOPE)
+        self.assertEqual(response.data["gyroscope"]["target_yaw"], 90.0)
+
+        puzzle = Puzzle.objects.get(step=self.step)
+        detail = GyroscopePuzzleDetail.objects.get(puzzle=puzzle)
+        self.assertEqual(detail.tolerance_degrees, 12.0)

@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.gamification.models import TourProgress
+from apps.gamification.models import PictureCompareConfig, TourProgress
 from apps.tours.models import (
     PictureComparePuzzleDetail,
     Puzzle,
@@ -121,6 +121,21 @@ class PictureCompareFlowTests(APITestCase):
         self.assertEqual(
             PuzzleAttempt.objects.filter(progress=self.progress).count(), 1
         )
+
+    def test_submit_picture_compare_uses_live_config_threshold(self):
+        config = PictureCompareConfig.load()
+        config.similarity_threshold = 1.0
+        config.save(update_fields=["similarity_threshold", "updated_at"])
+
+        response = self.client.post(
+            f"/api/tour-progress/{self.progress.id}/submit-picture-compare/",
+            {"image": self._image_file(self._shifted_attempt_image(), "attempt.jpg")},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["accepted"])
+        self.assertEqual(response.data["threshold_used"], 1.0)
 
     def test_submit_picture_compare_mismatch_does_not_advance(self):
         response = self.client.post(

@@ -4,6 +4,23 @@ from PIL import Image, ImageChops, ImageFilter, ImageOps, ImageStat
 
 FAST_SIZE = (160, 160)
 FINAL_SIZE = (224, 224)
+DEFAULT_COMPARE_CONFIG = {
+    "fast_max_shift": 8,
+    "fast_step": 2,
+    "final_max_shift": 12,
+    "final_step": 2,
+    "edge_max_shift": 12,
+    "edge_step": 2,
+    "fast_reject_threshold": 0.35,
+    "base_weight": 0.45,
+    "edge_weight": 0.25,
+    "histogram_weight": 0.15,
+    "grid_weight": 0.15,
+    "histogram_penalty_threshold": 0.78,
+    "grid_penalty_threshold": 0.72,
+    "histogram_penalty_multiplier": 0.82,
+    "grid_penalty_multiplier": 0.82,
+}
 
 
 def _center_square(image):
@@ -15,16 +32,23 @@ def _center_square(image):
 
 
 def _prepare_grayscale(source, size):
-    if hasattr(source, "open"):
+    opened_source = False
+    if hasattr(source, "open") and hasattr(source, "storage"):
         source.open("rb")
+        opened_source = True
     if hasattr(source, "seek"):
         source.seek(0)
-    image = Image.open(source)
-    image = ImageOps.exif_transpose(image)
-    image = image.convert("L")
-    image = _center_square(image)
-    image = ImageOps.autocontrast(image)
-    return image.resize(size, Image.Resampling.BILINEAR)
+
+    try:
+        with Image.open(source) as image:
+            image = ImageOps.exif_transpose(image)
+            image = image.convert("L")
+            image = _center_square(image)
+            image = ImageOps.autocontrast(image)
+            return image.resize(size, Image.Resampling.BILINEAR).copy()
+    finally:
+        if opened_source and hasattr(source, "close"):
+            source.close()
 
 
 def _overlap_boxes(width, height, dx, dy):
@@ -121,8 +145,62 @@ def _grid_mean_similarity(reference, attempt, grid=6):
     return max(0.0, min(1.0, score_sum / max(1, count)))
 
 
-def compare_picture_similarity(reference_image_file, attempt_image_file, threshold):
+def _compare_config(overrides=None):
+    config = DEFAULT_COMPARE_CONFIG.copy()
+    if overrides:
+        for key, value in overrides.items():
+            if value is not None and key in config:
+                config[key] = value
+
+    for key in (
+        "fast_max_shift",
+        "fast_step",
+        "final_max_shift",
+        "final_step",
+        "edge_max_shift",
+        "edge_step",
+    ):
+        config[key] = max(1, int(config[key]))
+
+    for key in (
+        "fast_reject_threshold",
+        "base_weight",
+        "edge_weight",
+        "histogram_weight",
+        "grid_weight",
+        "histogram_penalty_threshold",
+        "grid_penalty_threshold",
+        "histogram_penalty_multiplier",
+        "grid_penalty_multiplier",
+    ):
+        config[key] = max(0.0, min(1.0, float(config[key])))
+
+    weight_total = (
+        config["base_weight"]
+        + config["edge_weight"]
+        + config["histogram_weight"]
+        + config["grid_weight"]
+    )
+    if weight_total <= 0:
+        config["base_weight"] = DEFAULT_COMPARE_CONFIG["base_weight"]
+        config["edge_weight"] = DEFAULT_COMPARE_CONFIG["edge_weight"]
+        config["histogram_weight"] = DEFAULT_COMPARE_CONFIG["histogram_weight"]
+        config["grid_weight"] = DEFAULT_COMPARE_CONFIG["grid_weight"]
+        weight_total = 1.0
+
+    config["weight_total"] = weight_total
+    return config
+
+
+def compare_picture_similarity(
+    reference_image_file,
+    attempt_image_file,
+    threshold,
+    tuning_config=None,
+    include_breakdown=False,
+):
     started_at = time.perf_counter()
+    config = _compare_config(tuning_config)
 
     reference_fast = _prepare_grayscale(reference_image_file, FAST_SIZE)
     attempt_fast = _prepare_grayscale(attempt_image_file, FAST_SIZE)
@@ -130,18 +208,25 @@ def compare_picture_similarity(reference_image_file, attempt_image_file, thresho
     stage_a_similarity = _best_shift_similarity(
         reference_fast,
         attempt_fast,
-        max_shift=8,
-        step=2,
+        max_shift=config["fast_max_shift"],
+        step=config["fast_step"],
     )
 
     # Fast reject for clearly different images.
-    if stage_a_similarity < 0.35:
+    if stage_a_similarity < config["fast_reject_threshold"]:
         processing_ms = int((time.perf_counter() - started_at) * 1000)
-        return {
+        result = {
             "accepted": False,
             "similarity_score": round(stage_a_similarity, 4),
             "processing_ms": processing_ms,
         }
+        if include_breakdown:
+            result["breakdown"] = {
+                "fast_similarity": round(stage_a_similarity, 4),
+                "fast_rejected": True,
+                "config": config,
+            }
+        return result
 
     reference_final = _prepare_grayscale(reference_image_file, FINAL_SIZE)
     attempt_final = _prepare_grayscale(attempt_image_file, FINAL_SIZE)
@@ -149,8 +234,8 @@ def compare_picture_similarity(reference_image_file, attempt_image_file, thresho
     base_similarity = _best_shift_similarity(
         reference_final,
         attempt_final,
-        max_shift=12,
-        step=2,
+        max_shift=config["final_max_shift"],
+        step=config["final_step"],
     )
 
     edge_reference = reference_final.filter(ImageFilter.FIND_EDGES)
@@ -158,31 +243,48 @@ def compare_picture_similarity(reference_image_file, attempt_image_file, thresho
     edge_similarity = _best_shift_similarity(
         edge_reference,
         edge_attempt,
-        max_shift=12,
-        step=2,
+        max_shift=config["edge_max_shift"],
+        step=config["edge_step"],
     )
 
     hist_similarity = _histogram_similarity(reference_final, attempt_final)
     grid_similarity = _grid_mean_similarity(reference_final, attempt_final)
 
-    combined_similarity = (
-        (0.45 * base_similarity)
-        + (0.25 * edge_similarity)
-        + (0.15 * hist_similarity)
-        + (0.15 * grid_similarity)
-    )
+    unpenalized_similarity = (
+        (config["base_weight"] * base_similarity)
+        + (config["edge_weight"] * edge_similarity)
+        + (config["histogram_weight"] * hist_similarity)
+        + (config["grid_weight"] * grid_similarity)
+    ) / config["weight_total"]
 
     # Penalize false positives where broad tonal or spatial structure diverges.
-    if hist_similarity < 0.78:
-        combined_similarity *= 0.82
-    if grid_similarity < 0.72:
-        combined_similarity *= 0.82
+    combined_similarity = unpenalized_similarity
+    histogram_penalty_applied = hist_similarity < config["histogram_penalty_threshold"]
+    grid_penalty_applied = grid_similarity < config["grid_penalty_threshold"]
+    if histogram_penalty_applied:
+        combined_similarity *= config["histogram_penalty_multiplier"]
+    if grid_penalty_applied:
+        combined_similarity *= config["grid_penalty_multiplier"]
 
     combined_similarity = max(0.0, min(1.0, combined_similarity))
 
     processing_ms = int((time.perf_counter() - started_at) * 1000)
-    return {
+    result = {
         "accepted": combined_similarity >= threshold,
         "similarity_score": round(combined_similarity, 4),
         "processing_ms": processing_ms,
     }
+    if include_breakdown:
+        result["breakdown"] = {
+            "fast_similarity": round(stage_a_similarity, 4),
+            "base_similarity": round(base_similarity, 4),
+            "edge_similarity": round(edge_similarity, 4),
+            "histogram_similarity": round(hist_similarity, 4),
+            "grid_similarity": round(grid_similarity, 4),
+            "unpenalized_similarity": round(unpenalized_similarity, 4),
+            "histogram_penalty_applied": histogram_penalty_applied,
+            "grid_penalty_applied": grid_penalty_applied,
+            "fast_rejected": False,
+            "config": config,
+        }
+    return result

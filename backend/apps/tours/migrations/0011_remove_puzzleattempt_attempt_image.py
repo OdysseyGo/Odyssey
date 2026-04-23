@@ -7,9 +7,4 @@ class Migration(migrations.Migration):
         ("tours", "0010_puzzle_detail_models"),
     ]
 
-    operations = [
-        migrations.RemoveField(
-            model_name="puzzleattempt",
-            name="attempt_image",
-        ),
-    ]
+    operations = []

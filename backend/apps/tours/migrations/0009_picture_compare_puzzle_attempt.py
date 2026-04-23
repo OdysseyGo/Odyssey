@@ -46,7 +46,6 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("attempt_image", models.ImageField(upload_to="puzzle_attempts/")),
                 ("similarity_score", models.FloatField(blank=True, null=True)),
                 ("accepted", models.BooleanField(default=False)),
                 ("processing_ms", models.PositiveIntegerField(default=0)),

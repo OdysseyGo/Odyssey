@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Pressable,
   StyleSheet,
@@ -98,6 +99,11 @@ export default function SquareCameraOverlayCapture({
 
       await onCapture(manipulated.uri);
       onClose();
+    } catch {
+      Alert.alert(
+        'Capture failed',
+        'Could not process this photo. Please try again.'
+      );
     } finally {
       setIsCapturing(false);
     }

@@ -393,6 +393,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
             update_fields=["options", "correct_answer", "reference_image", "updated_at"]
         )
 
+        self._clear_other_puzzle_details(puzzle, Puzzle.AR)
         ArPuzzleDetail.objects.update_or_create(
             puzzle=puzzle,
             defaults={
@@ -400,7 +401,6 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 "metadata": data.get("metadata", {}),
             },
         )
-        self._clear_other_puzzle_details(puzzle, Puzzle.AR)
 
         serializer = PuzzleSerializer(puzzle, context={"request": request})
         return Response(

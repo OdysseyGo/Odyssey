@@ -150,6 +150,7 @@ function PictureCompareView({ puzzle, isSolved, onSolve }: PictureCompareViewPro
   const [isCameraVisible, setIsCameraVisible] = useState(false);
   const [fullscreenImageUri, setFullscreenImageUri] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string>('');
+  const referenceImageUri = puzzle.referenceImageUri;
 
   const handleCaptureAndCheck = async () => {
     if (isSolved || isSubmitting) {
@@ -192,21 +193,29 @@ function PictureCompareView({ puzzle, isSolved, onSolve }: PictureCompareViewPro
       <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
 
       <Text style={styles.sectionLabel}>Look around and try to find this!</Text>
-      <Pressable
-        style={styles.referenceImageButton}
-        onPress={() => setFullscreenImageUri(puzzle.referenceImageUri)}
-        accessibilityRole="button"
-        accessibilityLabel="Open reference image full screen"
-      >
-        <Image
-          source={{ uri: puzzle.referenceImageUri }}
-          style={styles.referenceImagePreview}
-          resizeMode="cover"
-        />
-        <View style={styles.referenceImageOverlay}>
-          <Text style={styles.referenceImageOverlayText}>Tap to view full image</Text>
+      {referenceImageUri ? (
+        <Pressable
+          style={styles.referenceImageButton}
+          onPress={() => setFullscreenImageUri(referenceImageUri)}
+          accessibilityRole="button"
+          accessibilityLabel="Open reference image full screen"
+        >
+          <Image
+            source={{ uri: referenceImageUri }}
+            style={styles.referenceImagePreview}
+            resizeMode="cover"
+          />
+          <View style={styles.referenceImageOverlay}>
+            <Text style={styles.referenceImageOverlayText}>Tap to view full image</Text>
+          </View>
+        </Pressable>
+      ) : (
+        <View style={styles.referenceImageMissing}>
+          <Text style={styles.referenceImageMissingText}>
+            Reference image is not available.
+          </Text>
         </View>
-      </Pressable>
+      )}
 
       {previewUri && (
         <>

@@ -83,6 +83,22 @@ export default function getStyles(theme: ThemeName) {
       width: '100%',
       aspectRatio: 1,
     },
+    referenceImageMissing: {
+      width: '100%',
+      aspectRatio: 1,
+      marginBottom: Spacing.md,
+      borderRadius: Spacing.borderRadius,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: color.foregroundSecondary,
+      padding: Spacing.md,
+    },
+    referenceImageMissingText: {
+      color: color.subText,
+      fontSize: 13,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
     referenceImageOverlay: {
       position: 'absolute',
       left: 0,
