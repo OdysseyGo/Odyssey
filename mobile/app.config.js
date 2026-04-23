@@ -40,6 +40,7 @@ export default {
     plugins: [
       './scripts/newArchEnabled.js',
       'expo-router',
+      'expo-iap',
       [
         '@reactvision/react-viro',
         {
@@ -51,6 +52,11 @@ export default {
     ],
     experiments: {
       typedRoutes: true,
+    },
+    extra: {
+      eas: {
+        projectId: '7455529e-3cde-49eb-a10c-a60072460aca',
+      },
     },
   },
 };

@@ -1,7 +1,5 @@
 import { apiRequest } from './APIClient';
 
-// Types
-
 export type SubscriptionPlan = 'MONTHLY' | 'YEARLY';
 export type SubscriptionStatus = 'ACTIVE' | 'CANCELED' | 'EXPIRED' | 'PAST_DUE' | 'NONE';
 
@@ -11,12 +9,14 @@ export type PlanInfo = {
   price_display: string;
   interval: string;
   features: string[];
+  apple_product_id: string;
 };
 
 export type Subscription = {
   id: number;
   plan: SubscriptionPlan;
   status: SubscriptionStatus;
+  apple_product_id: string;
   current_period_start: string;
   current_period_end: string;
   cancel_at_period_end: boolean;
@@ -30,6 +30,7 @@ export type CreditPack = {
   price_cents: number;
   currency: string;
   price_display: string;
+  apple_product_id: string;
 };
 
 export type Transaction = {
@@ -67,25 +68,15 @@ export type CreatorEarnings = {
   recent_earnings: Transaction[];
 };
 
-// Subscription
+export type IapVerifyResult =
+  | { kind: 'subscription'; subscription: Subscription }
+  | { kind: 'consumable'; balance: number };
 
 export async function getSubscriptionPlans(): Promise<PlanInfo[]> {
   return apiRequest<PlanInfo[]>({
     method: 'GET',
     url: '/api/payments/plans/',
     auth: false,
-  });
-}
-
-export async function createSubscriptionCheckout(
-  plan: SubscriptionPlan,
-  redirectUrl?: string
-): Promise<{ checkout_url: string }> {
-  return apiRequest<{ checkout_url: string }>({
-    method: 'POST',
-    url: '/api/payments/subscribe/',
-    data: { plan, success_url: redirectUrl, cancel_url: redirectUrl },
-    auth: true,
   });
 }
 
@@ -97,41 +88,30 @@ export async function getSubscription(): Promise<Subscription | { status: 'NONE'
   });
 }
 
-export async function cancelSubscription(): Promise<Subscription> {
-  return apiRequest<Subscription>({
-    method: 'POST',
-    url: '/api/payments/subscription/cancel/',
+export async function getManageSubscriptionUrl(): Promise<{ manage_url: string }> {
+  return apiRequest<{ manage_url: string }>({
+    method: 'GET',
+    url: '/api/payments/subscription/manage/',
     auth: true,
   });
 }
 
-export async function reactivateSubscription(): Promise<Subscription> {
-  return apiRequest<Subscription>({
+export async function verifyIapTransaction(
+  jwsSignedTransaction: string
+): Promise<IapVerifyResult> {
+  return apiRequest<IapVerifyResult>({
     method: 'POST',
-    url: '/api/payments/subscription/reactivate/',
+    url: '/api/payments/iap/verify/',
+    data: { jws_signed_transaction: jwsSignedTransaction },
     auth: true,
   });
 }
-
-// Credits
 
 export async function getCreditPacks(): Promise<CreditPack[]> {
   return apiRequest<CreditPack[]>({
     method: 'GET',
     url: '/api/payments/credit-packs/',
     auth: false,
-  });
-}
-
-export async function purchaseCredits(
-  packId: number,
-  redirectUrl?: string
-): Promise<{ checkout_url: string }> {
-  return apiRequest<{ checkout_url: string }>({
-    method: 'POST',
-    url: '/api/payments/credits/purchase/',
-    data: { pack_id: packId, success_url: redirectUrl, cancel_url: redirectUrl },
-    auth: true,
   });
 }
 
@@ -142,8 +122,6 @@ export async function getCreditBalance(): Promise<CreditBalance> {
     auth: true,
   });
 }
-
-// Tour Access
 
 export async function unlockTour(tourId: number): Promise<{ message: string }> {
   return apiRequest<{ message: string }>({
@@ -161,8 +139,6 @@ export async function checkTourAccess(tourId: number): Promise<TourAccess> {
   });
 }
 
-// AI Generation
-
 export async function getAIGenerationAllowance(): Promise<AIGenerationAllowance> {
   return apiRequest<AIGenerationAllowance>({
     method: 'GET',
@@ -170,8 +146,6 @@ export async function getAIGenerationAllowance(): Promise<AIGenerationAllowance>
     auth: true,
   });
 }
-
-// Creator
 
 export async function getCreatorEarnings(): Promise<CreatorEarnings> {
   return apiRequest<CreatorEarnings>({

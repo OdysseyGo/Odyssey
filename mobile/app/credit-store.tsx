@@ -1,18 +1,16 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Text, View } from '@/components/Themed';
-import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { useColorTheme } from '@/utils/useColorTheme';
 import {
   getCreditPacks,
   getCreditBalance,
-  purchaseCredits,
   type CreditPack,
   type Transaction,
 } from '@/api/payments';
+import { useIap } from '@/hooks/useIap';
 
 export default function CreditStoreScreen() {
   const colorTheme = useColorTheme() ?? 'light';
@@ -42,18 +40,27 @@ export default function CreditStoreScreen() {
     fetchData();
   }, [fetchData]);
 
-  const handlePurchase = async (pack: CreditPack) => {
-    try {
-      setPurchaseLoading(pack.id);
-      const redirectUrl = Linking.createURL('credit-store');
-      const { checkout_url } = await purchaseCredits(pack.id, redirectUrl);
-      await WebBrowser.openAuthSessionAsync(checkout_url, redirectUrl);
-      await fetchData();
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to start purchase.');
-    } finally {
+  const productSkus = useMemo(() => packs.map((p) => p.apple_product_id), [packs]);
+
+  const { buy, restore, processing } = useIap({
+    productSkus,
+    subscriptionSkus: [],
+    onVerified: (result) => {
+      if (result.kind === 'consumable') {
+        setBalance(result.balance);
+      }
+      fetchData();
       setPurchaseLoading(null);
-    }
+    },
+    onError: (message) => {
+      setPurchaseLoading(null);
+      Alert.alert('Purchase Error', message);
+    },
+  });
+
+  const handlePurchase = async (pack: CreditPack) => {
+    setPurchaseLoading(pack.id);
+    await buy(pack.apple_product_id);
   };
 
   if (loading) {
@@ -69,13 +76,11 @@ export default function CreditStoreScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
     >
-      {/* Balance Card */}
       <View style={[styles.balanceCard, { backgroundColor: colors.primary }]}>
         <Text style={[styles.balanceLabel, { color: colors.white }]}>Your Credits</Text>
         <Text style={[styles.balanceAmount, { color: colors.white }]}>{balance}</Text>
       </View>
 
-      {/* Credit Packs */}
       <Text style={[styles.sectionTitle, { color: colors.text }]}>Buy Credits</Text>
 
       {packs.map((pack) => (
@@ -83,7 +88,7 @@ export default function CreditStoreScreen() {
           key={pack.id}
           style={[styles.packCard, { backgroundColor: colors.foreground }]}
           onPress={() => handlePurchase(pack)}
-          disabled={purchaseLoading !== null}
+          disabled={processing}
         >
           <View style={{ flex: 1, backgroundColor: 'transparent' }}>
             <Text style={[styles.packName, { color: colors.text }]}>{pack.name}</Text>
@@ -101,7 +106,10 @@ export default function CreditStoreScreen() {
         </TouchableOpacity>
       ))}
 
-      {/* Transaction History */}
+      <TouchableOpacity style={styles.restoreButton} onPress={restore} disabled={processing}>
+        <Text style={[styles.restoreText, { color: colors.primary }]}>Restore Purchases</Text>
+      </TouchableOpacity>
+
       {transactions.length > 0 && (
         <>
           <Text style={[styles.sectionTitle, { color: colors.text, marginTop: Spacing.xl }]}>
@@ -162,6 +170,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   priceText: { fontSize: 16, fontWeight: '700' },
+  restoreButton: { alignItems: 'center', paddingVertical: Spacing.md },
+  restoreText: { fontSize: 14, fontWeight: '600' },
   transactionRow: {
     flexDirection: 'row',
     alignItems: 'center',

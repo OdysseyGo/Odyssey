@@ -1,22 +1,26 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  Linking,
+} from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { router } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { useColorTheme } from '@/utils/useColorTheme';
 import {
   getSubscriptionPlans,
   getSubscription,
-  createSubscriptionCheckout,
-  cancelSubscription,
-  reactivateSubscription,
+  getManageSubscriptionUrl,
   type PlanInfo,
   type Subscription,
   type SubscriptionPlan,
 } from '@/api/payments';
+import { useIap } from '@/hooks/useIap';
 
 export default function SubscriptionScreen() {
   const colorTheme = useColorTheme() ?? 'light';
@@ -26,7 +30,6 @@ export default function SubscriptionScreen() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('MONTHLY');
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -49,55 +52,32 @@ export default function SubscriptionScreen() {
     fetchData();
   }, [fetchData]);
 
+  const subscriptionSkus = useMemo(() => plans.map((p) => p.apple_product_id), [plans]);
+
+  const { processing, subscribe, restore } = useIap({
+    productSkus: [],
+    subscriptionSkus,
+    onVerified: (result) => {
+      if (result.kind === 'subscription') {
+        setSubscription(result.subscription);
+      }
+      fetchData();
+    },
+    onError: (message) => Alert.alert('Purchase Error', message),
+  });
+
   const handleSubscribe = async () => {
-    try {
-      setActionLoading(true);
-      const redirectUrl = Linking.createURL('subscription');
-      const { checkout_url } = await createSubscriptionCheckout(selectedPlan, redirectUrl);
-      await WebBrowser.openAuthSessionAsync(checkout_url, redirectUrl);
-      // Refresh subscription status after returning
-      await fetchData();
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to start checkout.');
-    } finally {
-      setActionLoading(false);
-    }
+    const plan = plans.find((p) => p.plan === selectedPlan);
+    if (!plan) return;
+    await subscribe(plan.apple_product_id);
   };
 
-  const handleCancel = async () => {
-    Alert.alert(
-      'Cancel Subscription',
-      'Your subscription will remain active until the end of the current billing period. Are you sure?',
-      [
-        { text: 'Keep Subscription', style: 'cancel' },
-        {
-          text: 'Cancel',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setActionLoading(true);
-              const updated = await cancelSubscription();
-              setSubscription(updated);
-            } catch (error: any) {
-              Alert.alert('Error', error.message || 'Failed to cancel.');
-            } finally {
-              setActionLoading(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const handleReactivate = async () => {
+  const handleManage = async () => {
     try {
-      setActionLoading(true);
-      const updated = await reactivateSubscription();
-      setSubscription(updated);
+      const { manage_url } = await getManageSubscriptionUrl();
+      await Linking.openURL(manage_url);
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to reactivate.');
-    } finally {
-      setActionLoading(false);
+      Alert.alert('Error', error.message || 'Failed to open subscription settings.');
     }
   };
 
@@ -117,7 +97,6 @@ export default function SubscriptionScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
     >
-      {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Odyssey Premium</Text>
         <Text style={[styles.subtitle, { color: colors.subText }]}>
@@ -126,7 +105,6 @@ export default function SubscriptionScreen() {
       </View>
 
       {isSubscribed ? (
-        /* Active Subscription View */
         <View style={[styles.card, { backgroundColor: colors.foreground }]}>
           <View style={[styles.statusBadge, { backgroundColor: colors.primary }]}>
             <Text style={[styles.statusText, { color: colors.white }]}>
@@ -142,32 +120,17 @@ export default function SubscriptionScreen() {
               : `Renews on ${new Date(subscription.current_period_end).toLocaleDateString()}`}
           </Text>
 
-          {subscription.cancel_at_period_end ? (
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: colors.primary }]}
-              onPress={handleReactivate}
-              disabled={actionLoading}
-            >
-              <Text style={[styles.buttonText, { color: colors.white }]}>
-                {actionLoading ? 'Processing...' : 'Reactivate Subscription'}
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: colors.foregroundSecondary }]}
-              onPress={handleCancel}
-              disabled={actionLoading}
-            >
-              <Text style={[styles.buttonText, { color: colors.text }]}>
-                {actionLoading ? 'Processing...' : 'Cancel Subscription'}
-              </Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: colors.primary }]}
+            onPress={handleManage}
+          >
+            <Text style={[styles.buttonText, { color: colors.white }]}>
+              Manage Subscription
+            </Text>
+          </TouchableOpacity>
         </View>
       ) : (
-        /* Plan Selection View */
         <>
-          {/* Plan Toggle */}
           <View style={[styles.planToggle, { backgroundColor: colors.foreground }]}>
             {(['MONTHLY', 'YEARLY'] as SubscriptionPlan[]).map((plan) => (
               <TouchableOpacity
@@ -206,7 +169,6 @@ export default function SubscriptionScreen() {
             ))}
           </View>
 
-          {/* Selected Plan Price */}
           {plans
             .filter((p) => p.plan === selectedPlan)
             .map((plan) => (
@@ -215,7 +177,6 @@ export default function SubscriptionScreen() {
               </View>
             ))}
 
-          {/* Features */}
           <View style={[styles.featuresCard, { backgroundColor: colors.foreground }]}>
             <Text style={[styles.featuresTitle, { color: colors.text }]}>What&apos;s included</Text>
             {(plans.find((p) => p.plan === selectedPlan)?.features ?? []).map((feature, i) => (
@@ -226,20 +187,22 @@ export default function SubscriptionScreen() {
             ))}
           </View>
 
-          {/* Subscribe Button */}
           <TouchableOpacity
             style={[styles.subscribeButton, { backgroundColor: colors.primary }]}
             onPress={handleSubscribe}
-            disabled={actionLoading}
+            disabled={processing}
           >
             <Text style={[styles.subscribeButtonText, { color: colors.white }]}>
-              {actionLoading ? 'Processing...' : 'Subscribe Now'}
+              {processing ? 'Processing...' : 'Subscribe Now'}
             </Text>
           </TouchableOpacity>
         </>
       )}
 
-      {/* Credit Store Link */}
+      <TouchableOpacity style={styles.linkButton} onPress={restore} disabled={processing}>
+        <Text style={[styles.linkText, { color: colors.primary }]}>Restore Purchases</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/credit-store')}>
         <Text style={[styles.linkText, { color: colors.primary }]}>
           Or purchase credits individually

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Modal, View as RNView, Pressable } from 'react-native';
-import { useState } from 'react';
 import { router } from 'expo-router';
 import {
   User,
