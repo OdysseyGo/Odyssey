@@ -16,6 +16,7 @@ export interface TourDetail {
   title: string;
   description: string;
   author: string;
+  authorId: number;
   authorAvatar: string;
   coverImage: string;
   duration: string;

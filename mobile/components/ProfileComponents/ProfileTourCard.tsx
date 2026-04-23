@@ -13,7 +13,7 @@ const TYPE_ICONS: Record<string, string> = {
   HYBRID: 'layers-outline',
 };
 
-export default function ProfileTourCard({ tour, onPress }: ProfileTourCardProps) {
+export default function ProfileTourCard({ tour, onPress, containerStyle }: ProfileTourCardProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => profileTourCardStyles(theme), [theme]);
   const color = Colors[theme];
@@ -41,7 +41,7 @@ export default function ProfileTourCard({ tour, onPress }: ProfileTourCardProps)
   return (
     <Pressable
       onPress={handlePress}
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+      style={({ pressed }) => [styles.card, pressed && styles.cardPressed, containerStyle]}
     >
       <View style={styles.iconWrap}>
         <Ionicons

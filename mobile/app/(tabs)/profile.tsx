@@ -7,7 +7,9 @@ import {
   Animated,
   Dimensions,
   Alert,
+  Modal,
 } from 'react-native';
+import SettingsScreen from '@/app/profile/settings';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +20,7 @@ import * as SecureStore from 'expo-secure-store';
 import ProfileHeaderComp from '@/components/ProfileComponents/ProfileHeaderComp';
 import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
 import ProfileAddFriendsButton from '@/components/ProfileComponents/ProfileAddFriendsButton';
+import ProfileFollowingFeedButton from '@/components/ProfileComponents/ProfileFollowingFeedButton';
 import ProfileBadgesContainer from '@/components/ProfileComponents/ProfileBadgesContainer';
 import ProfileToursContainer from '@/components/ProfileComponents/ProfileToursContainer';
 import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
@@ -26,6 +29,7 @@ import AuthButton from '@/components/LoginComponents/AuthButton';
 import { getMe, User } from '@/api/users';
 import { getMyBadges, Badge } from '@/api/profile';
 import { removeAuthToken } from '@/api/auth';
+import { consumeProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -91,18 +95,23 @@ function SkeletonLoading({ theme }: { theme: (typeof Colors)['light'] }) {
           paddingBottom: 60,
         }}
       >
-        <ShimmerBlock width={104} height={104} borderRadius={52} color="rgba(255,255,255,0.2)" />
+        <ShimmerBlock
+          width={104}
+          height={104}
+          borderRadius={52}
+          color={theme.profileSkeletonShimmerStrong}
+        />
         <ShimmerBlock
           width={140}
           height={22}
-          color="rgba(255,255,255,0.2)"
+          color={theme.profileSkeletonShimmerStrong}
           style={{ marginTop: 14 }}
         />
         <ShimmerBlock
           width={90}
           height={24}
           borderRadius={999}
-          color="rgba(255,255,255,0.15)"
+          color={theme.profileSkeletonShimmerSoft}
           style={{ marginTop: 10 }}
         />
       </View>
@@ -158,15 +167,15 @@ function GuestScreen({
   const features = [
     {
       icon: 'map-outline' as const,
-      label: t('profile.feature1', { defaultValue: 'Create and join guided tours' }),
+      label: t('profile.feature1'),
     },
     {
       icon: 'trophy-outline' as const,
-      label: t('profile.feature2', { defaultValue: 'Earn badges and XP' }),
+      label: t('profile.feature2'),
     },
     {
       icon: 'people-outline' as const,
-      label: t('profile.feature3', { defaultValue: 'Connect with other travelers' }),
+      label: t('profile.feature3'),
     },
   ];
 
@@ -174,12 +183,14 @@ function GuestScreen({
     <View style={[guestStyles.root, { backgroundColor: theme.headerGradientTop }]}>
       {/* ── Hero ── */}
       <View style={[guestStyles.hero, { paddingTop: insets.top, height: GUEST_HERO_HEIGHT }]}>
-        <View style={guestStyles.iconRing}>
-          <Ionicons name="compass" size={44} color="#FFFFFF" />
+        <View
+          style={[guestStyles.iconRing, { backgroundColor: theme.profileGuestIconRingBackground }]}
+        >
+          <Ionicons name="compass" size={44} color={theme.white} />
         </View>
-        <Text style={guestStyles.appName}>ODYSSEY</Text>
-        <Text style={guestStyles.tagline}>
-          {t('auth.tagline', { defaultValue: 'Your journey begins here' })}
+        <Text style={[guestStyles.appName, { color: theme.white }]}>ODYSSEY</Text>
+        <Text style={[guestStyles.tagline, { color: theme.profileGuestTaglineText }]}>
+          {t('auth.tagline')}
         </Text>
       </View>
 
@@ -196,10 +207,10 @@ function GuestScreen({
         ]}
       >
         <Text style={[guestStyles.cardTitle, { color: theme.text }]}>
-          {t('profile.signInToUnlock', { defaultValue: 'Sign in to unlock' })}
+          {t('profile.signInToUnlock')}
         </Text>
         <Text style={[guestStyles.cardSubtitle, { color: theme.subText }]}>
-          {t('profile.signInSubtitle', { defaultValue: 'Join thousands of explorers on Odyssey.' })}
+          {t('profile.signInSubtitle')}
         </Text>
 
         {/* Feature bullets */}
@@ -221,7 +232,7 @@ function GuestScreen({
           activeOpacity={0.85}
         >
           <Text style={guestStyles.loginButtonText}>{t('profile.loginButton')}</Text>
-          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+          <Ionicons name="arrow-forward" size={18} color={theme.white} />
         </TouchableOpacity>
 
         {/* Sign up link */}
@@ -253,7 +264,6 @@ const guestStyles = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
@@ -261,12 +271,10 @@ const guestStyles = StyleSheet.create({
   appName: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#FFFFFF',
     letterSpacing: 5,
   },
   tagline: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.70)',
     letterSpacing: 0.3,
     marginTop: 4,
   },
@@ -320,7 +328,6 @@ const guestStyles = StyleSheet.create({
   loginButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
   },
   signUpRow: {
     flexDirection: 'row',
@@ -351,10 +358,13 @@ export default function Profile() {
   const [retryKey, setRetryKey] = useState(0);
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+  const lastRetryKeyRef = useRef(retryKey);
 
   const scrollY = useRef(new Animated.Value(0)).current;
+  const lastRefreshed = useRef<number>(0);
 
   const colorScheme = useColorTheme();
   const theme = Colors[colorScheme];
@@ -386,6 +396,7 @@ export default function Profile() {
         setBadgesCount(badgesResponse.count);
         setBadges(badgesResponse.results);
       });
+      lastRefreshed.current = Date.now();
     } catch (err) {
       console.error('Failed to load profile:', err);
       setFetchError(true);
@@ -396,11 +407,12 @@ export default function Profile() {
 
   useFocusEffect(
     useCallback(() => {
-      // Only show full skeleton on initial load (no existing data)
-      if (!curUser) {
-        setLoading(true);
-      }
-      refreshProfile();
+      const now = Date.now();
+      const hasData = lastRefreshed.current > 0;
+      const isStale = now - lastRefreshed.current > 30_000;
+      const forceRefresh = consumeProfileNeedsRefresh();
+      if (!hasData) setLoading(true);
+      if (!hasData || isStale || forceRefresh) refreshProfile();
     }, [retryKey])
   );
 
@@ -474,6 +486,8 @@ export default function Profile() {
     subtitle: curUser.country,
     avatarUrl: curUser.avatar_url || undefined,
     onAvatarPress: () => setShowAvatarModal(true),
+    onSettingsPress: () => setShowSettings(true),
+    settingsAccessibilityLabel: t('tabs.settings'),
   };
 
   const profileStats = {
@@ -503,7 +517,11 @@ export default function Profile() {
 
   const handleBadgesPress = () => {
     //router.push({pathname: '/profile/badges'});
-    alert('deneme');
+    //alert('deneme');
+  };
+
+  const handleToursPress = () => {
+    router.push('/(tour)/my-completed-tours');
   };
 
   return (
@@ -521,7 +539,7 @@ export default function Profile() {
           },
         ]}
       >
-        <Text style={styles.stickyBarText}>{curUser.username}</Text>
+        <Text style={[styles.stickyBarText, { color: theme.white }]}>{curUser.username}</Text>
       </Animated.View>
 
       <Animated.ScrollView
@@ -540,11 +558,13 @@ export default function Profile() {
           {...profileStats}
           onFollowersPress={handleFollowersPress}
           onFollowingPress={handleFollowingPress}
+          onToursPress={handleToursPress}
         />
 
         {/* ─── Actions ─────────────────────────────── */}
         <View style={styles.actionsRow}>
           <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
+          <ProfileFollowingFeedButton />
         </View>
 
         {/* ─── Badges ──────────────────────────────── */}
@@ -582,6 +602,15 @@ export default function Profile() {
         currentAvatarUrl={curUser.avatar_url || undefined}
         onAvatarSaved={(url) => setCurUser((prev) => (prev ? { ...prev, avatar_url: url } : prev))}
       />
+
+      <Modal
+        visible={showSettings}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSettings(false)}
+      >
+        <SettingsScreen onClose={() => setShowSettings(false)} />
+      </Modal>
     </View>
   );
 }
@@ -605,14 +634,16 @@ const styles = StyleSheet.create({
   stickyBarText: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#FFFFFF',
     letterSpacing: -0.3,
   },
 
   // Actions
   actionsRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: Spacing.lg + 2,
+    gap: Spacing.md,
   },
 
   // Logout

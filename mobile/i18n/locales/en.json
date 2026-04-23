@@ -1,4 +1,11 @@
 {
+  "common": {
+    "retry": "Try Again",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "ok": "OK"
+  },
   "auth": {
     "welcomeTitle": "Welcome, adventurer!",
     "welcomeSubtitle": "Log in to start your journey.",
@@ -31,6 +38,17 @@
     "resetPassword": "Reset Password",
     "updatePassword": "Update Password",
     "cancel": "Cancel",
+    "tagline": "Your journey begins here",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "welcomeBack": "Welcome back",
+    "noAccountLabel": "Don't have an account?",
+    "signUp": "Sign up",
+    "signIn": "Sign in",
+    "registerTagline": "Create your account",
+    "continue": "Continue",
+    "back": "Back",
+    "resetTagline": "Reset your password",
     "errors": {
       "usernameRequired": "Username is required",
       "passwordRequired": "Password is required",
@@ -80,9 +98,53 @@
     "followersError": "Could not load followers",
     "followingError": "Could not load following",
     "unfollow": "Unfollow",
-    "removeFollower": "Remove"
+    "removeFollower": "Remove",
+    "completedTours": "Completed Tours",
+    "emptyCompletedTour": "No tours found",
+    "errorTitle": "Something went wrong",
+    "errorMessage": "We couldn't load your tours. Please try again.",
+    "editReview": "Edit Review",
+    "reviewTour": "Review Tour",
+    "leaveReview": "Leave a Review",
+    "reviewRatingLabel": "Rating (1-5)",
+    "reviewRatingPlaceholder": "5",
+    "reviewCommentLabel": "Comment",
+    "reviewCommentPlaceholder": "Write up to 200 characters",
+    "reviewRatingInvalid": "Rating must be between 1 and 5.",
+    "reviewSuccessTitle": "Review submitted",
+    "reviewSuccessMessage": "Thank you for your feedback!",
+    "reviewErrorTitle": "Could not submit review",
+    "reviewErrorMessage": "Please try again later.",
+    "followingFeedTitle": "Following Feed",
+    "feedCompletedBadge": "COMPLETED",
+    "feedCompletedText": "completed this tour",
+    "feedToday": "Today",
+    "feedYesterday": "Yesterday",
+    "feedDaysAgo": "{{count}} days ago",
+    "feedDaysAgo_one": "{{count}} day ago",
+    "feedDaysAgo_other": "{{count}} days ago",
+    "feedRetry": "Retry",
+    "feedEmptyTitle": "No completed tours from your friends yet.",
+    "feedEmptySubtext": "Follow more users to see their completed tours here!",
+    "feedErrorTitle": "Error",
+    "feedLoadError": "Failed to load following feed",
+    "feedModalViewTour": "View Tour",
+    "feedModalViewProfile": "View Profile",
+    "feedModalCancel": "Cancel",
+    "userProfileFollow": "Follow",
+    "userProfileUnfollow": "Unfollow",
+    "userProfileError": "Could not load this profile",
+    "chooseAvatar": "Choose Your Avatar",
+    "avatarStyle": "Style",
+    "save": "Save",
+    "signInToUnlock": "Sign in to unlock",
+    "signInSubtitle": "Join thousands of explorers on Odyssey.",
+    "feature1": "Create and join guided tours",
+    "feature2": "Earn badges and XP",
+    "feature3": "Connect with other travelers"
   },
   "tour": {
+    "featured": "Featured",
     "loading": "Loading tours...",
     "retry": "Tap to retry",
     "popular": "Popular Tours",
@@ -100,6 +162,10 @@
     }
   },
   "search": {
+    "placeholder": "Search tours, destinations...",
+    "unknownAuthor": "Unknown",
+    "unknownLocation": "Unknown location",
+    "notAvailable": "N/A",
     "noToursFound": "No tours found",
     "noToursFoundSub": "Try searching for a different destination, tour name, or guide",
     "searchFailed": "Search failed",
@@ -117,14 +183,18 @@
     "distance": "Distance",
     "difficulty": "Difficulty",
     "notFound": "Tour not found",
-    "reviews": "reviews",
+    "reviews": "Reviews",
+    "noReviews": "No reviews found for this tour.",
     "aboutThisTour": "About this tour",
     "createdBy": "Created by",
+    "following": "Following",
     "tourStops": "Tour Stops",
     "routeMap": "Route Map",
     "easy": "Easy",
     "medium": "Medium",
-    "hard": "Hard"
+    "hard": "Hard",
+    "readMore": "Read more",
+    "readLess": "Read less"
   },
   "tabs": {
     "settings": "Settings",
@@ -135,9 +205,66 @@
   "settings": {
     "language": "Language",
     "selectLanguage": "Select Language",
+    "sections": {
+      "profile": "Profile",
+      "account": "Account",
+      "preferences": "Preferences"
+    },
+    "items": {
+      "editProfile": {
+        "label": "Edit Profile",
+        "description": "Update your personal information"
+      },
+      "notifications": {
+        "label": "Notifications",
+        "description": "Manage notification preferences"
+      },
+      "privacy": {
+        "label": "Privacy",
+        "description": "Control your privacy settings"
+      }
+    },
+    "appearance": {
+      "label": "Appearance",
+      "mode": {
+        "light": "Light mode",
+        "dark": "Dark mode",
+        "system": "System default"
+      }
+    },
     "languages": {
       "en": "English",
-      "tr": "Turkish"
+      "tr": "Turkish",
+      "es": "Spanish"
+    },
+    "account": {
+      "title": "Account",
+      "editProfile": {
+        "label": "Edit Profile",
+        "description": "Update your personal information"
+      },
+      "notifications": {
+        "label": "Notifications",
+        "description": "Manage notification preferences"
+      },
+      "privacy": {
+        "label": "Privacy",
+        "description": "Control your privacy settings"
+      }
+    },
+    "preferences": {
+      "title": "Preferences",
+      "appearance": {
+        "label": "Appearance",
+        "description": "Light mode"
+      }
+    },
+    "support": {
+      "title": "Support",
+      "help": {
+        "label": "Help & Support",
+        "description": "Get help with the app"
+      }
     }
   },
   "tourId": {
@@ -154,6 +281,9 @@
     "tourInProgressMessage": "You already have an active tour! Please finish or quit it before starting a new one."
   },
   "creation": {
+    "loginRequired": "Login Required",
+    "loginRequiredMessage": "You need to be logged in to create a tour.",
+    "loginButton": "Log In",
     "continue": "Continue",
     "continueWithCount": "Continue ({{count}} locations)",
     "submit": "Submit Tour",
@@ -192,7 +322,10 @@
       "duration": "Estimated Duration"
     },
     "location": {
-      "instructionBanner": "Tap on the map to add tour stops.",
+      "searchPlaceholder": "Search for a location...",
+      "searchNoResults": "No results found",
+      "title": "Add Locations",
+      "instructionBanner": "Search for a location above to add it as a tour stop.",
       "empty": "No locations added yet.\nTap on the map to add your first stop!",
       "tapToAddDetails": "Tap to add details",
       "deleteTitle": "Delete Location",
@@ -349,7 +482,12 @@
   "tourStep": {
     "tourProgress": "Tour Progress",
     "back": "Back",
-    "next": "Next"
+    "next": "Next",
+    "finish": "Finish"
+  },
+  "common": {
+    "error": "Error",
+    "syncError": "Could not sync progress with server."
   },
   "map": {
     "noActiveTour": {

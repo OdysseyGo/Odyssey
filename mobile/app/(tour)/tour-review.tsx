@@ -13,7 +13,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { useTourCreation } from '@/contexts/TourCreationContext';
 import { TourReviewStep } from '@/components/TourCreation/steps';
-import { StepIndicator, CreationFooter } from '@/components/TourCreation/common';
+import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
@@ -33,7 +33,6 @@ export default function TourReviewScreen() {
         onPress: async () => {
           setIsSubmitting(true);
           try {
-            // 1. Create the Tour
             const tour = await createTour({
               title: tourData.title || 'Untitled Tour',
               description: tourData.description || 'No description provided.',
@@ -42,7 +41,7 @@ export default function TourReviewScreen() {
               difficulty: tourData.difficulty,
               duration_minutes: tourData.estimatedDuration,
               city: tourData.city || 'Unknown City',
-              status: 'PUBLISHED', // or DRAFT
+              status: 'PUBLISHED',
               is_premium: false,
             });
 
@@ -113,7 +112,6 @@ export default function TourReviewScreen() {
                 text: t('creation.ok'),
                 onPress: () => {
                   resetTourData();
-                  // Navigate back to the main screen
                   router.dismissAll();
                 },
               },
@@ -131,12 +129,13 @@ export default function TourReviewScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: color.foreground }]}>
+      <CreationHeader title={t('creation.review.title')} />
       <StepIndicator steps={STEPS} currentStepIndex={3} />
       <TourReviewStep tourData={tourData} />
       <CreationFooter
         buttonText={isSubmitting ? t('creation.submitting') : t('creation.submit')}
         onPress={handleSubmitTour}
-        disabled={isSubmitting} // Assuming CreationFooter supports disabled prop, if not we might need to check
+        disabled={isSubmitting}
       />
     </View>
   );

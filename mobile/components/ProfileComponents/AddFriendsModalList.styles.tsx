@@ -33,6 +33,14 @@ export const addFriendsModalListStyles = (theme: ThemeName) => {
       backgroundColor: color.primary,
       justifyContent: 'center',
       alignItems: 'center',
+      overflow: 'hidden',
+    },
+
+    avatarImage: {
+      width: '100%',
+      height: '100%',
+      borderRadius: (Spacing.xl + Spacing.sm) / 2,
+      resizeMode: 'cover',
     },
 
     username: {

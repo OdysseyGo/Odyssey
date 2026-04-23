@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import { router, useNavigation } from 'expo-router';
+import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { useTourCreation } from '@/contexts/TourCreationContext';
@@ -10,13 +10,13 @@ import ImageUploadSection from '@/components/TourCreation/StoryEditor/ImageUploa
 import WritingTips from '@/components/TourCreation/StoryEditor/WritingTips';
 import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditorFooter';
 import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
+import { CreationHeader } from '@/components/TourCreation/common';
 import { Puzzle } from '@/components/TourCreation';
 import { useTranslation } from 'react-i18next';
 
 export default function EditLocationScreen() {
   const theme = useColorTheme();
   const color = Colors[theme];
-  const navigation = useNavigation();
   const { tourData, selectedLocation, setSelectedLocation, updateLocation } = useTourCreation();
   const { t } = useTranslation();
 
@@ -28,7 +28,6 @@ export default function EditLocationScreen() {
 
   const isPuzzleMode = tourData.tourType === 'PUZZLE' || tourData.tourType === 'HYBRID';
 
-  // Initialize form with selected location data
   useEffect(() => {
     if (selectedLocation) {
       setTitle(selectedLocation.title);
@@ -68,7 +67,6 @@ export default function EditLocationScreen() {
     (direction: 'prev' | 'next') => {
       if (!selectedLocation) return;
 
-      // Save current location first
       updateLocation({
         ...selectedLocation,
         title,
@@ -98,13 +96,6 @@ export default function EditLocationScreen() {
       isPuzzleMode,
     ]
   );
-
-  // Update header title
-  useEffect(() => {
-    navigation.setOptions({
-      headerTitle: t('creation.editLocation.header'),
-    });
-  }, [navigation, t]);
 
   const isPuzzleValid = (currentPuzzle?: Puzzle) => {
     if (!currentPuzzle?.question) {
@@ -141,6 +132,7 @@ export default function EditLocationScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: color.foreground }]}>
+      <CreationHeader title={t('creation.editLocation.header')} />
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
