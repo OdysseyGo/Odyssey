@@ -1,11 +1,7 @@
 import os
 
-<<<<<<< KAN-78-Adding-cool-features-to-map
-from django.db.models import Avg, OuterRef, Subquery
-=======
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db.models import Avg
->>>>>>> main
+from django.db.models import Avg, OuterRef, Subquery
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
