@@ -1,7 +1,7 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs, router, usePathname } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import Colors from '@/constants/Colors';
@@ -47,10 +47,11 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="two"
+          name="tourDisplay"
           options={{
-            title: t('tabs.settings'),
-            tabBarIcon: ({ color }) => <TabBarIcon name="gear" color={color} />,
+            title: t('tabs.tours'),
+            tabBarIcon: ({ color }) => <TabBarIcon name="compass" color={color} />,
+            headerShown: false,
           }}
         />
         <Tabs.Screen
@@ -59,14 +60,6 @@ export default function TabLayout() {
             title: t('tabs.map'),
             headerShown: false,
             tabBarIcon: ({ color }) => <TabBarIcon name="map" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="tourDisplay"
-          options={{
-            title: t('tabs.tours'),
-            tabBarIcon: ({ color }) => <TabBarIcon name="compass" color={color} />,
-            headerShown: false,
           }}
         />
         <Tabs.Screen
