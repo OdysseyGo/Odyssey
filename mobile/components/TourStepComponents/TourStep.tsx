@@ -211,9 +211,7 @@ function PictureCompareView({ puzzle, isSolved, onSolve }: PictureCompareViewPro
         </Pressable>
       ) : (
         <View style={styles.referenceImageMissing}>
-          <Text style={styles.referenceImageMissingText}>
-            Reference image is not available.
-          </Text>
+          <Text style={styles.referenceImageMissingText}>Reference image is not available.</Text>
         </View>
       )}
 

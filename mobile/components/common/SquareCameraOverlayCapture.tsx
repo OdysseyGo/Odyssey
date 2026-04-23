@@ -100,10 +100,7 @@ export default function SquareCameraOverlayCapture({
       await onCapture(manipulated.uri);
       onClose();
     } catch {
-      Alert.alert(
-        'Capture failed',
-        'Could not process this photo. Please try again.'
-      );
+      Alert.alert('Capture failed', 'Could not process this photo. Please try again.');
     } finally {
       setIsCapturing(false);
     }
