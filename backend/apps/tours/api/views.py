@@ -63,6 +63,43 @@ class TourViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["get"],
+        url_path="in-bounds",
+        permission_classes=[permissions.IsAuthenticatedOrReadOnly],
+    )
+    def in_bounds(self, request):
+        """Return published tours whose first step falls inside the given bounding box."""
+        try:
+            north = float(request.query_params["north"])
+            south = float(request.query_params["south"])
+            east = float(request.query_params["east"])
+            west = float(request.query_params["west"])
+        except (KeyError, ValueError):
+            return Response(
+                {"error": "north, south, east, west are required."}, status=400
+            )
+
+        tours = (
+            Tour.objects.filter(status=Tour.PUBLISHED)
+            .annotate(average_rating=Avg("reviews__rating"))
+            .prefetch_related("steps", "reviews__user", "creator")
+        )
+
+        result = []
+        for tour in tours:
+            first_step = tour.steps.order_by("order").first()
+            if not first_step:
+                continue
+            lat = float(first_step.latitude)
+            lng = float(first_step.longitude)
+            if south <= lat <= north and west <= lng <= east:
+                result.append(tour)
+
+        serializer = self.get_serializer(result, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=["get"],
         url_path="my-tours",
         permission_classes=[permissions.IsAuthenticated],
     )

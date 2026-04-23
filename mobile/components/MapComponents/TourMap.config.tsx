@@ -18,6 +18,8 @@ export interface TourMapProps {
   initialRegion?: Region;
   currentStepIndex?: number;
   tour?: { steps: { coordinate: { latitude: number; longitude: number } }[] };
+  onRegionChangeComplete?: (region: Region) => void;
+  nearbyMarkers?: MapMarkerProps[];
 }
 
 export const exampleTourMap: TourMapProps = {

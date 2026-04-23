@@ -8,31 +8,35 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0002_rename_token_user_credit'),
+        ("users", "0002_rename_token_user_credit"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='follow',
-            old_name='followee',
-            new_name='following',
+            model_name="follow",
+            old_name="followee",
+            new_name="following",
         ),
         migrations.RenameField(
-            model_name='user',
-            old_name='follow_count',
-            new_name='following_count',
+            model_name="user",
+            old_name="follow_count",
+            new_name="following_count",
         ),
         migrations.AlterUniqueTogether(
-            name='follow',
+            name="follow",
             unique_together=set(),
         ),
         migrations.AlterField(
-            model_name='follow',
-            name='follower',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='followings', to=settings.AUTH_USER_MODEL),
+            model_name="follow",
+            name="follower",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="followings",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='follow',
-            unique_together={('follower', 'following')},
+            name="follow",
+            unique_together={("follower", "following")},
         ),
     ]
