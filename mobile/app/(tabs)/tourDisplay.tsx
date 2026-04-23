@@ -8,9 +8,10 @@ import {
   Platform,
   Animated,
   Dimensions,
+  Modal,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TourScrollerComp from '@/components/TourComponents/TourScrollerComp';
 import FeaturedTourCarousel from '@/components/TourComponents/FeaturedTourCarousel';
@@ -20,11 +21,21 @@ import { useFocusEffect, router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Spacing } from '@/constants/Spacing';
-import Colors from '@/constants/Colors';
+import Colors from '@/constants/Colors'
 import CreateTourButton from '@/components/TourCreation/CreateTourButton';
 import { useTranslation } from 'react-i18next';
 
+import { CopilotProvider, CopilotStep, walkthroughable } from 'react-native-copilot';
+import { useAutoStartTour } from '@/hooks/useAutoStartHook';
+import CustomStepNumber from '@/components/TutorialComponents/CustomStepNumber';
+import CustomTooltip from '@/components/TutorialComponents/CustomTooltip';
+import { useIsFocused } from '@react-navigation/native';
+import TutorialsModal from '../profile/tutorials';
+import { Button } from '@react-navigation/elements';
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+const WalkthroughableView = walkthroughable(View);
 
 // ─────────────────────────────────────────────────────────
 // Helpers
@@ -174,7 +185,7 @@ function SkeletonLoading({ theme }: { theme: (typeof Colors)['light'] }) {
 // Main component
 // ─────────────────────────────────────────────────────────
 
-export default function TourDisplay() {
+function TourDisplayContent() {
   const colorScheme = useColorTheme();
   const theme = Colors[colorScheme];
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -186,11 +197,15 @@ export default function TourDisplay() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [showTutorials, setShowTutorials] = useState(false);
   // Tracks the rendered height of the floating header so scroll content starts below it
   const [headerHeight, setHeaderHeight] = useState(insets.top + 130);
 
   const hasFetchedRef = useRef(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const isFocused = useIsFocused();
+
+  useAutoStartTour("TOURS_TUTORIAL", !loading && isFocused, scrollViewRef);
 
   useEffect(() => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
@@ -351,6 +366,7 @@ export default function TourDisplay() {
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       {/* ─── Main scroll — fills the full screen ─────────── */}
+       
       <ScrollView
         ref={scrollViewRef}
         style={{ flex: 1 }}
@@ -360,12 +376,16 @@ export default function TourDisplay() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: insets.bottom + 80 }}
       >
+        
         {/* ─── Hero Carousel ─────────────────────────────── */}
+        
         {featuredTours.length > 0 && showFeatured && (
           <FeaturedTourCarousel tours={featuredTours} autoPlayInterval={5000} />
         )}
 
         {/* ─── Popular Tours ─────────────────────────────── */}
+        <CopilotStep text={t('tutorial.tours.step2text')} order={2} name="toursOutro">
+        <WalkthroughableView>
         {showPopular && popularTours.length > 0 && (
           <TourScrollerComp
             title={t('tour.popular')}
@@ -373,6 +393,8 @@ export default function TourDisplay() {
             accentColor={theme.primary}
           />
         )}
+        </WalkthroughableView>
+        </CopilotStep>
 
         {/* ─── Continent Sections ────────────────────────── */}
         {shownContinents.map(({ continent, tours }, index) => (
@@ -412,6 +434,8 @@ export default function TourDisplay() {
         onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
       >
         {/* Title row */}
+        <CopilotStep text={t('tutorial.tours.step1text')} order={1} name="toursIntro">
+        <WalkthroughableView>
         <View style={styles.pageHeader}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.headerEyebrow, { color: theme.primary }]}>
@@ -421,6 +445,7 @@ export default function TourDisplay() {
               {t('tour.headerTitle', { defaultValue: 'Discover Tours' })}
             </Text>
           </View>
+          
           <TouchableOpacity
             style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
             activeOpacity={0.7}
@@ -428,7 +453,10 @@ export default function TourDisplay() {
           >
             <Ionicons name="search" size={20} color={theme.text} />
           </TouchableOpacity>
+          
         </View>
+        </WalkthroughableView>
+        </CopilotStep>
 
         {/* Category pills */}
         <ScrollView
@@ -485,6 +513,12 @@ export default function TourDisplay() {
       </BlurView>
 
       <CreateTourButton />
+      <Button onPress={()=>setShowTutorials(true)}>ccc</Button>
+
+
+      <Modal visible={showTutorials} transparent animationType="fade">
+              <TutorialsModal onClose={() => setShowTutorials(false)} />
+      </Modal>
     </View>
   );
 }
@@ -657,3 +691,29 @@ const createStyles = (theme: (typeof Colors)['light']) =>
       maxWidth: 240,
     },
   });
+
+
+export default function TourDisplay() {
+
+  const colorTheme = useColorTheme();
+  
+  return (
+    <CopilotProvider 
+        margin={8}
+        animated={true} 
+        overlay="svg" 
+        tooltipComponent={CustomTooltip}
+        stepNumberComponent= {CustomStepNumber}
+        animationDuration={600}
+        arrowColor={Colors[colorTheme].primary}
+        tooltipStyle={{ 
+          backgroundColor: 'transparent', 
+          padding: 0,                     
+          borderRadius: 0,
+        }}
+        backdropColor="rgba(10, 20, 40, 0.9)"
+      >
+      <TourDisplayContent />
+    </CopilotProvider>
+  );
+}

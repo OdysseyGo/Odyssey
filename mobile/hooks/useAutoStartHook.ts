@@ -24,7 +24,8 @@ export function useAutoStartTour(
       if (scrollViewRef?.current) {
         scrollViewRef.current.scrollTo({ y: 0, animated: false });
       }
-
+      console.log(activeTutorial);
+      
       setTimeout(() => start(), 200);
     }
   }, [activeTutorial, start, isReady, targetTutorialName, scrollViewRef]);

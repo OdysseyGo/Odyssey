@@ -44,15 +44,27 @@ export default function TutorialsModal({ onClose }: { onClose?: () => void }) {
       description: t('tutorial.tours.desc', { defaultValue: 'Learn how to navigate and interact with tours.' }),
       descriptionKey: 'tutorial.tours.desc',
       tutorialKey: 'TOURS_TUTORIAL',
-      route: '/tours', 
+      route: '/tourDisplay', 
     },
   ];
 
-  const handleTutorialPress = (item: TutorialItemConfig) => {
-
-    startTutorial(item.tutorialKey);
+ const handleTutorialPress = (item: TutorialItemConfig) => {
+    // 1. Instantly trigger the modal close animation
     if (onClose) onClose();
-    router.push(item.route as any);
+    
+    // 2. Wait 400ms for the modal to completely vanish from the screen
+    setTimeout(() => {
+      
+      // 3. Navigate to the new screen
+      router.navigate(item.route as any);
+
+      // 4. Wait just a tiny bit for the navigation transition to finish 
+      //    before arming the global context!
+      setTimeout(() => {
+        startTutorial(item.tutorialKey);
+      }, 100);
+
+    }, 400); 
   };
 
   return (

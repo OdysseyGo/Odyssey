@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 
-import { CopilotStep, walkthroughable } from 'react-native-copilot';
+import { CopilotProvider, CopilotStep, walkthroughable } from 'react-native-copilot';
 
 import ProfileHeaderComp from '@/components/ProfileComponents/ProfileHeaderComp';
 import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
@@ -38,6 +38,8 @@ import { Spacing } from '@/constants/Spacing';
 import { ScrollView } from 'react-native';
 import { useAutoStartTour } from '@/hooks/useAutoStartHook';
 import TutorialsModal from '../profile/tutorials';
+import CustomTooltip from '@/components/TutorialComponents/CustomTooltip';
+import CustomStepNumber from '@/components/TutorialComponents/CustomStepNumber';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = 240;
@@ -355,7 +357,7 @@ const guestStyles = StyleSheet.create({
 // Main component
 // ─────────────────────────────────────────────────────────
 
-export default function Profile() {
+function ProfileContent() {
   const [curUser, setCurUser] = useState<User | null>(null);
   const [badgesCount, setBadgesCount] = useState(0);
   const [badges, setBadges] = useState<Badge[]>([]);
@@ -735,3 +737,29 @@ const errorStyles = StyleSheet.create({
     lineHeight: 21,
   },
 });
+
+
+export default function Profile() {
+
+  const colorTheme = useColorTheme();
+  
+  return (
+    <CopilotProvider 
+        margin={8}
+        animated={true} 
+        overlay="svg" 
+        tooltipComponent={CustomTooltip}
+        stepNumberComponent= {CustomStepNumber}
+        animationDuration={600}
+        arrowColor={Colors[colorTheme].primary}
+        tooltipStyle={{ 
+          backgroundColor: 'transparent', 
+          padding: 0,                     
+          borderRadius: 0,
+        }}
+        backdropColor="rgba(10, 20, 40, 0.9)"
+      >
+      <ProfileContent />
+    </CopilotProvider>
+  );
+}

@@ -554,7 +554,9 @@
     },
     "tours": {
       "label":"Tours Tutorial",
-      "desc":"Learn how to navigate and interact with tours."
+      "desc":"Learn how to navigate and interact with tours.",
+      "step1text":"Welcome to the tours tutorial!",
+      "step2text":"Welcome to the next tutorial!"
     }
   }
 }

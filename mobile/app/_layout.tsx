@@ -1,10 +1,8 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import CustomTooltip from '@/components/TutorialComponents/CustomTooltip';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import { CopilotProvider } from 'react-native-copilot';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -15,7 +13,6 @@ import { TutorialProvider } from '@/contexts/TutorialContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ThemeProvider as AppThemeProvider } from '@/contexts/ThemeContext';
 import '@/i18n/i18n';
-import CustomStepNumber from '@/components/TutorialComponents/CustomStepNumber';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -68,21 +65,6 @@ function RootLayoutNavigator() {
 
   return (
     <TutorialProvider>
-      <CopilotProvider 
-        margin={8}
-        animated={true} 
-        overlay="svg" 
-        tooltipComponent={CustomTooltip}
-        stepNumberComponent= {CustomStepNumber}
-        animationDuration={600}
-        arrowColor={Colors[themeKey].primary}
-        tooltipStyle={{ 
-          backgroundColor: 'transparent', 
-          padding: 0,                     
-          borderRadius: 0,
-        }}
-        backdropColor="rgba(10, 20, 40, 0.9)"
-      >
         <LanguageProvider>
           <ActiveTourProvider>
             <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
@@ -114,7 +96,6 @@ function RootLayoutNavigator() {
             </ThemeProvider>
           </ActiveTourProvider>
         </LanguageProvider>
-      </CopilotProvider>
     </TutorialProvider>
   );
 }
