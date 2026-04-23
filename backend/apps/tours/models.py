@@ -266,7 +266,6 @@ class PuzzleAttempt(models.Model):
         on_delete=models.CASCADE,
         related_name="puzzle_attempts",
     )
-    attempt_image = models.ImageField(upload_to="puzzle_attempts/")
     similarity_score = models.FloatField(null=True, blank=True)
     accepted = models.BooleanField(default=False)
     processing_ms = models.PositiveIntegerField(default=0)

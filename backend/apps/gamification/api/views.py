@@ -279,7 +279,6 @@ class TourProgressViewSet(
             puzzle=puzzle,
             user=request.user,
             progress=progress,
-            attempt_image=attempt_image,
             similarity_score=similarity_result["similarity_score"],
             accepted=similarity_result["accepted"],
             processing_ms=similarity_result["processing_ms"],
