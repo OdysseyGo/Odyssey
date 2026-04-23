@@ -118,6 +118,8 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
               country: selectedCountry.value,
               countryCode: selectedCountry.countryCode || '',
               city: '',
+              cityLatitude: undefined,
+              cityLongitude: undefined,
             })
           }
         />
@@ -126,9 +128,9 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
       <FormInputGroup label={t('creation.details.city')} required>
         <FormGooglePlacesSelect
           value={tourData.city}
-          disabled={!tourData.countryCode}
+          disabled={!tourData.country}
           placeholder={
-            tourData.countryCode
+            tourData.country
               ? t('creation.details.cityPlaceholder')
               : t('creation.details.cityDisabledPlaceholder', {
                   defaultValue: 'Select a country first',
@@ -136,7 +138,13 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
           }
           types="(cities)"
           countryCode={tourData.countryCode}
-          onSelect={(selectedCity) => onUpdate({ city: selectedCity.value })}
+          onSelect={(selectedCity) =>
+            onUpdate({
+              city: selectedCity.value,
+              cityLatitude: selectedCity.latitude,
+              cityLongitude: selectedCity.longitude,
+            })
+          }
         />
       </FormInputGroup>
 

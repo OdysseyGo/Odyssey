@@ -107,6 +107,8 @@ export type Tour = {
   city: string;
   country?: string;
   country_code?: string;
+  city_latitude?: number;
+  city_longitude?: number;
   status: TourStatus;
   created_at: string;
   updated_at: string;

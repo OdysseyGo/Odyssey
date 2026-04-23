@@ -7,6 +7,7 @@ import googlemaps
 from .models import TourStep
 
 GOOGLE_MAPS_TIMEOUT_SECONDS = 5
+CITY_MATCH_RADIUS_KM = 100.0
 
 
 class GoogleMapsFacade:
@@ -53,51 +54,61 @@ class GoogleMapsFacade:
         return (fallback_lat, fallback_lng)
 
     def tour_has_step_in_city(
-        self, tour, city: Optional[str] = None, country: Optional[str] = None
+        self,
+        tour,
+        city_latitude: Optional[float] = None,
+        city_longitude: Optional[float] = None,
     ) -> bool:
         steps = list(tour.steps.all())
         if not steps:
             return False
-        if not self.client:
-            return False
 
-        city = city if city is not None else tour.city
-        country = country if country is not None else getattr(tour, "country", "")
-        query_parts = [city]
-        if country:
-            query_parts.append(country)
-        query = ", ".join(part for part in query_parts if part)
+        if city_latitude is None or city_longitude is None:
+            return False
 
         try:
-            results = self.client.geocode(query)
-        except Exception as e:
-            print(f"City validation geocoding failed for '{query}': {e}")
-            return False
-
-        if not results:
-            return False
-
-        geometry = results[0].get("geometry", {})
-        bounds = geometry.get("bounds") or geometry.get("viewport")
-        if not bounds:
-            return False
-
-        northeast = bounds.get("northeast", {})
-        southwest = bounds.get("southwest", {})
-        min_lat = southwest.get("lat")
-        max_lat = northeast.get("lat")
-        min_lng = southwest.get("lng")
-        max_lng = northeast.get("lng")
-        if None in (min_lat, max_lat, min_lng, max_lng):
+            center_lat = float(city_latitude)
+            center_lng = float(city_longitude)
+        except (TypeError, ValueError):
             return False
 
         for step in steps:
-            lat = float(step.latitude)
-            lng = float(step.longitude)
-            if min_lat <= lat <= max_lat and min_lng <= lng <= max_lng:
+            try:
+                step_lat = float(step.latitude)
+                step_lng = float(step.longitude)
+            except (TypeError, ValueError):
+                continue
+
+            distance_km = self._haversine_km(
+                step_lat,
+                step_lng,
+                center_lat,
+                center_lng,
+            )
+            if distance_km <= CITY_MATCH_RADIUS_KM:
                 return True
 
         return False
+
+    @staticmethod
+    def _haversine_km(
+        lat1: float,
+        lng1: float,
+        lat2: float,
+        lng2: float,
+    ) -> float:
+        radius_km = 6371.0
+        lat1_rad, lng1_rad = math.radians(lat1), math.radians(lng1)
+        lat2_rad, lng2_rad = math.radians(lat2), math.radians(lng2)
+
+        dlat = lat2_rad - lat1_rad
+        dlng = lng2_rad - lng1_rad
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlng / 2) ** 2
+        )
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return radius_km * c
 
     def search_places(
         self,

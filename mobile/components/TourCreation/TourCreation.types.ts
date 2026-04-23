@@ -53,6 +53,8 @@ export interface TourCreationData {
   country?: string;
   countryCode?: string;
   city?: string;
+  cityLatitude?: number;
+  cityLongitude?: number;
 }
 
 export const TOUR_CATEGORIES = [
@@ -91,6 +93,8 @@ export const createEmptyTourData = (): TourCreationData => ({
   country: '',
   countryCode: '',
   city: '',
+  cityLatitude: undefined,
+  cityLongitude: undefined,
 });
 
 export const createNewLocation = (

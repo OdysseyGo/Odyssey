@@ -202,6 +202,8 @@ class TourSerializer(serializers.ModelSerializer):
     steps = TourStepSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
     average_rating = serializers.FloatField(read_only=True)
+    city_latitude = serializers.FloatField(write_only=True, required=False)
+    city_longitude = serializers.FloatField(write_only=True, required=False)
 
     class Meta:
         model = Tour
@@ -219,6 +221,8 @@ class TourSerializer(serializers.ModelSerializer):
             "city",
             "country",
             "country_code",
+            "city_latitude",
+            "city_longitude",
             "cover_image",
             "status",
             "created_at",
@@ -235,17 +239,29 @@ class TourSerializer(serializers.ModelSerializer):
         status_value = attrs.get("status", current_status)
         city = attrs.get("city", getattr(instance, "city", ""))
         country = attrs.get("country", getattr(instance, "country", ""))
+        country_code = attrs.get("country_code", getattr(instance, "country_code", ""))
+        city_latitude = attrs.get("city_latitude")
+        city_longitude = attrs.get("city_longitude")
         is_publishing = (
             status_value == Tour.PUBLISHED and current_status != Tour.PUBLISHED
         )
         is_location_update = any(
-            field in attrs for field in ("city", "country", "country_code")
+            field in attrs
+            for field in (
+                "city",
+                "country",
+                "country_code",
+            )
         )
 
         if status_value == Tour.PUBLISHED and (is_publishing or is_location_update):
             if not city:
                 raise serializers.ValidationError(
                     {"city": "City is required before publishing a tour."}
+                )
+            if city_latitude is None or city_longitude is None:
+                raise serializers.ValidationError(
+                    {"city": "City coordinates are required before publishing a tour."}
                 )
 
             if instance is None:
@@ -259,7 +275,9 @@ class TourSerializer(serializers.ModelSerializer):
                 )
 
             if not GoogleMapsFacade().tour_has_step_in_city(
-                instance, city=city, country=country
+                instance,
+                city_latitude=float(city_latitude),
+                city_longitude=float(city_longitude),
             ):
                 raise serializers.ValidationError(
                     {
@@ -273,5 +291,12 @@ class TourSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # Assign current user as creator
+        validated_data.pop("city_latitude", None)
+        validated_data.pop("city_longitude", None)
         validated_data["creator"] = self.context["request"].user
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop("city_latitude", None)
+        validated_data.pop("city_longitude", None)
+        return super().update(instance, validated_data)

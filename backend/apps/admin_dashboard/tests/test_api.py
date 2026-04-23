@@ -207,7 +207,11 @@ class AdminTourViewSetTests(APITestCase):
             "apps.admin_dashboard.api.views.GoogleMapsFacade.tour_has_step_in_city",
             return_value=True,
         ):
-            response = self.client.post(f"/api/admin/tours/{self.tour.id}/approve/")
+            response = self.client.post(
+                f"/api/admin/tours/{self.tour.id}/approve/",
+                {"city_latitude": 41.0082, "city_longitude": 28.9784},
+                format="json",
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.tour.refresh_from_db()
         self.assertEqual(self.tour.status, Tour.PUBLISHED)

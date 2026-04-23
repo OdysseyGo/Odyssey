@@ -8,6 +8,7 @@ import {
   setStepGyroscopePuzzle,
   setStepPictureComparePuzzle,
   setStepTriviaPuzzle,
+  updateTour,
 } from '@/api/tours';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -19,16 +20,11 @@ import { ApiError } from '@/api/APIClient';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
 
-function getSubmitErrorMessage(
-  error: unknown,
-  fallbackMessage: string,
-  cityMismatchMessage: string
-) {
-  if (!(error instanceof ApiError)) return fallbackMessage;
-  if (error.statusCode === 400 && /^server error/i.test(error.message)) {
-    return cityMismatchMessage;
+function getSubmitErrorMessage(error: unknown, fallbackMessage: string) {
+  if (error instanceof ApiError) {
+    return error.message;
   }
-  return error.message;
+  return fallbackMessage;
 }
 
 export default function TourReviewScreen() {
@@ -56,6 +52,8 @@ export default function TourReviewScreen() {
               city: tourData.city || 'Unknown City',
               country: tourData.country || '',
               country_code: tourData.countryCode || '',
+              city_latitude: tourData.cityLatitude,
+              city_longitude: tourData.cityLongitude,
               status: 'DRAFT',
               is_premium: false,
             });
@@ -112,17 +110,20 @@ export default function TourReviewScreen() {
                 continue;
               }
 
-              await Promise.all(createStepPromises);
-              await updateTour(tour.id, {
-                city: tourData.city || 'Unknown City',
-                country: tourData.country || '',
-                country_code: tourData.countryCode || '',
-                status: 'PUBLISHED',
-              });
               if (loc.puzzle.puzzle_type === 'GYROSCOPE') {
                 await setStepGyroscopePuzzle(tour.id, createdStep.id, basePayload);
               }
             }
+
+            // 3. Publish after all steps are created so backend city/step validation runs once.
+            await updateTour(tour.id, {
+              city: tourData.city || 'Unknown City',
+              country: tourData.country || '',
+              country_code: tourData.countryCode || '',
+              city_latitude: tourData.cityLatitude,
+              city_longitude: tourData.cityLongitude,
+              status: 'PUBLISHED',
+            });
 
             Alert.alert(t('creation.successTitle'), t('creation.successMessage'), [
               {
@@ -136,13 +137,7 @@ export default function TourReviewScreen() {
           } catch (error) {
             Alert.alert(
               t('creation.errorTitle'),
-              getSubmitErrorMessage(
-                error,
-                t('creation.errorMessage'),
-                t('creation.cityStopsMismatch', {
-                  defaultValue: 'At least one tour stop must be inside the selected city.',
-                })
-              )
+              getSubmitErrorMessage(error, t('creation.errorMessage'))
             );
           } finally {
             setIsSubmitting(false);

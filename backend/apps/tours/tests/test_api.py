@@ -67,7 +67,13 @@ class TourCreationApiTests(APITestCase):
             return_value=True,
         ):
             response_publish = self.client.patch(
-                f"/api/tours/{tour_id}/", {"status": "PUBLISHED"}, format="json"
+                f"/api/tours/{tour_id}/",
+                {
+                    "status": "PUBLISHED",
+                    "city_latitude": 48.8566,
+                    "city_longitude": 2.3522,
+                },
+                format="json",
             )
         self.assertEqual(response_publish.status_code, status.HTTP_200_OK)
 

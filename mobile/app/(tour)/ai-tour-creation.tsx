@@ -125,6 +125,8 @@ export default function AITourCreation() {
                   country: selectedCountry.value,
                   countryCode: selectedCountry.countryCode || '',
                   city: '',
+                  cityLatitude: undefined,
+                  cityLongitude: undefined,
                 })
               }
             />
@@ -133,9 +135,9 @@ export default function AITourCreation() {
           <FormInputGroup label={t('aiTour.city')} required>
             <FormGooglePlacesSelect
               value={formData.city}
-              disabled={!formData.countryCode}
+              disabled={!formData.country}
               placeholder={
-                formData.countryCode
+                formData.country
                   ? t('creation.details.cityPlaceholder')
                   : t('creation.details.cityDisabledPlaceholder', {
                       defaultValue: 'Select a country first',
@@ -143,7 +145,13 @@ export default function AITourCreation() {
               }
               types="(cities)"
               countryCode={formData.countryCode}
-              onSelect={(selectedCity) => updateFormData({ city: selectedCity.value })}
+              onSelect={(selectedCity) =>
+                updateFormData({
+                  city: selectedCity.value,
+                  cityLatitude: selectedCity.latitude,
+                  cityLongitude: selectedCity.longitude,
+                })
+              }
             />
           </FormInputGroup>
 
