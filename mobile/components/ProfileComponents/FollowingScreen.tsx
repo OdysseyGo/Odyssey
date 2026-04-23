@@ -6,11 +6,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { getUserFollowings, getMe, followUser, unfollowUser, User } from '@/api/users';
+import { setProfileNeedsRefresh } from '@/utils/profileRefreshFlag';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { styles, rowStyles } from './FollowListStyles';
 import { FollowingUserRowProps } from './FollowingScreen.config';
+import BackButton from '@/components/common/BackButton';
 
 function UserRow({
   item,
@@ -169,7 +171,8 @@ export default function FollowingScreen() {
       try {
         await unfollowUser({ following: targetId });
         setUsers((prev) => prev.filter((u) => u.id !== targetId));
-      } catch {
+        setProfileNeedsRefresh();
+    } catch {
         setMyFollowings((prev) => new Set([...prev, targetId]));
       } finally {
         setUnfollowingId(null);
@@ -179,6 +182,7 @@ export default function FollowingScreen() {
       setMyFollowings((prev) => { const s = new Set(prev); s.delete(targetId); return s; });
       try {
         await unfollowUser({ following: targetId });
+        setProfileNeedsRefresh();
       } catch {
         setMyFollowings((prev) => new Set([...prev, targetId]));
       } finally {
@@ -192,6 +196,7 @@ export default function FollowingScreen() {
     setMyFollowings((prev) => new Set([...prev, targetId]));
     try {
       await followUser({ following: targetId });
+      setProfileNeedsRefresh();
     } catch {
       setMyFollowings((prev) => { const s = new Set(prev); s.delete(targetId); return s; });
     } finally {
@@ -204,9 +209,7 @@ export default function FollowingScreen() {
       <View
         style={[styles.header, { backgroundColor: colors.primary, paddingTop: insets.top + 8 }]}
       >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
-          <Ionicons name="chevron-back" size={26} color={colors.white} />
-        </TouchableOpacity>
+        <BackButton color={colors.white} size={26} style={styles.backButton} />
         <Text style={styles.headerTitle}>{t('profile.followingTitle', 'Following')}</Text>
         <View style={styles.backButton} />
       </View>

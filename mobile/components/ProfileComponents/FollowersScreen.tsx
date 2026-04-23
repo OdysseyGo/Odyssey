@@ -6,11 +6,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { getUserFollowers, getMe, getUserFollowings, followUser, unfollowUser, removeFollower, User } from '@/api/users';
+import { setProfileNeedsRefresh } from '@/utils/profileRefreshFlag';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { styles, rowStyles } from './FollowListStyles';
 import { FollowersUserRowProps } from './FollowersScreen.config';
+import BackButton from '@/components/common/BackButton';
 
 function UserRow({
   item,
@@ -160,6 +162,7 @@ export default function FollowersScreen() {
     try {
       await removeFollower(followerId);
       setUsers((prev) => prev.filter((u) => u.id !== followerId));
+      setProfileNeedsRefresh();
     } catch {
       // silently ignore
     } finally {
@@ -172,6 +175,7 @@ export default function FollowersScreen() {
     setMyFollowings((prev) => new Set([...prev, targetId]));
     try {
       await followUser({ following: targetId });
+      setProfileNeedsRefresh();
     } catch {
       setMyFollowings((prev) => { const s = new Set(prev); s.delete(targetId); return s; });
     } finally {
@@ -184,6 +188,7 @@ export default function FollowersScreen() {
     setMyFollowings((prev) => { const s = new Set(prev); s.delete(targetId); return s; });
     try {
       await unfollowUser({ following: targetId });
+      setProfileNeedsRefresh();
     } catch {
       setMyFollowings((prev) => new Set([...prev, targetId]));
     } finally {
@@ -196,9 +201,7 @@ export default function FollowersScreen() {
       <View
         style={[styles.header, { backgroundColor: colors.primary, paddingTop: insets.top + 8 }]}
       >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
-          <Ionicons name="chevron-back" size={26} color={colors.white} />
-        </TouchableOpacity>
+        <BackButton color={colors.white} size={26} style={styles.backButton} />
         <Text style={styles.headerTitle}>{t('profile.followersTitle', 'Followers')}</Text>
         <View style={styles.backButton} />
       </View>

@@ -96,6 +96,7 @@ function SkeletonLoading({ theme }: { theme: (typeof Colors)['light'] }) {
 // ─────────────────────────────────────────────────────────
 // Cache + main component
 // ─────────────────────────────────────────────────────────
+import BackButton from '@/components/common/BackButton';
 
 const profileCache = new Map<string, { user: User; isFollowing: boolean; currentUserId: number }>();
 

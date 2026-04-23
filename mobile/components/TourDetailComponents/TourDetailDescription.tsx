@@ -54,9 +54,7 @@ export default function TourDetailDescription({ description, tags }: TourDetailD
       {needsTruncation && (
         <TouchableOpacity style={styles.readMoreButton} onPress={() => setExpanded(!expanded)}>
           <Text style={styles.readMoreText}>
-            {expanded
-              ? t('tourDetail.readLess', { defaultValue: 'Read less' })
-              : t('tourDetail.readMore', { defaultValue: 'Read more' })}
+            {expanded ? t('tourDetail.readLess') : t('tourDetail.readMore')}
           </Text>
         </TouchableOpacity>
       )}

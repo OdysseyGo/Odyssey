@@ -14,6 +14,7 @@ import Colors from '@/constants/Colors';
 const SUPPORTED_LANGUAGES = [
   { code: 'en', labelKey: 'settings.languages.en' },
   { code: 'tr', labelKey: 'settings.languages.tr' },
+  { code: 'es', labelKey: 'settings.languages.es' },
 ];
 
 type SettingsGroup = {
@@ -41,30 +42,30 @@ export default function TabTwoScreen() {
       ],
     },
     {
-      title: 'Account',
+      title: t('settings.account.title'),
       items: [
         {
           key: 'edit_profile',
           icon: User,
-          label: 'Edit Profile',
-          description: 'Update your personal information',
+          label: t('settings.account.editProfile.label'),
+          description: t('settings.account.editProfile.description'),
         },
         {
           key: 'notifications',
           icon: Bell,
-          label: 'Notifications',
-          description: 'Manage notification preferences',
+          label: t('settings.account.notifications.label'),
+          description: t('settings.account.notifications.description'),
         },
         {
           key: 'privacy',
           icon: Shield,
-          label: 'Privacy',
-          description: 'Control your privacy settings',
+          label: t('settings.account.privacy.label'),
+          description: t('settings.account.privacy.description'),
         },
       ],
     },
     {
-      title: 'Preferences',
+      title: t('settings.preferences.title'),
       items: [
         {
           key: 'language',
@@ -75,19 +76,19 @@ export default function TabTwoScreen() {
         {
           key: 'appearance',
           icon: Palette,
-          label: 'Appearance',
-          description: 'Light mode',
+          label: t('settings.preferences.appearance.label'),
+          description: t('settings.preferences.appearance.description'),
         },
       ],
     },
     {
-      title: 'Support',
+      title: t('settings.support.title'),
       items: [
         {
           key: 'help_support',
           icon: HelpCircle,
-          label: 'Help & Support',
-          description: 'Get help with the app',
+          label: t('settings.support.help.label'),
+          description: t('settings.support.help.description'),
         },
       ],
     },

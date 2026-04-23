@@ -79,7 +79,7 @@ export default function LoginScreen() {
       const response = await login(credentials);
       SecureStore.setItem('userToken', response.access);
       SecureStore.setItem('refreshToken', response.refresh);
-      router.push('/(tabs)/profile');
+      router.replace('/(tabs)/profile');
     } catch (e) {
       console.error(e);
       setErrors({ general: t('auth.errors.loginFailed') });
@@ -125,9 +125,7 @@ export default function LoginScreen() {
               <Ionicons name="compass" size={46} color="#FFFFFF" />
             </View>
             <Text style={styles.appName}>ODYSSEY</Text>
-            <Text style={styles.tagline}>
-              {t('auth.tagline', { defaultValue: 'Your journey begins here' })}
-            </Text>
+            <Text style={styles.tagline}>{t('auth.tagline')}</Text>
           </View>
         </Animated.View>
 
@@ -144,9 +142,7 @@ export default function LoginScreen() {
               },
             ]}
           >
-            <Text style={[styles.cardTitle, { color: theme.text }]}>
-              {t('auth.welcomeBack', { defaultValue: 'Welcome back' })}
-            </Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>{t('auth.welcomeBack')}</Text>
             <Text style={[styles.cardSubtitle, { color: theme.subText }]}>
               {t('auth.welcomeSubtitle')}
             </Text>
@@ -221,11 +217,11 @@ export default function LoginScreen() {
             {/* Register inline link */}
             <View style={styles.registerRow}>
               <Text style={[styles.registerLabel, { color: theme.subText }]}>
-                {t('auth.noAccountLabel', { defaultValue: "Don't have an account?" })}
+                {t('auth.noAccountLabel')}
               </Text>
               <TouchableOpacity onPress={() => router.push('/register')} disabled={loading}>
                 <Text style={[styles.registerLink, { color: theme.primary }]}>
-                  {` ${t('auth.signUp', { defaultValue: 'Sign up' })}`}
+                  {` ${t('auth.signUp')}`}
                 </Text>
               </TouchableOpacity>
             </View>
