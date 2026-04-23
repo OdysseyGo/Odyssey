@@ -7,7 +7,9 @@ import {
   Animated,
   Dimensions,
   Alert,
+  Modal,
 } from 'react-native';
+import SettingsScreen from '@/app/profile/settings';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -27,8 +29,8 @@ import AuthButton from '@/components/LoginComponents/AuthButton';
 import { getMe, User } from '@/api/users';
 import { getMyBadges, Badge } from '@/api/profile';
 import { removeAuthToken } from '@/api/auth';
+import { consumeProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
-import { consumeProfileNeedsRefresh } from '@/utils/profileRefreshFlag';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
@@ -93,18 +95,23 @@ function SkeletonLoading({ theme }: { theme: (typeof Colors)['light'] }) {
           paddingBottom: 60,
         }}
       >
-        <ShimmerBlock width={104} height={104} borderRadius={52} color="rgba(255,255,255,0.2)" />
+        <ShimmerBlock
+          width={104}
+          height={104}
+          borderRadius={52}
+          color={theme.profileSkeletonShimmerStrong}
+        />
         <ShimmerBlock
           width={140}
           height={22}
-          color="rgba(255,255,255,0.2)"
+          color={theme.profileSkeletonShimmerStrong}
           style={{ marginTop: 14 }}
         />
         <ShimmerBlock
           width={90}
           height={24}
           borderRadius={999}
-          color="rgba(255,255,255,0.15)"
+          color={theme.profileSkeletonShimmerSoft}
           style={{ marginTop: 10 }}
         />
       </View>
@@ -176,11 +183,15 @@ function GuestScreen({
     <View style={[guestStyles.root, { backgroundColor: theme.headerGradientTop }]}>
       {/* ── Hero ── */}
       <View style={[guestStyles.hero, { paddingTop: insets.top, height: GUEST_HERO_HEIGHT }]}>
-        <View style={guestStyles.iconRing}>
-          <Ionicons name="compass" size={44} color="#FFFFFF" />
+        <View
+          style={[guestStyles.iconRing, { backgroundColor: theme.profileGuestIconRingBackground }]}
+        >
+          <Ionicons name="compass" size={44} color={theme.white} />
         </View>
-        <Text style={guestStyles.appName}>ODYSSEY</Text>
-        <Text style={guestStyles.tagline}>{t('auth.tagline')}</Text>
+        <Text style={[guestStyles.appName, { color: theme.white }]}>ODYSSEY</Text>
+        <Text style={[guestStyles.tagline, { color: theme.profileGuestTaglineText }]}>
+          {t('auth.tagline')}
+        </Text>
       </View>
 
       {/* ── Card ── */}
@@ -221,7 +232,7 @@ function GuestScreen({
           activeOpacity={0.85}
         >
           <Text style={guestStyles.loginButtonText}>{t('profile.loginButton')}</Text>
-          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+          <Ionicons name="arrow-forward" size={18} color={theme.white} />
         </TouchableOpacity>
 
         {/* Sign up link */}
@@ -253,7 +264,6 @@ const guestStyles = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
@@ -261,12 +271,10 @@ const guestStyles = StyleSheet.create({
   appName: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#FFFFFF',
     letterSpacing: 5,
   },
   tagline: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.70)',
     letterSpacing: 0.3,
     marginTop: 4,
   },
@@ -320,7 +328,6 @@ const guestStyles = StyleSheet.create({
   loginButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
   },
   signUpRow: {
     flexDirection: 'row',
@@ -351,8 +358,10 @@ export default function Profile() {
   const [retryKey, setRetryKey] = useState(0);
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+  const lastRetryKeyRef = useRef(retryKey);
 
   const scrollY = useRef(new Animated.Value(0)).current;
   const lastRefreshed = useRef<number>(0);
@@ -477,6 +486,8 @@ export default function Profile() {
     subtitle: curUser.country,
     avatarUrl: curUser.avatar_url || undefined,
     onAvatarPress: () => setShowAvatarModal(true),
+    onSettingsPress: () => setShowSettings(true),
+    settingsAccessibilityLabel: t('tabs.settings'),
   };
 
   const profileStats = {
@@ -528,7 +539,7 @@ export default function Profile() {
           },
         ]}
       >
-        <Text style={styles.stickyBarText}>{curUser.username}</Text>
+        <Text style={[styles.stickyBarText, { color: theme.white }]}>{curUser.username}</Text>
       </Animated.View>
 
       <Animated.ScrollView
@@ -591,6 +602,15 @@ export default function Profile() {
         currentAvatarUrl={curUser.avatar_url || undefined}
         onAvatarSaved={(url) => setCurUser((prev) => (prev ? { ...prev, avatar_url: url } : prev))}
       />
+
+      <Modal
+        visible={showSettings}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSettings(false)}
+      >
+        <SettingsScreen onClose={() => setShowSettings(false)} />
+      </Modal>
     </View>
   );
 }
@@ -614,7 +634,6 @@ const styles = StyleSheet.create({
   stickyBarText: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#FFFFFF',
     letterSpacing: -0.3,
   },
 
