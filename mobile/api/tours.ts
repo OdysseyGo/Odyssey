@@ -380,6 +380,25 @@ export async function getMyCompletedTours(
 }
 
 /**
+ * Fetch published tours whose first step falls inside the map bounding box
+ */
+export async function getToursInBounds(
+  north: number,
+  south: number,
+  east: number,
+  west: number,
+  signal?: AbortSignal
+): Promise<Tour[]> {
+  return apiRequest<Tour[]>({
+    method: 'GET',
+    url: '/api/tours/in-bounds/',
+    params: { north, south, east, west },
+    auth: false,
+    signal,
+  });
+}
+
+/**
  * Add a step to a tour (requires authentication)
  */
 export async function createTourStep(

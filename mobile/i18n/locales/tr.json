@@ -519,6 +519,23 @@
       "stepOf": "Adım {{current}} / {{total}}",
       "end": "Bitir",
       "skip": "ATLA"
+    },
+    "nearby": {
+      "title_one": "{{count}} yakın tur",
+      "title_other": "{{count}} yakın tur",
+      "areaTitle_one": "Bu alanda {{count}} tur",
+      "areaTitle_other": "Bu alanda {{count}} tur",
+      "searching": "Yakında aranıyor...",
+      "radius": "Dokunma noktanızdan 500 m içinde",
+      "areaSubtitle": "Görünür harita alanında başlayan turlar",
+      "emptyTitle": "Burada tur yok",
+      "emptySubtitle": "Farklı bir yere dokunmayı ya da daha kalabalık bir bölgeyi keşfetmeyi deneyin.",
+      "duration_one": "{{count}} dk",
+      "duration_other": "{{count}} dk"
+    },
+    "searchMode": {
+      "searchHere": "Burada ara",
+      "zoomIn": "Aramak için yakınlaştır"
     }
   },
   "friends": {
