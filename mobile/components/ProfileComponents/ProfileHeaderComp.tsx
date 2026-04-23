@@ -18,6 +18,8 @@ export default function ProfileHeaderComp({
   subtitle,
   avatarUrl,
   onAvatarPress,
+  onSettingsPress,
+  settingsAccessibilityLabel,
   scrollY,
 }: ProfileHeaderProps) {
   const theme = useColorTheme();
@@ -53,6 +55,22 @@ export default function ProfileHeaderComp({
     <View style={[styles.container, { paddingTop: insets.top + Spacing.lg }]}>
       {/* Subtle depth overlay at bottom of header */}
       <View style={styles.bottomGlow} />
+
+      <TouchableOpacity
+        onPress={onSettingsPress}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={settingsAccessibilityLabel}
+        style={[
+          styles.settingsButton,
+          {
+            top: insets.top + Spacing.md,
+            right: Spacing.lg,
+          },
+        ]}
+      >
+        <Ionicons name="settings-outline" size={Spacing.lg} color={color.primary} />
+      </TouchableOpacity>
 
       {/* Avatar with parallax + scale animation */}
       <Animated.View

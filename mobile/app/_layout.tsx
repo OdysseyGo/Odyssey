@@ -13,6 +13,7 @@ import Colors from '@/constants/Colors';
 import { ActiveTourProvider } from '@/contexts/ActiveTourContext';
 import { TutorialProvider } from '@/contexts/TutorialContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { ThemeProvider as AppThemeProvider } from '@/contexts/ThemeContext';
 import '@/i18n/i18n';
 import CustomStepNumber from '@/components/TutorialComponents/CustomStepNumber';
 
@@ -54,6 +55,14 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  return (
+    <AppThemeProvider>
+      <RootLayoutNavigator />
+    </AppThemeProvider>
+  );
+}
+
+function RootLayoutNavigator() {
   const colorTheme = useColorTheme();
   const themeKey = colorTheme;
 
