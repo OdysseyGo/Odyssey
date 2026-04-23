@@ -11,6 +11,7 @@ import {
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -40,6 +41,7 @@ export default function SquareCameraOverlayCapture({
   const color = Colors[theme];
   const styles = useMemo(() => getStyles(theme), [theme]);
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   const [permission, requestPermission] = useCameraPermissions();
   const [isCapturing, setIsCapturing] = useState(false);
@@ -159,7 +161,7 @@ export default function SquareCameraOverlayCapture({
           ]}
         />
 
-        <View style={styles.topBar}>
+        <View style={[styles.topBar, { top: insets.top + Spacing.lg }]}>
           <Pressable style={styles.iconButton} onPress={onClose}>
             <MaterialCommunityIcons name="close" size={26} color={color.white} />
           </Pressable>
@@ -211,7 +213,6 @@ function getStyles(theme: 'light' | 'dark') {
     },
     topBar: {
       position: 'absolute',
-      top: Spacing.xl,
       left: Spacing.md,
       right: Spacing.md,
       flexDirection: 'row',
