@@ -83,7 +83,9 @@ export default function FormGooglePlacesSelect({
     setQuery(value);
   }, [value]);
 
-  const canSearch = Boolean(mapsApiKey && !disabled && isFocused && query.trim().length >= MIN_QUERY_LENGTH);
+  const canSearch = Boolean(
+    mapsApiKey && !disabled && isFocused && query.trim().length >= MIN_QUERY_LENGTH
+  );
 
   useEffect(() => {
     if (!canSearch) {

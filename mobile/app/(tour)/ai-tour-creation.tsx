@@ -110,7 +110,10 @@ export default function AITourCreation() {
         >
           <AICreationHeader />
 
-          <FormInputGroup label={t('creation.details.country', { defaultValue: 'Country' })} required>
+          <FormInputGroup
+            label={t('creation.details.country', { defaultValue: 'Country' })}
+            required
+          >
             <FormGooglePlacesSelect
               value={formData.country}
               placeholder={t('creation.details.countryPlaceholder', {

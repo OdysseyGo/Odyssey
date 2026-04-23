@@ -22,12 +22,9 @@ export default function TourReviewStep({ tourData }: TourReviewStepProps) {
   const translatedTourType = tourTypeKey
     ? t(`creation.tourType.${tourTypeKey}`, { defaultValue: tourData.tourType })
     : tourData.tourType;
-  const tags = [
-    tourData.category,
-    translatedTourType,
-    tourData.country,
-    tourData.city,
-  ].filter(Boolean) as string[];
+  const tags = [tourData.category, translatedTourType, tourData.country, tourData.city].filter(
+    Boolean
+  ) as string[];
 
   return (
     <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>

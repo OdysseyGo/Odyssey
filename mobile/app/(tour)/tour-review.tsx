@@ -19,7 +19,11 @@ import { ApiError } from '@/api/APIClient';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
 
-function getSubmitErrorMessage(error: unknown, fallbackMessage: string, cityMismatchMessage: string) {
+function getSubmitErrorMessage(
+  error: unknown,
+  fallbackMessage: string,
+  cityMismatchMessage: string
+) {
   if (!(error instanceof ApiError)) return fallbackMessage;
   if (error.statusCode === 400 && /^server error/i.test(error.message)) {
     return cityMismatchMessage;
@@ -108,13 +112,13 @@ export default function TourReviewScreen() {
                 continue;
               }
 
-            await Promise.all(createStepPromises);
-            await updateTour(tour.id, {
-              city: tourData.city || 'Unknown City',
-              country: tourData.country || '',
-              country_code: tourData.countryCode || '',
-              status: 'PUBLISHED',
-            });
+              await Promise.all(createStepPromises);
+              await updateTour(tour.id, {
+                city: tourData.city || 'Unknown City',
+                country: tourData.country || '',
+                country_code: tourData.countryCode || '',
+                status: 'PUBLISHED',
+              });
               if (loc.puzzle.puzzle_type === 'GYROSCOPE') {
                 await setStepGyroscopePuzzle(tour.id, createdStep.id, basePayload);
               }
