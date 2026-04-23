@@ -1,4 +1,4 @@
-export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE';
+export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE';
 
 export interface Puzzle {
   puzzle_type: PuzzleType;
@@ -7,12 +7,18 @@ export interface Puzzle {
   correctAnswer: string;
   hint: string;
   xp_reward: number;
+  referenceImage?: string;
 }
 
 export const PUZZLE_TYPE_OPTIONS = [
   { value: 'TRIVIA', label: 'Trivia', description: 'Multiple choice question' },
   { value: 'AR', label: 'AR Challenge', description: 'Augmented reality experience' },
   { value: 'GYROSCOPE', label: 'Gyroscope', description: 'Motion-based challenge' },
+  {
+    value: 'PICTURE_COMPARE',
+    label: 'Picture Compare',
+    description: 'Match a reference photo in real life',
+  },
 ] as const;
 
 export const createEmptyPuzzle = (): Puzzle => ({
