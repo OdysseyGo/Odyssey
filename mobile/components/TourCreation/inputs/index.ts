@@ -4,5 +4,5 @@ export { default as FormTextArea } from './FormTextArea';
 export { default as FormChipSelect } from './FormChipSelect';
 export { default as FormOptionCard } from './FormOptionCard';
 export { default as FormDurationPicker } from './FormDurationPicker';
-export { default as FormGooglePlacesSelect } from './FormGooglePlacesSelect';
-export type { GooglePlacesSelectValue } from './FormGooglePlacesSelect';
+export { default as FormLocationSelect } from './FormLocationSelect';
+export type { LocationSelectValue } from './FormLocationSelect';

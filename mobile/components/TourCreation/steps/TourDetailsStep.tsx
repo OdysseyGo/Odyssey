@@ -10,7 +10,7 @@ import {
   FormChipSelect,
   FormOptionCard,
   FormDurationPicker,
-  FormGooglePlacesSelect,
+  FormLocationSelect,
 } from '../inputs';
 import { useTranslation } from 'react-i18next';
 
@@ -107,7 +107,7 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
       </FormInputGroup>
 
       <FormInputGroup label={t('creation.details.country', { defaultValue: 'Country' })} required>
-        <FormGooglePlacesSelect
+        <FormLocationSelect
           value={tourData.country}
           placeholder={t('creation.details.countryPlaceholder', {
             defaultValue: 'Search countries...',
@@ -126,7 +126,7 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
       </FormInputGroup>
 
       <FormInputGroup label={t('creation.details.city')} required>
-        <FormGooglePlacesSelect
+        <FormLocationSelect
           value={tourData.city}
           disabled={!tourData.country}
           placeholder={
@@ -138,6 +138,7 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
           }
           types="(cities)"
           countryCode={tourData.countryCode}
+          countryName={tourData.country}
           onSelect={(selectedCity) =>
             onUpdate({
               city: selectedCity.value,

@@ -9,7 +9,7 @@ import {
   FormTextArea,
   FormOptionCard,
   FormDurationPicker,
-  FormGooglePlacesSelect,
+  FormLocationSelect,
 } from '@/components/TourCreation';
 import {
   AICreationHeader,
@@ -114,7 +114,7 @@ export default function AITourCreation() {
             label={t('creation.details.country', { defaultValue: 'Country' })}
             required
           >
-            <FormGooglePlacesSelect
+            <FormLocationSelect
               value={formData.country}
               placeholder={t('creation.details.countryPlaceholder', {
                 defaultValue: 'Search countries...',
@@ -133,7 +133,7 @@ export default function AITourCreation() {
           </FormInputGroup>
 
           <FormInputGroup label={t('aiTour.city')} required>
-            <FormGooglePlacesSelect
+            <FormLocationSelect
               value={formData.city}
               disabled={!formData.country}
               placeholder={
@@ -145,6 +145,7 @@ export default function AITourCreation() {
               }
               types="(cities)"
               countryCode={formData.countryCode}
+              countryName={formData.country}
               onSelect={(selectedCity) =>
                 updateFormData({
                   city: selectedCity.value,

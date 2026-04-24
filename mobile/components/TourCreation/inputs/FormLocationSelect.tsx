@@ -6,9 +6,9 @@ import Colors from '@/constants/Colors';
 import { fetchCitySuggestions, fetchCountrySuggestions } from '@/api/locations';
 import { useColorTheme } from '@/utils/useColorTheme';
 
-import { formGooglePlacesSelectStyles } from './FormGooglePlacesSelect.styles';
+import { formLocationSelectStyles } from './FormLocationSelect.styles';
 
-export type GooglePlacesSelectValue = {
+export type LocationSelectValue = {
   label: string;
   value: string;
   countryCode?: string;
@@ -16,13 +16,14 @@ export type GooglePlacesSelectValue = {
   longitude?: number;
 };
 
-type FormGooglePlacesSelectProps = {
+type FormLocationSelectProps = {
   value?: string;
   placeholder: string;
   disabled?: boolean;
   types: '(regions)' | '(cities)';
   countryCode?: string;
-  onSelect: (value: GooglePlacesSelectValue) => void;
+  countryName?: string;
+  onSelect: (value: LocationSelectValue) => void;
 };
 
 type PlaceSuggestion = {
@@ -37,19 +38,21 @@ type PlaceSuggestion = {
 
 const MIN_QUERY_LENGTH = 1;
 
-export default function FormGooglePlacesSelect({
+export default function FormLocationSelect({
   value = '',
   placeholder,
   disabled = false,
   types,
   countryCode,
+  countryName,
   onSelect,
-}: FormGooglePlacesSelectProps) {
+}: FormLocationSelectProps) {
   const theme = useColorTheme();
   const color = Colors[theme];
-  const styles = formGooglePlacesSelectStyles(theme);
+  const styles = formLocationSelectStyles(theme);
   const { t } = useTranslation();
 
+  const isEffectivelyDisabled = disabled;
   const [query, setQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -62,7 +65,8 @@ export default function FormGooglePlacesSelect({
     setQuery(value);
   }, [value]);
 
-  const canSearch = Boolean(!disabled && isFocused && query.trim().length >= MIN_QUERY_LENGTH);
+  const hasMinQuery = query.trim().length >= MIN_QUERY_LENGTH;
+  const canSearch = Boolean(!isEffectivelyDisabled && isFocused && hasMinQuery);
 
   useEffect(() => {
     if (!canSearch) {
@@ -90,22 +94,8 @@ export default function FormGooglePlacesSelect({
             latitude: undefined,
             longitude: undefined,
           }));
-          const hasExactMatch = mapped.some(
-            (item) => item.value.toLowerCase() === trimmedQuery.toLowerCase()
-          );
-          if (!hasExactMatch) {
-            mapped.unshift({
-              id: `country:typed:${trimmedQuery}`,
-              label: trimmedQuery,
-              value: trimmedQuery,
-              description: trimmedQuery,
-              countryCode: trimmedQuery.length === 2 ? trimmedQuery.toUpperCase() : '',
-              latitude: undefined,
-              longitude: undefined,
-            });
-          }
         } else {
-          const cities = await fetchCitySuggestions(trimmedQuery, countryCode);
+          const cities = await fetchCitySuggestions(trimmedQuery, countryCode, countryName);
           mapped = cities.slice(0, 10).map((city) => ({
             id: `city:${city.name}:${city.country_code}`,
             label: city.name,
@@ -118,10 +108,14 @@ export default function FormGooglePlacesSelect({
         }
 
         if (!cancelled) {
-          setSuggestions(mapped.slice(0, 6));
+          const normalizedQuery = trimmedQuery.toLowerCase();
+          const visibleSuggestions = mapped.filter(
+            (item) => item.value.toLowerCase() !== normalizedQuery
+          );
+          setSuggestions(visibleSuggestions.slice(0, 6));
         }
       } catch (error) {
-        console.warn('[FormGooglePlacesSelect] Location search failed:', error);
+        console.warn('[FormLocationSelect] Location search failed:', error);
         if (!cancelled) setSuggestions([]);
       } finally {
         if (!cancelled) setIsSearching(false);
@@ -132,7 +126,7 @@ export default function FormGooglePlacesSelect({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [canSearch, countryCode, query, types]);
+  }, [canSearch, countryCode, countryName, query, types]);
 
   const handleSelect = (suggestion: PlaceSuggestion) => {
     if (isSelectingRef.current) return;
@@ -170,12 +164,12 @@ export default function FormGooglePlacesSelect({
   };
 
   return (
-    <View style={[styles.container, disabled && styles.disabled]}>
+    <View style={[styles.container, isEffectivelyDisabled && styles.disabled]}>
       <View style={styles.textInputContainer}>
         <TextInput
           ref={inputRef}
           value={query}
-          editable={!disabled}
+          editable={!isEffectivelyDisabled}
           onFocus={() => setIsFocused(true)}
           onBlur={() => {
             setTimeout(() => {
@@ -185,6 +179,7 @@ export default function FormGooglePlacesSelect({
           onChangeText={(text) => {
             setQuery(text);
             setSelectionError('');
+            setIsFocused(true);
           }}
           placeholder={placeholder}
           placeholderTextColor={color.subText}
@@ -202,7 +197,7 @@ export default function FormGooglePlacesSelect({
               style={styles.row}
               activeOpacity={0.75}
               delayPressIn={0}
-              onPressIn={() => handleSelect(suggestion)}
+              onPress={() => handleSelect(suggestion)}
             >
               <Text style={styles.description} numberOfLines={1}>
                 {suggestion.description}

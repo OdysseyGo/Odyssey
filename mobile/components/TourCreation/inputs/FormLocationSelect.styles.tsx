@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
-export const formGooglePlacesSelectStyles = (theme: ThemeName) => {
+export const formLocationSelectStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     container: {
