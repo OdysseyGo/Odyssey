@@ -10,7 +10,6 @@ import {
   useTourDetailScreen,
 } from '@/components/TourDetailComponents';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
-import { getTour } from '@/api/tours';
 import { isLoggedIn } from '@/api/auth';
 import { useTranslation } from 'react-i18next';
 
@@ -50,9 +49,11 @@ export default function TourDetailPage() {
     try {
       if (id) {
         const tourIdNum = parseInt(id, 10);
-        const tourData = await getTour(tourIdNum);
         const progressResponse = await createTourProgress({ tour_id: tourIdNum });
-        startTour(tourData, progressResponse.id);
+        if (!progressResponse.tour_snapshot) {
+          throw new Error('Backend did not return a tour snapshot.');
+        }
+        startTour(progressResponse.tour_snapshot, progressResponse.id);
         router.replace('/(tabs)/map');
       }
     } catch (err: any) {

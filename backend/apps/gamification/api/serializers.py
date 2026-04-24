@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from apps.gamification.models import Badge, TourProgress, UserBadge
-from apps.tours.api.serializers import TourSerializer, TourStepSerializer
+from apps.tours.models import Tour
 
 
 class BadgeSerializer(serializers.ModelSerializer):
@@ -19,31 +19,22 @@ class UserBadgeSerializer(serializers.ModelSerializer):
         read_only_fields = ["user", "earned_at"]
 
 
-from apps.tours.models import Tour, TourStep
-
-
 class TourProgressSerializer(serializers.ModelSerializer):
-    tour = TourSerializer(read_only=True)
     tour_id = serializers.PrimaryKeyRelatedField(
-        queryset=Tour.objects.all(), source="tour", write_only=True
+        queryset=Tour.objects.all(), source="tour"
     )
-    current_step = TourStepSerializer(read_only=True)
-    current_step_id = serializers.PrimaryKeyRelatedField(
-        queryset=TourStep.objects.all(),
-        source="current_step",
-        write_only=True,
-        required=False,
-        allow_null=True,
-    )
+    # Snapshot is the authoritative gameplay payload. `current_step_id` points
+    # into tour_snapshot["steps"], not the live TourStep table.
+    tour_snapshot = serializers.JSONField(read_only=True)
+    current_step_id = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model = TourProgress
         fields = [
             "id",
             "user",
-            "tour",
             "tour_id",
-            "current_step",
+            "tour_snapshot",
             "current_step_id",
             "status",
             "started_at",
@@ -51,4 +42,10 @@ class TourProgressSerializer(serializers.ModelSerializer):
             "total_xp",
             "skip_count",
         ]
-        read_only_fields = ["user", "started_at", "completed_at"]
+        read_only_fields = [
+            "user",
+            "started_at",
+            "completed_at",
+            "tour_snapshot",
+            "tour_id",
+        ]

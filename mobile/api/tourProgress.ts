@@ -1,12 +1,14 @@
 import { apiRequest } from './APIClient';
+import { Tour } from './tours';
 
 export type TourProgressStatus = 'IN_PROGRESS' | 'COMPLETED';
 
 export type TourProgress = {
   id: number;
-  tour: number;
+  tour_id: number;
   user: number;
-  current_step: number | null;
+  current_step_id: number | null;
+  tour_snapshot: Tour | null;
   status: TourProgressStatus;
   started_at: string;
   completed_at: string | null;

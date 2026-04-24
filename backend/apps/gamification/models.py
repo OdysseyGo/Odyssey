@@ -42,8 +42,13 @@ class TourProgress(models.Model):
     tour = models.ForeignKey(
         "tours.Tour", on_delete=models.CASCADE, related_name="progress"
     )
-    current_step = models.ForeignKey(
-        "tours.TourStep", on_delete=models.SET_NULL, null=True, blank=True
+    # Points into tour_snapshot["steps"] — not a DB FK, so it survives the
+    # original TourStep being edited or deleted.
+    current_step_id = models.IntegerField(null=True, blank=True)
+    tour_snapshot = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="Frozen tour payload (steps + puzzles) captured when progress started.",
     )
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default=IN_PROGRESS
@@ -52,9 +57,6 @@ class TourProgress(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
     total_xp = models.IntegerField(default=0)
     skip_count = models.IntegerField(default=0)
-
-    class Meta:
-        unique_together = ("user", "tour")
 
     def __str__(self):
         return f"{self.user} - {self.tour} ({self.status})"

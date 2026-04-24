@@ -9,7 +9,6 @@ import {
 } from '@/components/TourStepComponents/TourStep.config';
 
 import { getInProgressTour } from '@/api/tourProgress';
-import { getTour } from '@/api/tours';
 
 interface ActiveTourState {
   tour: Tour | null;
@@ -182,18 +181,20 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
 
     try {
       const activeProgress = await getInProgressTour();
-      //console.log(activeProgress);
       if (!activeProgress || !activeProgress.id) {
         console.log('No active tour found in background check.');
         return;
       }
 
-      const apiTour = await getTour(activeProgress.tour);
-      const internalTour = mapApiTourToInternalTour(apiTour);
+      if (!activeProgress.tour_snapshot) {
+        console.warn('Active progress has no tour_snapshot; cannot resume.');
+        return;
+      }
+      const internalTour = mapApiTourToInternalTour(activeProgress.tour_snapshot);
 
       let currentStepIdx = 0;
-      if (activeProgress.current_step) {
-        const targetStepId = String(activeProgress.current_step);
+      if (activeProgress.current_step_id) {
+        const targetStepId = String(activeProgress.current_step_id);
 
         currentStepIdx = internalTour.steps.findIndex((s) => s.id === targetStepId);
 

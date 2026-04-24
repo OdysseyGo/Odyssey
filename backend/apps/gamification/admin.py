@@ -19,7 +19,7 @@ class TourProgressAdmin(admin.ModelAdmin):
     list_display = (
         "user",
         "tour",
-        "current_step",
+        "current_step_id",
         "status",
         "started_at",
         "completed_at",
