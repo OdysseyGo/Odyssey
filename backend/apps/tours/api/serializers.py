@@ -238,8 +238,6 @@ class TourSerializer(serializers.ModelSerializer):
         current_status = getattr(instance, "status", Tour.DRAFT)
         status_value = attrs.get("status", current_status)
         city = attrs.get("city", getattr(instance, "city", ""))
-        country = attrs.get("country", getattr(instance, "country", ""))
-        country_code = attrs.get("country_code", getattr(instance, "country_code", ""))
         city_latitude = attrs.get("city_latitude")
         city_longitude = attrs.get("city_longitude")
         is_publishing = (
