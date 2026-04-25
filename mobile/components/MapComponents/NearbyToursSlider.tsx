@@ -119,10 +119,7 @@ export default function NearbyToursSlider({ tours, loading, onTourPress }: Nearb
 
   return (
     <Animated.View
-      style={[
-        styles.container,
-        { height: MAX_HEIGHT, transform: [{ translateY }] },
-      ]}
+      style={[styles.container, { height: MAX_HEIGHT, transform: [{ translateY }] }]}
       pointerEvents="box-none"
     >
       <View style={styles.sheet}>

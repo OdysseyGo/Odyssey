@@ -21,11 +21,7 @@ const BAR_HEIGHT = 62;
 const ACTIVE_CONTENT_COLOR = '#020617';
 export const ODYSSEY_TAB_BAR_FLOATING_HEIGHT = BAR_HEIGHT;
 
-export default function OdysseyTabBar({
-  state,
-  descriptors,
-  navigation,
-}: BottomTabBarProps) {
+export default function OdysseyTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const themeName = useColorTheme();
   const colors = Colors[themeName];
   const activeContentColor = themeName === 'light' ? colors.white : ACTIVE_CONTENT_COLOR;
@@ -78,7 +74,10 @@ export default function OdysseyTabBar({
   // ─── Drag offset: follows finger while swiping ────────
   const dragX = useRef(new Animated.Value(0)).current;
   const currentDragX = useRef(0); // raw value tracked separately to avoid stale reads
-  const indicatorX = useMemo(() => Animated.add(indicatorTranslateX, dragX), [indicatorTranslateX, dragX]);
+  const indicatorX = useMemo(
+    () => Animated.add(indicatorTranslateX, dragX),
+    [indicatorTranslateX, dragX]
+  );
 
   const tabPanResponder = useRef(
     PanResponder.create({

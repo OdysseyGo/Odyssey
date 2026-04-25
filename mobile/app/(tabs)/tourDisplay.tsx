@@ -365,8 +365,9 @@ export default function TourDisplay() {
 
   const uniqueCategories = useMemo(
     () =>
-      Array.from(new Set(allTours.map((tour) => tour.category?.trim()).filter(Boolean) as string[]))
-        .sort((a, b) => a.localeCompare(b)),
+      Array.from(
+        new Set(allTours.map((tour) => tour.category?.trim()).filter(Boolean) as string[])
+      ).sort((a, b) => a.localeCompare(b)),
     [allTours]
   );
 
@@ -394,12 +395,9 @@ export default function TourDisplay() {
         (tour.category || '').toLowerCase() === filters.category.toLowerCase();
       const matchesDifficulty =
         filters.difficulty === 'all' || tour.difficulty === filters.difficulty;
-      const matchesTourType =
-        filters.tourType === 'all' || tour.tour_type === filters.tourType;
+      const matchesTourType = filters.tourType === 'all' || tour.tour_type === filters.tourType;
 
-      return (
-        matchesCategory && matchesDifficulty && matchesTourType && matchesDuration(tour)
-      );
+      return matchesCategory && matchesDifficulty && matchesTourType && matchesDuration(tour);
     });
   }, [allTours, filters]);
 
@@ -761,215 +759,215 @@ export default function TourDisplay() {
               },
             ]}
           >
-          <Pressable
-            style={[styles.filterSheet, { backgroundColor: theme.background }]}
-            onPress={() => {}}
-          >
-            <View style={styles.filterSheetHeader}>
-              <View>
-                <Text style={[styles.filterSheetTitle, { color: theme.text }]}>
-                  {t('tour.filters.title', { defaultValue: 'Filter tours' })}
-                </Text>
-                <Text style={[styles.filterSheetSubtitle, { color: theme.subText }]}>
-                  {t('tour.filters.subtitle', {
-                    defaultValue: 'Refine by category, length, and tour style.',
-                  })}
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => setIsFilterModalVisible(false)}
-                style={[styles.filterCloseButton, { backgroundColor: theme.foregroundSecondary }]}
-              >
-                <Ionicons name="close" size={18} color={theme.text} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.filterContent}
+            <Pressable
+              style={[styles.filterSheet, { backgroundColor: theme.background }]}
+              onPress={() => {}}
             >
-              <View style={styles.filterSection}>
-                <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
-                  {t('tour.filters.category', { defaultValue: 'Category' })}
-                </Text>
-                <View style={styles.filterOptionsWrap}>
-                  <TouchableOpacity
-                    onPress={() => updateFilter('category', 'all')}
-                    style={[
-                      styles.filterOption,
-                      filters.category === 'all' && {
-                        backgroundColor: theme.primary,
-                        borderColor: theme.primary,
-                      },
-                    ]}
-                  >
-                    <Text
+              <View style={styles.filterSheetHeader}>
+                <View>
+                  <Text style={[styles.filterSheetTitle, { color: theme.text }]}>
+                    {t('tour.filters.title', { defaultValue: 'Filter tours' })}
+                  </Text>
+                  <Text style={[styles.filterSheetSubtitle, { color: theme.subText }]}>
+                    {t('tour.filters.subtitle', {
+                      defaultValue: 'Refine by category, length, and tour style.',
+                    })}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => setIsFilterModalVisible(false)}
+                  style={[styles.filterCloseButton, { backgroundColor: theme.foregroundSecondary }]}
+                >
+                  <Ionicons name="close" size={18} color={theme.text} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.filterContent}
+              >
+                <View style={styles.filterSection}>
+                  <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
+                    {t('tour.filters.category', { defaultValue: 'Category' })}
+                  </Text>
+                  <View style={styles.filterOptionsWrap}>
+                    <TouchableOpacity
+                      onPress={() => updateFilter('category', 'all')}
                       style={[
-                        styles.filterOptionText,
-                        { color: filters.category === 'all' ? theme.white : theme.text },
+                        styles.filterOption,
+                        filters.category === 'all' && {
+                          backgroundColor: theme.primary,
+                          borderColor: theme.primary,
+                        },
                       ]}
                     >
-                      {t('tour.filters.anyCategory', { defaultValue: 'Any category' })}
-                    </Text>
-                  </TouchableOpacity>
-                  {uniqueCategories.map((category) => {
-                    const isActive = filters.category === category;
-                    return (
-                      <TouchableOpacity
-                        key={category}
-                        onPress={() => updateFilter('category', category)}
+                      <Text
                         style={[
-                          styles.filterOption,
-                          isActive && {
-                            backgroundColor: theme.primary,
-                            borderColor: theme.primary,
-                          },
+                          styles.filterOptionText,
+                          { color: filters.category === 'all' ? theme.white : theme.text },
                         ]}
                       >
-                        <Text
+                        {t('tour.filters.anyCategory', { defaultValue: 'Any category' })}
+                      </Text>
+                    </TouchableOpacity>
+                    {uniqueCategories.map((category) => {
+                      const isActive = filters.category === category;
+                      return (
+                        <TouchableOpacity
+                          key={category}
+                          onPress={() => updateFilter('category', category)}
                           style={[
-                            styles.filterOptionText,
-                            { color: isActive ? theme.white : theme.text },
+                            styles.filterOption,
+                            isActive && {
+                              backgroundColor: theme.primary,
+                              borderColor: theme.primary,
+                            },
                           ]}
                         >
-                          {category}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+                          <Text
+                            style={[
+                              styles.filterOptionText,
+                              { color: isActive ? theme.white : theme.text },
+                            ]}
+                          >
+                            {category}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 </View>
-              </View>
 
-              <View style={styles.filterSection}>
-                <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
-                  {t('tour.filters.duration', { defaultValue: 'Length' })}
-                </Text>
-                <View style={styles.filterOptionsWrap}>
-                  {durationOptions.map((option) => {
-                    const isActive = filters.duration === option.key;
-                    return (
-                      <TouchableOpacity
-                        key={option.key}
-                        onPress={() => updateFilter('duration', option.key)}
-                        style={[
-                          styles.filterOption,
-                          isActive && {
-                            backgroundColor: theme.primary,
-                            borderColor: theme.primary,
-                          },
-                        ]}
-                      >
-                        <Text
+                <View style={styles.filterSection}>
+                  <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
+                    {t('tour.filters.duration', { defaultValue: 'Length' })}
+                  </Text>
+                  <View style={styles.filterOptionsWrap}>
+                    {durationOptions.map((option) => {
+                      const isActive = filters.duration === option.key;
+                      return (
+                        <TouchableOpacity
+                          key={option.key}
+                          onPress={() => updateFilter('duration', option.key)}
                           style={[
-                            styles.filterOptionText,
-                            { color: isActive ? theme.white : theme.text },
+                            styles.filterOption,
+                            isActive && {
+                              backgroundColor: theme.primary,
+                              borderColor: theme.primary,
+                            },
                           ]}
                         >
-                          {option.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+                          <Text
+                            style={[
+                              styles.filterOptionText,
+                              { color: isActive ? theme.white : theme.text },
+                            ]}
+                          >
+                            {option.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 </View>
-              </View>
 
-              <View style={styles.filterSection}>
-                <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
-                  {t('tour.filters.difficulty', { defaultValue: 'Difficulty' })}
-                </Text>
-                <View style={styles.filterOptionsWrap}>
-                  {['all', 'EASY', 'MEDIUM', 'HARD'].map((difficulty) => {
-                    const isActive = filters.difficulty === difficulty;
-                    return (
-                      <TouchableOpacity
-                        key={difficulty}
-                        onPress={() => updateFilter('difficulty', difficulty)}
-                        style={[
-                          styles.filterOption,
-                          isActive && {
-                            backgroundColor: theme.primary,
-                            borderColor: theme.primary,
-                          },
-                        ]}
-                      >
-                        <Text
+                <View style={styles.filterSection}>
+                  <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
+                    {t('tour.filters.difficulty', { defaultValue: 'Difficulty' })}
+                  </Text>
+                  <View style={styles.filterOptionsWrap}>
+                    {['all', 'EASY', 'MEDIUM', 'HARD'].map((difficulty) => {
+                      const isActive = filters.difficulty === difficulty;
+                      return (
+                        <TouchableOpacity
+                          key={difficulty}
+                          onPress={() => updateFilter('difficulty', difficulty)}
                           style={[
-                            styles.filterOptionText,
-                            { color: isActive ? theme.white : theme.text },
+                            styles.filterOption,
+                            isActive && {
+                              backgroundColor: theme.primary,
+                              borderColor: theme.primary,
+                            },
                           ]}
                         >
-                          {difficulty === 'all'
-                            ? t('tour.filters.anyDifficulty', { defaultValue: 'Any difficulty' })
-                            : t(`tourDetail.${difficulty.toLowerCase()}`, {
-                                defaultValue: difficulty,
-                              })}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+                          <Text
+                            style={[
+                              styles.filterOptionText,
+                              { color: isActive ? theme.white : theme.text },
+                            ]}
+                          >
+                            {difficulty === 'all'
+                              ? t('tour.filters.anyDifficulty', { defaultValue: 'Any difficulty' })
+                              : t(`tourDetail.${difficulty.toLowerCase()}`, {
+                                  defaultValue: difficulty,
+                                })}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 </View>
-              </View>
 
-              <View style={styles.filterSection}>
-                <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
-                  {t('tour.filters.tourType', { defaultValue: 'Tour type' })}
-                </Text>
-                <View style={styles.filterOptionsWrap}>
-                  {['all', 'STORY', 'PUZZLE', 'HYBRID'].map((tourType) => {
-                    const isActive = filters.tourType === tourType;
-                    return (
-                      <TouchableOpacity
-                        key={tourType}
-                        onPress={() => updateFilter('tourType', tourType)}
-                        style={[
-                          styles.filterOption,
-                          isActive && {
-                            backgroundColor: theme.primary,
-                            borderColor: theme.primary,
-                          },
-                        ]}
-                      >
-                        <Text
+                <View style={styles.filterSection}>
+                  <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
+                    {t('tour.filters.tourType', { defaultValue: 'Tour type' })}
+                  </Text>
+                  <View style={styles.filterOptionsWrap}>
+                    {['all', 'STORY', 'PUZZLE', 'HYBRID'].map((tourType) => {
+                      const isActive = filters.tourType === tourType;
+                      return (
+                        <TouchableOpacity
+                          key={tourType}
+                          onPress={() => updateFilter('tourType', tourType)}
                           style={[
-                            styles.filterOptionText,
-                            { color: isActive ? theme.white : theme.text },
+                            styles.filterOption,
+                            isActive && {
+                              backgroundColor: theme.primary,
+                              borderColor: theme.primary,
+                            },
                           ]}
                         >
-                          {tourType === 'all'
-                            ? t('tour.filters.anyTourType', { defaultValue: 'Any type' })
-                            : t(`creation.tourType.${tourType.toLowerCase()}`, {
-                                defaultValue: tourType,
-                              })}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+                          <Text
+                            style={[
+                              styles.filterOptionText,
+                              { color: isActive ? theme.white : theme.text },
+                            ]}
+                          >
+                            {tourType === 'all'
+                              ? t('tour.filters.anyTourType', { defaultValue: 'Any type' })
+                              : t(`creation.tourType.${tourType.toLowerCase()}`, {
+                                  defaultValue: tourType,
+                                })}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 </View>
-              </View>
-            </ScrollView>
+              </ScrollView>
 
-            <View style={styles.filterFooter}>
-              <TouchableOpacity
-                style={[styles.filterSecondaryButton, { borderColor: theme.borderLight }]}
-                onPress={() => setFilters(EMPTY_FILTERS)}
-              >
-                <Text style={[styles.filterSecondaryText, { color: theme.text }]}>
-                  {t('tour.filters.reset', { defaultValue: 'Reset' })}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.filterPrimaryButton, { backgroundColor: theme.primary }]}
-                onPress={() => setIsFilterModalVisible(false)}
-              >
-                <Text style={styles.filterPrimaryText}>
-                  {t('tour.filters.showResults', {
-                    defaultValue: 'Show {{count}} tours',
-                    count: filteredTours.length,
-                  })}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </Pressable>
+              <View style={styles.filterFooter}>
+                <TouchableOpacity
+                  style={[styles.filterSecondaryButton, { borderColor: theme.borderLight }]}
+                  onPress={() => setFilters(EMPTY_FILTERS)}
+                >
+                  <Text style={[styles.filterSecondaryText, { color: theme.text }]}>
+                    {t('tour.filters.reset', { defaultValue: 'Reset' })}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.filterPrimaryButton, { backgroundColor: theme.primary }]}
+                  onPress={() => setIsFilterModalVisible(false)}
+                >
+                  <Text style={styles.filterPrimaryText}>
+                    {t('tour.filters.showResults', {
+                      defaultValue: 'Show {{count}} tours',
+                      count: filteredTours.length,
+                    })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
           </Animated.View>
         </Pressable>
       </Modal>
