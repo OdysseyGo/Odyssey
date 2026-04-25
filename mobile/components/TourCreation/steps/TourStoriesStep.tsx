@@ -26,6 +26,9 @@ export default function TourStoriesStep({
   const styles = tourStoriesStepStyles(theme);
   const color = Colors[theme];
   const { t } = useTranslation();
+  const completeCount = locations.filter((location) =>
+    doesLocationMeetTourRequirements(location, tourType)
+  ).length;
 
   if (locations.length === 0) {
     return (
@@ -40,8 +43,20 @@ export default function TourStoriesStep({
 
   return (
     <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.sectionTitle}>{t('creation.stories.title')}</Text>
-      <Text style={styles.sectionSubtitle}>{t('creation.stories.subtitle')}</Text>
+      <View style={styles.introCard}>
+        <View style={styles.introCopy}>
+          <Text style={styles.sectionTitle}>{t('creation.stories.title')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('creation.stories.subtitle')}</Text>
+        </View>
+        <View style={styles.progressBadge}>
+          <Text style={styles.progressValue}>
+            {completeCount}/{locations.length}
+          </Text>
+          <Text style={styles.progressLabel}>
+            {t('creation.stories.ready', { defaultValue: 'Ready' })}
+          </Text>
+        </View>
+      </View>
 
       {locations.map((location) => {
         const isComplete = doesLocationMeetTourRequirements(location, tourType);
@@ -51,17 +66,32 @@ export default function TourStoriesStep({
             style={[styles.locationCard, isComplete && styles.locationCardComplete]}
             onPress={() => onLocationSelect(location)}
           >
+            <View
+              style={[styles.locationStatusRail, isComplete && styles.locationStatusRailDone]}
+            />
             <View style={styles.locationCardHeader}>
               <View style={styles.locationCardLeft}>
-                <View style={styles.locationOrderBadge}>
+                <View
+                  style={[
+                    styles.locationOrderBadge,
+                    isComplete && styles.locationOrderBadgeComplete,
+                  ]}
+                >
                   <Text style={styles.locationOrderText}>{location.order}</Text>
                 </View>
-                <Text style={styles.locationCardTitle} numberOfLines={2} ellipsizeMode="tail">
-                  {location.title || t('creation.stories.untitledLocation')}
-                </Text>
+                <View style={styles.locationTextWrap}>
+                  <Text style={styles.locationCardTitle} numberOfLines={2} ellipsizeMode="tail">
+                    {location.title || t('creation.stories.untitledLocation')}
+                  </Text>
+                  <Text style={styles.locationCardMeta}>
+                    {isComplete
+                      ? t('creation.stories.complete', { defaultValue: 'Story complete' })
+                      : t('creation.stories.needsDraft', { defaultValue: 'Needs story draft' })}
+                  </Text>
+                </View>
               </View>
               <Ionicons
-                name={isComplete ? 'checkmark-circle' : 'create-outline'}
+                name={isComplete ? 'checkmark-circle' : 'pencil-outline'}
                 size={24}
                 color={isComplete ? color.primary : color.subText}
               />

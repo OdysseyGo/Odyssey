@@ -6,13 +6,13 @@ export const formInputGroupStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     inputGroup: {
-      marginBottom: Spacing.lg,
+      marginBottom: Spacing.md,
     },
     label: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: '700',
       color: color.text,
-      marginBottom: Spacing.xs,
+      marginBottom: Spacing.sm,
     },
   });
 };

@@ -7,17 +7,18 @@ export const formDurationPickerStyles = (theme: ThemeName) => {
   return StyleSheet.create({
     durationContainer: {
       width: '100%',
-      marginTop: Spacing.md,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: Spacing.md,
     },
     durationButton: {
-      width: '30%',
+      width: 56,
       height: 44,
-      borderRadius: 22,
-      backgroundColor: color.foregroundSecondary,
+      borderRadius: 8,
+      backgroundColor: color.primaryMuted,
+      borderWidth: 1,
+      borderColor: color.borderLight,
       justifyContent: 'center',
       alignItems: 'center',
     },

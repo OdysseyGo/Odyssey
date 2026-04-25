@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { creationFooterStyles } from './CreationFooter.styles';
 
@@ -25,6 +26,7 @@ export default function CreationFooter({
         disabled={disabled}
       >
         <Text style={styles.buttonText}>{buttonText}</Text>
+        <Ionicons name="arrow-forward" size={18} style={styles.buttonIcon} />
       </TouchableOpacity>
     </View>
   );

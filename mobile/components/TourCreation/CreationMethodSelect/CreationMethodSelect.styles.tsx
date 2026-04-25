@@ -1,11 +1,10 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
-const { width: screenWidth } = Dimensions.get('window');
-
 export const creationMethodStyles = (theme: ThemeName) => {
   const color = Colors[theme];
+  const isDark = theme === 'dark';
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -13,60 +12,101 @@ export const creationMethodStyles = (theme: ThemeName) => {
     },
     content: {
       flex: 1,
-      padding: Spacing.xl,
+      padding: Spacing.lg,
       justifyContent: 'center',
+    },
+    hero: {
+      borderRadius: 8,
+      padding: Spacing.xl,
+      marginBottom: Spacing.lg,
+      overflow: 'hidden',
+      shadowColor: isDark ? '#000' : color.primary,
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: isDark ? 0.35 : 0.18,
+      shadowRadius: 22,
+      elevation: 8,
+    },
+    heroIcon: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: 'rgba(255,255,255,0.18)',
       alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: Spacing.lg,
     },
     title: {
-      fontSize: 28,
+      fontSize: 30,
       fontWeight: '800',
-      color: color.text,
-      textAlign: 'center',
+      color: color.white,
       marginBottom: Spacing.sm,
     },
     subtitle: {
       fontSize: 16,
-      color: color.subText,
-      textAlign: 'center',
-      marginBottom: Spacing.xxl,
+      color: 'rgba(248,250,252,0.86)',
+      lineHeight: 23,
     },
     optionsContainer: {
       width: '100%',
-      maxWidth: 400,
-      gap: Spacing.lg,
+      gap: Spacing.md,
     },
     optionCard: {
-      backgroundColor: color.foreground,
-      borderRadius: Spacing.borderRadius,
-      padding: Spacing.xl,
-      borderWidth: 2,
+      backgroundColor: color.cardSurface,
+      borderRadius: 8,
+      padding: Spacing.lg,
+      borderWidth: 1,
       borderColor: color.borderLight,
-      alignItems: 'center',
+      overflow: 'hidden',
+      shadowColor: isDark ? '#000' : color.text,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: isDark ? 0.24 : 0.08,
+      shadowRadius: 18,
+      elevation: 4,
     },
     optionCardPressed: {
       borderColor: color.primary,
       backgroundColor: color.foregroundSecondary,
     },
+    optionAccent: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 5,
+    },
+    optionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+      marginBottom: Spacing.md,
+    },
     optionIconContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: color.foregroundSecondary,
+      width: 52,
+      height: 52,
+      borderRadius: 26,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: Spacing.md,
+    },
+    optionHeaderText: {
+      flex: 1,
+      minWidth: 0,
     },
     optionTitle: {
       fontSize: 20,
       fontWeight: '700',
       color: color.text,
-      marginBottom: Spacing.xs,
+    },
+    optionMeta: {
+      fontSize: 12,
+      fontWeight: '700',
+      marginTop: 2,
+      textTransform: 'uppercase',
     },
     optionDescription: {
       fontSize: 14,
       color: color.subText,
-      textAlign: 'center',
-      lineHeight: 20,
+      lineHeight: 21,
+      paddingLeft: Spacing.xs,
     },
     disabledCard: {
       opacity: 0.5,
@@ -89,10 +129,11 @@ export const creationMethodStyles = (theme: ThemeName) => {
       marginTop: Spacing.xl,
       paddingVertical: Spacing.md,
       paddingHorizontal: Spacing.xl,
-      borderRadius: Spacing.borderRadius,
+      borderRadius: 8,
       borderWidth: 1,
       borderColor: color.borderLight,
-      backgroundColor: color.foreground,
+      backgroundColor: color.cardSurface,
+      alignSelf: 'center',
     },
     skipText: {
       fontSize: 15,

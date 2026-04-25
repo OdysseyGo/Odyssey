@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { tourStatsRowStyles } from './TourStatsRow.styles';
 import { useTranslation } from 'react-i18next';
@@ -18,14 +19,17 @@ export default function TourStatsRow({ locationCount, duration, difficulty }: To
   return (
     <View style={styles.container}>
       <View style={styles.statItem}>
+        <Ionicons name="location-outline" size={18} style={styles.statIcon} />
         <Text style={styles.statValue}>{locationCount}</Text>
         <Text style={styles.statLabel}>{t('creation.stats.locations')}</Text>
       </View>
       <View style={styles.statItem}>
+        <Ionicons name="time-outline" size={18} style={styles.statIcon} />
         <Text style={styles.statValue}>{duration}</Text>
         <Text style={styles.statLabel}>{t('creation.stats.minutes')}</Text>
       </View>
       <View style={styles.statItem}>
+        <Ionicons name="speedometer-outline" size={18} style={styles.statIcon} />
         <Text style={styles.statValue}>
           {t(`creation.difficulty.${difficulty.toLowerCase()}`, { defaultValue: difficulty })}
         </Text>

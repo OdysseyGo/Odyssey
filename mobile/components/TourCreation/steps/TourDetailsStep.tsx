@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { Text, ScrollView } from 'react-native';
+import { Text, ScrollView, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { tourDetailsStepStyles } from './TourDetailsStep.styles';
 import { TourCreationData, TOUR_CATEGORIES } from '../TourCreation.types';
@@ -79,68 +80,89 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
   ) as unknown as readonly string[];
 
   const selectedTranslatedCategory = t(`creation.categories.${tourData.category.toLowerCase()}`);
+  const completedBasics = [
+    tourData.title.trim(),
+    tourData.description.trim(),
+    tourData.category,
+  ].filter(Boolean).length;
 
   return (
     <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.sectionTitle}>{t('creation.details.title')}</Text>
-      <Text style={styles.sectionSubtitle}>{t('creation.details.subtitle')}</Text>
+      <View style={styles.introCard}>
+        <View style={styles.introIcon}>
+          <Ionicons name="compass-outline" size={24} style={styles.introIconGlyph} />
+        </View>
+        <View style={styles.introCopy}>
+          <Text style={styles.sectionTitle}>{t('creation.details.title')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('creation.details.subtitle')}</Text>
+        </View>
+        <View style={styles.completionPill}>
+          <Text style={styles.completionValue}>{completedBasics}/3</Text>
+        </View>
+      </View>
 
-      <FormInputGroup label={t('creation.details.tourTitle')} required>
-        <FormTextInput
-          value={tourData.title}
-          onChangeText={(text) => onUpdate({ title: text })}
-          placeholder={t('creation.details.tourTitlePlaceholder')}
-        />
-      </FormInputGroup>
+      <View style={styles.formCard}>
+        <FormInputGroup label={t('creation.details.tourTitle')} required>
+          <FormTextInput
+            value={tourData.title}
+            onChangeText={(text) => onUpdate({ title: text })}
+            placeholder={t('creation.details.tourTitlePlaceholder')}
+          />
+        </FormInputGroup>
 
-      <FormInputGroup label={t('creation.details.description')} required>
-        <FormTextArea
-          value={tourData.description}
-          onChangeText={(text) => onUpdate({ description: text })}
-          placeholder={t('creation.details.descriptionPlaceholder')}
-        />
-      </FormInputGroup>
+        <FormInputGroup label={t('creation.details.description')} required>
+          <FormTextArea
+            value={tourData.description}
+            onChangeText={(text) => onUpdate({ description: text })}
+            placeholder={t('creation.details.descriptionPlaceholder')}
+          />
+        </FormInputGroup>
 
-      <FormInputGroup label={t('creation.details.city')}>
-        <FormTextInput
-          value={tourData.city}
-          onChangeText={(text) => onUpdate({ city: text })}
-          placeholder={t('creation.details.cityPlaceholder')}
-        />
-      </FormInputGroup>
+        <FormInputGroup label={t('creation.details.city')}>
+          <FormTextInput
+            value={tourData.city}
+            onChangeText={(text) => onUpdate({ city: text })}
+            placeholder={t('creation.details.cityPlaceholder')}
+          />
+        </FormInputGroup>
+      </View>
 
-      <FormInputGroup label={t('creation.details.category')} required>
-        <FormChipSelect
-          options={translatedCategories}
-          selectedValue={selectedTranslatedCategory}
-          onSelect={(translatedValue) =>
-            onUpdate({ category: categoryKeyMap[translatedValue] ?? translatedValue })
-          }
-        />
-      </FormInputGroup>
+      <View style={styles.formCard}>
+        <FormInputGroup label={t('creation.details.category')} required>
+          <FormChipSelect
+            options={translatedCategories}
+            selectedValue={selectedTranslatedCategory}
+            onSelect={(translatedValue) =>
+              onUpdate({ category: categoryKeyMap[translatedValue] ?? translatedValue })
+            }
+          />
+        </FormInputGroup>
+      </View>
 
-      <FormInputGroup label={t('creation.details.difficulty')}>
-        <FormOptionCard
-          options={difficultyOptions}
-          selectedValue={tourData.difficulty}
-          onSelect={(value) => onUpdate({ difficulty: value as 'EASY' | 'MEDIUM' | 'HARD' })}
-        />
-      </FormInputGroup>
+      <View style={styles.formCard}>
+        <FormInputGroup label={t('creation.details.difficulty')}>
+          <FormOptionCard
+            options={difficultyOptions}
+            selectedValue={tourData.difficulty}
+            onSelect={(value) => onUpdate({ difficulty: value as 'EASY' | 'MEDIUM' | 'HARD' })}
+          />
+        </FormInputGroup>
 
-      <FormInputGroup label={t('creation.details.tourType')}>
-        <FormOptionCard
-          options={tourTypeOptions}
-          selectedValue={tourData.tourType}
-          onSelect={(value) => onUpdate({ tourType: value as 'STORY' | 'PUZZLE' | 'HYBRID' })}
-        />
-      </FormInputGroup>
+        <FormInputGroup label={t('creation.details.tourType')}>
+          <FormOptionCard
+            options={tourTypeOptions}
+            selectedValue={tourData.tourType}
+            onSelect={(value) => onUpdate({ tourType: value as 'STORY' | 'PUZZLE' | 'HYBRID' })}
+          />
+        </FormInputGroup>
 
-      <FormInputGroup label={t('creation.details.duration')}>
-        <FormDurationPicker
-          value={tourData.estimatedDuration}
-          onChange={(estimatedDuration) => onUpdate({ estimatedDuration })}
-        />
-      </FormInputGroup>
+        <FormInputGroup label={t('creation.details.duration')}>
+          <FormDurationPicker
+            value={tourData.estimatedDuration}
+            onChange={(estimatedDuration) => onUpdate({ estimatedDuration })}
+          />
+        </FormInputGroup>
+      </View>
     </ScrollView>
   );
 }

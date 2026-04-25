@@ -13,10 +13,10 @@ export const formChipSelectStyles = (theme: ThemeName) => {
     chip: {
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.sm,
-      borderRadius: Spacing.borderRadius,
-      backgroundColor: color.foregroundSecondary,
+      borderRadius: 8,
+      backgroundColor: color.background,
       borderWidth: 1,
-      borderColor: color.primary,
+      borderColor: color.borderLight,
     },
     chipSelected: {
       backgroundColor: color.primary,
@@ -25,9 +25,10 @@ export const formChipSelectStyles = (theme: ThemeName) => {
     chipText: {
       fontSize: 14,
       color: color.text,
+      fontWeight: '600',
     },
     chipTextSelected: {
-      color: color.text,
+      color: color.white,
     },
   });
 };

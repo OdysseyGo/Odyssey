@@ -7,18 +7,29 @@ export const tourStatsRowStyles = (theme: ThemeName) => {
   return StyleSheet.create({
     container: {
       flexDirection: 'row',
-      justifyContent: 'space-around',
-      backgroundColor: color.foregroundSecondary,
-      borderRadius: Spacing.borderRadius,
-      padding: Spacing.md,
+      backgroundColor: color.cardSurface,
+      borderRadius: 8,
+      padding: Spacing.sm,
       marginBottom: Spacing.lg,
+      borderWidth: 1,
+      borderColor: color.borderLight,
+      gap: Spacing.sm,
     },
     statItem: {
       alignItems: 'center',
+      flex: 1,
+      backgroundColor: color.background,
+      borderRadius: 8,
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.xs,
+    },
+    statIcon: {
+      color: color.primary,
+      marginBottom: Spacing.xs,
     },
     statValue: {
-      fontSize: 24,
-      fontWeight: '700',
+      fontSize: 18,
+      fontWeight: '800',
       color: color.primary,
     },
     statLabel: {

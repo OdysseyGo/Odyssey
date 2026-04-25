@@ -6,10 +6,10 @@ export const formTextInputStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     textInput: {
-      backgroundColor: color.foreground,
+      backgroundColor: color.background,
       borderWidth: 1,
       borderColor: color.borderLight,
-      borderRadius: Spacing.borderRadius,
+      borderRadius: 8,
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.md,
       fontSize: 16,

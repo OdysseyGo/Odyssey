@@ -30,13 +30,18 @@ export default function FormOptionCard({ options, selectedValue, onSelect }: For
           style={[styles.optionCard, selectedValue === option.value && styles.optionCardSelected]}
           onPress={() => onSelect(option.value)}
         >
-          <View style={styles.optionCardHeader}>
-            <Text style={styles.optionCardTitle}>{option.label}</Text>
-            {selectedValue === option.value && (
-              <Ionicons name="checkmark-circle" size={24} color={color.primary} />
-            )}
+          <View style={[styles.radio, selectedValue === option.value && styles.radioSelected]}>
+            {selectedValue === option.value && <View style={styles.radioDot} />}
           </View>
-          <Text style={styles.optionCardDescription}>{option.description}</Text>
+          <View style={styles.optionContent}>
+            <View style={styles.optionCardHeader}>
+              <Text style={styles.optionCardTitle}>{option.label}</Text>
+              {selectedValue === option.value && (
+                <Ionicons name="checkmark-circle" size={24} color={color.primary} />
+              )}
+            </View>
+            <Text style={styles.optionCardDescription}>{option.description}</Text>
+          </View>
         </TouchableOpacity>
       ))}
     </View>

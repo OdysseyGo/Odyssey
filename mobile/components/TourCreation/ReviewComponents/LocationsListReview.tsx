@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { locationsListReviewStyles } from './LocationsListReview.styles';
 import { TourLocation } from '../TourCreation.types';
@@ -23,10 +24,20 @@ export default function LocationsListReview({ locations }: LocationsListReviewPr
       {locations.map((location) => (
         <View key={location.id} style={styles.locationCard}>
           <View style={styles.locationHeader}>
-            <Text style={styles.locationOrder}>{location.order}.</Text>
-            <Text style={styles.locationTitle} numberOfLines={2} ellipsizeMode="tail">
-              {location.title}
-            </Text>
+            <View style={styles.locationOrderBadge}>
+              <Text style={styles.locationOrder}>{location.order}</Text>
+            </View>
+            <View style={styles.locationTitleWrap}>
+              <Text style={styles.locationTitle} numberOfLines={2} ellipsizeMode="tail">
+                {location.title}
+              </Text>
+              <View style={styles.locationMeta}>
+                <Ionicons name="checkmark-circle" size={14} style={styles.locationMetaIcon} />
+                <Text style={styles.locationMetaText}>
+                  {t('creation.review.readyStop', { defaultValue: 'Ready stop' })}
+                </Text>
+              </View>
+            </View>
           </View>
           <Text style={styles.locationStory} numberOfLines={3}>
             {location.story}

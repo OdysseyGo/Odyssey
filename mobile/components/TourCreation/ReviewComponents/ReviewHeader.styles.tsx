@@ -7,6 +7,11 @@ export const reviewHeaderStyles = (theme: ThemeName) => {
   return StyleSheet.create({
     container: {
       marginBottom: Spacing.lg,
+      backgroundColor: color.primaryMuted,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: color.borderLight,
+      padding: Spacing.lg,
     },
     title: {
       fontSize: 20,
@@ -17,6 +22,7 @@ export const reviewHeaderStyles = (theme: ThemeName) => {
     subtitle: {
       fontSize: 14,
       color: color.subText,
+      lineHeight: 20,
     },
   });
 };

@@ -14,13 +14,15 @@ export const tourTagsListStyles = (theme: ThemeName) => {
     tag: {
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.sm,
-      borderRadius: Spacing.borderRadius,
-      backgroundColor: color.primary,
+      borderRadius: 8,
+      backgroundColor: color.primaryMuted,
+      borderWidth: 1,
+      borderColor: color.borderLight,
     },
     tagText: {
       fontSize: 14,
-      color: color.text,
-      fontWeight: '500',
+      color: color.primary,
+      fontWeight: '700',
     },
   });
 };
