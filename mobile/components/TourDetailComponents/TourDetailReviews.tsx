@@ -1,9 +1,10 @@
-import { View, Text, Image, Animated, ActivityIndicator } from 'react-native';
+import { View, Text, Image, Animated } from 'react-native';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
+import { isLoggedIn } from '@/api/auth';
 import { getTourReviews } from '@/api/tours';
 import { TourDetailReviewsProps, TourDetailReviewsState } from './TourDetailReviews.config';
 import { tourDetailReviewsStyles } from './TourDetailReviews.styles';
@@ -103,23 +104,36 @@ export default function TourDetailReviews({ tourId }: TourDetailReviewsProps) {
     reviews: [],
     loading: true,
     error: null,
+    requiresLogin: false,
   });
 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
         setState((prev) => ({ ...prev, loading: true, error: null }));
+        const loggedIn = await isLoggedIn();
+        if (!loggedIn) {
+          setState({
+            reviews: [],
+            loading: false,
+            error: null,
+            requiresLogin: true,
+          });
+          return;
+        }
+
         const response = await getTourReviews(tourId);
 
         // Handle both array and wrapped responses
         const reviewsArray = Array.isArray(response) ? response : (response as any)?.results || [];
 
-        setState({ reviews: reviewsArray, loading: false, error: null });
+        setState({ reviews: reviewsArray, loading: false, error: null, requiresLogin: false });
       } catch (err: any) {
         setState((prev) => ({
           ...prev,
           loading: false,
           error: err.message || 'Failed to load reviews',
+          requiresLogin: false,
         }));
       }
     };
@@ -147,6 +161,22 @@ export default function TourDetailReviews({ tourId }: TourDetailReviewsProps) {
             <Ionicons name="alert-circle-outline" size={32} color={colors.subText} />
           </View>
           <Text style={styles.emptyText}>{state.error}</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (state.requiresLogin) {
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('tourDetail.reviews')}</Text>
+        <View style={styles.emptyState}>
+          <View style={styles.emptyIcon}>
+            <Ionicons name="lock-closed-outline" size={32} color={colors.subText} />
+          </View>
+          <Text style={styles.emptyText}>
+            {t('tourDetail.loginToViewReviews', 'Log in to view reviews.')}
+          </Text>
         </View>
       </View>
     );
