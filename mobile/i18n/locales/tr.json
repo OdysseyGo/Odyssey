@@ -554,6 +554,7 @@
     },
     "searchMode": {
       "searchHere": "Burada ara",
+      "stopDragging": "Aramak için sürüklemeyi bırak",
       "zoomIn": "Aramak için yakınlaştır"
     }
   },

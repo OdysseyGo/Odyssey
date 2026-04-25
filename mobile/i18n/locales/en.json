@@ -554,6 +554,7 @@
     },
     "searchMode": {
       "searchHere": "Search here",
+      "stopDragging": "Stop dragging to search",
       "zoomIn": "Zoom in to search"
     }
   },
