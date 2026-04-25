@@ -51,13 +51,10 @@ export default function MapScreen() {
   const [hasSearched, setHasSearched] = useState(false);
   const [isZoomedOut, setIsZoomedOut] = useState(false);
   const [isCoolingDown, setIsCoolingDown] = useState(false);
+  const [isDraggingMap, setIsDraggingMap] = useState(false);
   const [showSearchButton, setShowSearchButton] = useState(false);
-  const currentRegionRef = useRef<Region>({
-    latitude: 41.0082,
-    longitude: 28.9784,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
-  });
+  const currentRegionRef = useRef<Region | null>(null);
+  const isDraggingMapRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const cooldownRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const spinAnim = useRef(new Animated.Value(0)).current;
@@ -84,11 +81,13 @@ export default function MapScreen() {
       spinLoop.current?.stop();
       spinAnim.setValue(0);
       setIsCoolingDown(false);
+      setIsDraggingMap(false);
+      isDraggingMapRef.current = false;
       initialSearchDoneRef.current = false;
       setShowSearchButton(false);
 
       const region = currentRegionRef.current;
-      if (region.latitudeDelta > MAX_SEARCH_DELTA) return;
+      if (!region || region.latitudeDelta > MAX_SEARCH_DELTA) return;
 
       abortControllerRef.current?.abort();
       const controller = new AbortController();
@@ -118,7 +117,7 @@ export default function MapScreen() {
         });
 
       return () => controller.abort();
-    }, [])
+    }, [MAX_SEARCH_DELTA, spinAnim])
   );
 
   const visibleMarkers = useMemo(() => {
@@ -180,6 +179,7 @@ export default function MapScreen() {
 
   const handleSearchHere = useCallback(async () => {
     const region = currentRegionRef.current;
+    if (!region) return;
     if (region.latitudeDelta > MAX_SEARCH_DELTA) return;
 
     abortControllerRef.current?.abort();
@@ -217,13 +217,62 @@ export default function MapScreen() {
     } finally {
       setNearbyLoading(false);
     }
-  }, []);
+  }, [MAX_SEARCH_DELTA, spinAnim]);
 
   const handleRegionChangeComplete = useCallback(
     (region: Region) => {
       currentRegionRef.current = region;
+      isDraggingMapRef.current = false;
+      setIsDraggingMap(false);
       setIsZoomedOut(region.latitudeDelta > MAX_SEARCH_DELTA);
       if (initialSearchDoneRef.current) setShowSearchButton(true);
+    },
+    [MAX_SEARCH_DELTA]
+  );
+
+  const handleRegionChange = useCallback((region: Region) => {
+    currentRegionRef.current = region;
+
+    if (!initialSearchDoneRef.current || isDraggingMapRef.current) return;
+
+    isDraggingMapRef.current = true;
+    setIsDraggingMap(true);
+    setShowSearchButton(true);
+  }, []);
+
+  const handleUserLocationReady = useCallback(
+    async (region: Region) => {
+      currentRegionRef.current = region;
+      setIsZoomedOut(region.latitudeDelta > MAX_SEARCH_DELTA);
+
+      if (initialSearchDoneRef.current || region.latitudeDelta > MAX_SEARCH_DELTA) return;
+
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      setNearbyLoading(true);
+
+      try {
+        const tours = await getToursInBounds(
+          region.latitude + region.latitudeDelta / 2,
+          region.latitude - region.latitudeDelta / 2,
+          region.longitude + region.longitudeDelta / 2,
+          region.longitude - region.longitudeDelta / 2,
+          controller.signal
+        );
+        if (!controller.signal.aborted) {
+          setNearbyTours(tours);
+          setHasSearched(true);
+        }
+      } catch {
+        if (!controller.signal.aborted) setNearbyTours([]);
+      } finally {
+        if (!controller.signal.aborted) {
+          setNearbyLoading(false);
+          initialSearchDoneRef.current = true;
+        }
+      }
     },
     [MAX_SEARCH_DELTA]
   );
@@ -276,7 +325,9 @@ export default function MapScreen() {
           route={[]}
           initialRegion={defaultRegion}
           currentStepIndex={0}
+          onRegionChange={handleRegionChange}
           onRegionChangeComplete={handleRegionChangeComplete}
+          onUserLocationReady={handleUserLocationReady}
           nearbyMarkers={nearbyMarkersForMap}
         />
 
@@ -285,9 +336,14 @@ export default function MapScreen() {
           <Pressable
             style={[
               styles.searchHereButton,
-              (isZoomedOut || nearbyLoading || isCoolingDown) && styles.searchHereButtonDisabled,
+              (isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown) &&
+                styles.searchHereButtonDisabled,
             ]}
-            onPress={isZoomedOut || nearbyLoading || isCoolingDown ? undefined : handleSearchHere}
+            onPress={
+              isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown
+                ? undefined
+                : handleSearchHere
+            }
           >
             {isZoomedOut ? (
               <MaterialCommunityIcons
@@ -311,21 +367,28 @@ export default function MapScreen() {
                 <MaterialCommunityIcons
                   name="magnify"
                   size={16}
-                  color={nearbyLoading || isCoolingDown ? colors.subText : colors.primary}
+                  color={
+                    isDraggingMap || nearbyLoading || isCoolingDown
+                      ? colors.subText
+                      : colors.primary
+                  }
                 />
               </Animated.View>
             )}
             <Text
               style={[
                 styles.searchHereText,
-                (isZoomedOut || nearbyLoading || isCoolingDown) && styles.searchHereTextDisabled,
+                (isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown) &&
+                  styles.searchHereTextDisabled,
               ]}
             >
               {nearbyLoading
                 ? t('map.nearby.searching')
-                : isZoomedOut
-                  ? t('map.searchMode.zoomIn')
-                  : t('map.searchMode.searchHere')}
+                : isDraggingMap
+                  ? t('map.searchMode.stopDragging')
+                  : isZoomedOut
+                    ? t('map.searchMode.zoomIn')
+                    : t('map.searchMode.searchHere')}
             </Text>
           </Pressable>
         )}

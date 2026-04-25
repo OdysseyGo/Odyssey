@@ -110,6 +110,11 @@
     "feedModalCancel": "Cancelar",
     "userProfileFollow": "Seguir",
     "userProfileUnfollow": "Dejar de seguir",
+    "loginToFollow": "Inicia sesión para seguir",
+    "loginToFollowTitle": "Inicio de sesión requerido",
+    "loginToFollowMessage": "Debes iniciar sesión para seguir a este usuario.",
+    "socialLoginRequiredTitle": "Inicio de sesión requerido",
+    "socialLoginRequiredMessage": "Debes iniciar sesión para ver seguidores y seguidos.",
     "userProfileError": "No se pudo cargar este perfil",
     "chooseAvatar": "Elige tu avatar",
     "avatarStyle": "Estilo",
@@ -161,6 +166,7 @@
     "difficulty": "Dificultad",
     "notFound": "Tour no encontrado",
     "reviews": "reseñas",
+    "loginToViewReviews": "Inicia sesión para ver las reseñas.",
     "aboutThisTour": "Sobre este tour",
     "createdBy": "Creado por",
     "tourStops": "Paradas del tour",
@@ -465,7 +471,14 @@
     "activeTour": {
       "stepOf": "Paso {{current}} de {{total}}",
       "end": "Finalizar",
-      "skip": "SALTAR"
+      "skip": "SALTAR",
+      "route": "Ruta",
+      "directions": "Indicaciones",
+      "openIn": "Abrir esta parada en",
+      "appleMaps": "Apple Maps",
+      "googleMaps": "Google Maps",
+      "yandexMaps": "Yandex Maps",
+      "directionsUnavailableMessage": "No se pudieron abrir las indicaciones ahora mismo. Inténtalo de nuevo."
     }
   },
   "friends": {
