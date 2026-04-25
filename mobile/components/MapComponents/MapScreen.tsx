@@ -368,7 +368,9 @@ export default function MapScreen() {
                   name="magnify"
                   size={16}
                   color={
-                    isDraggingMap || nearbyLoading || isCoolingDown ? colors.subText : colors.primary
+                    isDraggingMap || nearbyLoading || isCoolingDown
+                      ? colors.subText
+                      : colors.primary
                   }
                 />
               </Animated.View>
