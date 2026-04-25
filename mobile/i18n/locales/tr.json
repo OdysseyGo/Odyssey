@@ -219,6 +219,10 @@
         "label": "Bildirimler",
         "description": "Bildirim tercihlerini yönet"
       },
+      "logout": {
+        "label": "Çıkış Yap",
+        "description": "Hesabından çıkış yap"
+      },
       "privacy": {
         "label": "Gizlilik",
         "description": "Gizlilik ayarlarını yönet"
@@ -298,6 +302,8 @@
     "errorTitle": "Hata",
     "errorMessage": "Tur gönderilemedi. Lütfen tekrar deneyin.",
     "cityStopsMismatch": "En az bir tur durağı seçilen şehrin içinde olmalıdır.",
+    "incompletePuzzleTitle": "Zorunlu bulmacaları tamamla",
+    "incompletePuzzleMessage": "Bulmaca turunda göndermeden önce her konumda geçerli bir bulmaca olmalı.",
     "method": {
       "title": "Turunuzu Oluşturun",
       "subtitle": "Tur deneyiminizi nasıl oluşturmak istediğinizi seçin",
@@ -525,7 +531,31 @@
     "activeTour": {
       "stepOf": "Adım {{current}} / {{total}}",
       "end": "Bitir",
-      "skip": "ATLA"
+      "skip": "ATLA",
+      "route": "Rota",
+      "directions": "Yol Tarifi",
+      "openIn": "Bu durağı burada aç",
+      "appleMaps": "Apple Maps",
+      "googleMaps": "Google Maps",
+      "yandexMaps": "Yandex Maps",
+      "directionsUnavailableMessage": "Yol tarifi şu anda açılamadı. Lütfen tekrar deneyin."
+    },
+    "nearby": {
+      "title_one": "{{count}} yakın tur",
+      "title_other": "{{count}} yakın tur",
+      "areaTitle_one": "Bu alanda {{count}} tur",
+      "areaTitle_other": "Bu alanda {{count}} tur",
+      "searching": "Yakında aranıyor...",
+      "radius": "Dokunma noktanızdan 500 m içinde",
+      "areaSubtitle": "Görünür harita alanında başlayan turlar",
+      "emptyTitle": "Burada tur yok",
+      "emptySubtitle": "Farklı bir yere dokunmayı ya da daha kalabalık bir bölgeyi keşfetmeyi deneyin.",
+      "duration_one": "{{count}} dk",
+      "duration_other": "{{count}} dk"
+    },
+    "searchMode": {
+      "searchHere": "Burada ara",
+      "zoomIn": "Aramak için yakınlaştır"
     }
   },
   "friends": {

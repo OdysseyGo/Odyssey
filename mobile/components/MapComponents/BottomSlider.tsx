@@ -16,7 +16,7 @@ const BOTTOM_SHEET_ANIMATION_DURATION = Animations.bottomSheet.animationDuration
 export default function BottomSlider({
   onEndTour,
   onTourComplete,
-}: BottomSliderProps & { onTourComplete?: () => void }) {
+}: BottomSliderProps & { onTourComplete?: () => Promise<void> | void }) {
   const { t } = useTranslation();
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -44,27 +44,37 @@ export default function BottomSlider({
     }
 
     const currentStep = tour.steps[currentStepIndex];
-    const isPuzzle = currentStep.type === 'puzzle';
-    const isSolved = solvedSteps.has(currentStep.id);
+    if (!currentStep) {
+      console.error(
+        '[BottomSlider] currentStep is undefined — index out of bounds:',
+        currentStepIndex,
+        'steps length:',
+        tour.steps.length
+      );
+      return;
+    }
 
     try {
-      let response = await completeStep(progressId);
+      const response = await completeStep(progressId);
 
-      // Handle backend response
       if (response.is_tour_complete) {
-        onTourComplete?.(); // Tell MapScreen to show the completion modal
+        await onTourComplete?.();
       } else if (response.new_step_id) {
-        // Backend dictates the next step, update our UI context
         const nextStepIndex = tour.steps.findIndex(
           (s) => s.id === response.new_step_id?.toString()
         );
         if (nextStepIndex !== -1) {
           setCurrentStepIndex(nextStepIndex);
           setHighestStepIndex(nextStepIndex);
+        } else {
+          console.warn(
+            '[BottomSlider] new_step_id not found in frontend steps:',
+            response.new_step_id
+          );
         }
       }
     } catch (error) {
-      console.error('Failed to navigate next:', error);
+      console.error('[BottomSlider] completeStep error:', error);
       Alert.alert(t('common.error'), t('common.syncError'));
     }
   }, [
@@ -88,14 +98,16 @@ export default function BottomSlider({
     }
 
     const currentStep = tour.steps[currentStepIndex];
-    const isPuzzle = currentStep.type === 'puzzle';
-    const isSolved = solvedSteps.has(currentStep.id);
+    if (!currentStep) {
+      console.error('[BottomSlider] handleSkip — currentStep out of bounds:', currentStepIndex);
+      return;
+    }
 
     try {
-      let response = await skipStep(progressId);
+      const response = await skipStep(progressId);
 
       if (response.is_tour_complete) {
-        onTourComplete?.(); // Tell MapScreen to show the completion modal
+        await onTourComplete?.();
       } else if (response.new_step_id) {
         const nextStepIndex = tour.steps.findIndex(
           (s) => s.id === response.new_step_id?.toString()
@@ -106,7 +118,7 @@ export default function BottomSlider({
         }
       }
     } catch (error) {
-      console.error('Failed to navigate next:', error);
+      console.error('[BottomSlider] skipStep error:', error);
       Alert.alert(t('common.error'), t('common.syncError'));
     }
   }, [
@@ -137,7 +149,6 @@ export default function BottomSlider({
   const handleLocationConfirm = useCallback(
     async (stepId: string, latitude: number, longitude: number) => {
       confirmLocation(stepId);
-      console.log(`Location confirmed for step ${stepId} at:`, { latitude, longitude });
     },
     [confirmLocation]
   );

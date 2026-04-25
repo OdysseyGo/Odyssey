@@ -26,7 +26,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "singleton_id",
-                    models.PositiveSmallIntegerField(default=1, editable=False, unique=True),
+                    models.PositiveSmallIntegerField(
+                        default=1, editable=False, unique=True
+                    ),
                 ),
                 ("similarity_threshold", models.FloatField(default=0.7)),
                 ("fast_reject_threshold", models.FloatField(default=0.35)),
