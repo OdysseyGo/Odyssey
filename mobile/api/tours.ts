@@ -122,6 +122,7 @@ export type ToursResponse = {
 
 export type TourFilters = {
   search?: string;
+  category?: string;
   city?: string;
   difficulty?: Difficulty;
   tour_type?: TourType;
@@ -150,6 +151,7 @@ export async function getTours(
 
   if (filters) {
     if (filters.search) params.search = filters.search;
+    if (filters.category) params.category = filters.category;
     if (filters.city) params.city = filters.city;
     if (filters.difficulty) params.difficulty = filters.difficulty;
     if (filters.tour_type) params.tour_type = filters.tour_type;
@@ -216,7 +218,7 @@ export async function getToursByCategory(
   filters?: TourFilters,
   signal?: AbortSignal
 ): Promise<ToursResponse> {
-  return getTours({ ...filters, search: category }, signal);
+  return getTours({ ...filters, category }, signal);
 }
 
 /**

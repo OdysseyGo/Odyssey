@@ -11,10 +11,13 @@ import {
 import { useMemo, useRef } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Animations } from '@/constants/Animations';
+import { Spacing } from '@/constants/Spacing';
+import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
 import getStyles from './NearbyToursSlider.styles';
 import type { Tour, Difficulty, TourType } from '@/api/tours';
 
@@ -43,14 +46,15 @@ export default function NearbyToursSlider({ tours, loading, onTourPress }: Nearb
   const styles = useMemo(() => getStyles(theme), [theme]);
   const colors = Colors[theme];
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { height: screenHeight } = useWindowDimensions();
+  // clearance so the slider header sits above the tab bar
+  const bottomClearance = ODYSSEY_TAB_BAR_FLOATING_HEIGHT + Math.max(insets.bottom, Spacing.sm);
 
-  // translateY model: slider is anchored at bottom, positive pushes it down
-  // 0 = fully expanded (almost full screen)
   const MAX_HEIGHT = screenHeight * 0.82;
-  const EXPANDED = 0;
-  const HALF = MAX_HEIGHT * 0.45;
-  const PEEK = MAX_HEIGHT - 96; // leave just the header visible
+  const EXPANDED = -bottomClearance;
+  const HALF = MAX_HEIGHT * 0.45 - bottomClearance;
+  const PEEK = MAX_HEIGHT - (96 + bottomClearance);
 
   const snapPoints = useMemo(() => [EXPANDED, HALF, PEEK], [EXPANDED, HALF, PEEK]);
 
@@ -115,7 +119,10 @@ export default function NearbyToursSlider({ tours, loading, onTourPress }: Nearb
 
   return (
     <Animated.View
-      style={[styles.container, { height: MAX_HEIGHT, transform: [{ translateY }] }]}
+      style={[
+        styles.container,
+        { height: MAX_HEIGHT, transform: [{ translateY }] },
+      ]}
       pointerEvents="box-none"
     >
       <View style={styles.sheet}>
