@@ -5,6 +5,8 @@ from apps.users.models.User import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    is_ad_free = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -24,10 +26,16 @@ class UserSerializer(serializers.ModelSerializer):
             "tour_count",
             "rating",
             "avatar_url",
+            "is_ad_free",
         ]
         extra_kwargs = {
             "password": {"write_only": True},
         }
+
+    def get_is_ad_free(self, obj):
+        from apps.ads.api.permissions import is_user_ad_free
+
+        return is_user_ad_free(obj)
 
     def create(self, validated_data):
         password = validated_data.pop("password", None)
