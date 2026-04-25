@@ -96,9 +96,7 @@ export async function getManageSubscriptionUrl(): Promise<{ manage_url: string }
   });
 }
 
-export async function verifyIapTransaction(
-  jwsSignedTransaction: string
-): Promise<IapVerifyResult> {
+export async function verifyIapTransaction(jwsSignedTransaction: string): Promise<IapVerifyResult> {
   return apiRequest<IapVerifyResult>({
     method: 'POST',
     url: '/api/payments/iap/verify/',

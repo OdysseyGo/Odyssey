@@ -11,14 +11,11 @@ import {
   purchaseUpdatedListener,
   requestPurchase,
   type Product,
-  type ProductPurchase,
-  type Subscription as IapSubscription,
-  type SubscriptionPurchase,
+  type Purchase,
+  type SubscriptionProduct as IapSubscription,
 } from 'expo-iap';
 
 import { verifyIapTransaction, type IapVerifyResult } from '@/api/payments';
-
-type Purchase = ProductPurchase | SubscriptionPurchase;
 
 export type UseIapOptions = {
   productSkus: string[];

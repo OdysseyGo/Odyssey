@@ -45,6 +45,8 @@ export interface TourCreationData {
   estimatedDuration: number; // in minutes
   locations: TourLocation[];
   city?: string;
+  isPremium?: boolean;
+  creditPrice?: number;
 }
 
 export const TOUR_CATEGORIES = [

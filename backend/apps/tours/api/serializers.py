@@ -73,7 +73,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class TourSerializer(serializers.ModelSerializer):
     creator = UserSerializer(read_only=True)
-    steps = TourStepSerializer(many=True, read_only=True)
+    steps = serializers.SerializerMethodField()
+    step_count = serializers.SerializerMethodField()
     reviews = ReviewSerializer(many=True, read_only=True)
     average_rating = serializers.FloatField(read_only=True)
     has_access = serializers.SerializerMethodField()
@@ -98,6 +99,7 @@ class TourSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "steps",
+            "step_count",
             "reviews",
             "average_rating",
             "has_access",
@@ -108,7 +110,29 @@ class TourSerializer(serializers.ModelSerializer):
             "updated_at",
             "average_rating",
             "has_access",
+            "step_count",
         ]
+
+    def get_step_count(self, obj):
+        return obj.steps.count()
+
+    def get_steps(self, obj):
+        if not self.get_has_access(obj):
+            return []
+        return TourStepSerializer(obj.steps.all().order_by("order"), many=True).data
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        user = getattr(request, "user", None) if request else None
+        from apps.users.models.User import User
+
+        is_creator_role = bool(
+            user and user.is_authenticated and user.user_type == User.CREATOR
+        )
+        if not is_creator_role:
+            attrs["is_premium"] = False
+            attrs["credit_price"] = 0
+        return attrs
 
     def get_has_access(self, obj):
         if obj.credit_price == 0 and not obj.is_premium:

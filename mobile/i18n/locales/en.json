@@ -193,13 +193,10 @@
     "easy": "Easy",
     "medium": "Medium",
     "hard": "Hard",
-<<<<<<< HEAD
     "unlockFor_one": "Unlock for {{count}} credit",
-    "unlockFor_other": "Unlock for {{count}} credits"
-=======
+    "unlockFor_other": "Unlock for {{count}} credits",
     "readMore": "Read more",
     "readLess": "Read less"
->>>>>>> 26e3e0ad5b013c413a74834e7c12b4ea1d58be68
   },
   "tabs": {
     "settings": "Settings",

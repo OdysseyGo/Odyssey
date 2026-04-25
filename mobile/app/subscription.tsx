@@ -124,9 +124,7 @@ export default function SubscriptionScreen() {
             style={[styles.button, { backgroundColor: colors.primary }]}
             onPress={handleManage}
           >
-            <Text style={[styles.buttonText, { color: colors.white }]}>
-              Manage Subscription
-            </Text>
+            <Text style={[styles.buttonText, { color: colors.white }]}>Manage Subscription</Text>
           </TouchableOpacity>
         </View>
       ) : (

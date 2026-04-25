@@ -6,8 +6,8 @@ from rest_framework import filters, permissions, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 
-from apps.payments.models import TourPurchase
 from apps.gamification.models import TourProgress
+from apps.payments.models import TourPurchase
 from apps.tours.models import Review, Tour, TourStep
 
 from ..permissions import IsCreatorOrReadOnly
