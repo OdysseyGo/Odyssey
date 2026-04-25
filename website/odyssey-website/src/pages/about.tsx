@@ -32,7 +32,7 @@ export default function About(): JSX.Element {
           <h2 style={{ color: '#4da3ff' }}>Project Origins</h2>
           <p style={{ textAlign: 'justify', color: '#b0b0b0', lineHeight: '1.8' }}>
             Odyssey began as an ambitious senior design initiative aimed at redefining digital exploration and guidance. 
-            Below, you can view our core presentation outlining the original scope, system architecture, and functional prototypes.
+            Below, you can view our core presentation outlining the original scope and system architecture.
           </p>
           
           <h3 style={{ textAlign: 'justify', color: '#4da3ff' }}>First Demo Slides</h3>

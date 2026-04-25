@@ -53,7 +53,7 @@ export default function Team(): JSX.Element {
             <div className="odyssey-card">
               <h3>Ege Ertem</h3>
               <p style={{ fontSize: '0.85em', color: '#666', marginBottom: '10px' }}></p>
-              <a href="#" target="_blank" rel="noopener noreferrer" className="odyssey-btn">Read Log</a>
+              <a href="https://docs.google.com/document/d/e/2PACX-1vRM__8iTPELbKNomSY2GorymSvNcOUvP27BRU5Ew3wLI4QLNMxe7DkYhVCM0TGuisKOVAQQTvroRhug/pub" target="_blank" rel="noopener noreferrer" className="odyssey-btn">Read Log</a>
             </div>
           </div>
         </section>
