@@ -5,6 +5,7 @@ import PuzzleQuestion from './PuzzleQuestion';
 import PuzzleOptions from './PuzzleOptions';
 import PuzzleHint from './PuzzleHint';
 import ImageUploadSection from './ImageUploadSection';
+import ARPuzzleConfigurator from './ARPuzzleConfigurator';
 import { puzzleEditorStyles } from './PuzzleEditor.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -24,6 +25,8 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
 
   const currentPuzzle = puzzle || createEmptyPuzzle();
   const isPictureCompare = currentPuzzle.puzzle_type === 'PICTURE_COMPARE';
+  const isArChallenge = currentPuzzle.puzzle_type === 'AR';
+  const isGyroscope = currentPuzzle.puzzle_type === 'GYROSCOPE';
   const options = currentPuzzle.options;
   const correctAnswer = currentPuzzle.correctAnswer;
 
@@ -89,6 +92,16 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
       return;
     }
 
+    if (nextType === 'AR' || nextType === 'GYROSCOPE') {
+      onChange({
+        ...currentPuzzle,
+        puzzle_type: nextType,
+        options: [],
+        correctAnswer: '',
+      });
+      return;
+    }
+
     onChange({
       ...currentPuzzle,
       puzzle_type: nextType,
@@ -149,7 +162,12 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
             "Has good lighting and doesn't depend much on the time of day.",
           ].join('\n')}
         />
-      ) : (
+      ) : isArChallenge ? (
+        <ARPuzzleConfigurator
+          value={currentPuzzle.arConfig}
+          onChange={(config) => handleChange('arConfig', config)}
+        />
+      ) : isGyroscope ? null : (
         <PuzzleOptions
           options={options}
           correctAnswer={correctAnswer}

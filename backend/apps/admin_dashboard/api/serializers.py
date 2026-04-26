@@ -1,8 +1,10 @@
+import json
+
 from rest_framework import serializers
 
 from apps.admin_dashboard.models import BanRecord, Report
 from apps.gamification.models import PictureCompareConfig
-from apps.tours.models import Puzzle, Review, Tour, TourStep
+from apps.tours.models import ARModel, Puzzle, Review, Tour, TourStep
 from apps.users.models import User
 
 # ── User Management ──────────────────────────────────────────────────
@@ -209,6 +211,173 @@ class PictureCompareConfigSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class AdminARModelSerializer(serializers.ModelSerializer):
+    preview_image_url = serializers.SerializerMethodField()
+    scene_asset_url = serializers.SerializerMethodField()
+    anchor_count = serializers.SerializerMethodField()
+    preview_image = serializers.ImageField(required=False, allow_null=True)
+    scene_asset_file = serializers.FileField(required=False, allow_null=True)
+
+    class Meta:
+        model = ARModel
+        fields = [
+            "id",
+            "slug",
+            "name",
+            "preview_image",
+            "preview_image_url",
+            "scene_asset_file",
+            "scene_asset_url",
+            "anchors",
+            "anchor_count",
+            "is_active",
+            "sort_order",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "preview_image_url",
+            "scene_asset_url",
+            "anchor_count",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_preview_image_url(self, obj):
+        return obj.get_preview_image_url(request=self.context.get("request"))
+
+    def get_scene_asset_url(self, obj):
+        return obj.get_scene_asset_url(request=self.context.get("request"))
+
+    def get_anchor_count(self, obj):
+        return len(obj.anchors or [])
+
+    def validate_scene_asset_file(self, value):
+        filename = (value.name or "").lower()
+        if not filename.endswith(".glb"):
+            raise serializers.ValidationError("scene_asset_file must be a .glb file.")
+        return value
+
+    def validate_anchors(self, value):
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except json.JSONDecodeError as exc:
+                raise serializers.ValidationError(
+                    "anchors must be valid JSON."
+                ) from exc
+
+        if not isinstance(value, list):
+            raise serializers.ValidationError("anchors must be a JSON array.")
+
+        seen_ids = set()
+        normalized = []
+        for index, anchor in enumerate(value):
+            if not isinstance(anchor, dict):
+                raise serializers.ValidationError(
+                    {"anchors": f"Anchor at index {index} must be an object."}
+                )
+
+            anchor_id = str(anchor.get("id", "")).strip()
+            label = str(anchor.get("label", "")).strip()
+            position = anchor.get("position")
+            normal = anchor.get("normal")
+            order = anchor.get("order", index)
+
+            if not anchor_id:
+                raise serializers.ValidationError(
+                    {"anchors": f"Anchor at index {index} is missing id."}
+                )
+            if anchor_id in seen_ids:
+                raise serializers.ValidationError(
+                    {"anchors": f"Duplicate anchor id '{anchor_id}'."}
+                )
+            if not label:
+                raise serializers.ValidationError(
+                    {"anchors": f"Anchor '{anchor_id}' is missing label."}
+                )
+            if not isinstance(position, dict):
+                raise serializers.ValidationError(
+                    {"anchors": f"Anchor '{anchor_id}' is missing position."}
+                )
+
+            def parse_vector(raw_value, field_name):
+                if raw_value is None:
+                    return None
+                if not isinstance(raw_value, dict):
+                    raise serializers.ValidationError(
+                        {
+                            "anchors": (
+                                f"Anchor '{anchor_id}' {field_name} must be an object."
+                            )
+                        }
+                    )
+                parsed = {}
+                for axis in ("x", "y", "z"):
+                    if axis not in raw_value:
+                        raise serializers.ValidationError(
+                            {
+                                "anchors": (
+                                    f"Anchor '{anchor_id}' {field_name} requires "
+                                    f"{axis}."
+                                )
+                            }
+                        )
+                    try:
+                        parsed[axis] = float(raw_value[axis])
+                    except (TypeError, ValueError) as exc:
+                        raise serializers.ValidationError(
+                            {
+                                "anchors": (
+                                    f"Anchor '{anchor_id}' {field_name}.{axis} "
+                                    "must be numeric."
+                                )
+                            }
+                        ) from exc
+                return parsed
+
+            try:
+                parsed_order = int(order)
+            except (TypeError, ValueError) as exc:
+                raise serializers.ValidationError(
+                    {"anchors": f"Anchor '{anchor_id}' order must be an integer."}
+                ) from exc
+
+            seen_ids.add(anchor_id)
+            normalized.append(
+                {
+                    "id": anchor_id,
+                    "label": label,
+                    "position": parse_vector(position, "position"),
+                    "normal": parse_vector(normal, "normal") if normal else None,
+                    "order": parsed_order,
+                }
+            )
+
+        return normalized
+
+    def validate(self, attrs):
+        instance = getattr(self, "instance", None)
+        anchors = attrs.get("anchors")
+        preview_image = attrs.get("preview_image")
+        scene_asset_file = attrs.get("scene_asset_file")
+
+        errors = {}
+        if instance is None:
+            if not scene_asset_file:
+                errors["scene_asset_file"] = "scene_asset_file is required."
+            if not preview_image:
+                errors["preview_image"] = "preview_image is required."
+            if not anchors:
+                errors["anchors"] = "At least one anchor is required."
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return attrs
+
+
 # ── Tour Management ──────────────────────────────────────────────────
 
 
@@ -241,6 +410,8 @@ class AdminTourListSerializer(serializers.ModelSerializer):
             "difficulty",
             "status",
             "city",
+            "country",
+            "country_code",
             "duration_minutes",
             "is_premium",
             "created_at",
@@ -314,6 +485,8 @@ class AdminTourDetailSerializer(serializers.ModelSerializer):
             "duration_minutes",
             "is_premium",
             "city",
+            "country",
+            "country_code",
             "total_distance",
             "walking_distance",
             "transport_distance",

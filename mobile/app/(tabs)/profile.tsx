@@ -40,6 +40,7 @@ import { useAutoStartTour } from '@/hooks/useAutoStartHook';
 import TutorialsModal from '../profile/tutorials';
 import CustomTooltip from '@/components/TutorialComponents/CustomTooltip';
 import CustomStepNumber from '@/components/TutorialComponents/CustomStepNumber';
+import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = 240;
@@ -556,7 +557,10 @@ function ProfileContent() {
       <Animated.ScrollView
         ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: Spacing.xxl + insets.bottom }}
+        contentContainerStyle={{
+          paddingBottom:
+            Math.max(insets.bottom, Spacing.sm) + ODYSSEY_TAB_BAR_FLOATING_HEIGHT + Spacing.xxl,
+        }}
         scrollEventThrottle={16}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
           useNativeDriver: false,

@@ -8,6 +8,7 @@ import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import ActiveTourFAB from '@/components/MapComponents/ActiveTourFAB';
+import OdysseyTabBar from '@/components/Navigation/OdysseyTabBar';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -32,6 +33,11 @@ export default function TabLayout() {
         screenOptions={{
           tabBarActiveTintColor: Colors[colorTheme ?? 'light'].primary,
           tabBarInactiveTintColor: Colors[colorTheme ?? 'light'].tabIconDefault,
+          tabBarStyle: {
+            backgroundColor: 'transparent',
+            borderTopWidth: 0,
+            elevation: 0,
+          },
           headerShown: true,
           headerTitle: '',
           headerStyle: {
@@ -40,6 +46,7 @@ export default function TabLayout() {
           lazy: false,
           headerShadowVisible: false,
         }}
+        tabBar={(props) => <OdysseyTabBar {...props} />}
       >
         <Tabs.Screen
           name="index"

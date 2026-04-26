@@ -20,6 +20,7 @@
     "@react-navigation/native": "^7.1.8",
     "@reactvision/react-viro": "^2.54.0",
     "axios": "^1.13.2",
+    "country-state-city": "^3.2.1",
     "dotenv": "^17.4.1",
     "expo": "~54.0.23",
     "expo-blur": "~15.0.8",
