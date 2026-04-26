@@ -1,12 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import {
-  Animated,
-  PanResponder,
-  Pressable,
-  Text,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { Animated, PanResponder, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
