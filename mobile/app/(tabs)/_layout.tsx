@@ -43,7 +43,7 @@ export default function TabLayout() {
           headerStyle: {
             backgroundColor: Colors[colorTheme ?? 'light'].primary,
           },
-          lazy: false,
+          lazy: true,
           headerShadowVisible: false,
         }}
         tabBar={(props) => <OdysseyTabBar {...props} />}
