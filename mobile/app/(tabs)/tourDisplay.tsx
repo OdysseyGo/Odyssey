@@ -37,6 +37,7 @@ type DurationFilter = 'any' | 'short' | 'medium' | 'long';
 
 type TourFilterState = {
   category: string;
+  continent: string;
   duration: DurationFilter;
   difficulty: string;
   tourType: string;
@@ -44,6 +45,7 @@ type TourFilterState = {
 
 const EMPTY_FILTERS: TourFilterState = {
   category: 'all',
+  continent: 'all',
   duration: 'any',
   difficulty: 'all',
   tourType: 'all',
@@ -90,6 +92,7 @@ const CONTINENT_ICONS: Record<string, string> = {
 
 const FILTER_ICONS: Record<keyof Omit<TourFilterState, 'duration'>, string> = {
   category: 'pricetags-outline',
+  continent: 'earth-outline',
   difficulty: 'flash-outline',
   tourType: 'layers-outline',
 };
@@ -330,15 +333,8 @@ export default function TourDisplay() {
     () => [
       { key: 'all', label: t('tour.all', { defaultValue: 'All' }), icon: 'compass' },
       { key: 'popular', label: t('tour.popular'), icon: 'flame' },
-      ...toursByContinent.map(({ continent }) => ({
-        key: continent,
-        label: t(continentKeyMap[continent] ?? 'tour.continents.other', {
-          defaultValue: continent,
-        }),
-        icon: CONTINENT_ICONS[continent] ?? 'location-outline',
-      })),
     ],
-    [toursByContinent, t]
+    [t]
   );
 
   const durationOptions = useMemo(
@@ -371,6 +367,17 @@ export default function TourDisplay() {
     [allTours]
   );
 
+  const availableContinents = useMemo(
+    () =>
+      toursByContinent.map(({ continent }) => ({
+        key: continent,
+        label: t(continentKeyMap[continent] ?? 'tour.continents.other', {
+          defaultValue: continent,
+        }),
+      })),
+    [t, toursByContinent]
+  );
+
   const hasActiveFilters = useMemo(
     () =>
       Object.entries(filters).some(
@@ -393,11 +400,19 @@ export default function TourDisplay() {
       const matchesCategory =
         filters.category === 'all' ||
         (tour.category || '').toLowerCase() === filters.category.toLowerCase();
+      const matchesContinent =
+        filters.continent === 'all' || getContinent(tour) === filters.continent;
       const matchesDifficulty =
         filters.difficulty === 'all' || tour.difficulty === filters.difficulty;
       const matchesTourType = filters.tourType === 'all' || tour.tour_type === filters.tourType;
 
-      return matchesCategory && matchesDifficulty && matchesTourType && matchesDuration(tour);
+      return (
+        matchesCategory &&
+        matchesContinent &&
+        matchesDifficulty &&
+        matchesTourType &&
+        matchesDuration(tour)
+      );
     });
   }, [allTours, filters]);
 
@@ -412,6 +427,16 @@ export default function TourDisplay() {
         key: 'category',
         label: filters.category,
         icon: FILTER_ICONS.category,
+      });
+    }
+
+    if (filters.continent !== 'all') {
+      chips.push({
+        key: 'continent',
+        label: t(continentKeyMap[filters.continent] ?? 'tour.continents.other', {
+          defaultValue: filters.continent,
+        }),
+        icon: 'earth-outline',
       });
     }
 
@@ -497,12 +522,7 @@ export default function TourDisplay() {
   const showFeatured = !hasActiveFilters && selectedSection === 'all';
   const showPopular =
     !hasActiveFilters && (selectedSection === 'all' || selectedSection === 'popular');
-  const shownContinents =
-    selectedSection === 'all'
-      ? toursByContinent
-      : selectedSection === 'popular'
-        ? []
-        : toursByContinent.filter(({ continent }) => continent === selectedSection);
+  const shownContinents = selectedSection === 'all' ? toursByContinent : [];
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -831,6 +851,58 @@ export default function TourDisplay() {
                             ]}
                           >
                             {category}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                <View style={styles.filterSection}>
+                  <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
+                    {t('tour.filters.continent', { defaultValue: 'Continent' })}
+                  </Text>
+                  <View style={styles.filterOptionsWrap}>
+                    <TouchableOpacity
+                      onPress={() => updateFilter('continent', 'all')}
+                      style={[
+                        styles.filterOption,
+                        filters.continent === 'all' && {
+                          backgroundColor: theme.primary,
+                          borderColor: theme.primary,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.filterOptionText,
+                          { color: filters.continent === 'all' ? theme.white : theme.text },
+                        ]}
+                      >
+                        {t('tour.filters.anyContinent', { defaultValue: 'Any continent' })}
+                      </Text>
+                    </TouchableOpacity>
+                    {availableContinents.map((continent) => {
+                      const isActive = filters.continent === continent.key;
+                      return (
+                        <TouchableOpacity
+                          key={continent.key}
+                          onPress={() => updateFilter('continent', continent.key)}
+                          style={[
+                            styles.filterOption,
+                            isActive && {
+                              backgroundColor: theme.primary,
+                              borderColor: theme.primary,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.filterOptionText,
+                              { color: isActive ? theme.white : theme.text },
+                            ]}
+                          >
+                            {continent.label}
                           </Text>
                         </TouchableOpacity>
                       );
