@@ -10,6 +10,8 @@ import TourNavigation from '../TourStepComponents/TourNavigation';
 
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { completeStep, skipStep } from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
+import { useRewardedAd } from '@/components/Ads/useRewardedAd';
+import { useAds } from '@/contexts/AdsContext';
 
 const BOTTOM_SHEET_ANIMATION_DURATION = Animations.bottomSheet.animationDuration;
 
@@ -34,6 +36,10 @@ export default function BottomSlider({
     solveStep,
     confirmLocation,
   } = useActiveTour();
+
+  const { isAdFree } = useAds();
+  const rewardedSkip = useRewardedAd('rewarded_hint');
+  const skipUsingAdRef = useRef(false);
 
   const handleNavigateNext = useCallback(async () => {
     if (!tour || !progressId) return;
@@ -103,8 +109,11 @@ export default function BottomSlider({
       return;
     }
 
+    const useAdSkip = skipUsingAdRef.current;
+    skipUsingAdRef.current = false;
+
     try {
-      const response = await skipStep(progressId);
+      const response = await skipStep(progressId, { useAdSkip });
 
       if (response.is_tour_complete) {
         await onTourComplete?.();
@@ -132,6 +141,36 @@ export default function BottomSlider({
     onTourComplete,
     t,
   ]);
+
+  const handleSkipPress = useCallback(() => {
+    if (isAdFree || !rewardedSkip.available || rewardedSkip.status !== 'loaded') {
+      handleSkip();
+      return;
+    }
+    Alert.alert(
+      t('map.activeTour.skipPromptTitle', { defaultValue: 'Skip this step?' }),
+      t('map.activeTour.skipPromptMessage', {
+        defaultValue: 'Watch a short ad to skip without penalty, or skip anyway.',
+      }),
+      [
+        { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+        {
+          text: t('map.activeTour.skipAnyway', { defaultValue: 'Skip anyway' }),
+          onPress: () => handleSkip(),
+        },
+        {
+          text: t('map.activeTour.watchAdToSkip', { defaultValue: 'Watch ad' }),
+          onPress: async () => {
+            const earned = await rewardedSkip.show();
+            if (earned) {
+              skipUsingAdRef.current = true;
+              await handleSkip();
+            }
+          },
+        },
+      ]
+    );
+  }, [isAdFree, rewardedSkip, handleSkip, t]);
 
   const handleNavigatePrev = useCallback(() => {
     if (currentStepIndex > 0) {
@@ -283,7 +322,7 @@ export default function BottomSlider({
             onStepSolved={handleStepSolved}
             onLocationConfirm={handleLocationConfirm}
             onEndTour={onEndTour}
-            onSkipStep={handleSkip}
+            onSkipStep={handleSkipPress}
           />
         </View>
       </View>

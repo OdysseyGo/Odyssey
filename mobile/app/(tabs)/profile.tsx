@@ -23,6 +23,8 @@ import ProfileAddFriendsButton from '@/components/ProfileComponents/ProfileAddFr
 import ProfileFollowingFeedButton from '@/components/ProfileComponents/ProfileFollowingFeedButton';
 import ProfileBadgesContainer from '@/components/ProfileComponents/ProfileBadgesContainer';
 import ProfileToursContainer from '@/components/ProfileComponents/ProfileToursContainer';
+import BannerAd from '@/components/Ads/BannerAd';
+import RewardedAdButton from '@/components/Ads/RewardedAdButton';
 import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
 import AvatarSelectionModal from '@/components/ProfileComponents/AvatarSelectionModal';
 import AuthButton from '@/components/LoginComponents/AuthButton';
@@ -567,6 +569,16 @@ export default function Profile() {
 
         {/* ─── My Tours ────────────────────────────── */}
         <ProfileToursContainer />
+
+        <View style={{ paddingHorizontal: 16, marginVertical: 12 }}>
+          <RewardedAdButton
+            placement="rewarded_credits"
+            label={t('profile.watchAdForCredits', { defaultValue: 'Watch ad for credits' })}
+            onEarned={refreshProfile}
+          />
+        </View>
+
+        <BannerAd placement="profile_banner" />
       </Animated.ScrollView>
 
       {/* ─── Modals ────────────────────────────────── */}

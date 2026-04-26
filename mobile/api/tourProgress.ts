@@ -109,12 +109,16 @@ export async function completeStep(id: number, signal?: AbortSignal): Promise<St
  * Skips the current step without awarding XP and moves to the next,
  * or finishes the tour if no steps remain.
  */
-export async function skipStep(id: number, signal?: AbortSignal): Promise<StepActionResponse> {
-  return apiRequest<StepActionResponse, void>({
+export async function skipStep(
+  id: number,
+  options?: { useAdSkip?: boolean; signal?: AbortSignal }
+): Promise<StepActionResponse> {
+  return apiRequest<StepActionResponse, { use_ad_skip?: boolean }>({
     method: 'POST',
     url: `/api/tour-progress/${id}/skip-step/`,
+    data: options?.useAdSkip ? { use_ad_skip: true } : {},
     auth: true,
-    signal,
+    signal: options?.signal,
   });
 }
 

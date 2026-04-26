@@ -22,6 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Spacing } from '@/constants/Spacing';
 import Colors from '@/constants/Colors';
 import CreateTourButton from '@/components/TourCreation/CreateTourButton';
+import BannerAd from '@/components/Ads/BannerAd';
 import { useTranslation } from 'react-i18next';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -402,6 +403,8 @@ export default function TourDisplay() {
             </Text>
           </View>
         )}
+
+        <BannerAd placement="tour_list_banner" />
       </ScrollView>
 
       {/* ─── Floating blurred header ─────────────────────── */}

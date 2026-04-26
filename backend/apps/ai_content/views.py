@@ -8,6 +8,28 @@ from .serializers import GenerateTourRequestSerializer, GenerateTourResponseSeri
 from .services import GeminiService
 
 
+def _consume_ai_slot_grant(user):
+    """Find and consume the user's most recent unconsumed AI_SLOT grant.
+
+    Returns True if a grant was consumed, False if none was found.
+    """
+    from apps.ads.models import RewardedAdGrant
+    from apps.ads.services import reward_service
+
+    grant = (
+        RewardedAdGrant.objects.filter(
+            user=user,
+            reward_type=RewardedAdGrant.AI_SLOT,
+            consumed_at__isnull=True,
+        )
+        .order_by("-granted_at")
+        .first()
+    )
+    if grant is None:
+        return False
+    return reward_service.consume(grant, context={"source": "ai_generate_tour"})
+
+
 class GenerateTourView(APIView):
     """API endpoint for AI generated tours"""
 
@@ -21,6 +43,19 @@ class GenerateTourView(APIView):
     def post(self, request):
         serializer = GenerateTourRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        if serializer.validated_data.get("use_ad_slot"):
+            if not _consume_ai_slot_grant(request.user):
+                return Response(
+                    {
+                        "error": (
+                            "No unconsumed AI_SLOT reward available. "
+                            "Watch a rewarded ad first or wait a few seconds for "
+                            "verification."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         try:
             service = GeminiService()

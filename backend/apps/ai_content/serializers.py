@@ -28,6 +28,14 @@ class GenerateTourRequestSerializer(serializers.Serializer):
         allow_blank=True,
         help_text="Additional details for tour generation",
     )
+    use_ad_slot = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text=(
+            "If true, consume the user's most recent unconsumed AI_SLOT "
+            "rewarded-ad grant instead of charging credits."
+        ),
+    )
 
 
 class GenerateTourResponseSerializer(serializers.Serializer):

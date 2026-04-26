@@ -9,6 +9,7 @@ import 'react-native-reanimated';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { ActiveTourProvider } from '@/contexts/ActiveTourContext';
+import { AdsProvider } from '@/contexts/AdsContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ThemeProvider as AppThemeProvider } from '@/contexts/ThemeContext';
 import '@/i18n/i18n';
@@ -64,8 +65,9 @@ function RootLayoutNavigator() {
 
   return (
     <LanguageProvider>
-      <ActiveTourProvider>
-        <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
+      <AdsProvider>
+        <ActiveTourProvider>
+          <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack
             screenOptions={{
               headerTitle: '',
@@ -91,8 +93,9 @@ function RootLayoutNavigator() {
               }}
             />
           </Stack>
-        </ThemeProvider>
-      </ActiveTourProvider>
+          </ThemeProvider>
+        </ActiveTourProvider>
+      </AdsProvider>
     </LanguageProvider>
   );
 }

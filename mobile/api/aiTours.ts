@@ -7,6 +7,7 @@ export type AITourGenerationRequest = {
   duration: number;
   language: string;
   additional_details?: string;
+  use_ad_slot?: boolean;
 };
 
 export type AITourGenerationResponse = {
