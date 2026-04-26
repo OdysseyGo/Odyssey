@@ -156,6 +156,8 @@ export type ToursResponse = {
 
 export type TourFilters = {
   search?: string;
+  category?: string;
+  continent?: string;
   city?: string;
   country?: string;
   country_code?: string;
@@ -187,6 +189,8 @@ export async function getTours(
 
   if (filters) {
     if (filters.search) params.search = filters.search;
+    if (filters.category) params.category = filters.category;
+    if (filters.continent) params.continent = filters.continent;
     if (filters.city) params.city = filters.city;
     if (filters.country) params.country = filters.country;
     if (filters.country_code) params.country_code = filters.country_code;
@@ -256,7 +260,7 @@ export async function getToursByCategory(
   filters?: TourFilters,
   signal?: AbortSignal
 ): Promise<ToursResponse> {
-  return getTours({ ...filters, search: category }, signal);
+  return getTours({ ...filters, category }, signal);
 }
 
 /**
