@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import os
 import re
 from typing import Optional
@@ -73,6 +74,9 @@ class GeminiService:
         num_steps = max(3, duration // 15)
         location_query = self._format_location(city, country)
         candidate_places = self._discover_places(location_query, theme, num_steps)
+        candidate_places = self._cluster_candidates(
+            candidate_places, keep=max(num_steps * 3, 12)
+        )
 
         if not candidate_places:
             raise ValueError(
@@ -271,6 +275,52 @@ class GeminiService:
             city=city, theme=theme, max_results=max_candidates
         )
 
+    OUTLIER_MULTIPLIER = 2.5
+    MIN_CANDIDATES_AFTER_TRIM = 4
+
+    @staticmethod
+    def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+        radius_km = 6371.0
+        lat1_rad, lat2_rad = math.radians(lat1), math.radians(lat2)
+        dlat = lat2_rad - lat1_rad
+        dlng = math.radians(lng2 - lng1)
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlng / 2) ** 2
+        )
+        return radius_km * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    @staticmethod
+    def _cluster_candidates(candidates: list[dict], keep: int) -> list[dict]:
+        if len(candidates) < 4:
+            return candidates
+
+        avg_lat = sum(float(p["latitude"]) for p in candidates) / len(candidates)
+        avg_lng = sum(float(p["longitude"]) for p in candidates) / len(candidates)
+
+        with_dist = [
+            (
+                p,
+                GeminiService._haversine_km(
+                    float(p["latitude"]), float(p["longitude"]), avg_lat, avg_lng
+                ),
+            )
+            for p in candidates
+        ]
+        median_dist = sorted(d for _, d in with_dist)[len(with_dist) // 2]
+        threshold = max(median_dist * GeminiService.OUTLIER_MULTIPLIER, 1.5)
+
+        trimmed = [p for p, d in with_dist if d <= threshold]
+        if len(trimmed) < GeminiService.MIN_CANDIDATES_AFTER_TRIM:
+            with_dist.sort(key=lambda x: x[1])
+            return [
+                p
+                for p, _ in with_dist[
+                    : max(keep, GeminiService.MIN_CANDIDATES_AFTER_TRIM)
+                ]
+            ]
+        return trimmed
+
     # ------------------------------------------------------------------
     # Fuzzy Matching
     # ------------------------------------------------------------------
@@ -340,30 +390,87 @@ class GeminiService:
     # Metrics
     # ------------------------------------------------------------------
 
+    STREET_CIRCUITY_FACTOR = 1.3
+    WALKING_PACE_M_PER_MIN = 80.0
+    CIRCULAR_THRESHOLD_M = 200.0
+    LONG_LEG_TRANSPORT_THRESHOLD_M = 2000.0
+
+    def _haversine_fallback_metrics(self, steps_list: list) -> dict:
+        if len(steps_list) < 2:
+            return {"success": False}
+
+        sorted_steps = sorted(steps_list, key=lambda s: s.order)
+        total_distance = 0.0
+        max_leg = 0.0
+
+        for a, b in zip(sorted_steps, sorted_steps[1:]):
+            straight_m = (
+                self._haversine_km(
+                    float(a.latitude),
+                    float(a.longitude),
+                    float(b.latitude),
+                    float(b.longitude),
+                )
+                * 1000
+            )
+            leg_m = straight_m * self.STREET_CIRCUITY_FACTOR
+            total_distance += leg_m
+            max_leg = max(max_leg, leg_m)
+
+        end_dist_m = (
+            self._haversine_km(
+                float(sorted_steps[0].latitude),
+                float(sorted_steps[0].longitude),
+                float(sorted_steps[-1].latitude),
+                float(sorted_steps[-1].longitude),
+            )
+            * 1000
+        )
+
+        return {
+            "total_distance": total_distance,
+            "walking_distance": total_distance,
+            "duration_minutes": int(total_distance / self.WALKING_PACE_M_PER_MIN),
+            "elevation_gain": 0.0,
+            "max_leg_distance": max_leg,
+            "requires_transport": max_leg > self.LONG_LEG_TRANSPORT_THRESHOLD_M,
+            "is_circular": end_dist_m < self.CIRCULAR_THRESHOLD_M,
+            "success": True,
+            "estimated": True,
+        }
+
     def _calculate_metrics(self, tour: Tour) -> None:
-        """Calculate real-world route metrics and update the tour in-place."""
         try:
             maps_facade = GoogleMapsFacade()
             steps_list = list(tour.steps.all())
             metrics = maps_facade.calculate_route_metrics(steps_list)
 
-            if metrics.get("success"):
-                tour.total_distance = metrics.get("total_distance", 0.0)
-                tour.walking_distance = metrics.get("walking_distance", 0.0)
-                tour.elevation_gain = metrics.get("elevation_gain", 0.0)
-                tour.max_leg_distance = metrics.get("max_leg_distance", 0.0)
-                tour.requires_transport = metrics.get("requires_transport", False)
-                tour.is_circular = metrics.get("is_circular", False)
+            if not metrics.get("success"):
+                logger.info(
+                    "Directions API failed for tour %s; using haversine fallback.",
+                    tour.pk,
+                )
+                metrics = self._haversine_fallback_metrics(steps_list)
 
-                walking_minutes = metrics.get("duration_minutes", 0)
-                exploration_minutes = len(steps_list) * self.MINUTES_PER_STEP
-                total_duration = walking_minutes + exploration_minutes
-                if total_duration > 0:
-                    tour.duration_minutes = total_duration
+            if not metrics.get("success"):
+                return
 
-                tour.metrics_calculated = True
-                tour.accessibility_rating = maps_facade.estimate_accessibility(metrics)
-                tour.save()
+            tour.total_distance = metrics.get("total_distance", 0.0)
+            tour.walking_distance = metrics.get("walking_distance", 0.0)
+            tour.elevation_gain = metrics.get("elevation_gain", 0.0)
+            tour.max_leg_distance = metrics.get("max_leg_distance", 0.0)
+            tour.requires_transport = metrics.get("requires_transport", False)
+            tour.is_circular = metrics.get("is_circular", False)
+
+            walking_minutes = metrics.get("duration_minutes", 0)
+            exploration_minutes = len(steps_list) * self.MINUTES_PER_STEP
+            total_duration = walking_minutes + exploration_minutes
+            if total_duration > 0:
+                tour.duration_minutes = total_duration
+
+            tour.metrics_calculated = True
+            tour.accessibility_rating = maps_facade.estimate_accessibility(metrics)
+            tour.save()
         except Exception as e:
             logger.warning("Failed to calculate route metrics: %s", e)
 
@@ -415,10 +522,32 @@ class GeminiService:
             else ""
         )
 
-        # Format verified places as a numbered list for the prompt
+        if len(candidate_places) >= 2:
+            c_lat = sum(float(p["latitude"]) for p in candidate_places) / len(
+                candidate_places
+            )
+            c_lng = sum(float(p["longitude"]) for p in candidate_places) / len(
+                candidate_places
+            )
+
+            def _area_label(p: dict) -> str:
+                d_m = (
+                    self._haversine_km(
+                        float(p["latitude"]), float(p["longitude"]), c_lat, c_lng
+                    )
+                    * 1000
+                )
+                return f" [~{d_m:.0f}m from area centre]"
+
+        else:
+
+            def _area_label(p: dict) -> str:
+                return ""
+
         places_list = "\n".join(
             f"  {i}. \"{p['name']}\" — GPS: ({p['latitude']}, {p['longitude']})"
             + (f" — {p['address']}" if p.get("address") else "")
+            + _area_label(p)
             for i, p in enumerate(candidate_places, start=1)
         )
 
@@ -437,7 +566,7 @@ CRITICAL RULES:
 1. You MUST select exactly {num_steps} locations from the VERIFIED LOCATIONS list above.
 2. Do NOT invent, fabricate, or hallucinate any new locations.
 3. Use the EXACT name and GPS coordinates provided in the list above.
-4. Arrange the selected locations in a logical walking order to minimize backtracking.
+4. ROUTE COHERENCE: Arrange the selected stops as a smooth itinerary with no big jumps. Consecutive stops should be close to each other (ideally under ~1.5 km / 20 min walk apart) and the path should flow in one general direction or loop — NOT zigzag back and forth between far-apart areas. If a location is far from the others, either skip it or visit it at the start/end so it doesn't break the flow. Use the "[~Xm from area centre]" labels and the GPS coordinates to plan the order.
 5. Write engaging, theme-connected narrative content for each selected location.
 
 OUTPUT FORMAT (strict JSON):

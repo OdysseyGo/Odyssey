@@ -301,6 +301,11 @@ export function TourDetailScreenContent({
               duration={tour.duration}
               distance={tour.distance}
               difficulty={tour.difficulty}
+              elevationGain={tour.elevationGain}
+              requiresTransport={tour.requiresTransport}
+              isCircular={tour.isCircular}
+              accessibilityRating={tour.accessibilityRating}
+              metricsCalculated={tour.metricsCalculated}
             />
           </AnimatedSection>
 
