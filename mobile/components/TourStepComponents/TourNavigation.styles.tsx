@@ -78,11 +78,14 @@ export default function getStyles(theme: ThemeName) {
     },
 
     navigationContainer: {
+      marginTop: 'auto',
+      flexShrink: 0,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.md,
+      marginBottom: Spacing.sm,
       borderTopWidth: 1,
       borderTopColor: color.foregroundSecondary,
     },

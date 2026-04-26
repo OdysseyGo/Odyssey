@@ -1,5 +1,25 @@
 export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE';
 
+export type ARAnchorPosition = {
+  x: number;
+  y: number;
+  z: number;
+};
+
+export type ARPuzzleConfig = {
+  modelId: number;
+  modelSlug: string;
+  modelName: string;
+  previewImageUrl: string;
+  sceneAssetUrl: string;
+  modelScaleMeters: number;
+  secretCode: string;
+  placementMode: 'anchor';
+  anchorId: string;
+  anchorLabel: string;
+  anchorPosition: ARAnchorPosition;
+};
+
 export interface Puzzle {
   puzzle_type: PuzzleType;
   question: string;
@@ -8,6 +28,7 @@ export interface Puzzle {
   hint: string;
   xp_reward: number;
   referenceImage?: string;
+  arConfig?: ARPuzzleConfig;
 }
 
 export const PUZZLE_TYPE_OPTIONS = [

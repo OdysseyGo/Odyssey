@@ -8,13 +8,15 @@ import {
   Platform,
   Animated,
   Dimensions,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TourScrollerComp from '@/components/TourComponents/TourScrollerComp';
 import FeaturedTourCarousel from '@/components/TourComponents/FeaturedTourCarousel';
-import { getTours, Tour } from '@/api/tours';
+import { getTours, Tour, TourFilters } from '@/api/tours';
 import { TourDisplayProps } from '@/components/TourComponents/TourDisplayComp.config';
 import { useFocusEffect, router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -23,6 +25,7 @@ import { Spacing } from '@/constants/Spacing';
 import Colors from '@/constants/Colors';
 import CreateTourButton from '@/components/TourCreation/CreateTourButton';
 import { useTranslation } from 'react-i18next';
+import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -30,7 +33,28 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 // Helpers
 // ─────────────────────────────────────────────────────────
 
-function mapTourToDisplayProps(tour: Tour, t: (key: string) => string): TourDisplayProps {
+type DurationFilter = 'any' | 'short' | 'medium' | 'long';
+
+type TourFilterState = {
+  category: string;
+  continent: string;
+  duration: DurationFilter;
+  difficulty: string;
+  tourType: string;
+};
+
+const EMPTY_FILTERS: TourFilterState = {
+  category: 'all',
+  continent: 'all',
+  duration: 'any',
+  difficulty: 'all',
+  tourType: 'all',
+};
+
+function mapTourToDisplayProps(
+  tour: Tour,
+  t: (key: string, options?: Record<string, unknown>) => string
+): TourDisplayProps {
   return {
     id: tour.id.toString(),
     image: tour.steps?.[0]?.image || '',
@@ -55,16 +79,72 @@ const continentKeyMap: Record<string, string> = {
   Other: 'tour.continents.other',
 };
 
-const CONTINENT_ICONS: Record<string, string> = {
-  Europe: 'business',
-  Asia: 'leaf',
-  'North America': 'flag',
-  'South America': 'water',
-  Africa: 'sunny',
-  Oceania: 'earth',
-  Antarctica: 'snow',
-  Other: 'help-circle-outline',
+const FILTER_ICONS: Record<keyof Omit<TourFilterState, 'duration'>, string> = {
+  category: 'pricetags-outline',
+  continent: 'earth-outline',
+  difficulty: 'flash-outline',
+  tourType: 'layers-outline',
 };
+
+function buildApiFilters(filters: TourFilterState): TourFilters {
+  const apiFilters: TourFilters = {};
+
+  if (filters.category !== 'all') apiFilters.category = filters.category;
+  if (filters.continent !== 'all') apiFilters.continent = filters.continent;
+  if (filters.difficulty !== 'all') {
+    apiFilters.difficulty = filters.difficulty as TourFilters['difficulty'];
+  }
+  if (filters.tourType !== 'all') {
+    apiFilters.tour_type = filters.tourType as TourFilters['tour_type'];
+  }
+
+  if (filters.duration === 'short') {
+    apiFilters.max_duration = 59;
+  } else if (filters.duration === 'medium') {
+    apiFilters.min_duration = 60;
+    apiFilters.max_duration = 119;
+  } else if (filters.duration === 'long') {
+    apiFilters.min_duration = 120;
+  }
+
+  return apiFilters;
+}
+
+async function fetchAllTours(filters?: TourFilters, signal?: AbortSignal): Promise<Tour[]> {
+  const results: Tour[] = [];
+  let page = 1;
+  let next: string | null = null;
+
+  do {
+    const response = await getTours({ ...filters, page, page_size: 100 }, signal);
+    results.push(...response.results);
+    next = response.next;
+    page += 1;
+  } while (next && !signal?.aborted);
+
+  return results;
+}
+
+function getContinentFromCoordinates(lat: number, lon: number): string {
+  if (lat >= -35 && lat <= 37 && lon >= -18 && lon <= 51) return 'Africa';
+  if (lat >= 36 && lat <= 71 && lon >= -25 && lon <= 40) return 'Europe';
+  if (lat >= -10 && lat <= 77 && lon >= 40 && lon <= 180) return 'Asia';
+  if (lat >= 15 && lat <= 72 && lon >= -168 && lon <= -52) return 'North America';
+  if (lat >= -56 && lat <= 13 && lon >= -82 && lon <= -34) return 'South America';
+  if (lat >= -47 && lat <= -10 && lon >= 110 && lon <= 180) return 'Oceania';
+  if (lat < -60) return 'Antarctica';
+  return 'Other';
+}
+
+function getContinent(tour: Tour): string {
+  if (tour.steps && tour.steps.length > 0) {
+    const firstStep = tour.steps[0];
+    const lat = parseFloat(firstStep.latitude);
+    const lon = parseFloat(firstStep.longitude);
+    if (!isNaN(lat) && !isNaN(lon)) return getContinentFromCoordinates(lat, lon);
+  }
+  return 'Other';
+}
 
 // ─────────────────────────────────────────────────────────
 // Skeleton shimmer block
@@ -182,64 +262,83 @@ export default function TourDisplay() {
   const insets = useSafeAreaInsets();
 
   const [allTours, setAllTours] = useState<Tour[]>([]);
+  const [catalogTours, setCatalogTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedSection, setSelectedSection] = useState<string>('all');
+  const [appliedFilters, setAppliedFilters] = useState<TourFilterState>(EMPTY_FILTERS);
+  const [draftFilters, setDraftFilters] = useState<TourFilterState>(EMPTY_FILTERS);
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   // Tracks the rendered height of the floating header so scroll content starts below it
   const [headerHeight, setHeaderHeight] = useState(insets.top + 130);
 
   const hasFetchedRef = useRef(false);
+  const hasCatalogFetchedRef = useRef(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const filterRevealAnim = useRef(new Animated.Value(0)).current;
+  const apiFilters = useMemo(() => buildApiFilters(appliedFilters), [appliedFilters]);
 
   useEffect(() => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
-  }, [selectedCategory]);
+  }, [appliedFilters, selectedSection]);
 
-  const fetchTours = useCallback(async (isRefresh = false) => {
-    try {
-      if (isRefresh) setRefreshing(true);
-      else if (!hasFetchedRef.current) setLoading(true);
-      setError(null);
-      const response = await getTours({ page_size: 50 });
-      setAllTours(response.results);
-      hasFetchedRef.current = true;
-    } catch (err: any) {
-      if (!hasFetchedRef.current) setError(err.message || 'Failed to load tours');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+  useEffect(() => {
+    if (!isFilterModalVisible) {
+      filterRevealAnim.setValue(0);
+      return;
     }
-  }, []);
+
+    Animated.timing(filterRevealAnim, {
+      toValue: 1,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+  }, [filterRevealAnim, isFilterModalVisible]);
+
+  const fetchTours = useCallback(
+    async (isRefresh = false, signal?: AbortSignal) => {
+      try {
+        if (isRefresh || hasFetchedRef.current) setRefreshing(true);
+        else setLoading(true);
+        setError(null);
+        const requestFilters = Object.keys(apiFilters).length > 0 ? apiFilters : undefined;
+        const shouldFetchCatalog = !hasCatalogFetchedRef.current || (isRefresh && !!requestFilters);
+        const toursPromise = fetchAllTours(requestFilters, signal);
+        const catalogPromise = shouldFetchCatalog
+          ? requestFilters
+            ? fetchAllTours(undefined, signal)
+            : toursPromise
+          : Promise.resolve<Tour[] | null>(null);
+        const [tours, catalog] = await Promise.all([toursPromise, catalogPromise]);
+        if (signal?.aborted) return;
+        setAllTours(tours);
+        if (catalog) {
+          setCatalogTours(catalog);
+          hasCatalogFetchedRef.current = true;
+        } else if (!requestFilters) {
+          setCatalogTours(tours);
+          hasCatalogFetchedRef.current = true;
+        }
+        hasFetchedRef.current = true;
+      } catch (err: any) {
+        if (signal?.aborted) return;
+        setError(err.message || 'Failed to load tours');
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [apiFilters]
+  );
 
   useFocusEffect(
     useCallback(() => {
-      fetchTours();
+      const controller = new AbortController();
+      fetchTours(false, controller.signal);
+      return () => controller.abort();
     }, [fetchTours])
   );
-
-  // ─── Continent logic ──────────────────────────────────
-
-  const getContinentFromCoordinates = (lat: number, lon: number): string => {
-    if (lat >= -35 && lat <= 37 && lon >= -18 && lon <= 51) return 'Africa';
-    if (lat >= 36 && lat <= 71 && lon >= -25 && lon <= 40) return 'Europe';
-    if (lat >= -10 && lat <= 77 && lon >= 40 && lon <= 180) return 'Asia';
-    if (lat >= 15 && lat <= 72 && lon >= -168 && lon <= -52) return 'North America';
-    if (lat >= -56 && lat <= 13 && lon >= -82 && lon <= -34) return 'South America';
-    if (lat >= -47 && lat <= -10 && lon >= 110 && lon <= 180) return 'Oceania';
-    if (lat < -60) return 'Antarctica';
-    return 'Other';
-  };
-
-  const getContinent = (tour: Tour): string => {
-    if (tour.steps && tour.steps.length > 0) {
-      const firstStep = tour.steps[0];
-      const lat = parseFloat(firstStep.latitude);
-      const lon = parseFloat(firstStep.longitude);
-      if (!isNaN(lat) && !isNaN(lon)) return getContinentFromCoordinates(lat, lon);
-    }
-    return 'Other';
-  };
 
   // ─── Computed data ────────────────────────────────────
 
@@ -284,22 +383,158 @@ export default function TourDisplay() {
     };
   }, [allTours, t]);
 
-  const categories: { key: string; label: string; icon: string }[] = useMemo(
+  const sectionTabs: { key: string; label: string; icon: string }[] = useMemo(
     () => [
       { key: 'all', label: t('tour.all', { defaultValue: 'All' }), icon: 'compass' },
       { key: 'popular', label: t('tour.popular'), icon: 'flame' },
-      ...toursByContinent.map(({ continent }) => ({
-        key: continent,
-        label: t(continentKeyMap[continent] ?? 'tour.continents.other', {
-          defaultValue: continent,
-        }),
-        icon: CONTINENT_ICONS[continent] ?? 'location-outline',
-      })),
     ],
-    [toursByContinent, t]
+    [t]
+  );
+
+  const durationOptions = useMemo(
+    () => [
+      {
+        key: 'any' as const,
+        label: t('tour.filters.durationAny', { defaultValue: 'Any length' }),
+      },
+      {
+        key: 'short' as const,
+        label: t('tour.filters.durationShort', { defaultValue: 'Under 1 hour' }),
+      },
+      {
+        key: 'medium' as const,
+        label: t('tour.filters.durationMedium', { defaultValue: '1 to 2 hours' }),
+      },
+      {
+        key: 'long' as const,
+        label: t('tour.filters.durationLong', { defaultValue: '2+ hours' }),
+      },
+    ],
+    [t]
+  );
+
+  const uniqueCategories = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (catalogTours.length > 0 ? catalogTours : allTours)
+            .map((tour) => tour.category?.trim())
+            .filter(Boolean) as string[]
+        )
+      ).sort((a, b) => a.localeCompare(b)),
+    [allTours, catalogTours]
+  );
+
+  const availableContinents = useMemo(() => {
+    const sourceTours = catalogTours.length > 0 ? catalogTours : allTours;
+    const continents = Array.from(new Set(sourceTours.map((tour) => getContinent(tour))));
+    const orderedKeys = Object.keys(continentKeyMap).filter((continent) =>
+      continents.includes(continent)
+    );
+
+    return orderedKeys.map((continent) => ({
+      key: continent,
+      label: t(continentKeyMap[continent] ?? 'tour.continents.other', {
+        defaultValue: continent,
+      }),
+    }));
+  }, [allTours, catalogTours, t]);
+
+  const matchingToursCount = allTours.length;
+
+  const hasDraftChanges = useMemo(
+    () => JSON.stringify(draftFilters) !== JSON.stringify(appliedFilters),
+    [appliedFilters, draftFilters]
+  );
+
+  const hasActiveFilters = useMemo(
+    () =>
+      Object.entries(appliedFilters).some(
+        ([key, value]) => value !== EMPTY_FILTERS[key as keyof TourFilterState]
+      ),
+    [appliedFilters]
+  );
+
+  const activeFilterChips = useMemo(() => {
+    const durationLabel =
+      durationOptions.find((option) => option.key === appliedFilters.duration)?.label ??
+      durationOptions[0].label;
+    const chips = [];
+
+    if (appliedFilters.category !== 'all') {
+      chips.push({
+        key: 'category',
+        label: appliedFilters.category,
+        icon: FILTER_ICONS.category,
+      });
+    }
+
+    if (appliedFilters.continent !== 'all') {
+      chips.push({
+        key: 'continent',
+        label: t(continentKeyMap[appliedFilters.continent] ?? 'tour.continents.other', {
+          defaultValue: appliedFilters.continent,
+        }),
+        icon: FILTER_ICONS.continent,
+      });
+    }
+
+    if (appliedFilters.duration !== 'any') {
+      chips.push({
+        key: 'duration',
+        label: durationLabel,
+        icon: 'time-outline',
+      });
+    }
+
+    if (appliedFilters.difficulty !== 'all') {
+      chips.push({
+        key: 'difficulty',
+        label: t(`tourDetail.${appliedFilters.difficulty.toLowerCase()}`, {
+          defaultValue: appliedFilters.difficulty,
+        }),
+        icon: FILTER_ICONS.difficulty,
+      });
+    }
+
+    if (appliedFilters.tourType !== 'all') {
+      chips.push({
+        key: 'tourType',
+        label: t(`creation.tourType.${appliedFilters.tourType.toLowerCase()}`, {
+          defaultValue: appliedFilters.tourType,
+        }),
+        icon: FILTER_ICONS.tourType,
+      });
+    }
+
+    return chips;
+  }, [appliedFilters, durationOptions, t]);
+
+  const filteredTourCards = useMemo(
+    () => allTours.map((tour) => mapTourToDisplayProps(tour, t)),
+    [allTours, t]
   );
 
   const onRefresh = useCallback(() => fetchTours(true), [fetchTours]);
+  const updateFilter = useCallback((key: keyof TourFilterState, value: string) => {
+    setDraftFilters((current) => ({ ...current, [key]: value }));
+  }, []);
+  const openFilterModal = useCallback(() => {
+    setDraftFilters(appliedFilters);
+    setIsFilterModalVisible(true);
+  }, [appliedFilters]);
+  const closeFilterModal = useCallback(() => {
+    setDraftFilters(appliedFilters);
+    setIsFilterModalVisible(false);
+  }, [appliedFilters]);
+  const clearAppliedFilters = useCallback(() => {
+    setAppliedFilters(EMPTY_FILTERS);
+    setDraftFilters(EMPTY_FILTERS);
+  }, []);
+  const applyFilters = useCallback(() => {
+    setAppliedFilters(draftFilters);
+    setIsFilterModalVisible(false);
+  }, [draftFilters]);
 
   // ─── Loading state — skeleton ─────────────────────────
 
@@ -339,14 +574,10 @@ export default function TourDisplay() {
 
   // ─── Content ──────────────────────────────────────────
 
-  const showFeatured = selectedCategory === 'all';
-  const showPopular = selectedCategory === 'all' || selectedCategory === 'popular';
-  const shownContinents =
-    selectedCategory === 'all'
-      ? toursByContinent
-      : selectedCategory === 'popular'
-        ? []
-        : toursByContinent.filter(({ continent }) => continent === selectedCategory);
+  const showFeatured = !hasActiveFilters && selectedSection === 'all';
+  const showPopular =
+    !hasActiveFilters && (selectedSection === 'all' || selectedSection === 'popular');
+  const shownContinents = selectedSection === 'all' ? toursByContinent : [];
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -358,7 +589,10 @@ export default function TourDisplay() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
         }
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: insets.bottom + 80 }}
+        contentContainerStyle={{
+          paddingTop: headerHeight,
+          paddingBottom: Math.max(insets.bottom, Spacing.sm) + ODYSSEY_TAB_BAR_FLOATING_HEIGHT + 88,
+        }}
       >
         {/* ─── Hero Carousel ─────────────────────────────── */}
         {featuredTours.length > 0 && showFeatured && (
@@ -375,19 +609,54 @@ export default function TourDisplay() {
         )}
 
         {/* ─── Continent Sections ────────────────────────── */}
-        {shownContinents.map(({ continent, tours }, index) => (
+        {!hasActiveFilters &&
+          shownContinents.map(({ continent, tours }, index) => (
+            <TourScrollerComp
+              key={continent}
+              title={t(continentKeyMap[continent] ?? 'tour.continents.other', {
+                defaultValue: continent,
+              })}
+              data={tours}
+              accentColor={index % 2 === 0 ? theme.secondary : theme.primary}
+            />
+          ))}
+
+        {hasActiveFilters && filteredTourCards.length > 0 && (
           <TourScrollerComp
-            key={continent}
-            title={t(continentKeyMap[continent] ?? 'tour.continents.other', {
-              defaultValue: continent,
-            })}
-            data={tours}
-            accentColor={index % 2 === 0 ? theme.secondary : theme.primary}
+            title={t('tour.filters.resultsTitle', { defaultValue: 'Matching tours' })}
+            data={filteredTourCards}
+            accentColor={theme.secondary}
           />
-        ))}
+        )}
 
         {/* ─── Empty state ───────────────────────────────── */}
-        {!showPopular && shownContinents.length === 0 && (
+        {hasActiveFilters && filteredTourCards.length === 0 && (
+          <View style={styles.emptyState}>
+            <View style={[styles.emptyIconWrap, { backgroundColor: `${theme.primary}12` }]}>
+              <Ionicons name="funnel-outline" size={38} color={theme.primary} />
+            </View>
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>
+              {t('tour.filters.emptyTitle', { defaultValue: 'No tours match these filters' })}
+            </Text>
+            <Text style={[styles.emptySubText, { color: theme.subText }]}>
+              {t('tour.filters.emptySubtitle', {
+                defaultValue: 'Try broadening your category or length selection.',
+              })}
+            </Text>
+            <TouchableOpacity
+              style={[styles.retryButton, { backgroundColor: theme.primary }]}
+              onPress={clearAppliedFilters}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="refresh" size={16} color={theme.white} />
+              <Text style={styles.retryText}>
+                {t('tour.filters.clearAll', { defaultValue: 'Clear filters' })}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!hasActiveFilters && !showPopular && shownContinents.length === 0 && (
           <View style={styles.emptyState}>
             <View style={[styles.emptyIconWrap, { backgroundColor: `${theme.primary}12` }]}>
               <Ionicons name="map-outline" size={38} color={theme.primary} />
@@ -421,68 +690,416 @@ export default function TourDisplay() {
               {t('tour.headerTitle', { defaultValue: 'Discover Tours' })}
             </Text>
           </View>
-          <TouchableOpacity
-            style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
-            activeOpacity={0.7}
-            onPress={() => router.push('/search')}
-          >
-            <Ionicons name="search" size={20} color={theme.text} />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
+              activeOpacity={0.7}
+              onPress={openFilterModal}
+            >
+              <Ionicons name="options-outline" size={20} color={theme.text} />
+              {activeFilterChips.length > 0 && (
+                <View style={[styles.filterBadge, { backgroundColor: theme.primary }]}>
+                  <Text style={styles.filterBadgeText}>{activeFilterChips.length}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
+              activeOpacity={0.7}
+              onPress={() => router.push('/search')}
+            >
+              <Ionicons name="search" size={20} color={theme.text} />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Category pills */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryRow}
-          style={{ flexShrink: 0, flexGrow: 0 }}
-        >
-          {categories.map((cat) => {
-            const isActive = selectedCategory === cat.key;
-            return (
-              <TouchableOpacity
-                key={cat.key}
-                onPress={() => setSelectedCategory(cat.key)}
-                activeOpacity={0.75}
+        {hasActiveFilters ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryRow}
+            style={{ flexShrink: 0, flexGrow: 0 }}
+          >
+            {activeFilterChips.map((chip) => (
+              <View
+                key={chip.key}
                 style={[
-                  styles.categoryPill,
+                  styles.activeFilterPill,
                   {
-                    backgroundColor: isActive ? theme.primary : theme.foregroundSecondary,
-                    borderWidth: isActive ? 0 : StyleSheet.hairlineWidth,
+                    backgroundColor: theme.primaryMuted,
                     borderColor: theme.borderLight,
-                    ...(isActive
-                      ? Platform.select({
-                          ios: {
-                            shadowColor: theme.primary,
-                            shadowOffset: { width: 0, height: 4 },
-                            shadowOpacity: 0.35,
-                            shadowRadius: 8,
-                          },
-                          android: { elevation: 6 },
-                        })
-                      : {}),
                   },
                 ]}
               >
-                <Ionicons
-                  name={cat.icon as any}
-                  size={14}
-                  color={isActive ? theme.white : theme.subText}
-                />
-                <Text
+                <Ionicons name={chip.icon as any} size={14} color={theme.primary} />
+                <Text style={[styles.activeFilterText, { color: theme.text }]}>{chip.label}</Text>
+              </View>
+            ))}
+            <TouchableOpacity
+              style={[styles.clearFilterPill, { backgroundColor: theme.foregroundSecondary }]}
+              activeOpacity={0.8}
+              onPress={clearAppliedFilters}
+            >
+              <Ionicons name="close-circle-outline" size={14} color={theme.subText} />
+              <Text style={[styles.clearFilterText, { color: theme.subText }]}>
+                {t('tour.filters.clearAll', { defaultValue: 'Clear filters' })}
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryRow}
+            style={{ flexShrink: 0, flexGrow: 0 }}
+          >
+            {sectionTabs.map((cat) => {
+              const isActive = selectedSection === cat.key;
+              return (
+                <TouchableOpacity
+                  key={cat.key}
+                  onPress={() => setSelectedSection(cat.key)}
+                  activeOpacity={0.75}
                   style={[
-                    styles.categoryPillText,
-                    { color: isActive ? theme.white : theme.subText },
-                    isActive && { fontWeight: '700' },
+                    styles.categoryPill,
+                    {
+                      backgroundColor: isActive ? theme.primary : theme.foregroundSecondary,
+                      borderWidth: isActive ? 0 : StyleSheet.hairlineWidth,
+                      borderColor: theme.borderLight,
+                      ...(isActive
+                        ? Platform.select({
+                            ios: {
+                              shadowColor: theme.primary,
+                              shadowOffset: { width: 0, height: 4 },
+                              shadowOpacity: 0.35,
+                              shadowRadius: 8,
+                            },
+                            android: { elevation: 6 },
+                          })
+                        : {}),
+                    },
                   ]}
                 >
-                  {cat.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+                  <Ionicons
+                    name={cat.icon as any}
+                    size={14}
+                    color={isActive ? theme.white : theme.subText}
+                  />
+                  <Text
+                    style={[
+                      styles.categoryPillText,
+                      { color: isActive ? theme.white : theme.subText },
+                      isActive && { fontWeight: '700' },
+                    ]}
+                  >
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        )}
       </BlurView>
+
+      <Modal
+        visible={isFilterModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={closeFilterModal}
+      >
+        <Pressable
+          style={[styles.modalBackdrop, { backgroundColor: theme.overlay }]}
+          onPress={closeFilterModal}
+        >
+          <Animated.View
+            style={[
+              styles.filterDropdownWrap,
+              {
+                paddingTop: headerHeight + Spacing.xs,
+                opacity: filterRevealAnim,
+                transform: [
+                  {
+                    translateY: filterRevealAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-18, 0],
+                    }),
+                  },
+                  {
+                    scale: filterRevealAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.98, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <Pressable
+              style={[styles.filterSheet, { backgroundColor: theme.background }]}
+              onPress={() => {}}
+            >
+              <View style={styles.filterSheetHeader}>
+                <View>
+                  <Text style={[styles.filterSheetTitle, { color: theme.text }]}>
+                    {t('tour.filters.title', { defaultValue: 'Filter tours' })}
+                  </Text>
+                  <Text style={[styles.filterSheetSubtitle, { color: theme.subText }]}>
+                    {t('tour.filters.subtitle', {
+                      defaultValue: 'Refine by category, length, and tour style.',
+                    })}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={closeFilterModal}
+                  style={[styles.filterCloseButton, { backgroundColor: theme.foregroundSecondary }]}
+                >
+                  <Ionicons name="close" size={18} color={theme.text} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.filterContent}
+              >
+                <View style={styles.filterSection}>
+                  <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
+                    {t('tour.filters.category', { defaultValue: 'Category' })}
+                  </Text>
+                  <View style={styles.filterOptionsWrap}>
+                    <TouchableOpacity
+                      onPress={() => updateFilter('category', 'all')}
+                      style={[
+                        styles.filterOption,
+                        draftFilters.category === 'all' && {
+                          backgroundColor: theme.primary,
+                          borderColor: theme.primary,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.filterOptionText,
+                          { color: draftFilters.category === 'all' ? theme.white : theme.text },
+                        ]}
+                      >
+                        {t('tour.filters.anyCategory', { defaultValue: 'Any category' })}
+                      </Text>
+                    </TouchableOpacity>
+                    {uniqueCategories.map((category) => {
+                      const isActive = draftFilters.category === category;
+                      return (
+                        <TouchableOpacity
+                          key={category}
+                          onPress={() => updateFilter('category', category)}
+                          style={[
+                            styles.filterOption,
+                            isActive && {
+                              backgroundColor: theme.primary,
+                              borderColor: theme.primary,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.filterOptionText,
+                              { color: isActive ? theme.white : theme.text },
+                            ]}
+                          >
+                            {category}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                <View style={styles.filterSection}>
+                  <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
+                    {t('tour.filters.continent', { defaultValue: 'Continent' })}
+                  </Text>
+                  <View style={styles.filterOptionsWrap}>
+                    <TouchableOpacity
+                      onPress={() => updateFilter('continent', 'all')}
+                      style={[
+                        styles.filterOption,
+                        draftFilters.continent === 'all' && {
+                          backgroundColor: theme.primary,
+                          borderColor: theme.primary,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.filterOptionText,
+                          { color: draftFilters.continent === 'all' ? theme.white : theme.text },
+                        ]}
+                      >
+                        {t('tour.filters.anyContinent', { defaultValue: 'Any continent' })}
+                      </Text>
+                    </TouchableOpacity>
+                    {availableContinents.map((continent) => {
+                      const isActive = draftFilters.continent === continent.key;
+                      return (
+                        <TouchableOpacity
+                          key={continent.key}
+                          onPress={() => updateFilter('continent', continent.key)}
+                          style={[
+                            styles.filterOption,
+                            isActive && {
+                              backgroundColor: theme.primary,
+                              borderColor: theme.primary,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.filterOptionText,
+                              { color: isActive ? theme.white : theme.text },
+                            ]}
+                          >
+                            {continent.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                <View style={styles.filterSection}>
+                  <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
+                    {t('tour.filters.duration', { defaultValue: 'Length' })}
+                  </Text>
+                  <View style={styles.filterOptionsWrap}>
+                    {durationOptions.map((option) => {
+                      const isActive = draftFilters.duration === option.key;
+                      return (
+                        <TouchableOpacity
+                          key={option.key}
+                          onPress={() => updateFilter('duration', option.key)}
+                          style={[
+                            styles.filterOption,
+                            isActive && {
+                              backgroundColor: theme.primary,
+                              borderColor: theme.primary,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.filterOptionText,
+                              { color: isActive ? theme.white : theme.text },
+                            ]}
+                          >
+                            {option.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                <View style={styles.filterSection}>
+                  <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
+                    {t('tour.filters.difficulty', { defaultValue: 'Difficulty' })}
+                  </Text>
+                  <View style={styles.filterOptionsWrap}>
+                    {['all', 'EASY', 'MEDIUM', 'HARD'].map((difficulty) => {
+                      const isActive = draftFilters.difficulty === difficulty;
+                      return (
+                        <TouchableOpacity
+                          key={difficulty}
+                          onPress={() => updateFilter('difficulty', difficulty)}
+                          style={[
+                            styles.filterOption,
+                            isActive && {
+                              backgroundColor: theme.primary,
+                              borderColor: theme.primary,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.filterOptionText,
+                              { color: isActive ? theme.white : theme.text },
+                            ]}
+                          >
+                            {difficulty === 'all'
+                              ? t('tour.filters.anyDifficulty', { defaultValue: 'Any difficulty' })
+                              : t(`tourDetail.${difficulty.toLowerCase()}`, {
+                                  defaultValue: difficulty,
+                                })}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                <View style={styles.filterSection}>
+                  <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
+                    {t('tour.filters.tourType', { defaultValue: 'Tour type' })}
+                  </Text>
+                  <View style={styles.filterOptionsWrap}>
+                    {['all', 'STORY', 'PUZZLE', 'HYBRID'].map((tourType) => {
+                      const isActive = draftFilters.tourType === tourType;
+                      return (
+                        <TouchableOpacity
+                          key={tourType}
+                          onPress={() => updateFilter('tourType', tourType)}
+                          style={[
+                            styles.filterOption,
+                            isActive && {
+                              backgroundColor: theme.primary,
+                              borderColor: theme.primary,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.filterOptionText,
+                              { color: isActive ? theme.white : theme.text },
+                            ]}
+                          >
+                            {tourType === 'all'
+                              ? t('tour.filters.anyTourType', { defaultValue: 'Any type' })
+                              : t(`creation.tourType.${tourType.toLowerCase()}`, {
+                                  defaultValue: tourType,
+                                })}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              </ScrollView>
+
+              <View style={styles.filterFooter}>
+                <TouchableOpacity
+                  style={[styles.filterSecondaryButton, { borderColor: theme.borderLight }]}
+                  onPress={() => setDraftFilters(EMPTY_FILTERS)}
+                >
+                  <Text style={[styles.filterSecondaryText, { color: theme.text }]}>
+                    {t('tour.filters.reset', { defaultValue: 'Reset' })}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.filterPrimaryButton, { backgroundColor: theme.primary }]}
+                  onPress={applyFilters}
+                >
+                  <Text style={styles.filterPrimaryText}>
+                    {hasDraftChanges
+                      ? t('tour.filters.apply', { defaultValue: 'Apply filters' })
+                      : t('tour.filters.showResults', {
+                          defaultValue: 'Show {{count}} tours',
+                          count: matchingToursCount,
+                        })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </Animated.View>
+        </Pressable>
+      </Modal>
 
       <CreateTourButton />
     </View>
@@ -549,6 +1166,27 @@ const createStyles = (theme: (typeof Colors)['light']) =>
         android: { elevation: 2 },
       }),
     },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    filterBadge: {
+      position: 'absolute',
+      top: -3,
+      right: -3,
+      minWidth: 18,
+      height: 18,
+      borderRadius: 9,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 4,
+    },
+    filterBadgeText: {
+      color: theme.white,
+      fontSize: 10,
+      fontWeight: '800',
+    },
 
     // ─── Category pills
     categoryRow: {
@@ -569,6 +1207,145 @@ const createStyles = (theme: (typeof Colors)['light']) =>
       fontSize: 13,
       fontWeight: '600',
       letterSpacing: 0.1,
+    },
+    activeFilterPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: Spacing.borderRadiusFull,
+      borderWidth: StyleSheet.hairlineWidth,
+    },
+    activeFilterText: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    clearFilterPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: Spacing.borderRadiusFull,
+    },
+    clearFilterText: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+
+    modalBackdrop: {
+      flex: 1,
+      justifyContent: 'flex-start',
+      paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.lg,
+    },
+    filterDropdownWrap: {
+      width: '100%',
+    },
+    filterSheet: {
+      borderRadius: 26,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.borderLight,
+      paddingHorizontal: Spacing.xl,
+      paddingTop: Spacing.lg,
+      paddingBottom: Spacing.lg,
+      maxHeight: SCREEN_HEIGHT * 0.72,
+      ...Platform.select({
+        ios: {
+          shadowColor: theme.text,
+          shadowOffset: { width: 0, height: 12 },
+          shadowOpacity: 0.12,
+          shadowRadius: 28,
+        },
+        android: {
+          elevation: 10,
+        },
+      }),
+    },
+    filterSheetHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      marginBottom: Spacing.lg,
+      gap: Spacing.md,
+    },
+    filterSheetTitle: {
+      fontSize: 20,
+      fontWeight: '800',
+      letterSpacing: -0.3,
+      marginBottom: 4,
+    },
+    filterSheetSubtitle: {
+      fontSize: 14,
+      lineHeight: 20,
+      maxWidth: SCREEN_WIDTH - Spacing.xl * 5,
+    },
+    filterCloseButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    filterContent: {
+      paddingBottom: Spacing.md,
+      gap: Spacing.lg,
+    },
+    filterSection: {
+      gap: Spacing.sm,
+    },
+    filterSectionTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+    },
+    filterOptionsWrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: Spacing.sm,
+    },
+    filterOption: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: Spacing.borderRadiusFull,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.borderLight,
+      backgroundColor: theme.foregroundSecondary,
+    },
+    filterOptionText: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    filterFooter: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+      paddingTop: Spacing.lg,
+    },
+    filterSecondaryButton: {
+      flex: 1,
+      minHeight: 48,
+      borderRadius: 18,
+      borderWidth: StyleSheet.hairlineWidth,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.foregroundSecondary,
+    },
+    filterSecondaryText: {
+      fontSize: 15,
+      fontWeight: '700',
+    },
+    filterPrimaryButton: {
+      flex: 1.4,
+      minHeight: 48,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: Spacing.md,
+    },
+    filterPrimaryText: {
+      color: theme.white,
+      fontSize: 15,
+      fontWeight: '800',
     },
 
     // ─── Error

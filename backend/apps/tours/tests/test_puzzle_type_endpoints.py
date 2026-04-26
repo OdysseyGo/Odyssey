@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.tours.models import (
+    ARModel,
     ArPuzzleDetail,
     GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
@@ -26,6 +27,13 @@ class PuzzleTypeEndpointTests(APITestCase):
         image.save(buffer, format="JPEG")
         buffer.seek(0)
         return SimpleUploadedFile(name, buffer.read(), content_type="image/jpeg")
+
+    def _glb_file(self, name="model.glb"):
+        return SimpleUploadedFile(
+            name,
+            b"glTF\x02\x00\x00\x00mock-binary-payload",
+            content_type="model/gltf-binary",
+        )
 
     def setUp(self):
         self.user = User.objects.create_user(
@@ -49,6 +57,26 @@ class PuzzleTypeEndpointTests(APITestCase):
             description="",
             latitude="1.0",
             longitude="1.0",
+        )
+        self.ar_model = ARModel.objects.create(
+            slug="bronze-statue",
+            name="Bronze Statue",
+            preview_image=self._image_file("statue-preview.jpg"),
+            scene_asset_file=self._glb_file("statue.glb"),
+            anchors=[
+                {
+                    "id": "head",
+                    "label": "Head",
+                    "position": {"x": 0.0, "y": 1.2, "z": -1.0},
+                },
+                {
+                    "id": "left-hand",
+                    "label": "Left Hand",
+                    "position": {"x": -0.2, "y": 0.8, "z": -1.0},
+                },
+            ],
+            is_active=True,
+            sort_order=1,
         )
 
     def test_set_trivia_puzzle_creates_trivia_detail(self):
@@ -121,21 +149,86 @@ class PuzzleTypeEndpointTests(APITestCase):
                 "question": "Find the hidden object",
                 "hint": "Look up",
                 "xp_reward": 20,
-                "scene_asset_url": "https://example.com/scene.glb",
-                "metadata": {"target": "statue"},
+                "metadata": {
+                    "model_id": self.ar_model.id,
+                    "anchor_id": "head",
+                    "placement_mode": "anchor",
+                    "secret_code": "Code77",
+                    "model_scale_meters": 1.75,
+                },
             },
             format="json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["puzzle_type"], Puzzle.AR)
-        self.assertEqual(
-            response.data["ar"]["scene_asset_url"], "https://example.com/scene.glb"
-        )
+        self.assertTrue(response.data["ar"]["scene_asset_url"].endswith(".glb"))
 
         puzzle = Puzzle.objects.get(step=self.step)
         detail = ArPuzzleDetail.objects.get(puzzle=puzzle)
-        self.assertEqual(detail.metadata, {"target": "statue"})
+        self.assertEqual(detail.metadata["model_id"], self.ar_model.id)
+        self.assertEqual(detail.metadata["anchor_id"], "head")
+        self.assertEqual(detail.metadata["placement_mode"], "anchor")
+        self.assertEqual(detail.metadata["secret_code"], "Code77")
+        self.assertEqual(detail.metadata["model_scale_meters"], 1.75)
+        self.assertEqual(
+            detail.metadata["anchor_position"],
+            {"x": 0.0, "y": 1.2, "z": -1.0},
+        )
+
+    def test_set_ar_puzzle_rejects_invalid_secret_code(self):
+        response = self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-ar-puzzle/",
+            {
+                "question": "Find the hidden object",
+                "hint": "Look up",
+                "xp_reward": 20,
+                "metadata": {
+                    "model_id": self.ar_model.id,
+                    "anchor_id": "head",
+                    "placement_mode": "anchor",
+                    "secret_code": "??",
+                },
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_set_ar_puzzle_rejects_invalid_model_scale(self):
+        response = self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-ar-puzzle/",
+            {
+                "question": "Find the hidden object",
+                "hint": "Look up",
+                "xp_reward": 20,
+                "metadata": {
+                    "model_id": self.ar_model.id,
+                    "anchor_id": "head",
+                    "placement_mode": "anchor",
+                    "secret_code": "Code77",
+                    "model_scale_meters": 12,
+                },
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_ar_model_catalog_lists_active_items(self):
+        ARModel.objects.create(
+            slug="inactive-model",
+            name="Inactive Model",
+            preview_image_url="https://example.com/inactive-preview.jpg",
+            scene_asset_url="https://example.com/inactive.glb",
+            anchors=[],
+            is_active=False,
+            sort_order=0,
+        )
+        response = self.client.get("/api/tours/ar-models/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], self.ar_model.id)
+        self.assertTrue(response.data[0]["preview_image_url"].endswith(".jpg"))
+        self.assertTrue(response.data[0]["scene_asset_url"].endswith(".glb"))
 
     def test_set_gyroscope_puzzle_creates_gyroscope_detail(self):
         response = self.client.post(

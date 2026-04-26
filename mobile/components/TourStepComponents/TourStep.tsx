@@ -7,9 +7,13 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
+  TextInput,
 } from 'react-native';
 import { useMemo, useState } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import * as Location from 'expo-location';
+import { Camera } from 'expo-camera';
 
 import getStyles from './TourStep.styles';
 import {
@@ -18,10 +22,11 @@ import {
   PuzzleStep,
   MultipleChoicePuzzle,
   PictureComparePuzzle,
+  ArCodePuzzle,
 } from './TourStep.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
-import { submitPictureCompare } from '@/api/tourProgress';
+import { submitArCode, submitPictureCompare } from '@/api/tourProgress';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import SquareCameraOverlayCapture from '@/components/common/SquareCameraOverlayCapture';
 
@@ -282,6 +287,167 @@ function PictureCompareView({ puzzle, isSolved, onSolve }: PictureCompareViewPro
   );
 }
 
+interface ArCodeViewProps {
+  puzzle: ArCodePuzzle;
+  isSolved: boolean;
+  onSolve: () => void;
+}
+
+function ArCodeView({ puzzle, isSolved, onSolve }: ArCodeViewProps) {
+  const theme = useColorTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+  const { progressId } = useActiveTour();
+
+  const [codeInput, setCodeInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPreparingAr, setIsPreparingAr] = useState(false);
+  const [feedback, setFeedback] = useState('');
+
+  const ensureArPermissions = async () => {
+    const locationPerm = await Location.getForegroundPermissionsAsync();
+    if (locationPerm.status !== 'granted') {
+      const nextLocationPerm = await Location.requestForegroundPermissionsAsync();
+      if (nextLocationPerm.status !== 'granted') {
+        Alert.alert(
+          'Location permission needed',
+          'Location permission is required to continue with AR puzzle mode.'
+        );
+        return false;
+      }
+    }
+
+    const cameraPerm = await Camera.getCameraPermissionsAsync();
+    if (cameraPerm.status !== 'granted') {
+      const nextCameraPerm = await Camera.requestCameraPermissionsAsync();
+      if (nextCameraPerm.status !== 'granted') {
+        Alert.alert(
+          'Camera permission needed',
+          'Camera permission is required to open the AR puzzle view.'
+        );
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleOpenPuzzleView = async () => {
+    if (!puzzle.sceneAssetUrl || isPreparingAr) {
+      return;
+    }
+
+    setIsPreparingAr(true);
+    try {
+      const hasPermissions = await ensureArPermissions();
+      if (!hasPermissions) {
+        return;
+      }
+
+      router.push({
+        pathname: '/ar-puzzle-view',
+        params: {
+          sceneAssetUrl: puzzle.sceneAssetUrl,
+          secretCode: puzzle.secretCode ?? '',
+          anchorX: String(puzzle.anchorPosition?.x ?? 0),
+          anchorY: String(puzzle.anchorPosition?.y ?? 0.3),
+          anchorZ: String(puzzle.anchorPosition?.z ?? -1.2),
+          modelScaleMeters: String(puzzle.modelScaleMeters ?? 1),
+        },
+      });
+    } catch (error) {
+      console.error('Failed to prepare AR permissions', error);
+      Alert.alert('AR unavailable', 'Could not prepare the AR puzzle view right now.');
+    } finally {
+      setIsPreparingAr(false);
+    }
+  };
+
+  const handleCheckCode = async () => {
+    if (isSolved || isSubmitting) {
+      return;
+    }
+
+    if (!progressId) {
+      Alert.alert('Progress missing', 'Could not verify puzzle without active tour progress.');
+      return;
+    }
+
+    const trimmedCode = codeInput.trim();
+    if (!trimmedCode) {
+      setFeedback('Enter the secret code first.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFeedback('Checking code...');
+    try {
+      const response = await submitArCode(progressId, trimmedCode);
+      if (response.accepted) {
+        setFeedback('Code verified.');
+        onSolve();
+      } else {
+        setFeedback('Code is not correct. Try again.');
+      }
+    } catch (error) {
+      console.error('submit ar code failed', error);
+      setFeedback('Could not verify code right now. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <View>
+      <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
+      <Text style={styles.sectionLabel}>
+        This is an AR puzzle. Open the model, find the hidden secret code, then enter it below.
+      </Text>
+
+      <Pressable
+        style={[
+          styles.viewPuzzleButton,
+          (!puzzle.sceneAssetUrl || isPreparingAr) && styles.captureButtonDisabled,
+        ]}
+        onPress={handleOpenPuzzleView}
+        disabled={!puzzle.sceneAssetUrl || isPreparingAr}
+      >
+        {isPreparingAr ? (
+          <ActivityIndicator color={Colors[theme].white} />
+        ) : (
+          <>
+            <MaterialCommunityIcons name="eye-outline" size={18} color={Colors[theme].white} />
+            <Text style={styles.viewPuzzleButtonText}>View Puzzle</Text>
+          </>
+        )}
+      </Pressable>
+
+      <TextInput
+        value={codeInput}
+        onChangeText={setCodeInput}
+        style={styles.secretCodeInput}
+        placeholder="Enter secret code"
+        autoCapitalize="none"
+        autoCorrect={false}
+        editable={!isSolved && !isSubmitting}
+      />
+
+      <Pressable
+        style={[styles.captureButton, (isSolved || isSubmitting) && styles.captureButtonDisabled]}
+        onPress={handleCheckCode}
+        disabled={isSolved || isSubmitting}
+      >
+        {isSubmitting ? (
+          <ActivityIndicator color={Colors[theme].white} />
+        ) : (
+          <Text style={styles.captureButtonText}>{isSolved ? 'Solved' : 'Check Code'}</Text>
+        )}
+      </Pressable>
+
+      {feedback ? <Text style={styles.feedbackText}>{feedback}</Text> : null}
+    </View>
+  );
+}
+
 interface PuzzleStepViewProps {
   step: PuzzleStep;
   isSolved: boolean;
@@ -310,6 +476,8 @@ function PuzzleStepView({ step, isSolved, onSolve }: PuzzleStepViewProps) {
           isSolved={isSolved}
           onSolve={onSolve}
         />
+      ) : step.puzzle.type === 'ar-code' ? (
+        <ArCodeView key={step.id} puzzle={step.puzzle} isSolved={isSolved} onSolve={onSolve} />
       ) : (
         <PictureCompareView
           key={step.id}
