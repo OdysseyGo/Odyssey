@@ -8,6 +8,7 @@ import {
   setStepGyroscopePuzzle,
   setStepPictureComparePuzzle,
   setStepTriviaPuzzle,
+  updateTour,
 } from '@/api/tours';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -16,8 +17,16 @@ import { doesLocationMeetTourRequirements } from '@/components/TourCreation';
 import { TourReviewStep } from '@/components/TourCreation/steps';
 import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
+import { ApiError } from '@/api/APIClient';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
+
+function getSubmitErrorMessage(error: unknown, fallbackMessage: string) {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+  return fallbackMessage;
+}
 
 export default function TourReviewScreen() {
   const theme = useColorTheme();
@@ -55,7 +64,11 @@ export default function TourReviewScreen() {
               difficulty: tourData.difficulty,
               duration_minutes: tourData.estimatedDuration,
               city: tourData.city || 'Unknown City',
-              status: 'PUBLISHED',
+              country: tourData.country || '',
+              country_code: tourData.countryCode || '',
+              city_latitude: tourData.cityLatitude,
+              city_longitude: tourData.cityLongitude,
+              status: 'DRAFT',
               is_premium: false,
             });
 
@@ -136,6 +149,16 @@ export default function TourReviewScreen() {
               }
             }
 
+            // 3. Publish after all steps are created so backend city/step validation runs once.
+            await updateTour(tour.id, {
+              city: tourData.city || 'Unknown City',
+              country: tourData.country || '',
+              country_code: tourData.countryCode || '',
+              city_latitude: tourData.cityLatitude,
+              city_longitude: tourData.cityLongitude,
+              status: 'PUBLISHED',
+            });
+
             Alert.alert(t('creation.successTitle'), t('creation.successMessage'), [
               {
                 text: t('creation.ok'),
@@ -146,8 +169,10 @@ export default function TourReviewScreen() {
               },
             ]);
           } catch (error) {
-            console.error('Failed to create tour:', error);
-            Alert.alert(t('creation.errorTitle'), t('creation.errorMessage'));
+            Alert.alert(
+              t('creation.errorTitle'),
+              getSubmitErrorMessage(error, t('creation.errorMessage'))
+            );
           } finally {
             setIsSubmitting(false);
           }

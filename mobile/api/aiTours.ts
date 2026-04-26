@@ -2,6 +2,8 @@ import { apiRequest } from './APIClient';
 
 export type AITourGenerationRequest = {
   city: string;
+  country?: string;
+  country_code?: string;
   theme: string;
   mode: 'STORY' | 'PUZZLE' | 'HYBRID';
   duration: number;

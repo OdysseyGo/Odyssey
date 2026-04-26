@@ -15,6 +15,7 @@ export {
   FormChipSelect,
   FormOptionCard,
   FormDurationPicker,
+  FormLocationSelect,
 } from './inputs';
 
 export { TourDetailsStep, TourStoriesStep, TourReviewStep } from './steps';

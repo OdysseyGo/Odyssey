@@ -69,6 +69,14 @@ class Tour(models.Model):
     city = models.CharField(
         max_length=100, blank=True, help_text="City where the tour is located"
     )
+    country = models.CharField(
+        max_length=100, blank=True, help_text="Country where the tour is located"
+    )
+    country_code = models.CharField(
+        max_length=2,
+        blank=True,
+        help_text="ISO 3166-1 alpha-2 country code for the tour country",
+    )
     cover_image = models.ImageField(upload_to="tour_covers/", blank=True, null=True)
 
     # Advanced Metrics

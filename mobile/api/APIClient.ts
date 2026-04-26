@@ -43,6 +43,36 @@ export class ApiError extends Error {
   }
 }
 
+function getApiErrorMessage(errorData: unknown, statusCode: number): string {
+  const extractMessage = (value: unknown): string | undefined => {
+    if (typeof value === 'string') return value;
+    if (!value || typeof value !== 'object') return undefined;
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const message = extractMessage(item);
+        if (message) return message;
+      }
+      return undefined;
+    }
+
+    const data = value as Record<string, unknown>;
+    for (const key of ['detail', 'message', 'error', 'non_field_errors', 'city', 'steps']) {
+      const message = extractMessage(data[key]);
+      if (message) return message;
+    }
+
+    for (const nestedValue of Object.values(data)) {
+      const message = extractMessage(nestedValue);
+      if (message) return message;
+    }
+
+    return undefined;
+  };
+
+  return extractMessage(errorData) || `Server error (${statusCode})`;
+}
+
 export async function apiRequest<TResponse = unknown, TBody = Record<string, unknown>>(
   options: ApiRequestOptions<TBody>
 ): Promise<TResponse> {
@@ -74,7 +104,6 @@ export async function apiRequest<TResponse = unknown, TBody = Record<string, unk
       // Server responded with error status
       const statusCode = error.response.status;
       const errorData = error.response.data;
-      console.log('API Error Data:', JSON.stringify(errorData, null, 2)); // Debug logging
 
       // Clear token on any 401 Unauthorized error
       if (statusCode === 401) {
@@ -82,11 +111,7 @@ export async function apiRequest<TResponse = unknown, TBody = Record<string, unk
         throw new ApiError('Your session has expired. Please log in again.', statusCode, error);
       }
 
-      const message =
-        errorData?.detail ||
-        errorData?.message ||
-        errorData?.error ||
-        `Server error (${statusCode})`;
+      const message = getApiErrorMessage(errorData, statusCode);
 
       throw new ApiError(message, statusCode, error);
     } else if (error.code === 'ECONNABORTED') {
