@@ -6,7 +6,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
-import { isViroAvailable, loadViro } from '@/lib/viro';
+import { getViroModule, VIRO_UNAVAILABLE_MESSAGE } from '@/utils/viro';
 
 const MODEL_POSITION: [number, number, number] = [0, 0, -1.2];
 const MODEL_SCALE: [number, number, number] = [0.25, 0.25, 0.25];
@@ -45,10 +45,12 @@ function toModelWorldPoint(
 }
 
 function PreviewScene(props: any) {
-  if (!ViroARScene) {
+  const viro = getViroModule();
+  if (!viro) {
     return null;
   }
 
+  const { Viro3DObject, ViroARScene, ViroAmbientLight, ViroText } = viro;
   const appProps = props.sceneNavigator.viroAppProps;
   const sceneAssetUrl = appProps?.sceneAssetUrl as string;
   const secretCode = appProps?.secretCode as string;
@@ -95,6 +97,7 @@ export default function ARPreviewScreen() {
   const theme = useColorTheme();
   const color = Colors[theme];
   const insets = useSafeAreaInsets();
+  const viro = getViroModule();
   const params = useLocalSearchParams<{
     sceneAssetUrl?: string;
     secretCode?: string;
@@ -116,6 +119,24 @@ export default function ARPreviewScreen() {
     MIN_MODEL_SCALE_METERS,
     MAX_MODEL_SCALE_METERS
   );
+
+  if (!viro) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: color.foreground }]}>
+        <View style={styles.errorState}>
+          <Text style={[styles.errorText, { color: color.text }]}>{VIRO_UNAVAILABLE_MESSAGE}</Text>
+          <TouchableOpacity
+            style={[styles.closeButton, { backgroundColor: color.primary }]}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.closeButtonText}>Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const { ViroARSceneNavigator } = viro;
 
   if (!sceneAssetUrl) {
     return (

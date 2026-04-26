@@ -1,12 +1,15 @@
 import { View, Pressable, Animated, PanResponder, useWindowDimensions, Alert } from 'react-native';
 import { useMemo, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import getStyles from './BottomSlider.styles';
 import { BottomSliderProps } from './BottomSlider.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { Animations } from '@/constants/Animations';
 import TourNavigation from '../TourStepComponents/TourNavigation';
+import { Spacing } from '@/constants/Spacing';
+import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
 
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { completeStep, skipStep } from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
@@ -21,6 +24,11 @@ export default function BottomSlider({
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const { height: screenHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const tabBarTotalHeight = ODYSSEY_TAB_BAR_FLOATING_HEIGHT + Math.max(insets.bottom, Spacing.sm);
+  const bottomClearance = Math.max(tabBarTotalHeight - Spacing.md, ODYSSEY_TAB_BAR_FLOATING_HEIGHT);
+  const expandedTop = Math.max(insets.top, screenHeight * 0.08);
+  const sheetHeight = Math.max(screenHeight - expandedTop - bottomClearance, 0);
 
   const {
     tour,
@@ -82,7 +90,6 @@ export default function BottomSlider({
     progressId,
     currentStepIndex,
     highestStepIndex,
-    solvedSteps,
     setCurrentStepIndex,
     setHighestStepIndex,
     onTourComplete,
@@ -126,7 +133,6 @@ export default function BottomSlider({
     progressId,
     currentStepIndex,
     highestStepIndex,
-    solvedSteps,
     setCurrentStepIndex,
     setHighestStepIndex,
     onTourComplete,
@@ -158,10 +164,9 @@ export default function BottomSlider({
   // - negative translateY = pull UP (more on-screen)
   // - 0 = fully visible at bottom
 
-  const MAX_SHEET_HEIGHT = screenHeight * Animations.bottomSheet.maxScreenMultiplier;
-  const COLLAPSED_TRANSLATE = MAX_SHEET_HEIGHT * Animations.bottomSheet.collapsedScreenMultiplier;
-  const EXPANDED_TRANSLATE = MAX_SHEET_HEIGHT * Animations.bottomSheet.expandedScreenMultiplier;
-  const HALFWAY_TRANSLATE = MAX_SHEET_HEIGHT * Animations.bottomSheet.halfwayScreenMultiplier;
+  const COLLAPSED_TRANSLATE = sheetHeight * Animations.bottomSheet.collapsedScreenMultiplier;
+  const EXPANDED_TRANSLATE = 0;
+  const HALFWAY_TRANSLATE = sheetHeight * Animations.bottomSheet.halfwayScreenMultiplier;
 
   const snapPoints = useMemo(
     () => [EXPANDED_TRANSLATE, HALFWAY_TRANSLATE, COLLAPSED_TRANSLATE],
@@ -259,7 +264,9 @@ export default function BottomSlider({
       style={[
         styles.bottomOverlay,
         {
-          maxHeight: screenHeight * Animations.bottomSheet.maxScreenMultiplier,
+          top: expandedTop,
+          bottom: bottomClearance,
+          maxHeight: sheetHeight,
           transform: [{ translateY: bottomSheetTranslateY }],
         },
       ]}
