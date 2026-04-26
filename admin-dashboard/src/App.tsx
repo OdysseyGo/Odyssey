@@ -10,6 +10,7 @@ import TourDetail from "@/pages/TourDetail";
 import Reports from "@/pages/Reports";
 import Analytics from "@/pages/Analytics";
 import PictureCompareTuning from "@/pages/PictureCompareTuning";
+import ARModels from "@/pages/ARModels";
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/tours/:id" element={<TourDetail />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/ar-models" element={<ARModels />} />
             <Route path="/picture-compare-tuning" element={<PictureCompareTuning />} />
           </Route>
         </Routes>

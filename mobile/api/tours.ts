@@ -21,6 +21,36 @@ export type ArPuzzleDetail = {
   metadata?: Record<string, any>;
 };
 
+export type ARModelAnchor = {
+  id: string;
+  label: string;
+  description?: string;
+  position: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  rotation?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  scale?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+};
+
+export type ARModel = {
+  id: number;
+  slug: string;
+  name: string;
+  preview_image_url: string;
+  scene_asset_url: string;
+  anchors: ARModelAnchor[];
+};
+
 export type GyroscopePuzzleDetail = {
   target_pitch: number;
   target_roll: number;
@@ -529,6 +559,15 @@ export async function setStepArPuzzle(
     method: 'POST',
     url: `/api/tours/${tourId}/steps/${stepId}/set-ar-puzzle/`,
     data: payload,
+    auth: true,
+    signal,
+  });
+}
+
+export async function getArModels(signal?: AbortSignal): Promise<ARModel[]> {
+  return apiRequest<ARModel[]>({
+    method: 'GET',
+    url: '/api/tours/ar-models/',
     auth: true,
     signal,
   });

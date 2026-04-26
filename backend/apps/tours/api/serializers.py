@@ -1,6 +1,9 @@
+import re
+
 from rest_framework import serializers
 
 from apps.tours.models import (
+    ARModel,
     ArPuzzleDetail,
     GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
@@ -14,6 +17,32 @@ from apps.tours.utils import GoogleMapsFacade
 from apps.users.api.serializers import UserSerializer
 
 DEFAULT_PICTURE_COMPARE_THRESHOLD = 0.7
+SECRET_CODE_REGEX = re.compile(r"^[A-Za-z0-9]{4,12}$")
+MIN_MODEL_SCALE_METERS = 0.3
+MAX_MODEL_SCALE_METERS = 10.0
+DEFAULT_MODEL_SCALE_METERS = 1.0
+
+
+class ARModelSerializer(serializers.ModelSerializer):
+    preview_image_url = serializers.SerializerMethodField()
+    scene_asset_url = serializers.SerializerMethodField()
+
+    def get_preview_image_url(self, obj):
+        return obj.get_preview_image_url(request=self.context.get("request"))
+
+    def get_scene_asset_url(self, obj):
+        return obj.get_scene_asset_url(request=self.context.get("request"))
+
+    class Meta:
+        model = ARModel
+        fields = [
+            "id",
+            "slug",
+            "name",
+            "preview_image_url",
+            "scene_asset_url",
+            "anchors",
+        ]
 
 
 class TriviaPuzzleDetailSerializer(serializers.ModelSerializer):
@@ -116,6 +145,90 @@ class PictureComparePuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
 class ArPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
     scene_asset_url = serializers.URLField(required=False, allow_blank=True)
     metadata = serializers.JSONField(required=False)
+
+    def validate(self, attrs):
+        metadata = attrs.get("metadata") or {}
+        if not isinstance(metadata, dict):
+            raise serializers.ValidationError(
+                {"metadata": "metadata must be a JSON object."}
+            )
+
+        model_id = metadata.get("model_id")
+        anchor_id = metadata.get("anchor_id")
+        secret_code = metadata.get("secret_code")
+        placement_mode = metadata.get("placement_mode")
+        model_scale_meters = metadata.get(
+            "model_scale_meters", DEFAULT_MODEL_SCALE_METERS
+        )
+
+        if not model_id:
+            raise serializers.ValidationError({"metadata": "model_id is required."})
+        if not anchor_id:
+            raise serializers.ValidationError({"metadata": "anchor_id is required."})
+        if not secret_code:
+            raise serializers.ValidationError({"metadata": "secret_code is required."})
+        if placement_mode != "anchor":
+            raise serializers.ValidationError(
+                {"metadata": "placement_mode must be 'anchor'."}
+            )
+        if not SECRET_CODE_REGEX.match(str(secret_code)):
+            raise serializers.ValidationError(
+                {"metadata": "secret_code must be 4-12 alphanumeric characters."}
+            )
+        try:
+            model_scale_meters = float(model_scale_meters)
+        except (TypeError, ValueError):
+            raise serializers.ValidationError(
+                {"metadata": "model_scale_meters must be a valid number."}
+            )
+        if not (MIN_MODEL_SCALE_METERS <= model_scale_meters <= MAX_MODEL_SCALE_METERS):
+            raise serializers.ValidationError(
+                {
+                    "metadata": (
+                        f"model_scale_meters must be between "
+                        f"{MIN_MODEL_SCALE_METERS} and {MAX_MODEL_SCALE_METERS}."
+                    )
+                }
+            )
+
+        ar_model = ARModel.objects.filter(id=model_id, is_active=True).first()
+        if ar_model is None:
+            raise serializers.ValidationError({"metadata": "model_id is invalid."})
+
+        anchor = next(
+            (
+                item
+                for item in ar_model.anchors
+                if isinstance(item, dict) and str(item.get("id")) == str(anchor_id)
+            ),
+            None,
+        )
+        if anchor is None:
+            raise serializers.ValidationError(
+                {"metadata": "anchor_id is invalid for the selected model."}
+            )
+
+        position = anchor.get("position") if isinstance(anchor, dict) else {}
+        if not isinstance(position, dict):
+            position = {}
+
+        attrs["scene_asset_url"] = ar_model.get_scene_asset_url(
+            request=self.context.get("request")
+        )
+        attrs["metadata"] = {
+            "version": 1,
+            "model_id": ar_model.id,
+            "anchor_id": str(anchor_id),
+            "placement_mode": "anchor",
+            "secret_code": str(secret_code),
+            "model_scale_meters": model_scale_meters,
+            "anchor_position": {
+                "x": float(position.get("x", 0.0)),
+                "y": float(position.get("y", 0.0)),
+                "z": float(position.get("z", 0.0)),
+            },
+        }
+        return attrs
 
 
 class GyroscopePuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):

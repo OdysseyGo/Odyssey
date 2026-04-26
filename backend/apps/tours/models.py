@@ -11,6 +11,16 @@ def puzzle_reference_image_upload_to(instance, filename):
     return f"puzzle_reference_images/{uuid.uuid4().hex}{ext}"
 
 
+def ar_model_preview_upload_to(instance, filename):
+    ext = os.path.splitext(filename or "")[1].lower() or ".png"
+    return f"ar_models/previews/{uuid.uuid4().hex}{ext}"
+
+
+def ar_model_scene_asset_upload_to(instance, filename):
+    ext = os.path.splitext(filename or "")[1].lower() or ".glb"
+    return f"ar_models/scenes/{uuid.uuid4().hex}{ext}"
+
+
 class Tour(models.Model):
     STORY = "STORY"
     PUZZLE = "PUZZLE"
@@ -130,6 +140,57 @@ class TourStep(models.Model):
 
     def __str__(self):
         return f"{self.tour.title} - Step {self.order}"
+
+
+class ARModel(models.Model):
+    slug = models.SlugField(max_length=100, unique=True)
+    name = models.CharField(max_length=255)
+    preview_image_url = models.URLField(blank=True)
+    scene_asset_url = models.URLField(blank=True)
+    preview_image = models.ImageField(
+        upload_to=ar_model_preview_upload_to,
+        blank=True,
+        null=True,
+    )
+    scene_asset_file = models.FileField(
+        upload_to=ar_model_scene_asset_upload_to,
+        blank=True,
+        null=True,
+    )
+    anchors = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Anchor definitions with stable ids and xyz coordinates.",
+    )
+    is_active = models.BooleanField(default=True)
+    sort_order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return self.name
+
+    @staticmethod
+    def _absolute_media_url(url, request=None):
+        if not url:
+            return ""
+        if request and not url.startswith(("http://", "https://")):
+            normalized = url if url.startswith("/") else f"/{url.lstrip('/')}"
+            return request.build_absolute_uri(normalized)
+        return url
+
+    def get_preview_image_url(self, request=None):
+        if self.preview_image:
+            return self._absolute_media_url(self.preview_image.url, request=request)
+        return self._absolute_media_url(self.preview_image_url, request=request)
+
+    def get_scene_asset_url(self, request=None):
+        if self.scene_asset_file:
+            return self._absolute_media_url(self.scene_asset_file.url, request=request)
+        return self._absolute_media_url(self.scene_asset_url, request=request)
 
 
 class Puzzle(models.Model):
