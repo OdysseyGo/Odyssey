@@ -4,12 +4,12 @@ import { useCopilot } from 'react-native-copilot';
 import { useTutorial, TutorialType } from '@/contexts/TutorialContext';
 
 export function useAutoStartTour(
-  targetTutorialName: TutorialType, 
+  targetTutorialName: TutorialType,
   isReady: boolean,
   // 1. Add the scroll ref here as the 3rd parameter
-  scrollViewRef?: RefObject<ScrollView | null>, 
+  scrollViewRef?: RefObject<ScrollView | null>,
   // 2. Push the optional callback to the 4th parameter
-  onTourStop?: () => void 
+  onTourStop?: () => void
 ) {
   const { activeTutorial, stopTutorial } = useTutorial();
   const { start, copilotEvents } = useCopilot();
@@ -19,7 +19,7 @@ export function useAutoStartTour(
   useEffect(() => {
     if (activeTutorial === targetTutorialName && start && isReady && !hasStartedTour.current) {
       hasStartedTour.current = true;
-      
+
       // Force scroll to top if the ref was provided!
       if (scrollViewRef?.current) {
         scrollViewRef.current.scrollTo({ y: 0, animated: false });
@@ -33,12 +33,12 @@ export function useAutoStartTour(
     if (copilotEvents) {
       const handleStop = () => {
         hasStartedTour.current = false;
-        stopTutorial(); 
-        if (onTourStop) onTourStop(); 
+        stopTutorial();
+        if (onTourStop) onTourStop();
       };
 
       copilotEvents.on('stop', handleStop);
-      
+
       return () => {
         copilotEvents.off('stop', handleStop);
       };

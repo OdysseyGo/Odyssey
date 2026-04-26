@@ -12,7 +12,9 @@ export default function CustomStepNumber() {
 
   return (
     <View style={[styles.circle, { backgroundColor: theme.primary }]}>
-      <Text style={styles.text}>{currentStepNumber}/{totalStepsNumber} </Text>
+      <Text style={styles.text}>
+        {currentStepNumber}/{totalStepsNumber}{' '}
+      </Text>
     </View>
   );
 }
@@ -25,13 +27,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF', 
+    borderColor: '#FFFFFF',
     elevation: 4,
   },
   text: {
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: 'bold',
-    textAlign: 'center'
+    textAlign: 'center',
   },
 });

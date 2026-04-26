@@ -30,19 +30,20 @@ export default function CreateTourButton() {
   };
 
   return (
-
-     <CopilotStep text={t('tutorial.tours.step4text')} order={4} name="createTourStep">
-            <WalkthroughableView   style={{
-        position: 'absolute',
-        bottom: 24,
-        right: 24,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-      <TouchableOpacity style={styles.floatingButton} onPress={handlePress} activeOpacity={0.8}>
-        <Ionicons name="add" size={30} color={color.white} />
-      </TouchableOpacity>
-    </WalkthroughableView>
+    <CopilotStep text={t('tutorial.tours.step4text')} order={4} name="createTourStep">
+      <WalkthroughableView
+        style={{
+          position: 'absolute',
+          bottom: 24,
+          right: 24,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <TouchableOpacity style={styles.floatingButton} onPress={handlePress} activeOpacity={0.8}>
+          <Ionicons name="add" size={30} color={color.white} />
+        </TouchableOpacity>
+      </WalkthroughableView>
     </CopilotStep>
   );
 }

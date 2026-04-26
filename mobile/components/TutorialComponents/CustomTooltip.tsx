@@ -14,14 +14,10 @@ export default function CustomTooltip() {
   const theme = Colors[colorScheme];
 
   return (
-    
     <View style={[styles.container, { backgroundColor: theme.cardSurface }]}>
-      
       {/* Dynamic Text Color */}
-      <Text style={[styles.description, { color: theme.text }]}>
-        {currentStep?.text}
-      </Text>
-      
+      <Text style={[styles.description, { color: theme.text }]}>{currentStep?.text}</Text>
+
       <View style={styles.footer}>
         <TouchableOpacity onPress={stop} activeOpacity={0.7} style={styles.actionButton}>
           {/* Dynamic SubText Color */}
@@ -41,14 +37,14 @@ export default function CustomTooltip() {
           )}
 
           {/* Dynamic Primary Background for the Next Button */}
-          <TouchableOpacity 
-            onPress={isLastStep ? stop : goToNext} 
+          <TouchableOpacity
+            onPress={isLastStep ? stop : goToNext}
             activeOpacity={0.8}
             style={[styles.primaryButton, { backgroundColor: theme.primary }]}
           >
             <Text style={styles.primaryButtonText}>
-              {isLastStep 
-                ? t('tutorial.finish', { defaultValue: 'Finish' }) 
+              {isLastStep
+                ? t('tutorial.finish', { defaultValue: 'Finish' })
                 : t('tutorial.next', { defaultValue: 'Next' })}
             </Text>
           </TouchableOpacity>
@@ -60,10 +56,10 @@ export default function CustomTooltip() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: Spacing.lg, 
+    padding: Spacing.lg,
     borderRadius: 16,
     width: '100%',
-    
+
     ...Platform.select({
       ios: {
         shadowColor: '#000',

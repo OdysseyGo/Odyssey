@@ -382,7 +382,7 @@ function ProfileContent() {
   const { t } = useTranslation();
 
   const scrollViewRef = useRef<ScrollView>(null);
-  useAutoStartTour('PROFILE_TUTORIAL', !loading && !!curUser, scrollViewRef)
+  useAutoStartTour('PROFILE_TUTORIAL', !loading && !!curUser, scrollViewRef);
 
   const stickyOpacity = scrollY.interpolate({
     inputRange: [HEADER_HEIGHT * 0.5, HEADER_HEIGHT * 0.7],
@@ -563,10 +563,10 @@ function ProfileContent() {
         })}
       >
         <CopilotStep text={t('tutorial.profile.step1text')} order={1} name="profileIntro">
-        <WalkthroughableView>
-        {/* ─── Header ──────────────────────────────── */}
-        <ProfileHeaderComp {...profileHeader} scrollY={scrollY} />
-         </WalkthroughableView>
+          <WalkthroughableView>
+            {/* ─── Header ──────────────────────────────── */}
+            <ProfileHeaderComp {...profileHeader} scrollY={scrollY} />
+          </WalkthroughableView>
         </CopilotStep>
 
         {/* ─── Stats (overlaps header) ─────────────── */}
@@ -577,7 +577,7 @@ function ProfileContent() {
         />
 
         {/* ─── Actions ─────────────────────────────── */}
-        <CopilotStep text= {t('tutorial.profile.step4text')} order={4} name="friendsStep">
+        <CopilotStep text={t('tutorial.profile.step4text')} order={4} name="friendsStep">
           <WalkthroughableView>
             <View style={styles.actionsRow}>
               <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
@@ -587,20 +587,18 @@ function ProfileContent() {
         </CopilotStep>
 
         {/* ─── Badges ──────────────────────────────── */}
-        <CopilotStep text= {t('tutorial.profile.step5text')} order={5} name="badgeStep">
+        <CopilotStep text={t('tutorial.profile.step5text')} order={5} name="badgeStep">
           <WalkthroughableView>
             <ProfileBadgesContainer badges={formattedBadges} title={t('profile.badges')} />
           </WalkthroughableView>
         </CopilotStep>
 
         {/* ─── My Tours ────────────────────────────── */}
-        <CopilotStep text= {t('tutorial.profile.step6text')} order={6} name="tourCreatorStep">
+        <CopilotStep text={t('tutorial.profile.step6text')} order={6} name="tourCreatorStep">
           <WalkthroughableView>
             <ProfileToursContainer />
           </WalkthroughableView>
         </CopilotStep>
-        
-
       </Animated.ScrollView>
 
       {/* ─── Modals ────────────────────────────────── */}
@@ -666,7 +664,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: Spacing.lg + 2,
-    marginBottom:  Spacing.sm,
+    marginBottom: Spacing.sm,
     gap: Spacing.md,
   },
 });
@@ -707,27 +705,25 @@ const errorStyles = StyleSheet.create({
   },
 });
 
-
 export default function Profile() {
-
   const colorTheme = useColorTheme();
-  
+
   return (
-    <CopilotProvider 
-        margin={8}
-        animated={true} 
-        overlay="svg" 
-        tooltipComponent={CustomTooltip}
-        stepNumberComponent= {CustomStepNumber}
-        animationDuration={600}
-        arrowColor={Colors[colorTheme].primary}
-        tooltipStyle={{ 
-          backgroundColor: 'transparent', 
-          padding: 0,                     
-          borderRadius: 0,
-        }}
-        backdropColor="rgba(10, 20, 40, 0.9)"
-      >
+    <CopilotProvider
+      margin={8}
+      animated={true}
+      overlay="svg"
+      tooltipComponent={CustomTooltip}
+      stepNumberComponent={CustomStepNumber}
+      animationDuration={600}
+      arrowColor={Colors[colorTheme].primary}
+      tooltipStyle={{
+        backgroundColor: 'transparent',
+        padding: 0,
+        borderRadius: 0,
+      }}
+      backdropColor="rgba(10, 20, 40, 0.9)"
+    >
       <ProfileContent />
     </CopilotProvider>
   );

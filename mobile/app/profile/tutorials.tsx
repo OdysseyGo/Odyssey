@@ -14,7 +14,7 @@ import Colors from '@/constants/Colors';
 import { TutorialType, useTutorial } from '@/contexts/TutorialContext';
 
 type TutorialItemConfig = SettingsItemConfig & {
-  tutorialKey: TutorialType; 
+  tutorialKey: TutorialType;
   route: string;
 };
 
@@ -24,47 +24,48 @@ export default function TutorialsModal({ onClose }: { onClose?: () => void }) {
   const colors = Colors[colorTheme];
   const { startTutorial } = useTutorial();
 
-
   const tutorialItems: TutorialItemConfig[] = [
     {
       key: 'profile_tutorial',
       icon: User,
       label: t('tutorial.profile.label', { defaultValue: 'Profile Guide' }),
       labelKey: 'tutorial.profile.label',
-      description: t('tutorial.profile.desc', { defaultValue: 'Learn how to manage your stats, friends, and avatar.' }),
+      description: t('tutorial.profile.desc', {
+        defaultValue: 'Learn how to manage your stats, friends, and avatar.',
+      }),
       descriptionKey: 'tutorial.profile.desc',
       tutorialKey: 'PROFILE_TUTORIAL',
-      route: '/profile', 
+      route: '/profile',
     },
     {
       key: 'tours_tutorial',
       icon: Compass,
       label: t('tutorial.tours.label', { defaultValue: 'Tours Walkthrough' }),
       labelKey: 'tutorial.tours.label',
-      description: t('tutorial.tours.desc', { defaultValue: 'Learn how to navigate and interact with tours.' }),
+      description: t('tutorial.tours.desc', {
+        defaultValue: 'Learn how to navigate and interact with tours.',
+      }),
       descriptionKey: 'tutorial.tours.desc',
       tutorialKey: 'TOURS_TUTORIAL',
-      route: '/tourDisplay', 
+      route: '/tourDisplay',
     },
   ];
 
- const handleTutorialPress = (item: TutorialItemConfig) => {
+  const handleTutorialPress = (item: TutorialItemConfig) => {
     // 1. Instantly trigger the modal close animation
     if (onClose) onClose();
-    
+
     // 2. Wait 400ms for the modal to completely vanish from the screen
     setTimeout(() => {
-      
       // 3. Navigate to the new screen
       router.navigate(item.route as any);
 
-      // 4. Wait just a tiny bit for the navigation transition to finish 
+      // 4. Wait just a tiny bit for the navigation transition to finish
       //    before arming the global context!
       setTimeout(() => {
         startTutorial(item.tutorialKey);
       }, 100);
-
-    }, 400); 
+    }, 400);
   };
 
   return (
@@ -101,7 +102,7 @@ export default function TutorialsModal({ onClose }: { onClose?: () => void }) {
             <Text style={[styles.sectionTitle, { color: colors.subText }]}>
               {t('tutorial.section', { defaultValue: 'Available Tutorials' })}
             </Text>
-            
+
             <SettingsRowGroup>
               {tutorialItems.map((item) => (
                 <SettingsRowItem
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   headerBackButtonPlaceholder: {
-    width: 32, 
+    width: 32,
     height: 32,
   },
   popupTitle: {

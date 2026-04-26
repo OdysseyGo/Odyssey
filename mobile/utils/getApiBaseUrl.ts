@@ -9,7 +9,6 @@ export function getApiBaseUrl() {
       return envBaseUrl;
     }
 
-    
     const hostUri = Constants.expoConfig?.hostUri;
 
     if (hostUri) {
@@ -17,7 +16,6 @@ export function getApiBaseUrl() {
       return `http://${host}:8000`;
     }
     //return 'http://127.0.0.1:8000';
-
 
     return 'https://api.odysseygo.quest';
   } catch (e) {

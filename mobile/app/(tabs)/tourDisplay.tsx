@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Platform,
   Animated,
-  Dimensions
+  Dimensions,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
@@ -20,7 +20,7 @@ import { useFocusEffect, router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Spacing } from '@/constants/Spacing';
-import Colors from '@/constants/Colors'
+import Colors from '@/constants/Colors';
 import CreateTourButton from '@/components/TourCreation/CreateTourButton';
 import { useTranslation } from 'react-i18next';
 
@@ -201,7 +201,7 @@ function TourDisplayContent() {
   const scrollViewRef = useRef<ScrollView>(null);
   const isFocused = useIsFocused();
 
-  useAutoStartTour("TOURS_TUTORIAL", !loading && isFocused, scrollViewRef);
+  useAutoStartTour('TOURS_TUTORIAL', !loading && isFocused, scrollViewRef);
 
   useEffect(() => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
@@ -360,7 +360,7 @@ function TourDisplayContent() {
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       {/* ─── Main scroll — fills the full screen ─────────── */}
-       
+
       <ScrollView
         ref={scrollViewRef}
         style={{ flex: 1 }}
@@ -370,19 +370,18 @@ function TourDisplayContent() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: insets.bottom + 80 }}
       >
-        
         {/* ─── Hero Carousel ─────────────────────────────── */}
 
         <CopilotStep text={t('tutorial.tours.step3text')} order={3} name="toursFeatured">
-        <WalkthroughableView>
-        {featuredTours.length > 0 && showFeatured && (
-          <FeaturedTourCarousel tours={featuredTours} autoPlayInterval={5000} />
-        )}
-        </WalkthroughableView>
+          <WalkthroughableView>
+            {featuredTours.length > 0 && showFeatured && (
+              <FeaturedTourCarousel tours={featuredTours} autoPlayInterval={5000} />
+            )}
+          </WalkthroughableView>
         </CopilotStep>
 
         {/* ─── Popular Tours ─────────────────────────────── */}
-        
+
         {showPopular && popularTours.length > 0 && (
           <TourScrollerComp
             title={t('tour.popular')}
@@ -390,7 +389,6 @@ function TourDisplayContent() {
             accentColor={theme.primary}
           />
         )}
-      
 
         {/* ─── Continent Sections ────────────────────────── */}
         {shownContinents.map(({ continent, tours }, index) => (
@@ -431,31 +429,30 @@ function TourDisplayContent() {
       >
         {/* Title row */}
         <CopilotStep text={t('tutorial.tours.step1text')} order={1} name="toursIntro">
-        <WalkthroughableView>
-        <View style={styles.pageHeader}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.headerEyebrow, { color: theme.primary }]}>
-              {t('tour.headerEyebrow', { defaultValue: 'Ready to explore?' })}
-            </Text>
-            <Text style={[styles.headerHeadline, { color: theme.text }]}>
-              {t('tour.headerTitle', { defaultValue: 'Discover Tours' })}
-            </Text>
-          </View>
-          
-          <CopilotStep text={t('tutorial.tours.step2text')} order={2} name="toursSearch">
           <WalkthroughableView>
-          <TouchableOpacity
-            style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
-            activeOpacity={0.7}
-            onPress={() => router.push('/search')}
-          >
-            <Ionicons name="search" size={20} color={theme.text} />
-          </TouchableOpacity>
+            <View style={styles.pageHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.headerEyebrow, { color: theme.primary }]}>
+                  {t('tour.headerEyebrow', { defaultValue: 'Ready to explore?' })}
+                </Text>
+                <Text style={[styles.headerHeadline, { color: theme.text }]}>
+                  {t('tour.headerTitle', { defaultValue: 'Discover Tours' })}
+                </Text>
+              </View>
+
+              <CopilotStep text={t('tutorial.tours.step2text')} order={2} name="toursSearch">
+                <WalkthroughableView>
+                  <TouchableOpacity
+                    style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
+                    activeOpacity={0.7}
+                    onPress={() => router.push('/search')}
+                  >
+                    <Ionicons name="search" size={20} color={theme.text} />
+                  </TouchableOpacity>
+                </WalkthroughableView>
+              </CopilotStep>
+            </View>
           </WalkthroughableView>
-          </CopilotStep>
-          
-        </View>
-        </WalkthroughableView>
         </CopilotStep>
 
         {/* Category pills */}
@@ -512,9 +509,7 @@ function TourDisplayContent() {
         </ScrollView>
       </BlurView>
 
-     
       <CreateTourButton />
-        
     </View>
   );
 }
@@ -688,27 +683,25 @@ const createStyles = (theme: (typeof Colors)['light']) =>
     },
   });
 
-
 export default function TourDisplay() {
-
   const colorTheme = useColorTheme();
-  
+
   return (
-    <CopilotProvider 
-        margin={8}
-        animated={true} 
-        overlay="svg" 
-        tooltipComponent={CustomTooltip}
-        stepNumberComponent= {CustomStepNumber}
-        animationDuration={600}
-        arrowColor={Colors[colorTheme].primary}
-        tooltipStyle={{ 
-          backgroundColor: 'transparent', 
-          padding: 0,                     
-          borderRadius: 0,
-        }}
-        backdropColor="rgba(10, 20, 40, 0.9)"
-      >
+    <CopilotProvider
+      margin={8}
+      animated={true}
+      overlay="svg"
+      tooltipComponent={CustomTooltip}
+      stepNumberComponent={CustomStepNumber}
+      animationDuration={600}
+      arrowColor={Colors[colorTheme].primary}
+      tooltipStyle={{
+        backgroundColor: 'transparent',
+        padding: 0,
+        borderRadius: 0,
+      }}
+      backdropColor="rgba(10, 20, 40, 0.9)"
+    >
       <TourDisplayContent />
     </CopilotProvider>
   );

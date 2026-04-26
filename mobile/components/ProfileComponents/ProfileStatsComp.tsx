@@ -57,17 +57,13 @@ export default function ProfileStatsComp({
   return (
     <CopilotStep text={t('tutorial.profile.step3text')} order={3} name="statsStep">
       <WalkthroughableView style={styles.card}>
-          {/* Achievement row */}
-          <View style={styles.row}>
-            {achievementStats.map((s, i) => renderStat(s, i))}
-          </View>
+        {/* Achievement row */}
+        <View style={styles.row}>{achievementStats.map((s, i) => renderStat(s, i))}</View>
 
-          <View style={styles.hDivider} />
+        <View style={styles.hDivider} />
 
-          {/* Social row */}
-          <View style={styles.row}>
-            {socialStats.map((s, i) => renderStat(s, i))}
-          </View>
+        {/* Social row */}
+        <View style={styles.row}>{socialStats.map((s, i) => renderStat(s, i))}</View>
       </WalkthroughableView>
     </CopilotStep>
   );

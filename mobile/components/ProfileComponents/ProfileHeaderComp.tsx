@@ -76,23 +76,25 @@ export default function ProfileHeaderComp({
         <Ionicons name="help-outline" size={Spacing.xl} color={color.primary} />
       </TouchableOpacity>
 
-      <CopilotStep text= {t('tutorial.profile.step7text')} order={7} name="settingsStep">
-      <WalkthroughableView style={[
-          styles.settingsButton,
-          {
-            top: insets.top + Spacing.md,
-            right: Spacing.lg,
-          },
-        ]}>
-      <TouchableOpacity
-        onPress={onSettingsPress}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel={settingsAccessibilityLabel}
-      >
-        <Ionicons name="settings-outline" size={Spacing.lg} color={color.primary} />
-      </TouchableOpacity>
-      </WalkthroughableView>
+      <CopilotStep text={t('tutorial.profile.step7text')} order={7} name="settingsStep">
+        <WalkthroughableView
+          style={[
+            styles.settingsButton,
+            {
+              top: insets.top + Spacing.md,
+              right: Spacing.lg,
+            },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={onSettingsPress}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={settingsAccessibilityLabel}
+          >
+            <Ionicons name="settings-outline" size={Spacing.lg} color={color.primary} />
+          </TouchableOpacity>
+        </WalkthroughableView>
       </CopilotStep>
 
       {/* Avatar with parallax + scale animation */}
@@ -101,7 +103,7 @@ export default function ProfileHeaderComp({
           transform: [{ scale: avatarScale as any }, { translateY: avatarTranslateY as any }],
         }}
       >
-        <CopilotStep text={t('tutorial.profile.step2text')} order={2} name="avatarStep">  
+        <CopilotStep text={t('tutorial.profile.step2text')} order={2} name="avatarStep">
           <WalkthroughableView>
             <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.7}>
               <View style={styles.avatarRing}>
@@ -132,6 +134,5 @@ export default function ProfileHeaderComp({
         ) : null}
       </Animated.View>
     </View>
-   
   );
 }

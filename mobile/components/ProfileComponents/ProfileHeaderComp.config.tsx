@@ -7,7 +7,7 @@ export type ProfileHeaderProps = {
   onAvatarPress?: () => void;
   onSettingsPress?: () => void;
   settingsAccessibilityLabel?: string;
-  onTutorialsPress?: () =>void;
+  onTutorialsPress?: () => void;
   tutorialsAccessibilityLabel?: string;
   scrollY?: Animated.Value;
 };
