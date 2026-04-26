@@ -30,5 +30,5 @@ class TourFilter(filters.FilterSet):
             "tour_type",
             "is_premium",
             "status",
-            "creator"
+            "creator",
         ]
