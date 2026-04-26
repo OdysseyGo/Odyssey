@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Pressable, View as RNView } from 'react-native';
-import { User, Compass, PlayCircle } from 'lucide-react-native';
+import { User } from 'lucide-react-native';
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -36,18 +36,6 @@ export default function TutorialsModal({ onClose }: { onClose?: () => void }) {
       descriptionKey: 'tutorial.profile.desc',
       tutorialKey: 'PROFILE_TUTORIAL',
       route: '/profile',
-    },
-    {
-      key: 'tours_tutorial',
-      icon: Compass,
-      label: t('tutorial.tours.label', { defaultValue: 'Tours Walkthrough' }),
-      labelKey: 'tutorial.tours.label',
-      description: t('tutorial.tours.desc', {
-        defaultValue: 'Learn how to navigate and interact with tours.',
-      }),
-      descriptionKey: 'tutorial.tours.desc',
-      tutorialKey: 'TOURS_TUTORIAL',
-      route: '/tourDisplay',
     },
   ];
 

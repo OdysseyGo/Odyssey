@@ -27,15 +27,7 @@ import CreateTourButton from '@/components/TourCreation/CreateTourButton';
 import { useTranslation } from 'react-i18next';
 import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
 
-import { CopilotProvider, CopilotStep, walkthroughable } from 'react-native-copilot';
-import { useAutoStartTour } from '@/hooks/useAutoStartHook';
-import CustomStepNumber from '@/components/TutorialComponents/CustomStepNumber';
-import CustomTooltip from '@/components/TutorialComponents/CustomTooltip';
-import { useIsFocused } from '@react-navigation/native';
-
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-const WalkthroughableView = walkthroughable(View);
 
 // ─────────────────────────────────────────────────────────
 // Helpers
@@ -284,9 +276,6 @@ function TourDisplayContent() {
   const hasFetchedRef = useRef(false);
   const hasCatalogFetchedRef = useRef(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  const isFocused = useIsFocused();
-
-  useAutoStartTour('TOURS_TUTORIAL', !loading && isFocused, scrollViewRef);
   const filterRevealAnim = useRef(new Animated.Value(0)).current;
   const apiFilters = useMemo(() => buildApiFilters(appliedFilters), [appliedFilters]);
 
@@ -343,17 +332,13 @@ function TourDisplayContent() {
     [apiFilters]
   );
 
-  useEffect(() => {
-    fetchTours();
-  }, [fetchTours]);
-
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     const controller = new AbortController();
-  //     fetchTours(false, controller.signal);
-  //     return () => controller.abort();
-  //   }, [fetchTours])
-  // );
+  useFocusEffect(
+    useCallback(() => {
+      const controller = new AbortController();
+      fetchTours(false, controller.signal);
+      return () => controller.abort();
+    }, [fetchTours])
+  );
 
   // ─── Computed data ────────────────────────────────────
 
@@ -612,13 +597,9 @@ function TourDisplayContent() {
       >
         {/* ─── Hero Carousel ─────────────────────────────── */}
 
-        <CopilotStep text={t('tutorial.tours.step3text')} order={3} name="toursFeatured">
-          <WalkthroughableView>
-            {featuredTours.length > 0 && showFeatured && (
-              <FeaturedTourCarousel tours={featuredTours} autoPlayInterval={5000} />
-            )}
-          </WalkthroughableView>
-        </CopilotStep>
+        {featuredTours.length > 0 && showFeatured && (
+          <FeaturedTourCarousel tours={featuredTours} autoPlayInterval={5000} />
+        )}
 
         {/* ─── Popular Tours ─────────────────────────────── */}
 
@@ -703,32 +684,39 @@ function TourDisplayContent() {
         onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
       >
         {/* Title row */}
-        <CopilotStep text={t('tutorial.tours.step1text')} order={1} name="toursIntro">
-          <WalkthroughableView>
-            <View style={styles.pageHeader}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.headerEyebrow, { color: theme.primary }]}>
-                  {t('tour.headerEyebrow', { defaultValue: 'Ready to explore?' })}
-                </Text>
-                <Text style={[styles.headerHeadline, { color: theme.text }]}>
-                  {t('tour.headerTitle', { defaultValue: 'Discover Tours' })}
-                </Text>
-              </View>
+        <View style={styles.pageHeader}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.headerEyebrow, { color: theme.primary }]}>
+              {t('tour.headerEyebrow', { defaultValue: 'Ready to explore?' })}
+            </Text>
+            <Text style={[styles.headerHeadline, { color: theme.text }]}>
+              {t('tour.headerTitle', { defaultValue: 'Discover Tours' })}
+            </Text>
+          </View>
 
-              <CopilotStep text={t('tutorial.tours.step2text')} order={2} name="toursSearch">
-                <WalkthroughableView>
-                  <TouchableOpacity
-                    style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
-                    activeOpacity={0.7}
-                    onPress={() => router.push('/search')}
-                  >
-                    <Ionicons name="search" size={20} color={theme.text} />
-                  </TouchableOpacity>
-                </WalkthroughableView>
-              </CopilotStep>
-            </View>
-          </WalkthroughableView>
-        </CopilotStep>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
+              activeOpacity={0.7}
+              onPress={openFilterModal}
+            >
+              <Ionicons name="options-outline" size={20} color={theme.text} />
+              {activeFilterChips.length > 0 && (
+                <View style={[styles.filterBadge, { backgroundColor: theme.primary }]}>
+                  <Text style={styles.filterBadgeText}>{activeFilterChips.length}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
+              activeOpacity={0.7}
+              onPress={() => router.push('/search')}
+            >
+              <Ionicons name="search" size={20} color={theme.text} />
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {hasActiveFilters ? (
           <ScrollView
@@ -1452,26 +1440,4 @@ const createStyles = (theme: (typeof Colors)['light']) =>
     },
   });
 
-export default function TourDisplay() {
-  const colorTheme = useColorTheme();
-
-  return (
-    <CopilotProvider
-      margin={8}
-      animated={true}
-      overlay="svg"
-      tooltipComponent={CustomTooltip}
-      stepNumberComponent={CustomStepNumber}
-      animationDuration={600}
-      arrowColor={Colors[colorTheme].primary}
-      tooltipStyle={{
-        backgroundColor: 'transparent',
-        padding: 0,
-        borderRadius: 0,
-      }}
-      backdropColor="rgba(10, 20, 40, 0.9)"
-    >
-      <TourDisplayContent />
-    </CopilotProvider>
-  );
-}
+export default TourDisplayContent;
