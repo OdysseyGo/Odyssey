@@ -1,4 +1,4 @@
-const BAR_HEIGHT = 62;
+const BAR_HEIGHT = 56;
 
 export const ODYSSEY_TAB_BAR_INNER_PADDING = 4;
 export const ODYSSEY_TAB_BAR_HEIGHT = BAR_HEIGHT;
