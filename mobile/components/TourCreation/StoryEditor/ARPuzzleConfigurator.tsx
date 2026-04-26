@@ -280,7 +280,7 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
     if (!selectedModel || !anchor) return;
 
     router.push({
-      pathname: '/ar-preview',
+      pathname: '/(tour)/ar-preview',
       params: {
         sceneAssetUrl: selectedModel.scene_asset_url,
         secretCode,
