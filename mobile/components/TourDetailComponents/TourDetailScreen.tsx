@@ -16,6 +16,7 @@ import Colors from '@/constants/Colors';
 import BackButton from '@/components/common/BackButton';
 import { Spacing } from '@/constants/Spacing';
 import { getTour } from '@/api/tours';
+import { getCurrentUser } from '@/api/auth';
 import { TourDetail } from './TourDetail.config';
 import { TourDetailScreenProps, mapApiTourToDetail } from './TourDetailScreen.config';
 import { tourDetailScreenStyles } from './TourDetailScreen.styles';
@@ -72,6 +73,7 @@ function ShimmerBlock({
 
 interface TourDetailScreenState {
   tour: TourDetail | null;
+  showAllStops: boolean;
   loading: boolean;
   error: string | null;
 }
@@ -82,6 +84,7 @@ interface TourDetailScreenResult extends TourDetailScreenState {
 
 export function useTourDetailScreen(tourId: string): TourDetailScreenResult {
   const [tour, setTour] = useState<TourDetail | null>(null);
+  const [showAllStops, setShowAllStops] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { t } = useTranslation();
@@ -92,8 +95,13 @@ export function useTourDetailScreen(tourId: string): TourDetailScreenResult {
     try {
       setLoading(true);
       setError(null);
-      const tourData = await getTour(parseInt(tourId, 10));
+      setShowAllStops(false);
+      const [tourData, currentUser] = await Promise.all([
+        getTour(parseInt(tourId, 10)),
+        getCurrentUser(),
+      ]);
       setTour(mapApiTourToDetail(tourData, t));
+      setShowAllStops(Boolean(currentUser && tourData.creator?.id === currentUser.id));
     } catch (err: any) {
       setError(err.message || 'Failed to load tour');
     } finally {
@@ -105,7 +113,7 @@ export function useTourDetailScreen(tourId: string): TourDetailScreenResult {
     fetchTour();
   }, [fetchTour]);
 
-  return { tour, loading, error, fetchTour };
+  return { tour, showAllStops, loading, error, fetchTour };
 }
 
 export interface TourDetailScreenLoadingProps {
@@ -212,6 +220,7 @@ export interface TourDetailScreenContentProps {
   tour: TourDetail;
   onStartTour: () => void;
   starting?: boolean;
+  showAllStops?: boolean;
 }
 
 function AnimatedSection({ delay, children }: { delay: number; children: React.ReactNode }) {
@@ -246,6 +255,7 @@ export function TourDetailScreenContent({
   tour,
   onStartTour,
   starting,
+  showAllStops = false,
 }: TourDetailScreenContentProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => tourDetailScreenStyles(theme), [theme]);
@@ -317,11 +327,11 @@ export function TourDetailScreenContent({
           </AnimatedSection>
 
           <AnimatedSection delay={320}>
-            <TourDetailMap stops={tour.stops} />
+            <TourDetailMap stops={tour.stops} showAllStops={showAllStops} />
           </AnimatedSection>
 
           <AnimatedSection delay={400}>
-            <TourDetailStops stops={tour.stops} />
+            <TourDetailStops stops={tour.stops} showAllStops={showAllStops} />
           </AnimatedSection>
 
           <AnimatedSection delay={480}>
@@ -357,7 +367,7 @@ export function TourDetailScreenContent({
 }
 
 export default function TourDetailScreen({ tourId }: TourDetailScreenProps) {
-  const { tour, loading, error, fetchTour } = useTourDetailScreen(tourId);
+  const { tour, showAllStops, loading, error, fetchTour } = useTourDetailScreen(tourId);
   const { t } = useTranslation();
 
   const handleStartTour = async () => {
@@ -374,5 +384,11 @@ export default function TourDetailScreen({ tourId }: TourDetailScreenProps) {
     return <TourDetailScreenError error={error || t('tourDetail.notFound')} onRetry={fetchTour} />;
   }
 
-  return <TourDetailScreenContent tour={tour} onStartTour={handleStartTour} />;
+  return (
+    <TourDetailScreenContent
+      tour={tour}
+      onStartTour={handleStartTour}
+      showAllStops={showAllStops}
+    />
+  );
 }

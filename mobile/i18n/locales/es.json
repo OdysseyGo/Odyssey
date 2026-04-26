@@ -175,7 +175,9 @@
     "medium": "Medio",
     "hard": "Difícil",
     "readMore": "Leer más",
-    "readLess": "Leer menos"
+    "readLess": "Leer menos",
+    "lockedStopTitle": "Parada oculta",
+    "lockedStopMessage": "Inicia el tour y resuelve el puzle para revelar esta parada."
   },
   "tabs": {
     "settings": "Ajustes",

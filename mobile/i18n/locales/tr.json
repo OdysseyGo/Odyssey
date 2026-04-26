@@ -200,7 +200,9 @@
     "medium": "Orta",
     "hard": "Zor",
     "readMore": "Daha fazla oku",
-    "readLess": "Daha az göster"
+    "readLess": "Daha az göster",
+    "lockedStopTitle": "Gizli durak",
+    "lockedStopMessage": "Bu durağı açmak için tura başla ve bulmacayı çöz."
   },
   "tabs": {
     "settings": "Ayarlar",
