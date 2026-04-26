@@ -118,7 +118,10 @@ export default function ARPreviewScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: color.foreground }]}>
         <View style={styles.errorState}>
           <Text style={[styles.errorText, { color: color.text }]}>Missing AR model asset.</Text>
-          <TouchableOpacity style={[styles.closeButton, { backgroundColor: color.primary }]} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={[styles.closeButton, { backgroundColor: color.primary }]}
+            onPress={() => router.back()}
+          >
             <Text style={styles.closeButtonText}>Back</Text>
           </TouchableOpacity>
         </View>

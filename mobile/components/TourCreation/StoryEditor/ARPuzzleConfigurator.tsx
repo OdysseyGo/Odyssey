@@ -358,7 +358,10 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
               onPress={() => handlePickModel(model)}
               activeOpacity={0.85}
             >
-              <Image source={{ uri: model.preview_image_url }} style={stylesForTheme.catalogImage} />
+              <Image
+                source={{ uri: model.preview_image_url }}
+                style={stylesForTheme.catalogImage}
+              />
               <Text style={stylesForTheme.catalogName}>{model.name}</Text>
             </TouchableOpacity>
           ))}
@@ -506,7 +509,9 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
               {isScalePanelOpen ? (
                 <View style={[stylesForTheme.scalePanel, { top: insets.top + 108 }]}>
                   <Text style={stylesForTheme.scalePanelTitle}>Model Scale</Text>
-                  <Text style={stylesForTheme.scalePanelValue}>{modelScaleMeters.toFixed(2)} m</Text>
+                  <Text style={stylesForTheme.scalePanelValue}>
+                    {modelScaleMeters.toFixed(2)} m
+                  </Text>
                   <View
                     style={stylesForTheme.scaleTrack}
                     onLayout={(event) => setSliderWidth(event.nativeEvent.layout.width)}
@@ -519,15 +524,14 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
                       updateScaleFromSliderLocation(event.nativeEvent.locationX)
                     }
                   >
-                    <View style={[stylesForTheme.scaleTrackFill, { width: `${sliderRatio * 100}%` }]} />
+                    <View
+                      style={[stylesForTheme.scaleTrackFill, { width: `${sliderRatio * 100}%` }]}
+                    />
                     <View
                       style={[
                         stylesForTheme.scaleThumb,
                         {
-                          left:
-                            sliderWidth > 0
-                              ? sliderRatio * (sliderWidth - 20)
-                              : 0,
+                          left: sliderWidth > 0 ? sliderRatio * (sliderWidth - 20) : 0,
                         },
                       ]}
                     />
