@@ -264,7 +264,9 @@ class AdminARModelSerializer(serializers.ModelSerializer):
             try:
                 value = json.loads(value)
             except json.JSONDecodeError as exc:
-                raise serializers.ValidationError("anchors must be valid JSON.") from exc
+                raise serializers.ValidationError(
+                    "anchors must be valid JSON."
+                ) from exc
 
         if not isinstance(value, list):
             raise serializers.ValidationError("anchors must be a JSON array.")

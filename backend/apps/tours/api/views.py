@@ -25,8 +25,8 @@ from .filters import TourFilter
 from .pagination import TourPagination
 from .serializers import (
     DEFAULT_PICTURE_COMPARE_THRESHOLD,
-    ArPuzzleUpsertSerializer,
     ARModelSerializer,
+    ArPuzzleUpsertSerializer,
     GyroscopePuzzleUpsertSerializer,
     PictureComparePuzzleUpsertSerializer,
     PuzzleSerializer,
