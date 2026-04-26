@@ -9,6 +9,7 @@ import { puzzleEditorStyles } from './PuzzleEditor.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { useTranslation } from 'react-i18next';
+import { requiredLabel } from './requiredLabel';
 
 interface PuzzleEditorProps {
   puzzle?: Puzzle;
@@ -16,7 +17,7 @@ interface PuzzleEditorProps {
   isRequired?: boolean;
 }
 
-export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: PuzzleEditorProps) {
+export default function PuzzleEditor({ puzzle, onChange }: PuzzleEditorProps) {
   const theme = useColorTheme();
   const color = Colors[theme];
   const styles = puzzleEditorStyles();
@@ -102,7 +103,9 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
     <View style={styles.container}>
       {/* Puzzle Type Selector */}
       <View style={styles.section}>
-        <Text style={[styles.label, { color: color.text }]}>{t('creation.puzzle.type')} *</Text>
+        <Text style={[styles.label, { color: color.text }]}>
+          {requiredLabel(t('creation.puzzle.type'))}
+        </Text>
         <View style={styles.typeContainer}>
           {PUZZLE_TYPE_OPTIONS.map((type) => (
             <TouchableOpacity
@@ -133,7 +136,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
       <PuzzleQuestion
         question={currentPuzzle.question}
         onChange={(text) => handleChange('question', text)}
-        isRequired={isRequired}
+        isRequired
       />
 
       {isPictureCompare ? (
@@ -157,7 +160,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
           onRemoveOption={handleRemoveOption}
           onAddOption={handleAddOption}
           onSelectCorrect={handleSelectCorrect}
-          isRequired={isRequired}
+          isRequired
         />
       )}
 

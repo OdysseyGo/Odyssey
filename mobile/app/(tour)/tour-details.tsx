@@ -25,9 +25,18 @@ export default function TourDetailsScreen() {
     router.push('/tour-locations');
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/create-tour');
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: color.foreground }]}>
-      <CreationHeader title={t('creation.details.title')} />
+      <CreationHeader title={t('creation.details.title')} onBack={handleBack} />
       <StepIndicator steps={STEPS} currentStepIndex={0} />
       <TourDetailsStep tourData={tourData} onUpdate={updateTourData} />
       <CreationFooter

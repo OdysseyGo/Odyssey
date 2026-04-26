@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { GestureResponderEvent, View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -32,12 +32,24 @@ export default function LocationItem({
   const styles = locationItemStyles(theme);
   const color = Colors[theme];
   const { t } = useTranslation();
+  const handleActionPress = (
+    event: GestureResponderEvent,
+    action: () => void,
+    disabled?: boolean
+  ) => {
+    event.stopPropagation();
+    if (!disabled) {
+      action();
+    }
+  };
 
   return (
     <TouchableOpacity
       style={[styles.locationItem, isSelected && styles.locationItemSelected]}
       onPress={onPress}
+      activeOpacity={0.75}
     >
+      <View style={[styles.locationStatusRail, isSelected && styles.locationStatusRailSelected]} />
       <View style={styles.locationOrder}>
         <Text style={styles.locationOrderText}>{location.order}</Text>
       </View>
@@ -56,7 +68,7 @@ export default function LocationItem({
       <View style={styles.locationActions}>
         <TouchableOpacity
           style={styles.locationActionButton}
-          onPress={onReorderUp}
+          onPress={(event) => handleActionPress(event, onReorderUp, isFirst)}
           disabled={isFirst}
         >
           <Ionicons
@@ -67,8 +79,8 @@ export default function LocationItem({
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.locationActionButton}
-          onPress={onReorderDown}
-          //disabled={isLast}
+          onPress={(event) => handleActionPress(event, onReorderDown, isLast)}
+          disabled={isLast}
         >
           <Ionicons
             name="chevron-down"
@@ -76,7 +88,10 @@ export default function LocationItem({
             color={isLast ? color.foregroundSecondary : color.text}
           />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.locationActionButton} onPress={onDelete}>
+        <TouchableOpacity
+          style={styles.locationActionButton}
+          onPress={(event) => handleActionPress(event, onDelete)}
+        >
           <Ionicons name="trash-outline" size={20} color={color.error} />
         </TouchableOpacity>
       </View>

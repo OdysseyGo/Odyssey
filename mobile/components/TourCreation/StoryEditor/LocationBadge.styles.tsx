@@ -8,18 +8,34 @@ export const locationBadgeStyles = (theme: ThemeName) => {
     locationBadge: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: color.primary,
-      alignSelf: 'flex-start',
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.xs,
-      borderRadius: Spacing.borderRadius,
-      marginBottom: Spacing.lg,
+      alignSelf: 'stretch',
+    },
+    locationBadgeIcon: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      backgroundColor: color.primaryMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: Spacing.md,
+    },
+    locationBadgeIconGlyph: {
+      color: color.primary,
+    },
+    locationBadgeCopy: {
+      flex: 1,
+      minWidth: 0,
+    },
+    locationBadgeLabel: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: color.text,
+      marginBottom: 2,
     },
     locationBadgeText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: color.text,
-      marginLeft: Spacing.xs,
+      fontSize: 13,
+      fontWeight: '700',
+      color: color.subText,
     },
   });
 };

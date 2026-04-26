@@ -4,7 +4,6 @@ import MapView from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { locationPickerStyles } from './LocationPicker.styles';
-import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { TourLocation, createNewLocation } from '../TourCreation.types';
 import MapContainer from './MapContainer';
@@ -26,7 +25,6 @@ export default function LocationPicker({
 }: LocationPickerProps) {
   const theme = useColorTheme();
   const styles = locationPickerStyles(theme);
-  const color = Colors[theme];
   const mapRef = useRef<MapView>(null);
 
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
@@ -94,6 +92,10 @@ export default function LocationPicker({
   const handleReorderLocation = useCallback(
     (locationId: string, direction: 'up' | 'down') => {
       const index = locations.findIndex((loc) => loc.id === locationId);
+      if (index < 0) {
+        return;
+      }
+
       if (
         (direction === 'up' && index === 0) ||
         (direction === 'down' && index === locations.length - 1)

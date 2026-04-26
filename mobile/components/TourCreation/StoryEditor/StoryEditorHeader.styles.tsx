@@ -10,11 +10,11 @@ export const storyEditorHeaderStyles = (theme: ThemeName) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.xl,
-      backgroundColor: 'red',
+      paddingVertical: Spacing.md,
+      backgroundColor: color.foreground,
       borderBottomWidth: 1,
-      borderBottomColor: color.foregroundSecondary,
-      height: 60,
+      borderBottomColor: color.borderLight,
+      minHeight: 60,
     },
     headerTitle: {
       fontSize: 18,
@@ -23,10 +23,12 @@ export const storyEditorHeaderStyles = (theme: ThemeName) => {
     },
     headerButton: {
       padding: Spacing.sm,
+      minWidth: 56,
+      alignItems: 'center',
     },
     saveButtonText: {
-      fontWeight: '600',
-      fontSize: 16,
+      fontWeight: '800',
+      fontSize: 14,
     },
   });
 };

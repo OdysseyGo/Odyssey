@@ -17,10 +17,15 @@ export default function LocationBadge({ currentStop, totalStops }: LocationBadge
 
   return (
     <View style={styles.locationBadge}>
-      <Ionicons name="location" size={16} color="#fff" />
-      <Text style={styles.locationBadgeText}>
-        {t('creation.story.stopOf', { current: currentStop, total: totalStops })}
-      </Text>
+      <View style={styles.locationBadgeIcon}>
+        <Ionicons name="location" size={18} style={styles.locationBadgeIconGlyph} />
+      </View>
+      <View style={styles.locationBadgeCopy}>
+        <Text style={styles.locationBadgeLabel}>{t('creation.story.editLocation')}</Text>
+        <Text style={styles.locationBadgeText}>
+          {t('creation.story.stopOf', { current: currentStop, total: totalStops })}
+        </Text>
+      </View>
     </View>
   );
 }

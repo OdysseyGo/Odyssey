@@ -23,6 +23,15 @@ export default function TourLocationsScreen() {
     router.push('/tour-stories');
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/tour-details');
+  };
+
   const handleLocationsChange = useCallback(
     (locations: TourLocation[]) => {
       updateTourData({ locations });
@@ -33,14 +42,13 @@ export default function TourLocationsScreen() {
   const handleLocationSelect = useCallback(
     (location: TourLocation) => {
       setSelectedLocation(location);
-      router.push('/edit-location');
     },
     [setSelectedLocation]
   );
 
   return (
     <View style={[styles.container, { backgroundColor: color.foreground }]}>
-      <CreationHeader title={t('creation.location.title')} />
+      <CreationHeader title={t('creation.location.title')} onBack={handleBack} />
       <StepIndicator steps={STEPS} currentStepIndex={1} />
       <View style={styles.content}>
         <LocationPicker

@@ -11,16 +11,24 @@ export const locationsHeaderStyles = (theme: ThemeName) => {
       justifyContent: 'space-between',
       padding: Spacing.md,
       borderBottomWidth: 1,
-      borderBottomColor: color.foregroundSecondary,
+      borderBottomColor: color.borderLight,
+      backgroundColor: color.cardSurface,
     },
     locationsTitle: {
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: '800',
       color: color.text,
     },
     locationsCount: {
-      fontSize: 14,
-      color: color.subText,
+      fontSize: 12,
+      color: color.primary,
+      fontWeight: '800',
+      textTransform: 'uppercase',
+      backgroundColor: color.primaryMuted,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs,
+      borderRadius: 8,
+      overflow: 'hidden',
     },
   });
 };

@@ -8,6 +8,7 @@ import {
   TourCreationData,
   TourLocation,
   doesLocationMeetTourRequirements,
+  isPuzzleValid,
 } from '../TourCreation.types';
 import { useTranslation } from 'react-i18next';
 
@@ -29,6 +30,8 @@ export default function TourStoriesStep({
   const completeCount = locations.filter((location) =>
     doesLocationMeetTourRequirements(location, tourType)
   ).length;
+  const shouldShowHybridPuzzleWarning =
+    tourType === 'HYBRID' && !locations.some((location) => isPuzzleValid(location.puzzle));
 
   if (locations.length === 0) {
     return (
@@ -57,6 +60,17 @@ export default function TourStoriesStep({
           </Text>
         </View>
       </View>
+
+      {shouldShowHybridPuzzleWarning && (
+        <View style={styles.warningCard}>
+          <Ionicons name="alert-circle-outline" size={22} color={color.primary} />
+          <Text style={styles.warningText}>
+            {t('creation.stories.hybridPuzzleRequiredInline', {
+              defaultValue: 'Hybrid tours need at least one completed puzzle before review.',
+            })}
+          </Text>
+        </View>
+      )}
 
       {locations.map((location) => {
         const isComplete = doesLocationMeetTourRequirements(location, tourType);

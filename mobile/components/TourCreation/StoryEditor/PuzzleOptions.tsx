@@ -5,6 +5,7 @@ import { puzzleOptionsStyles } from './PuzzleOptions.styles';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { useTranslation } from 'react-i18next';
+import { requiredLabel } from './requiredLabel';
 
 interface PuzzleOptionsProps {
   options: string[];
@@ -32,7 +33,9 @@ export default function PuzzleOptions({
 
   return (
     <View style={styles.optionsSection}>
-      <Text style={styles.label}>{`${t('creation.puzzle.options')}${isRequired ? ' *' : ''}`}</Text>
+      <Text style={styles.label}>
+        {isRequired ? requiredLabel(t('creation.puzzle.options')) : t('creation.puzzle.options')}
+      </Text>
 
       {options.map((option, index) => (
         <View key={index} style={styles.optionRow}>

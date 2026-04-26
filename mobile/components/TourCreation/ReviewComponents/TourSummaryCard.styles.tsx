@@ -9,7 +9,6 @@ export const tourSummaryCardStyles = (theme: ThemeName) => {
       backgroundColor: color.cardSurface,
       borderRadius: 8,
       padding: Spacing.lg,
-      marginBottom: Spacing.lg,
       borderWidth: 1,
       borderColor: color.borderLight,
     },

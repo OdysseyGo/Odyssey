@@ -12,7 +12,7 @@ import {
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { useTourCreation } from '@/contexts/TourCreationContext';
-import { doesLocationMeetTourRequirements } from '@/components/TourCreation';
+import { doesTourMeetCreationRequirements } from '@/components/TourCreation';
 import { TourReviewStep } from '@/components/TourCreation/steps';
 import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
@@ -25,9 +25,7 @@ export default function TourReviewScreen() {
   const { tourData, resetTourData } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { t } = useTranslation();
-  const isReadyToSubmit = tourData.locations.every((location) =>
-    doesLocationMeetTourRequirements(location, tourData.tourType)
-  );
+  const isReadyToSubmit = doesTourMeetCreationRequirements(tourData);
 
   const handleSubmitTour = async () => {
     if (!isReadyToSubmit) {
@@ -136,9 +134,18 @@ export default function TourReviewScreen() {
     ]);
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/tour-stories');
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: color.foreground }]}>
-      <CreationHeader title={t('creation.review.title')} />
+      <CreationHeader title={t('creation.review.title')} onBack={handleBack} />
       <StepIndicator steps={STEPS} currentStepIndex={3} />
       <TourReviewStep tourData={tourData} />
       <CreationFooter

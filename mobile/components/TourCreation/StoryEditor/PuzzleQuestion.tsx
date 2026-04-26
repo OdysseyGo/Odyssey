@@ -4,6 +4,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import StoryInputField from './StoryInputField';
 import { puzzleQuestionStyles } from './PuzzleQuestion.styles';
 import { useTranslation } from 'react-i18next';
+import { requiredLabel } from './requiredLabel';
 
 interface PuzzleQuestionProps {
   question: string;
@@ -24,7 +25,9 @@ export default function PuzzleQuestion({
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>{t('creation.puzzle.challenge')}</Text>
       <StoryInputField
-        label={`${t('creation.puzzle.question')}${isRequired ? ' *' : ''}`}
+        label={
+          isRequired ? requiredLabel(t('creation.puzzle.question')) : t('creation.puzzle.question')
+        }
         value={question}
         onChangeText={onChange}
         placeholder={t('creation.puzzle.questionPlaceholder')}

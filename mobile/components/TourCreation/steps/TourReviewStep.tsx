@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView } from 'react-native';
+import { useColorTheme } from '@/utils/useColorTheme';
 import { TourCreationData } from '../TourCreation.types';
 import {
   ReviewHeader,
@@ -8,7 +9,7 @@ import {
   TourTagsList,
   LocationsListReview,
 } from '../ReviewComponents';
-import { Spacing } from '@/constants/Spacing';
+import { tourReviewStepStyles } from './TourReviewStep.styles';
 import { useTranslation } from 'react-i18next';
 
 type TourReviewStepProps = {
@@ -16,6 +17,8 @@ type TourReviewStepProps = {
 };
 
 export default function TourReviewStep({ tourData }: TourReviewStepProps) {
+  const theme = useColorTheme();
+  const styles = tourReviewStepStyles(theme);
   const { t } = useTranslation();
   // Build tags array with translated tour type, filter out empty values
   const tourTypeKey = tourData.tourType?.toLowerCase();
@@ -45,12 +48,3 @@ export default function TourReviewStep({ tourData }: TourReviewStepProps) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: Spacing.lg,
-  },
-});

@@ -140,3 +140,19 @@ export const doesLocationMeetTourRequirements = (
 
   return true;
 };
+
+export const doesTourMeetCreationRequirements = (tourData: TourCreationData): boolean => {
+  const allLocationsMeetRequirements = tourData.locations.every((location) =>
+    doesLocationMeetTourRequirements(location, tourData.tourType)
+  );
+
+  if (!allLocationsMeetRequirements) {
+    return false;
+  }
+
+  if (tourData.tourType === 'HYBRID') {
+    return tourData.locations.some((location) => isPuzzleValid(location.puzzle));
+  }
+
+  return true;
+};

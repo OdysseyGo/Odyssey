@@ -68,34 +68,42 @@ export default function StoryEditor({
       >
         <StoryEditorHeader onClose={onCancel} onSave={handleSave} isValid={isValid} />
 
-        <ScrollView style={styles.scrollContent}>
-          <LocationBadge currentStop={location.order} totalStops={totalLocations} />
+        <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.introCard}>
+            <LocationBadge currentStop={location.order} totalStops={totalLocations} />
+          </View>
 
-          <StoryInputField
-            label={t('creation.storyEditor.locationTitle')}
-            value={title}
-            onChangeText={setTitle}
-            placeholder={t('creation.storyEditor.locationTitlePlaceholder')}
-          />
+          <View style={styles.formCard}>
+            <StoryInputField
+              label={t('creation.storyEditor.locationTitle')}
+              value={title}
+              onChangeText={setTitle}
+              placeholder={t('creation.storyEditor.locationTitlePlaceholder')}
+            />
 
-          <StoryInputField
-            label={t('creation.storyEditor.address')}
-            value={address}
-            onChangeText={setAddress}
-            placeholder={t('creation.storyEditor.addressPlaceholder')}
-          />
+            <StoryInputField
+              label={t('creation.storyEditor.address')}
+              value={address}
+              onChangeText={setAddress}
+              placeholder={t('creation.storyEditor.addressPlaceholder')}
+            />
+          </View>
 
-          <ImageUploadSection image={image} onImageChange={setImage} />
+          <View style={styles.formCard}>
+            <ImageUploadSection image={image} onImageChange={setImage} />
+          </View>
 
-          <StoryInputField
-            label={t('creation.storyEditor.story')}
-            value={story}
-            onChangeText={setStory}
-            placeholder={t('creation.storyEditor.storyPlaceholder')}
-            hint={t('creation.storyEditor.storyHint')}
-            multiline
-            showCharacterCount
-          />
+          <View style={styles.formCard}>
+            <StoryInputField
+              label={t('creation.storyEditor.story')}
+              value={story}
+              onChangeText={setStory}
+              placeholder={t('creation.storyEditor.storyPlaceholder')}
+              hint={t('creation.storyEditor.storyHint')}
+              multiline
+              showCharacterCount
+            />
+          </View>
 
           <WritingTips />
         </ScrollView>

@@ -6,7 +6,7 @@ export const storyInputFieldStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     inputGroup: {
-      marginBottom: Spacing.lg,
+      marginBottom: 0,
     },
     label: {
       fontSize: 14,
@@ -20,17 +20,17 @@ export const storyInputFieldStyles = (theme: ThemeName) => {
       marginBottom: Spacing.sm,
     },
     textInput: {
-      backgroundColor: color.foregroundSecondary,
+      backgroundColor: color.background,
       borderWidth: 1,
-      borderColor: color.border,
-      borderRadius: Spacing.borderRadius,
+      borderColor: color.borderLight,
+      borderRadius: 8,
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.md,
       fontSize: 16,
       color: color.text,
     },
     multilineInput: {
-      minHeight: 200,
+      minHeight: 180,
       textAlignVertical: 'top',
       lineHeight: 24,
     },
@@ -39,6 +39,7 @@ export const storyInputFieldStyles = (theme: ThemeName) => {
       color: color.subText,
       textAlign: 'right',
       marginTop: Spacing.xs,
+      fontWeight: '600',
     },
   });
 };

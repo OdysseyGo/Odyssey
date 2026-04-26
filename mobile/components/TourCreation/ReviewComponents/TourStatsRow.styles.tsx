@@ -10,7 +10,6 @@ export const tourStatsRowStyles = (theme: ThemeName) => {
       backgroundColor: color.cardSurface,
       borderRadius: 8,
       padding: Spacing.sm,
-      marginBottom: Spacing.lg,
       borderWidth: 1,
       borderColor: color.borderLight,
       gap: Spacing.sm,
@@ -22,20 +21,24 @@ export const tourStatsRowStyles = (theme: ThemeName) => {
       borderRadius: 8,
       paddingVertical: Spacing.md,
       paddingHorizontal: Spacing.xs,
+      minHeight: 86,
+      justifyContent: 'center',
     },
     statIcon: {
       color: color.primary,
       marginBottom: Spacing.xs,
     },
     statValue: {
-      fontSize: 18,
+      fontSize: 16,
       fontWeight: '800',
       color: color.primary,
+      textAlign: 'center',
     },
     statLabel: {
       fontSize: 12,
       color: color.subText,
       marginTop: Spacing.xs,
+      textAlign: 'center',
     },
   });
 };

@@ -9,7 +9,6 @@ export const tourTagsListStyles = (theme: ThemeName) => {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: Spacing.sm,
-      marginBottom: Spacing.lg,
     },
     tag: {
       paddingHorizontal: Spacing.md,

@@ -10,8 +10,10 @@ export const instructionBannerStyles = (theme: ThemeName) => {
       top: Spacing.md,
       left: Spacing.md,
       right: Spacing.md,
-      backgroundColor: color.foreground,
-      borderRadius: Spacing.borderRadius,
+      backgroundColor: color.cardSurface,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: color.borderLight,
       padding: Spacing.md,
       flexDirection: 'row',
       alignItems: 'center',
@@ -24,8 +26,9 @@ export const instructionBannerStyles = (theme: ThemeName) => {
     instructionText: {
       flex: 1,
       fontSize: 14,
-      color: color.text,
+      color: color.subText,
       marginLeft: Spacing.sm,
+      lineHeight: 20,
     },
   });
 };

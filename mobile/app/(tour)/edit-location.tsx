@@ -12,6 +12,7 @@ import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditor
 import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
 import { CreationHeader } from '@/components/TourCreation/common';
 import { Puzzle, doesLocationMeetTourRequirements } from '@/components/TourCreation';
+import { Spacing } from '@/constants/Spacing';
 import { useTranslation } from 'react-i18next';
 
 export default function EditLocationScreen() {
@@ -190,6 +191,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContainer: {
-    padding: 16,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xl,
+    gap: Spacing.md,
   },
 });

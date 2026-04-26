@@ -6,7 +6,11 @@ export const locationsListReviewStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     container: {
-      marginTop: Spacing.lg,
+      backgroundColor: color.cardSurface,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: color.borderLight,
+      padding: Spacing.lg,
     },
     title: {
       fontSize: 18,
@@ -15,7 +19,7 @@ export const locationsListReviewStyles = (theme: ThemeName) => {
       marginBottom: Spacing.md,
     },
     locationCard: {
-      backgroundColor: color.cardSurface,
+      backgroundColor: color.background,
       borderRadius: 8,
       padding: Spacing.lg,
       marginBottom: Spacing.md,

@@ -6,7 +6,7 @@ export const locationPickerStyles = (theme: ThemeName) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: color.foreground,
+      backgroundColor: color.background,
     },
   });
 };

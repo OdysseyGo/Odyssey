@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { Alert, View, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -7,6 +7,7 @@ import { useTourCreation } from '@/contexts/TourCreationContext';
 import {
   TourLocation,
   doesLocationMeetTourRequirements,
+  isPuzzleValid,
 } from '@/components/TourCreation/TourCreation.types';
 import { TourStoriesStep } from '@/components/TourCreation/steps';
 import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
@@ -20,12 +21,37 @@ export default function TourStoriesScreen() {
   const { tourData, setSelectedLocation } = useTourCreation();
   const { t } = useTranslation();
 
-  const canProceed = tourData.locations.every((loc) =>
+  const locationsReady = tourData.locations.every((loc) =>
     doesLocationMeetTourRequirements(loc, tourData.tourType)
   );
+  const hasHybridPuzzle =
+    tourData.tourType !== 'HYBRID' ||
+    tourData.locations.some((location) => isPuzzleValid(location.puzzle));
 
   const handleNext = () => {
+    if (!hasHybridPuzzle) {
+      Alert.alert(
+        t('creation.stories.hybridPuzzleRequiredTitle', {
+          defaultValue: 'Add at least one puzzle',
+        }),
+        t('creation.stories.hybridPuzzleRequiredMessage', {
+          defaultValue:
+            'Hybrid tours need at least one location with a completed puzzle before review.',
+        })
+      );
+      return;
+    }
+
     router.push('/tour-review');
+  };
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/tour-locations');
   };
 
   const handleLocationSelect = useCallback(
@@ -38,7 +64,7 @@ export default function TourStoriesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: color.foreground }]}>
-      <CreationHeader title={t('creation.stories.title')} />
+      <CreationHeader title={t('creation.stories.title')} onBack={handleBack} />
       <StepIndicator steps={STEPS} currentStepIndex={2} />
       <TourStoriesStep
         locations={tourData.locations}
@@ -48,7 +74,7 @@ export default function TourStoriesScreen() {
       <CreationFooter
         buttonText={t('creation.continue')}
         onPress={handleNext}
-        disabled={!canProceed}
+        disabled={!locationsReady}
       />
     </View>
   );

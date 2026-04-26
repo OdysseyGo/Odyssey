@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, ScrollView, Alert } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { locationsListStyles } from './LocationsList.styles';
@@ -26,16 +26,40 @@ export default function LocationsList({
   const theme = useColorTheme();
   const styles = locationsListStyles(theme);
   const { t } = useTranslation();
+  const deleteAlertOpenRef = useRef(false);
 
   const handleDelete = (locationId: string) => {
-    Alert.alert(t('creation.location.deleteTitle'), t('creation.location.deleteMessage'), [
-      { text: t('creation.location.cancel'), style: 'cancel' },
+    if (deleteAlertOpenRef.current) {
+      return;
+    }
+
+    deleteAlertOpenRef.current = true;
+    Alert.alert(
+      t('creation.location.deleteTitle'),
+      t('creation.location.deleteMessage'),
+      [
+        {
+          text: t('creation.location.cancel'),
+          style: 'cancel',
+          onPress: () => {
+            deleteAlertOpenRef.current = false;
+          },
+        },
+        {
+          text: t('creation.location.delete'),
+          style: 'destructive',
+          onPress: () => {
+            deleteAlertOpenRef.current = false;
+            onDeleteLocation(locationId);
+          },
+        },
+      ],
       {
-        text: t('creation.location.delete'),
-        style: 'destructive',
-        onPress: () => onDeleteLocation(locationId),
-      },
-    ]);
+        onDismiss: () => {
+          deleteAlertOpenRef.current = false;
+        },
+      }
+    );
   };
 
   return (
