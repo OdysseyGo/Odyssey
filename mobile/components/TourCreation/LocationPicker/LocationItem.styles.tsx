@@ -34,11 +34,13 @@ export const locationItemStyles = (theme: ThemeName) => {
     },
     locationInfo: {
       flex: 1,
+      minWidth: 0,
     },
     locationTitle: {
       fontSize: 14,
       fontWeight: '600',
       color: color.text,
+      flexShrink: 1,
     },
     locationTitlePlaceholder: {
       color: color.subText,

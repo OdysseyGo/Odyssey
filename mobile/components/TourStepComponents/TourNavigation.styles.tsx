@@ -135,5 +135,60 @@ export default function getStyles(theme: ThemeName) {
     locationButtonConfirmed: {
       backgroundColor: color.primary,
     },
+
+    modalBackdrop: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: color.overlay,
+    },
+    modalDismissArea: {
+      flex: 1,
+    },
+    modalCard: {
+      backgroundColor: color.background,
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.lg,
+      paddingBottom: Spacing.xl,
+      borderTopLeftRadius: Spacing.xl,
+      borderTopRightRadius: Spacing.xl,
+      gap: Spacing.sm,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: color.text,
+    },
+    modalSubtitle: {
+      fontSize: 14,
+      color: color.subText,
+      marginBottom: Spacing.sm,
+    },
+    providerButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: color.foregroundSecondary,
+      borderRadius: Spacing.borderRadius,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+    },
+    providerIcon: {
+      marginRight: Spacing.sm,
+    },
+    providerButtonText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: color.text,
+    },
+    modalCancelButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: Spacing.md,
+      marginTop: Spacing.sm,
+    },
+    modalCancelText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: color.primary,
+    },
   });
 }

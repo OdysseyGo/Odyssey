@@ -1,4 +1,4 @@
-export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE';
+export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE';
 
 export interface Puzzle {
   puzzle_type: PuzzleType;
@@ -7,12 +7,18 @@ export interface Puzzle {
   correctAnswer: string;
   hint: string;
   xp_reward: number;
+  referenceImage?: string;
 }
 
 export const PUZZLE_TYPE_OPTIONS = [
   { value: 'TRIVIA', label: 'Trivia', description: 'Multiple choice question' },
   { value: 'AR', label: 'AR Challenge', description: 'Augmented reality experience' },
   { value: 'GYROSCOPE', label: 'Gyroscope', description: 'Motion-based challenge' },
+  {
+    value: 'PICTURE_COMPARE',
+    label: 'Picture Compare',
+    description: 'Match a reference photo in real life',
+  },
 ] as const;
 
 export const createEmptyPuzzle = (): Puzzle => ({
@@ -98,3 +104,41 @@ export const createNewLocation = (
   story: '',
   order,
 });
+
+export const isPuzzleValid = (puzzle?: Puzzle): boolean => {
+  if (!puzzle?.question.trim()) {
+    return false;
+  }
+
+  if (puzzle.puzzle_type === 'PICTURE_COMPARE') {
+    return !!puzzle.referenceImage;
+  }
+
+  if (puzzle.puzzle_type === 'TRIVIA') {
+    const options = puzzle.options.map((option) => option.trim()).filter(Boolean);
+    return options.length >= 2 && options.includes(puzzle.correctAnswer.trim());
+  }
+
+  return true;
+};
+
+export const doesLocationMeetTourRequirements = (
+  location: Pick<TourLocation, 'title' | 'story' | 'puzzle'>,
+  tourType: TourCreationData['tourType']
+): boolean => {
+  const hasCoreContent = location.title.trim().length > 0 && location.story.trim().length > 0;
+
+  if (!hasCoreContent) {
+    return false;
+  }
+
+  if (tourType === 'PUZZLE') {
+    return isPuzzleValid(location.puzzle);
+  }
+
+  if (tourType === 'HYBRID') {
+    return !location.puzzle || isPuzzleValid(location.puzzle);
+  }
+
+  return true;
+};

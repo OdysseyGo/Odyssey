@@ -133,6 +133,11 @@
     "feedModalCancel": "Cancel",
     "userProfileFollow": "Follow",
     "userProfileUnfollow": "Unfollow",
+    "loginToFollow": "Log in to follow",
+    "loginToFollowTitle": "Login Required",
+    "loginToFollowMessage": "You need to log in to follow this user.",
+    "socialLoginRequiredTitle": "Login Required",
+    "socialLoginRequiredMessage": "You need to log in to view followers and following.",
     "userProfileError": "Could not load this profile",
     "chooseAvatar": "Choose Your Avatar",
     "avatarStyle": "Style",
@@ -185,6 +190,7 @@
     "notFound": "Tour not found",
     "reviews": "Reviews",
     "noReviews": "No reviews found for this tour.",
+    "loginToViewReviews": "Log in to view reviews.",
     "aboutThisTour": "About this tour",
     "createdBy": "Created by",
     "following": "Following",
@@ -220,6 +226,10 @@
       "notifications": {
         "label": "Notifications",
         "description": "Manage notification preferences"
+      },
+      "logout": {
+        "label": "Logout",
+        "description": "Sign out of your account"
       },
       "privacy": {
         "label": "Privacy",
@@ -309,6 +319,8 @@
     "ok": "OK",
     "errorTitle": "Error",
     "errorMessage": "Failed to submit tour. Please try again.",
+    "incompletePuzzleTitle": "Complete required puzzles",
+    "incompletePuzzleMessage": "Puzzle tours need a valid puzzle at every location before submission.",
     "method": {
       "title": "Create Your Tour",
       "subtitle": "Choose how you want to create your tour experience",
@@ -536,7 +548,32 @@
     "activeTour": {
       "stepOf": "Step {{current}} of {{total}}",
       "end": "End",
-      "skip": "SKIP"
+      "skip": "SKIP",
+      "route": "Route",
+      "directions": "Directions",
+      "openIn": "Open this stop in",
+      "appleMaps": "Apple Maps",
+      "googleMaps": "Google Maps",
+      "yandexMaps": "Yandex Maps",
+      "directionsUnavailableMessage": "Could not open directions right now. Please try again."
+    },
+    "nearby": {
+      "title_one": "{{count}} tour nearby",
+      "title_other": "{{count}} tours nearby",
+      "areaTitle_one": "{{count}} tour in this area",
+      "areaTitle_other": "{{count}} tours in this area",
+      "searching": "Searching nearby...",
+      "radius": "Within 500 m of your tap",
+      "areaSubtitle": "Tours starting in the visible map area",
+      "emptyTitle": "No tours here",
+      "emptySubtitle": "Try tapping a different spot or explore a busier area.",
+      "duration_one": "{{count}} min",
+      "duration_other": "{{count}} min"
+    },
+    "searchMode": {
+      "searchHere": "Search here",
+      "stopDragging": "Stop dragging to search",
+      "zoomIn": "Zoom in to search"
     }
   },
   "friends": {

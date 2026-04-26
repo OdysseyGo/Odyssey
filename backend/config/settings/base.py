@@ -161,16 +161,45 @@ USE_I18N = True
 
 USE_TZ = True
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # DEV only
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8081",  # Typical Expo/React Native local port
-    "http://127.0.0.1:8081",
-]
 
-csrf_origins = os.getenv("CSRF_TRUSTED_ORIGINS", "")
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip() for origin in csrf_origins.split(",") if origin.strip()
-]
+def parse_csv_env(name: str, default: list[str] | None = None) -> list[str]:
+    value = os.getenv(name, "")
+    if value:
+        return [item.strip() for item in value.split(",") if item.strip()]
+    return default or []
+
+
+# DEV only: allow all origins when DEBUG=True
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+# Used when DEBUG=False, or whenever CORS_ALLOW_ALL_ORIGINS=False
+CORS_ALLOWED_ORIGINS = parse_csv_env(
+    "CORS_ALLOWED_ORIGINS",
+    default=(
+        [
+            "http://localhost:5173",  # Vite admin dashboard dev server
+            "http://127.0.0.1:5173",
+            "http://localhost:8081",  # Expo/React Native local port
+            "http://127.0.0.1:8081",
+        ]
+        if DEBUG
+        else []
+    ),
+)
+
+CSRF_TRUSTED_ORIGINS = parse_csv_env(
+    "CSRF_TRUSTED_ORIGINS",
+    default=(
+        [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:8081",
+            "http://127.0.0.1:8081",
+        ]
+        if DEBUG
+        else []
+    ),
+)
 
 # If we are in DEBUG mode, add the local dev URLs automatically
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

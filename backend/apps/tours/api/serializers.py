@@ -1,25 +1,176 @@
 from rest_framework import serializers
 
-from apps.tours.models import Puzzle, Review, Tour, TourStep
+from apps.tours.models import (
+    ArPuzzleDetail,
+    GyroscopePuzzleDetail,
+    PictureComparePuzzleDetail,
+    Puzzle,
+    Review,
+    Tour,
+    TourStep,
+    TriviaPuzzleDetail,
+)
 from apps.users.api.serializers import UserSerializer
+
+DEFAULT_PICTURE_COMPARE_THRESHOLD = 0.7
+
+
+class TriviaPuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TriviaPuzzleDetail
+        fields = ["options", "correct_answer"]
+
+
+class PictureComparePuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PictureComparePuzzleDetail
+        fields = ["reference_image", "similarity_threshold"]
+
+
+class ArPuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArPuzzleDetail
+        fields = ["scene_asset_url", "metadata"]
+
+
+class GyroscopePuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GyroscopePuzzleDetail
+        fields = ["target_pitch", "target_roll", "target_yaw", "tolerance_degrees"]
+
+
+class PuzzleBaseUpsertSerializer(serializers.Serializer):
+    question = serializers.CharField()
+    hint = serializers.CharField(required=False, allow_blank=True, default="")
+    xp_reward = serializers.IntegerField(required=False, min_value=0, default=10)
+
+
+class TriviaPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
+    options = serializers.ListField(child=serializers.CharField(), min_length=2)
+    correct_answer = serializers.CharField()
+
+    def validate(self, attrs):
+        options = [option.strip() for option in attrs["options"] if option.strip()]
+        if len(options) < 2:
+            raise serializers.ValidationError(
+                {"options": "TRIVIA puzzles require at least two non-empty options."}
+            )
+
+        if attrs["correct_answer"] not in options:
+            raise serializers.ValidationError(
+                {
+                    "correct_answer": (
+                        "correct_answer must match one of the provided options."
+                    )
+                }
+            )
+
+        attrs["options"] = options
+        return attrs
+
+
+class PictureComparePuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
+    reference_image = serializers.ImageField(required=False)
+    similarity_threshold = serializers.FloatField(
+        required=False,
+        min_value=0.0,
+        max_value=1.0,
+    )
+
+    def validate(self, attrs):
+        step = self.context.get("step")
+        if not step:
+            return attrs
+
+        existing_puzzle = getattr(step, "puzzle", None)
+        if existing_puzzle is None:
+            if not attrs.get("reference_image"):
+                raise serializers.ValidationError(
+                    {
+                        "reference_image": (
+                            "reference_image is required when creating "
+                            "PICTURE_COMPARE puzzles."
+                        )
+                    }
+                )
+            return attrs
+
+        has_image = attrs.get("reference_image")
+        if not has_image:
+            detail = getattr(existing_puzzle, "picture_compare_detail", None)
+            has_image = bool(detail and detail.reference_image)
+
+        if not has_image:
+            raise serializers.ValidationError(
+                {
+                    "reference_image": (
+                        "reference_image is required for PICTURE_COMPARE puzzles."
+                    )
+                }
+            )
+
+        return attrs
+
+
+class ArPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
+    scene_asset_url = serializers.URLField(required=False, allow_blank=True)
+    metadata = serializers.JSONField(required=False)
+
+
+class GyroscopePuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
+    target_pitch = serializers.FloatField(required=False, default=0.0)
+    target_roll = serializers.FloatField(required=False, default=0.0)
+    target_yaw = serializers.FloatField(required=False, default=0.0)
+    tolerance_degrees = serializers.FloatField(required=False, default=15.0)
 
 
 class PuzzleSerializer(serializers.ModelSerializer):
+    trivia = serializers.SerializerMethodField()
+    picture_compare = serializers.SerializerMethodField()
+    ar = serializers.SerializerMethodField()
+    gyroscope = serializers.SerializerMethodField()
+
+    def get_trivia(self, obj):
+        detail = getattr(obj, "trivia_detail", None)
+        if detail is None or obj.puzzle_type != Puzzle.TRIVIA:
+            return None
+        return TriviaPuzzleDetailSerializer(detail, context=self.context).data
+
+    def get_picture_compare(self, obj):
+        detail = getattr(obj, "picture_compare_detail", None)
+        if detail is None or obj.puzzle_type != Puzzle.PICTURE_COMPARE:
+            return None
+        return PictureComparePuzzleDetailSerializer(detail, context=self.context).data
+
+    def get_ar(self, obj):
+        detail = getattr(obj, "ar_detail", None)
+        if detail is None:
+            return None
+        return ArPuzzleDetailSerializer(detail, context=self.context).data
+
+    def get_gyroscope(self, obj):
+        detail = getattr(obj, "gyroscope_detail", None)
+        if detail is None:
+            return None
+        return GyroscopePuzzleDetailSerializer(detail, context=self.context).data
+
     class Meta:
         model = Puzzle
         fields = [
             "id",
             "puzzle_type",
             "question",
-            "options",
-            "correct_answer",
             "hint",
             "xp_reward",
+            "trivia",
+            "picture_compare",
+            "ar",
+            "gyroscope",
         ]
 
 
 class TourStepSerializer(serializers.ModelSerializer):
-    puzzle = PuzzleSerializer(required=False)
+    puzzle = PuzzleSerializer(read_only=True)
 
     class Meta:
         model = TourStep
@@ -34,32 +185,6 @@ class TourStepSerializer(serializers.ModelSerializer):
             "audio",
             "puzzle",
         ]
-
-    def create(self, validated_data):
-        puzzle_data = validated_data.pop("puzzle", None)
-        step = TourStep.objects.create(**validated_data)
-        if puzzle_data:
-            Puzzle.objects.create(step=step, **puzzle_data)
-        return step
-
-    def update(self, instance, validated_data):
-        puzzle_data = validated_data.pop("puzzle", None)
-
-        # Update step fields
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-
-        # Update or create puzzle
-        if puzzle_data:
-            if hasattr(instance, "puzzle"):
-                for attr, value in puzzle_data.items():
-                    setattr(instance.puzzle, attr, value)
-                instance.puzzle.save()
-            else:
-                Puzzle.objects.create(step=instance, **puzzle_data)
-
-        return instance
 
 
 class ReviewSerializer(serializers.ModelSerializer):
