@@ -41,6 +41,7 @@ from apps.admin_dashboard.services.analytics import AnalyticsService
 from apps.gamification.models import PictureCompareConfig, TourProgress
 from apps.gamification.picture_compare import compare_picture_similarity
 from apps.tours.models import Review, Tour
+from apps.tours.utils import GoogleMapsFacade
 from apps.users.models import User
 
 # ── User Management ──────────────────────────────────────────────────
@@ -168,7 +169,7 @@ class AdminTourViewSet(ModelViewSet):
     pagination_class = AdminPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = AdminTourFilter
-    search_fields = ["title", "description", "category", "city"]
+    search_fields = ["title", "description", "category", "city", "country"]
     ordering_fields = ["created_at", "title", "avg_rating", "completion_count"]
     ordering = ["-created_at"]
     http_method_names = ["get", "delete", "post", "head", "options"]
@@ -193,6 +194,40 @@ class AdminTourViewSet(ModelViewSet):
     @action(detail=True, methods=["post"], url_path="approve")
     def approve(self, request, pk=None):
         tour = self.get_object()
+        city_latitude = request.data.get("city_latitude")
+        city_longitude = request.data.get("city_longitude")
+        if not tour.city:
+            return Response(
+                {"city": "City is required before publishing a tour."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if city_latitude is None or city_longitude is None:
+            return Response(
+                {"city": "City coordinates are required before publishing a tour."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            city_latitude = float(city_latitude)
+            city_longitude = float(city_longitude)
+        except (TypeError, ValueError):
+            return Response(
+                {"city": "City coordinates are invalid."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not tour.steps.exists():
+            return Response(
+                {"steps": "At least one tour stop is required before publishing."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not GoogleMapsFacade().tour_has_step_in_city(
+            tour,
+            city_latitude=city_latitude,
+            city_longitude=city_longitude,
+        ):
+            return Response(
+                {"city": "At least one tour stop must be inside the selected city."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         tour.status = Tour.PUBLISHED
         tour.save(update_fields=["status"])
         return Response({"detail": "Tour approved and published."})

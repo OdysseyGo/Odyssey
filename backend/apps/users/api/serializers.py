@@ -73,6 +73,8 @@ class FollowingFeedSerializer(serializers.Serializer):
             "difficulty": tour.difficulty,
             "duration_minutes": tour.duration_minutes,
             "city": tour.city,
+            "country": tour.country,
+            "country_code": tour.country_code,
             "cover_image": tour.cover_image.url if tour.cover_image else None,
             "created_at": tour.created_at,
         }
