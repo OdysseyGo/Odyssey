@@ -27,7 +27,8 @@ import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
 import AvatarSelectionModal from '@/components/ProfileComponents/AvatarSelectionModal';
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import { getMe, User } from '@/api/users';
-import { getMyBadges, Badge } from '@/api/profile';
+import { getMyBadges, getLevelInfo, Badge, LevelInfo } from '@/api/profile';
+import { computeLevelInfo, getLevelTier } from '@/utils/levelConfig';
 import { removeAuthToken } from '@/api/auth';
 import { consumeProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -350,6 +351,7 @@ const guestStyles = StyleSheet.create({
 
 export default function Profile() {
   const [curUser, setCurUser] = useState<User | null>(null);
+  const [levelInfo, setLevelInfo] = useState<LevelInfo | null>(null);
   const [badgesCount, setBadgesCount] = useState(0);
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
@@ -389,12 +391,16 @@ export default function Profile() {
     setHasToken(true);
     setFetchError(false);
     try {
-      const user = await getMe();
-      const badgesResponse = await getMyBadges();
+      const [user, badgesResponse, levelData] = await Promise.all([
+        getMe(),
+        getMyBadges(),
+        getLevelInfo(),
+      ]);
       startTransition(() => {
         setCurUser(user);
         setBadgesCount(badgesResponse.count);
         setBadges(badgesResponse.results);
+        setLevelInfo(levelData);
       });
       lastRefreshed.current = Date.now();
     } catch (err) {
@@ -480,6 +486,8 @@ export default function Profile() {
   }
 
   // ─── Profile data ─────────────────────────────────────
+  const effectiveLevelInfo = levelInfo ?? computeLevelInfo(curUser.xp);
+  const effectiveLevelTier = getLevelTier(effectiveLevelInfo.level);
 
   const profileHeader = {
     title: curUser.username,
@@ -488,6 +496,12 @@ export default function Profile() {
     onAvatarPress: () => setShowAvatarModal(true),
     onSettingsPress: () => setShowSettings(true),
     settingsAccessibilityLabel: t('tabs.settings'),
+    level: effectiveLevelInfo.level,
+    levelTitle: effectiveLevelInfo.title,
+    xpProgressPercent: effectiveLevelInfo.xp_progress_percent,
+    currentXp: effectiveLevelInfo.current_xp,
+    xpForCurrentLevel: effectiveLevelInfo.xp_for_current_level,
+    xpForNextLevel: effectiveLevelInfo.xp_for_next_level,
   };
 
   const profileStats = {
@@ -530,7 +544,7 @@ export default function Profile() {
           {
             paddingTop: insets.top,
             height: insets.top + 52,
-            backgroundColor: theme.primary,
+            backgroundColor: effectiveLevelTier.gradient[1],
             opacity: stickyOpacity,
           },
         ]}
@@ -630,6 +644,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg + 2,
     gap: Spacing.md,
   },
+
 });
 
 const errorStyles = StyleSheet.create({

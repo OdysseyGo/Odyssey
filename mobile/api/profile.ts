@@ -21,3 +21,18 @@ export const getMyBadges = () =>
     method: 'get',
     url: `/api/my-badges/`,
   });
+
+export type LevelInfo = {
+  level: number;
+  title: string;
+  current_xp: number;
+  xp_for_current_level: number;
+  xp_for_next_level: number;
+  xp_progress_percent: number;
+};
+
+export const getLevelInfo = () =>
+  apiRequest<LevelInfo>({
+    method: 'get',
+    url: `/api/level-info/`,
+  });

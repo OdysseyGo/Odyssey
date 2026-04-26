@@ -5,7 +5,9 @@ from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from apps.gamification.level_service import LevelService
 from apps.gamification.models import (
     Badge,
     PictureCompareConfig,
@@ -163,6 +165,7 @@ class TourProgressViewSet(
                 progress.save()
 
                 user.xp += progress.total_xp
+                user.level = LevelService.get_level(user.xp)
                 user.tour_count += 1
                 user.save()
 
@@ -332,3 +335,10 @@ class TourProgressViewSet(
 
         serializer = self.get_serializer(active_progress)
         return Response(serializer.data)
+
+
+class LevelInfoView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        return Response(LevelService.get_level_info(request.user.xp))

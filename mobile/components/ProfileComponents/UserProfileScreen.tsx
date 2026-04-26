@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, View, Text, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
+import { Alert, View, Text, TouchableOpacity, ActivityIndicator, Animated, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import {
   getUserById,
@@ -19,6 +20,7 @@ import { Tour } from '@/api/tours';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { computeLevelInfo, getLevelTier } from '@/utils/levelConfig';
 import { userProfileStyles } from './UserProfileScreen.styles';
 import ProfileHeaderComp from './ProfileHeaderComp';
 import ProfileStatsComp from './ProfileStatsComp';
@@ -286,6 +288,8 @@ export default function UserProfileScreen() {
   // ── Profile ────────────────────────────────────────────
 
   const isSelf = currentUserId === user.id;
+  const levelInfo = computeLevelInfo(user.xp);
+  const stickyGradientColors = getLevelTier(levelInfo.level).gradient;
 
   return (
     <View style={styles.root}>
@@ -304,11 +308,17 @@ export default function UserProfileScreen() {
           {
             paddingTop: insets.top,
             height: insets.top + 52,
-            backgroundColor: color.primary,
             opacity: stickyOpacity,
           },
         ]}
       >
+        <LinearGradient
+          colors={stickyGradientColors}
+          locations={[0, 0.55, 1]}
+          start={{ x: 0.1, y: 0 }}
+          end={{ x: 0.9, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
         <Text style={styles.stickyBarText}>{user.username}</Text>
       </Animated.View>
 
@@ -326,6 +336,12 @@ export default function UserProfileScreen() {
           subtitle={user.country}
           avatarUrl={user.avatar_url || undefined}
           scrollY={scrollY}
+          level={levelInfo.level}
+          levelTitle={levelInfo.title}
+          xpProgressPercent={levelInfo.xp_progress_percent}
+          currentXp={levelInfo.current_xp}
+          xpForCurrentLevel={levelInfo.xp_for_current_level}
+          xpForNextLevel={levelInfo.xp_for_next_level}
         />
 
         {/* Stats card — overlaps the header via its built-in marginTop: -32 */}

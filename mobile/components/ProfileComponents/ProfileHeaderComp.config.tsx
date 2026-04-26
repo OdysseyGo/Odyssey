@@ -8,6 +8,12 @@ export type ProfileHeaderProps = {
   onSettingsPress?: () => void;
   settingsAccessibilityLabel?: string;
   scrollY?: Animated.Value;
+  level?: number;
+  levelTitle?: string;
+  xpProgressPercent?: number;
+  currentXp?: number;
+  xpForCurrentLevel?: number;
+  xpForNextLevel?: number;
 };
 
 export const exampleProfileHeader: ProfileHeaderProps = {
