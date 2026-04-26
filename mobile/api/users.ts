@@ -235,6 +235,14 @@ export const removeFollower = (followerId: number) =>
   });
 
 /**
+ * GET /api/users/{id}/published-tours/ - Get published tours created by the given user
+ */
+export const getUserPublishedTours = (id: string) =>
+  apiRequest<import('./tours').Tour[]>({
+    url: `/api/users/${id}/published-tours/`,
+  });
+
+/**
  * GET /api/users/{id}/followers/ - Get users who follow the given user
  */
 export const getUserFollowers = (id: string) =>
