@@ -1,14 +1,8 @@
-export function getFirstPuzzleIndex<T>(
-  steps: T[],
-  isPuzzleStep: (step: T) => boolean
-): number {
+export function getFirstPuzzleIndex<T>(steps: T[], isPuzzleStep: (step: T) => boolean): number {
   return steps.findIndex(isPuzzleStep);
 }
 
-export function getStepsThroughFirstPuzzle<T>(
-  steps: T[],
-  isPuzzleStep: (step: T) => boolean
-): T[] {
+export function getStepsThroughFirstPuzzle<T>(steps: T[], isPuzzleStep: (step: T) => boolean): T[] {
   const firstPuzzleIndex = getFirstPuzzleIndex(steps, isPuzzleStep);
 
   if (firstPuzzleIndex === -1) {

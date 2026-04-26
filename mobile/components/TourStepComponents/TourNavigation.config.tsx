@@ -110,9 +110,7 @@ export function getVisibleRoute(
 
     const currentVisible = step.type !== 'puzzle' || solvedSteps.has(step.id);
     const nextVisible =
-      i + 1 <= revealLimit ||
-      nextStep.type !== 'puzzle' ||
-      solvedSteps.has(nextStep.id);
+      i + 1 <= revealLimit || nextStep.type !== 'puzzle' || solvedSteps.has(nextStep.id);
 
     if (currentVisible && route.length === 0) {
       route.push(step.coordinate);

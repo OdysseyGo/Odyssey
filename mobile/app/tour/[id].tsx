@@ -84,5 +84,12 @@ export default function TourDetailPage() {
     return <TourDetailScreenError error={error || 'Tour not found'} onRetry={fetchTour} />;
   }
 
-  return <TourDetailScreenContent tour={tour} onStartTour={handleStartTour} starting={starting} showAllStops={showAllStops} />;
+  return (
+    <TourDetailScreenContent
+      tour={tour}
+      onStartTour={handleStartTour}
+      starting={starting}
+      showAllStops={showAllStops}
+    />
+  );
 }
