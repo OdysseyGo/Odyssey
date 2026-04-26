@@ -2,9 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import {
   Animated,
   PanResponder,
-  Platform,
   Pressable,
-  StyleSheet,
   Text,
   View,
   useWindowDimensions,
@@ -16,18 +14,23 @@ import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { useColorTheme } from '@/utils/useColorTheme';
 
-const BAR_INNER_PADDING = 4;
-const BAR_HEIGHT = 62;
-const ACTIVE_CONTENT_COLOR = '#020617';
-export const ODYSSEY_TAB_BAR_FLOATING_HEIGHT = BAR_HEIGHT;
+import {
+  ODYSSEY_TAB_BAR_ACTIVE_CONTENT_COLOR,
+  ODYSSEY_TAB_BAR_FLOATING_HEIGHT,
+  ODYSSEY_TAB_BAR_INNER_PADDING,
+} from './OdysseyTabBar.config';
+import { odysseyTabBarStyles } from './OdysseyTabBar.styles';
+
+export { ODYSSEY_TAB_BAR_FLOATING_HEIGHT };
 
 export default function OdysseyTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const themeName = useColorTheme();
   const colors = Colors[themeName];
-  const activeContentColor = themeName === 'light' ? colors.white : ACTIVE_CONTENT_COLOR;
+  const activeContentColor =
+    themeName === 'light' ? colors.white : ODYSSEY_TAB_BAR_ACTIVE_CONTENT_COLOR;
   const insets = useSafeAreaInsets();
   const safeAreaBottom = Math.max(insets.bottom, Spacing.sm);
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => odysseyTabBarStyles(colors), [colors]);
   const { width } = useWindowDimensions();
   const barWidth = width;
 
@@ -47,7 +50,7 @@ export default function OdysseyTabBar({ state, descriptors, navigation }: Bottom
 
   const tabWidth = useMemo(() => {
     if (visibleRoutes.length === 0) return 0;
-    return (barWidth - BAR_INNER_PADDING * 2) / visibleRoutes.length;
+    return (barWidth - ODYSSEY_TAB_BAR_INNER_PADDING * 2) / visibleRoutes.length;
   }, [barWidth, visibleRoutes.length]);
 
   // Keep fresh refs so pan responder callbacks never read stale values
@@ -217,86 +220,3 @@ export default function OdysseyTabBar({ state, descriptors, navigation }: Bottom
     </View>
   );
 }
-
-const createStyles = (colors: (typeof Colors)['light']) =>
-  StyleSheet.create({
-    outerWrap: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 40,
-    },
-    shell: {
-      width: '100%',
-      backgroundColor: colors.cardSurface,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.borderLight,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.text,
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.07,
-          shadowRadius: 8,
-        },
-        android: { elevation: 10 },
-      }),
-    },
-    innerBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      height: BAR_HEIGHT,
-      paddingHorizontal: BAR_INNER_PADDING,
-      position: 'relative',
-    },
-    activeIndicatorWrap: {
-      position: 'absolute',
-      top: BAR_INNER_PADDING,
-      bottom: BAR_INNER_PADDING,
-      left: BAR_INNER_PADDING,
-      borderRadius: 10,
-      overflow: 'hidden',
-    },
-    activeIndicator: {
-      flex: 1,
-      borderRadius: 10,
-      backgroundColor: colors.primary,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.primary,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-        },
-      }),
-    },
-    tabButton: {
-      height: BAR_HEIGHT - BAR_INNER_PADDING * 2,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    tabContent: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 2,
-      zIndex: 1,
-    },
-    iconOrbit: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    tabLabel: {
-      fontSize: 11,
-      fontWeight: '600',
-      letterSpacing: 0.2,
-      opacity: 0.9,
-    },
-    tabLabelFocused: {
-      fontWeight: '800',
-      opacity: 1,
-    },
-  });
