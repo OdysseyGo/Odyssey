@@ -97,14 +97,36 @@ export default function EditLocationScreen() {
     ]
   );
 
-  const isValid = doesLocationMeetTourRequirements(
-    {
-      title,
-      story,
-      puzzle,
-    },
-    tourData.tourType
-  );
+  const isPuzzleValid = (currentPuzzle?: Puzzle) => {
+    if (!currentPuzzle?.question) {
+      return false;
+    }
+
+    if (currentPuzzle.puzzle_type === 'PICTURE_COMPARE') {
+      return !!currentPuzzle.referenceImage;
+    }
+
+    if (currentPuzzle.puzzle_type === 'AR') {
+      return !!currentPuzzle.arConfig;
+    }
+
+    if (currentPuzzle.puzzle_type === 'GYROSCOPE') {
+      return true;
+    }
+
+    const options = currentPuzzle.options;
+    if (!currentPuzzle.correctAnswer || !options || options.length < 2) {
+      return false;
+    }
+
+    return options.every((opt) => opt.trim().length > 0);
+  };
+
+  const shouldValidatePuzzle = tourData.tourType === 'PUZZLE' || !!puzzle;
+  const isValid =
+    title.trim().length > 0 &&
+    story.trim().length > 0 &&
+    (!shouldValidatePuzzle || isPuzzleValid(puzzle));
 
   const currentIndex = selectedLocation
     ? tourData.locations.findIndex((loc) => loc.id === selectedLocation.id)
@@ -123,7 +145,12 @@ export default function EditLocationScreen() {
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContainer}>
+        <ScrollView
+          style={styles.scrollContent}
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
           <LocationBadge
             currentStop={selectedLocation.order}
             totalStops={tourData.locations.length}

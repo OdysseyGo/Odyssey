@@ -129,6 +129,30 @@ function mapApiPuzzleToInternal(apiPuzzle: ApiTour['steps'][0]['puzzle']): Puzzl
     };
   }
 
+  if (apiPuzzle.puzzle_type === 'AR' && apiPuzzle.ar) {
+    const metadata = apiPuzzle.ar.metadata || {};
+    const anchorPosition = metadata.anchor_position;
+    return {
+      type: 'ar-code',
+      question: apiPuzzle.question,
+      sceneAssetUrl: apiPuzzle.ar.scene_asset_url,
+      secretCode: metadata.secret_code ? String(metadata.secret_code) : undefined,
+      anchorPosition:
+        anchorPosition &&
+        typeof anchorPosition.x === 'number' &&
+        typeof anchorPosition.y === 'number' &&
+        typeof anchorPosition.z === 'number'
+          ? {
+              x: anchorPosition.x,
+              y: anchorPosition.y,
+              z: anchorPosition.z,
+            }
+          : undefined,
+      modelScaleMeters:
+        typeof metadata.model_scale_meters === 'number' ? metadata.model_scale_meters : undefined,
+    };
+  }
+
   return null;
 }
 
