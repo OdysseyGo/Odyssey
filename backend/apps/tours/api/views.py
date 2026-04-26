@@ -68,7 +68,25 @@ class TourViewSet(viewsets.ModelViewSet):
     ]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        first_lat = Subquery(
+            TourStep.objects.filter(tour=OuterRef("pk"))
+            .order_by("order")
+            .values("latitude")[:1]
+        )
+        first_lng = Subquery(
+            TourStep.objects.filter(tour=OuterRef("pk"))
+            .order_by("order")
+            .values("longitude")[:1]
+        )
+
+        queryset = (
+            super()
+            .get_queryset()
+            .annotate(
+                first_lat=first_lat,
+                first_lng=first_lng,
+            )
+        )
         status = self.request.query_params.get("status")
         if status:
             queryset = queryset.filter(status=status)

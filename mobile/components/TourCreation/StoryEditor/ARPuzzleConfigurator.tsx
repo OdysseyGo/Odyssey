@@ -13,22 +13,13 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import {
-  Viro3DObject,
-  ViroARScene,
-  ViroARSceneNavigator,
-  ViroAmbientLight,
-  ViroMaterials,
-  ViroPolyline,
-  ViroSphere,
-  ViroText,
-} from '@reactvision/react-viro';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { ARModel, ARModelAnchor, getArModels } from '@/api/tours';
 import { ARPuzzleConfig } from '../TourCreation.types';
+import { getViroModule, isViroAvailable, VIRO_UNAVAILABLE_MESSAGE } from '@/utils/viro';
 
 type WizardStep = 'catalog' | 'code' | 'review';
 
@@ -65,8 +56,18 @@ function getScaledModelScale(modelScaleMeters: number): [number, number, number]
 }
 
 let materialsReady = false;
-if (!materialsReady) {
-  ViroMaterials.createMaterials({
+
+function ensureViroMaterials() {
+  if (materialsReady) {
+    return;
+  }
+
+  const viro = getViroModule();
+  if (!viro) {
+    return;
+  }
+
+  viro.ViroMaterials.createMaterials({
     arPuzzleAnchorMarker: {
       lightingModel: 'Constant',
       diffuseColor: '#f97316',
@@ -99,6 +100,12 @@ function toModelWorldPoint(
 }
 
 function ARSelectionScene(props: any) {
+  const viro = getViroModule();
+  if (!viro) {
+    return null;
+  }
+
+  const { Viro3DObject, ViroARScene, ViroAmbientLight, ViroPolyline, ViroSphere, ViroText } = viro;
   const appProps = props.sceneNavigator.viroAppProps as SelectionSceneAppProps;
   const sceneAssetUrl = appProps?.sceneAssetUrl ?? '';
   const secretCode = appProps?.secretCode?.trim() || 'Code';
@@ -161,6 +168,8 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
   const color = Colors[theme];
   const stylesForTheme = React.useMemo(() => createStyles(color), [color]);
   const insets = useSafeAreaInsets();
+  const viroAvailable = isViroAvailable();
+  const viro = React.useMemo(() => getViroModule(), []);
 
   const [models, setModels] = React.useState<ARModel[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -219,6 +228,10 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
     loadModels();
   }, [loadModels]);
 
+  React.useEffect(() => {
+    ensureViroMaterials();
+  }, [viro]);
+
   const handlePickModel = (model: ARModel) => {
     if (!model.anchors.length) {
       setError('This AR model does not have any anchor points yet.');
@@ -233,6 +246,10 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
 
   const openAnchorSelection = () => {
     if (!selectedModel || !isSecretCodeValid) {
+      return;
+    }
+    if (!viroAvailable) {
+      setError(VIRO_UNAVAILABLE_MESSAGE);
       return;
     }
     setIsScalePanelOpen(false);
@@ -278,6 +295,10 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
 
   const openArPreview = (anchor?: ARModelAnchor | null) => {
     if (!selectedModel || !anchor) return;
+    if (!viroAvailable) {
+      setError(VIRO_UNAVAILABLE_MESSAGE);
+      return;
+    }
 
     router.push({
       pathname: '/(tour)/ar-preview',
@@ -317,6 +338,8 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
   const anchorPositionTuple: [number, number, number] = selectedAnchor
     ? [selectedAnchor.position.x, selectedAnchor.position.y, selectedAnchor.position.z]
     : [0, 0.3, -1.2];
+
+  const ViroARSceneNavigator = viro?.ViroARSceneNavigator;
 
   return (
     <View style={stylesForTheme.container}>
@@ -484,17 +507,23 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
           {selectedModel ? (
             <>
               <View style={stylesForTheme.fullscreenSceneFrame}>
-                <ViroARSceneNavigator
-                  autofocus
-                  initialScene={{ scene: ARSelectionScene as any }}
-                  viroAppProps={{
-                    sceneAssetUrl: selectedModel.scene_asset_url,
-                    secretCode,
-                    anchorPosition: anchorPositionTuple,
-                    modelScaleMeters,
-                  }}
-                  style={stylesForTheme.navigator}
-                />
+                {ViroARSceneNavigator ? (
+                  <ViroARSceneNavigator
+                    autofocus
+                    initialScene={{ scene: ARSelectionScene as any }}
+                    viroAppProps={{
+                      sceneAssetUrl: selectedModel.scene_asset_url,
+                      secretCode,
+                      anchorPosition: anchorPositionTuple,
+                      modelScaleMeters,
+                    }}
+                    style={stylesForTheme.navigator}
+                  />
+                ) : (
+                  <View style={stylesForTheme.centerState}>
+                    <Text style={stylesForTheme.errorText}>{VIRO_UNAVAILABLE_MESSAGE}</Text>
+                  </View>
+                )}
               </View>
 
               <View style={[stylesForTheme.scaleButtonWrap, { top: insets.top + 56 }]}>

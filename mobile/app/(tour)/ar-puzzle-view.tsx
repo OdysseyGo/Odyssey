@@ -2,14 +2,8 @@ import React from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  Viro3DObject,
-  ViroARScene,
-  ViroARSceneNavigator,
-  ViroAmbientLight,
-  ViroText,
-} from '@reactvision/react-viro';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { getViroModule, VIRO_UNAVAILABLE_MESSAGE } from '@/utils/viro';
 
 const MODEL_POSITION: [number, number, number] = [0, 0, -1.2];
 const MODEL_SCALE: [number, number, number] = [0.25, 0.25, 0.25];
@@ -42,6 +36,12 @@ function toModelWorldPoint(
 }
 
 function ARPuzzleScene(props: any) {
+  const viro = getViroModule();
+  if (!viro) {
+    return null;
+  }
+
+  const { Viro3DObject, ViroARScene, ViroAmbientLight, ViroText } = viro;
   const appProps = props.sceneNavigator.viroAppProps;
   const sceneAssetUrl = appProps?.sceneAssetUrl as string;
   const secretCode = appProps?.secretCode as string;
@@ -86,6 +86,7 @@ function ARPuzzleScene(props: any) {
 
 export default function ARPuzzleViewScreen() {
   const insets = useSafeAreaInsets();
+  const viro = getViroModule();
   const params = useLocalSearchParams<{
     sceneAssetUrl?: string;
     secretCode?: string;
@@ -107,6 +108,21 @@ export default function ARPuzzleViewScreen() {
     MIN_MODEL_SCALE_METERS,
     MAX_MODEL_SCALE_METERS
   );
+
+  if (!viro) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorState}>
+          <Text style={styles.errorText}>{VIRO_UNAVAILABLE_MESSAGE}</Text>
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <Text style={styles.closeButtonText}>Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const { ViroARSceneNavigator } = viro;
 
   if (!sceneAssetUrl) {
     return (

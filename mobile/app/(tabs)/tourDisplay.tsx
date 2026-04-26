@@ -16,7 +16,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TourScrollerComp from '@/components/TourComponents/TourScrollerComp';
 import FeaturedTourCarousel from '@/components/TourComponents/FeaturedTourCarousel';
-import { getTours, Tour } from '@/api/tours';
+import { getTours, Tour, TourFilters } from '@/api/tours';
 import { TourDisplayProps } from '@/components/TourComponents/TourDisplayComp.config';
 import { useFocusEffect, router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -79,23 +79,51 @@ const continentKeyMap: Record<string, string> = {
   Other: 'tour.continents.other',
 };
 
-const CONTINENT_ICONS: Record<string, string> = {
-  Europe: 'business',
-  Asia: 'leaf',
-  'North America': 'flag',
-  'South America': 'water',
-  Africa: 'sunny',
-  Oceania: 'earth',
-  Antarctica: 'snow',
-  Other: 'help-circle-outline',
-};
-
 const FILTER_ICONS: Record<keyof Omit<TourFilterState, 'duration'>, string> = {
   category: 'pricetags-outline',
   continent: 'earth-outline',
   difficulty: 'flash-outline',
   tourType: 'layers-outline',
 };
+
+function buildApiFilters(filters: TourFilterState): TourFilters {
+  const apiFilters: TourFilters = {};
+
+  if (filters.category !== 'all') apiFilters.category = filters.category;
+  if (filters.continent !== 'all') apiFilters.continent = filters.continent;
+  if (filters.difficulty !== 'all') {
+    apiFilters.difficulty = filters.difficulty as TourFilters['difficulty'];
+  }
+  if (filters.tourType !== 'all') {
+    apiFilters.tour_type = filters.tourType as TourFilters['tour_type'];
+  }
+
+  if (filters.duration === 'short') {
+    apiFilters.max_duration = 59;
+  } else if (filters.duration === 'medium') {
+    apiFilters.min_duration = 60;
+    apiFilters.max_duration = 119;
+  } else if (filters.duration === 'long') {
+    apiFilters.min_duration = 120;
+  }
+
+  return apiFilters;
+}
+
+async function fetchAllTours(filters?: TourFilters, signal?: AbortSignal): Promise<Tour[]> {
+  const results: Tour[] = [];
+  let page = 1;
+  let next: string | null = null;
+
+  do {
+    const response = await getTours({ ...filters, page, page_size: 100 }, signal);
+    results.push(...response.results);
+    next = response.next;
+    page += 1;
+  } while (next && !signal?.aborted);
+
+  return results;
+}
 
 function getContinentFromCoordinates(lat: number, lon: number): string {
   if (lat >= -35 && lat <= 37 && lon >= -18 && lon <= 51) return 'Africa';
@@ -234,22 +262,26 @@ export default function TourDisplay() {
   const insets = useSafeAreaInsets();
 
   const [allTours, setAllTours] = useState<Tour[]>([]);
+  const [catalogTours, setCatalogTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState<string>('all');
-  const [filters, setFilters] = useState<TourFilterState>(EMPTY_FILTERS);
+  const [appliedFilters, setAppliedFilters] = useState<TourFilterState>(EMPTY_FILTERS);
+  const [draftFilters, setDraftFilters] = useState<TourFilterState>(EMPTY_FILTERS);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   // Tracks the rendered height of the floating header so scroll content starts below it
   const [headerHeight, setHeaderHeight] = useState(insets.top + 130);
 
   const hasFetchedRef = useRef(false);
+  const hasCatalogFetchedRef = useRef(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const filterRevealAnim = useRef(new Animated.Value(0)).current;
+  const apiFilters = useMemo(() => buildApiFilters(appliedFilters), [appliedFilters]);
 
   useEffect(() => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
-  }, [selectedSection, filters]);
+  }, [appliedFilters, selectedSection]);
 
   useEffect(() => {
     if (!isFilterModalVisible) {
@@ -264,25 +296,47 @@ export default function TourDisplay() {
     }).start();
   }, [filterRevealAnim, isFilterModalVisible]);
 
-  const fetchTours = useCallback(async (isRefresh = false) => {
-    try {
-      if (isRefresh) setRefreshing(true);
-      else if (!hasFetchedRef.current) setLoading(true);
-      setError(null);
-      const response = await getTours({ page_size: 50 });
-      setAllTours(response.results);
-      hasFetchedRef.current = true;
-    } catch (err: any) {
-      if (!hasFetchedRef.current) setError(err.message || 'Failed to load tours');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+  const fetchTours = useCallback(
+    async (isRefresh = false, signal?: AbortSignal) => {
+      try {
+        if (isRefresh || hasFetchedRef.current) setRefreshing(true);
+        else setLoading(true);
+        setError(null);
+        const requestFilters = Object.keys(apiFilters).length > 0 ? apiFilters : undefined;
+        const shouldFetchCatalog = !hasCatalogFetchedRef.current || (isRefresh && !!requestFilters);
+        const toursPromise = fetchAllTours(requestFilters, signal);
+        const catalogPromise = shouldFetchCatalog
+          ? requestFilters
+            ? fetchAllTours(undefined, signal)
+            : toursPromise
+          : Promise.resolve<Tour[] | null>(null);
+        const [tours, catalog] = await Promise.all([toursPromise, catalogPromise]);
+        if (signal?.aborted) return;
+        setAllTours(tours);
+        if (catalog) {
+          setCatalogTours(catalog);
+          hasCatalogFetchedRef.current = true;
+        } else if (!requestFilters) {
+          setCatalogTours(tours);
+          hasCatalogFetchedRef.current = true;
+        }
+        hasFetchedRef.current = true;
+      } catch (err: any) {
+        if (signal?.aborted) return;
+        setError(err.message || 'Failed to load tours');
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [apiFilters]
+  );
 
   useFocusEffect(
     useCallback(() => {
-      fetchTours();
+      const controller = new AbortController();
+      fetchTours(false, controller.signal);
+      return () => controller.abort();
     }, [fetchTours])
   );
 
@@ -362,85 +416,70 @@ export default function TourDisplay() {
   const uniqueCategories = useMemo(
     () =>
       Array.from(
-        new Set(allTours.map((tour) => tour.category?.trim()).filter(Boolean) as string[])
+        new Set(
+          (catalogTours.length > 0 ? catalogTours : allTours)
+            .map((tour) => tour.category?.trim())
+            .filter(Boolean) as string[]
+        )
       ).sort((a, b) => a.localeCompare(b)),
-    [allTours]
+    [allTours, catalogTours]
   );
 
-  const availableContinents = useMemo(
-    () =>
-      toursByContinent.map(({ continent }) => ({
-        key: continent,
-        label: t(continentKeyMap[continent] ?? 'tour.continents.other', {
-          defaultValue: continent,
-        }),
-      })),
-    [t, toursByContinent]
+  const availableContinents = useMemo(() => {
+    const sourceTours = catalogTours.length > 0 ? catalogTours : allTours;
+    const continents = Array.from(new Set(sourceTours.map((tour) => getContinent(tour))));
+    const orderedKeys = Object.keys(continentKeyMap).filter((continent) =>
+      continents.includes(continent)
+    );
+
+    return orderedKeys.map((continent) => ({
+      key: continent,
+      label: t(continentKeyMap[continent] ?? 'tour.continents.other', {
+        defaultValue: continent,
+      }),
+    }));
+  }, [allTours, catalogTours, t]);
+
+  const matchingToursCount = allTours.length;
+
+  const hasDraftChanges = useMemo(
+    () => JSON.stringify(draftFilters) !== JSON.stringify(appliedFilters),
+    [appliedFilters, draftFilters]
   );
 
   const hasActiveFilters = useMemo(
     () =>
-      Object.entries(filters).some(
+      Object.entries(appliedFilters).some(
         ([key, value]) => value !== EMPTY_FILTERS[key as keyof TourFilterState]
       ),
-    [filters]
+    [appliedFilters]
   );
-
-  const filteredTours = useMemo(() => {
-    const matchesDuration = (tour: Tour) => {
-      if (filters.duration === 'any') return true;
-      if (filters.duration === 'short') return tour.duration_minutes < 60;
-      if (filters.duration === 'medium') {
-        return tour.duration_minutes >= 60 && tour.duration_minutes < 120;
-      }
-      return tour.duration_minutes >= 120;
-    };
-
-    return allTours.filter((tour) => {
-      const matchesCategory =
-        filters.category === 'all' ||
-        (tour.category || '').toLowerCase() === filters.category.toLowerCase();
-      const matchesContinent =
-        filters.continent === 'all' || getContinent(tour) === filters.continent;
-      const matchesDifficulty =
-        filters.difficulty === 'all' || tour.difficulty === filters.difficulty;
-      const matchesTourType = filters.tourType === 'all' || tour.tour_type === filters.tourType;
-
-      return (
-        matchesCategory &&
-        matchesContinent &&
-        matchesDifficulty &&
-        matchesTourType &&
-        matchesDuration(tour)
-      );
-    });
-  }, [allTours, filters]);
 
   const activeFilterChips = useMemo(() => {
     const durationLabel =
-      durationOptions.find((option) => option.key === filters.duration)?.label ??
+      durationOptions.find((option) => option.key === appliedFilters.duration)?.label ??
       durationOptions[0].label;
     const chips = [];
 
-    if (filters.category !== 'all') {
+    if (appliedFilters.category !== 'all') {
       chips.push({
         key: 'category',
-        label: filters.category,
+        label: appliedFilters.category,
         icon: FILTER_ICONS.category,
       });
     }
 
-    if (filters.continent !== 'all') {
+    if (appliedFilters.continent !== 'all') {
       chips.push({
         key: 'continent',
-        label: t(continentKeyMap[filters.continent] ?? 'tour.continents.other', {
-          defaultValue: filters.continent,
+        label: t(continentKeyMap[appliedFilters.continent] ?? 'tour.continents.other', {
+          defaultValue: appliedFilters.continent,
         }),
-        icon: 'earth-outline',
+        icon: FILTER_ICONS.continent,
       });
     }
 
-    if (filters.duration !== 'any') {
+    if (appliedFilters.duration !== 'any') {
       chips.push({
         key: 'duration',
         label: durationLabel,
@@ -448,38 +487,54 @@ export default function TourDisplay() {
       });
     }
 
-    if (filters.difficulty !== 'all') {
+    if (appliedFilters.difficulty !== 'all') {
       chips.push({
         key: 'difficulty',
-        label: t(`tourDetail.${filters.difficulty.toLowerCase()}`, {
-          defaultValue: filters.difficulty,
+        label: t(`tourDetail.${appliedFilters.difficulty.toLowerCase()}`, {
+          defaultValue: appliedFilters.difficulty,
         }),
         icon: FILTER_ICONS.difficulty,
       });
     }
 
-    if (filters.tourType !== 'all') {
+    if (appliedFilters.tourType !== 'all') {
       chips.push({
         key: 'tourType',
-        label: t(`creation.tourType.${filters.tourType.toLowerCase()}`, {
-          defaultValue: filters.tourType,
+        label: t(`creation.tourType.${appliedFilters.tourType.toLowerCase()}`, {
+          defaultValue: appliedFilters.tourType,
         }),
         icon: FILTER_ICONS.tourType,
       });
     }
 
     return chips;
-  }, [durationOptions, filters, t]);
+  }, [appliedFilters, durationOptions, t]);
 
   const filteredTourCards = useMemo(
-    () => filteredTours.map((tour) => mapTourToDisplayProps(tour, t)),
-    [filteredTours, t]
+    () => allTours.map((tour) => mapTourToDisplayProps(tour, t)),
+    [allTours, t]
   );
 
   const onRefresh = useCallback(() => fetchTours(true), [fetchTours]);
   const updateFilter = useCallback((key: keyof TourFilterState, value: string) => {
-    setFilters((current) => ({ ...current, [key]: value }));
+    setDraftFilters((current) => ({ ...current, [key]: value }));
   }, []);
+  const openFilterModal = useCallback(() => {
+    setDraftFilters(appliedFilters);
+    setIsFilterModalVisible(true);
+  }, [appliedFilters]);
+  const closeFilterModal = useCallback(() => {
+    setDraftFilters(appliedFilters);
+    setIsFilterModalVisible(false);
+  }, [appliedFilters]);
+  const clearAppliedFilters = useCallback(() => {
+    setAppliedFilters(EMPTY_FILTERS);
+    setDraftFilters(EMPTY_FILTERS);
+  }, []);
+  const applyFilters = useCallback(() => {
+    setAppliedFilters(draftFilters);
+    setIsFilterModalVisible(false);
+  }, [draftFilters]);
 
   // ─── Loading state — skeleton ─────────────────────────
 
@@ -590,7 +645,7 @@ export default function TourDisplay() {
             </Text>
             <TouchableOpacity
               style={[styles.retryButton, { backgroundColor: theme.primary }]}
-              onPress={() => setFilters(EMPTY_FILTERS)}
+              onPress={clearAppliedFilters}
               activeOpacity={0.8}
             >
               <Ionicons name="refresh" size={16} color={theme.white} />
@@ -639,7 +694,7 @@ export default function TourDisplay() {
             <TouchableOpacity
               style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
               activeOpacity={0.7}
-              onPress={() => setIsFilterModalVisible(true)}
+              onPress={openFilterModal}
             >
               <Ionicons name="options-outline" size={20} color={theme.text} />
               {activeFilterChips.length > 0 && (
@@ -683,7 +738,7 @@ export default function TourDisplay() {
             <TouchableOpacity
               style={[styles.clearFilterPill, { backgroundColor: theme.foregroundSecondary }]}
               activeOpacity={0.8}
-              onPress={() => setFilters(EMPTY_FILTERS)}
+              onPress={clearAppliedFilters}
             >
               <Ionicons name="close-circle-outline" size={14} color={theme.subText} />
               <Text style={[styles.clearFilterText, { color: theme.subText }]}>
@@ -750,11 +805,11 @@ export default function TourDisplay() {
         visible={isFilterModalVisible}
         animationType="fade"
         transparent
-        onRequestClose={() => setIsFilterModalVisible(false)}
+        onRequestClose={closeFilterModal}
       >
         <Pressable
           style={[styles.modalBackdrop, { backgroundColor: theme.overlay }]}
-          onPress={() => setIsFilterModalVisible(false)}
+          onPress={closeFilterModal}
         >
           <Animated.View
             style={[
@@ -795,7 +850,7 @@ export default function TourDisplay() {
                   </Text>
                 </View>
                 <TouchableOpacity
-                  onPress={() => setIsFilterModalVisible(false)}
+                  onPress={closeFilterModal}
                   style={[styles.filterCloseButton, { backgroundColor: theme.foregroundSecondary }]}
                 >
                   <Ionicons name="close" size={18} color={theme.text} />
@@ -815,7 +870,7 @@ export default function TourDisplay() {
                       onPress={() => updateFilter('category', 'all')}
                       style={[
                         styles.filterOption,
-                        filters.category === 'all' && {
+                        draftFilters.category === 'all' && {
                           backgroundColor: theme.primary,
                           borderColor: theme.primary,
                         },
@@ -824,14 +879,14 @@ export default function TourDisplay() {
                       <Text
                         style={[
                           styles.filterOptionText,
-                          { color: filters.category === 'all' ? theme.white : theme.text },
+                          { color: draftFilters.category === 'all' ? theme.white : theme.text },
                         ]}
                       >
                         {t('tour.filters.anyCategory', { defaultValue: 'Any category' })}
                       </Text>
                     </TouchableOpacity>
                     {uniqueCategories.map((category) => {
-                      const isActive = filters.category === category;
+                      const isActive = draftFilters.category === category;
                       return (
                         <TouchableOpacity
                           key={category}
@@ -867,7 +922,7 @@ export default function TourDisplay() {
                       onPress={() => updateFilter('continent', 'all')}
                       style={[
                         styles.filterOption,
-                        filters.continent === 'all' && {
+                        draftFilters.continent === 'all' && {
                           backgroundColor: theme.primary,
                           borderColor: theme.primary,
                         },
@@ -876,14 +931,14 @@ export default function TourDisplay() {
                       <Text
                         style={[
                           styles.filterOptionText,
-                          { color: filters.continent === 'all' ? theme.white : theme.text },
+                          { color: draftFilters.continent === 'all' ? theme.white : theme.text },
                         ]}
                       >
                         {t('tour.filters.anyContinent', { defaultValue: 'Any continent' })}
                       </Text>
                     </TouchableOpacity>
                     {availableContinents.map((continent) => {
-                      const isActive = filters.continent === continent.key;
+                      const isActive = draftFilters.continent === continent.key;
                       return (
                         <TouchableOpacity
                           key={continent.key}
@@ -916,7 +971,7 @@ export default function TourDisplay() {
                   </Text>
                   <View style={styles.filterOptionsWrap}>
                     {durationOptions.map((option) => {
-                      const isActive = filters.duration === option.key;
+                      const isActive = draftFilters.duration === option.key;
                       return (
                         <TouchableOpacity
                           key={option.key}
@@ -949,7 +1004,7 @@ export default function TourDisplay() {
                   </Text>
                   <View style={styles.filterOptionsWrap}>
                     {['all', 'EASY', 'MEDIUM', 'HARD'].map((difficulty) => {
-                      const isActive = filters.difficulty === difficulty;
+                      const isActive = draftFilters.difficulty === difficulty;
                       return (
                         <TouchableOpacity
                           key={difficulty}
@@ -986,7 +1041,7 @@ export default function TourDisplay() {
                   </Text>
                   <View style={styles.filterOptionsWrap}>
                     {['all', 'STORY', 'PUZZLE', 'HYBRID'].map((tourType) => {
-                      const isActive = filters.tourType === tourType;
+                      const isActive = draftFilters.tourType === tourType;
                       return (
                         <TouchableOpacity
                           key={tourType}
@@ -1021,7 +1076,7 @@ export default function TourDisplay() {
               <View style={styles.filterFooter}>
                 <TouchableOpacity
                   style={[styles.filterSecondaryButton, { borderColor: theme.borderLight }]}
-                  onPress={() => setFilters(EMPTY_FILTERS)}
+                  onPress={() => setDraftFilters(EMPTY_FILTERS)}
                 >
                   <Text style={[styles.filterSecondaryText, { color: theme.text }]}>
                     {t('tour.filters.reset', { defaultValue: 'Reset' })}
@@ -1029,13 +1084,15 @@ export default function TourDisplay() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.filterPrimaryButton, { backgroundColor: theme.primary }]}
-                  onPress={() => setIsFilterModalVisible(false)}
+                  onPress={applyFilters}
                 >
                   <Text style={styles.filterPrimaryText}>
-                    {t('tour.filters.showResults', {
-                      defaultValue: 'Show {{count}} tours',
-                      count: filteredTours.length,
-                    })}
+                    {hasDraftChanges
+                      ? t('tour.filters.apply', { defaultValue: 'Apply filters' })
+                      : t('tour.filters.showResults', {
+                          defaultValue: 'Show {{count}} tours',
+                          count: matchingToursCount,
+                        })}
                   </Text>
                 </TouchableOpacity>
               </View>
