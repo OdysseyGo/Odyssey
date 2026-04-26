@@ -1,87 +1,60 @@
-"""
-Unit tests for GeminiService (RAG pipeline).
-
-All external dependencies (Gemini API, Google Maps) are mocked so
-these tests can run without API keys or network access.
-"""
+"""Unit tests for TourGenerationService provider-agnostic RAG pipeline."""
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from django.test import TestCase
 
 from apps.tours.models import Puzzle, Tour, TourStep
 
-from .services import GeminiService
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+from .providers import build_provider
+from .services import TourGenerationService
 
 
 def _candidate_places() -> list[dict]:
-    """Return a list of verified Google Maps places (simulating search_places)."""
     return [
         {
             "name": "Hagia Sophia",
-            "place_id": "ChIJy5olGKC5yhQRzmFRHOT2cYA",
+            "place_id": "1",
             "latitude": 41.00860,
             "longitude": 28.98020,
-            "address": "Sultan Ahmet, Ayasofya Meydanı No:1, Istanbul",
+            "address": "Sultan Ahmet, Istanbul",
             "types": ["tourist_attraction", "museum"],
         },
         {
             "name": "Blue Mosque",
-            "place_id": "ChIJ2V-ypMu5yhQRVL-Fs_5CfDw",
+            "place_id": "2",
             "latitude": 41.00550,
             "longitude": 28.97690,
-            "address": "Sultan Ahmet, At Meydanı No:7, Istanbul",
+            "address": "Sultan Ahmet, Istanbul",
             "types": ["mosque", "tourist_attraction"],
         },
         {
             "name": "Topkapi Palace",
-            "place_id": "ChIJGzD0K5S5yhQRMNUyNWJzGCw",
+            "place_id": "3",
             "latitude": 41.01140,
             "longitude": 28.98330,
             "address": "Cankurtaran, Istanbul",
             "types": ["museum", "tourist_attraction"],
         },
-        {
-            "name": "Grand Bazaar",
-            "place_id": "ChIJScTTAgm5yhQRH29LPQR5a6M",
-            "latitude": 41.01070,
-            "longitude": 28.96800,
-            "address": "Beyazıt, Kalpakçılar Cd., Istanbul",
-            "types": ["shopping_mall", "tourist_attraction"],
-        },
-        {
-            "name": "Basilica Cistern",
-            "place_id": "ChIJ6dFnXaC5yhQRAx4RNGlcYKY",
-            "latitude": 41.00840,
-            "longitude": 28.97790,
-            "address": "Alemdar, Yerebatan Cd. 1/3, Istanbul",
-            "types": ["tourist_attraction", "museum"],
-        },
     ]
 
 
 def _valid_tour_json(*, include_puzzles: bool = True) -> dict:
-    """
-    Return a well-formed tour data dict that mirrors what the AI returns
-    when constrained to verified places.
-    """
     step_base = {
         "title": "Hagia Sophia",
         "description": "A masterpiece of Byzantine architecture.",
         "latitude": 41.00860,
         "longitude": 28.98020,
+        "puzzle": None,
     }
     step_2 = {
         "title": "Blue Mosque",
         "description": "The iconic Sultan Ahmed Mosque.",
         "latitude": 41.00550,
         "longitude": 28.97690,
+        "puzzle": None,
     }
 
     if include_puzzles:
@@ -110,119 +83,81 @@ def _valid_tour_json(*, include_puzzles: bool = True) -> dict:
     }
 
 
-def _mock_gemini_response(tour_data: dict) -> MagicMock:
-    """Create a mock Gemini response from a dict."""
-    resp = MagicMock()
-    resp.text = json.dumps(tour_data)
-    return resp
+class DummyProvider:
+    def __init__(self, payload=None, error=None):
+        self.payload = payload
+        self.error = error
 
-
-@pytest.fixture(autouse=True)
-def _patch_genai():
-    """Globally patch google.generativeai for all tests."""
-    with patch("apps.ai_content.services.genai") as mock_genai:
-        mock_model = MagicMock()
-        mock_genai.GenerativeModel.return_value = mock_model
-        yield mock_model
-
-
-# ---------------------------------------------------------------------------
-# Tests — RAG Pipeline
-# ---------------------------------------------------------------------------
+    def generate_tour_data(self, prompt: str, mode: str) -> dict:
+        del prompt, mode
+        if self.error:
+            raise self.error
+        return self.payload
 
 
 @pytest.mark.django_db
 class TestGenerateTour(TestCase):
-    """Tests for GeminiService.generate_tour (RAG pipeline)"""
-
     def _make_creator(self):
         from django.contrib.auth import get_user_model
 
-        User = get_user_model()
-        return User.objects.create_user(
+        user_model = get_user_model()
+        return user_model.objects.create_user(
             username="test_creator",
             password="pass123",
             email="creator@test.com",
         )
 
-    # ---- RAG pipeline: valid tour creates all objects --------------------
-
     @patch("apps.ai_content.services.GoogleMapsFacade")
-    @patch("apps.ai_content.services.genai")
-    def test_valid_response_creates_tour_steps_puzzles(self, mock_genai, mock_maps_cls):
-        """A well-formed AI response should create Tour + Steps + Puzzles."""
-        tour_data = _valid_tour_json(include_puzzles=True)
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
-
-        # Mock the maps facade for both search_places and calculate_route_metrics
+    def test_valid_response_creates_tour_steps_puzzles(self, mock_maps_cls):
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
         mock_facade.calculate_route_metrics.return_value = {"success": False}
 
-        creator = self._make_creator()
-        service = GeminiService()
+        service = TourGenerationService(
+            providers=[DummyProvider(payload=_valid_tour_json(include_puzzles=True))]
+        )
         tour = service.generate_tour(
             city="Istanbul",
             theme="History",
             mode="PUZZLE",
             duration=60,
             language="en",
-            creator=creator,
+            creator=self._make_creator(),
         )
 
         assert tour.title == "Historic Istanbul Walking Tour"
         assert tour.steps.count() == 2
         assert Puzzle.objects.filter(step__tour=tour).count() == 2
 
-    # ---- RAG pipeline: verified coordinates are used ---------------------
-
     @patch("apps.ai_content.services.GoogleMapsFacade")
-    @patch("apps.ai_content.services.genai")
-    def test_verified_coordinates_replace_ai_coords(self, mock_genai, mock_maps_cls):
-        """Steps should use Google Maps verified coordinates, not AI guesses."""
+    def test_verified_coordinates_replace_ai_coords(self, mock_maps_cls):
         tour_data = _valid_tour_json(include_puzzles=False)
-        # AI returns slightly wrong coordinates
         tour_data["steps"][0]["latitude"] = 41.0
         tour_data["steps"][0]["longitude"] = 29.0
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
 
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
         mock_facade.calculate_route_metrics.return_value = {"success": False}
 
-        creator = self._make_creator()
-        service = GeminiService()
+        service = TourGenerationService(providers=[DummyProvider(payload=tour_data)])
         tour = service.generate_tour(
             city="Istanbul",
             theme="History",
             mode="STORY",
             duration=60,
             language="en",
-            creator=creator,
+            creator=self._make_creator(),
         )
 
         steps = list(tour.steps.order_by("order"))
-        # Should use the verified coordinates from _candidate_places, NOT (41.0, 29.0)
         assert float(steps[0].latitude) == pytest.approx(41.00860, abs=1e-5)
         assert float(steps[0].longitude) == pytest.approx(28.98020, abs=1e-5)
 
-    # ---- RAG pipeline: no places found raises ValueError -----------------
-
     @patch("apps.ai_content.services.GoogleMapsFacade")
-    @patch("apps.ai_content.services.genai")
-    def test_no_places_found_raises_value_error(self, mock_genai, mock_maps_cls):
-        """When Google Maps returns no places, a clear error should be raised."""
-        mock_facade = mock_maps_cls.return_value
-        mock_facade.search_places.return_value = []
+    def test_no_places_found_raises_value_error(self, mock_maps_cls):
+        mock_maps_cls.return_value.search_places.return_value = []
 
-        creator = self._make_creator()
-        service = GeminiService()
+        service = TourGenerationService(providers=[DummyProvider(payload={})])
 
         with pytest.raises(ValueError, match="Could not find any real places"):
             service.generate_tour(
@@ -231,67 +166,43 @@ class TestGenerateTour(TestCase):
                 mode="STORY",
                 duration=60,
                 language="en",
-                creator=creator,
+                creator=self._make_creator(),
             )
 
-    # ---- RAG pipeline: fuzzy matching works ------------------------------
-
     @patch("apps.ai_content.services.GoogleMapsFacade")
-    @patch("apps.ai_content.services.genai")
-    def test_fuzzy_match_corrects_slightly_different_names(
-        self, mock_genai, mock_maps_cls
-    ):
-        """AI returning a slightly different name should still match a candidate."""
+    def test_fuzzy_match_corrects_slightly_different_names(self, mock_maps_cls):
         tour_data = _valid_tour_json(include_puzzles=False)
-        # AI uses "Hagia Sophia Museum" instead of "Hagia Sophia"
         tour_data["steps"][0]["title"] = "Hagia Sophia Museum"
         tour_data["steps"][0]["latitude"] = 0
         tour_data["steps"][0]["longitude"] = 0
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
 
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
         mock_facade.calculate_route_metrics.return_value = {"success": False}
 
-        creator = self._make_creator()
-        service = GeminiService()
+        service = TourGenerationService(providers=[DummyProvider(payload=tour_data)])
         tour = service.generate_tour(
             city="Istanbul",
             theme="History",
             mode="STORY",
             duration=60,
             language="en",
-            creator=creator,
+            creator=self._make_creator(),
         )
 
         steps = list(tour.steps.order_by("order"))
-        # Should have matched "Hagia Sophia Museum" → "Hagia Sophia" via fuzzy match
         assert float(steps[0].latitude) == pytest.approx(41.00860, abs=1e-5)
 
-    # ---- Atomic rollback -------------------------------------------------
-
     @patch("apps.ai_content.services.GoogleMapsFacade")
-    @patch("apps.ai_content.services.genai")
-    def test_atomic_rollback_on_step_failure(self, mock_genai, mock_maps_cls):
-        """If step creation fails mid-way, no Tour row should remain."""
+    def test_atomic_rollback_on_step_failure(self, mock_maps_cls):
         tour_data = _valid_tour_json(include_puzzles=False)
-        # Inject an invalid step (missing title) to trigger validation error
         tour_data["steps"].append(
             {"description": "No title here", "latitude": 41.0, "longitude": 28.0}
         )
 
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
+        mock_maps_cls.return_value.search_places.return_value = _candidate_places()
 
-        mock_facade = mock_maps_cls.return_value
-        mock_facade.search_places.return_value = _candidate_places()
-
-        creator = self._make_creator()
-        service = GeminiService()
+        service = TourGenerationService(providers=[DummyProvider(payload=tour_data)])
 
         with pytest.raises(ValueError, match="missing required key 'title'"):
             service.generate_tour(
@@ -300,29 +211,19 @@ class TestGenerateTour(TestCase):
                 mode="STORY",
                 duration=60,
                 language="en",
-                creator=creator,
+                creator=self._make_creator(),
             )
 
         assert Tour.objects.count() == 0
         assert TourStep.objects.count() == 0
 
-    # ---- Missing key validation ------------------------------------------
-
     @patch("apps.ai_content.services.GoogleMapsFacade")
-    @patch("apps.ai_content.services.genai")
-    def test_missing_title_raises_value_error(self, mock_genai, mock_maps_cls):
-        """Response missing 'title' should raise ValueError before DB writes."""
-        tour_data = {"description": "A tour", "steps": []}
+    def test_missing_title_raises_value_error(self, mock_maps_cls):
+        mock_maps_cls.return_value.search_places.return_value = _candidate_places()
 
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
-
-        mock_facade = mock_maps_cls.return_value
-        mock_facade.search_places.return_value = _candidate_places()
-
-        creator = self._make_creator()
-        service = GeminiService()
+        service = TourGenerationService(
+            providers=[DummyProvider(payload={"description": "A tour", "steps": []})]
+        )
 
         with pytest.raises(ValueError, match="missing required keys.*title"):
             service.generate_tour(
@@ -331,24 +232,20 @@ class TestGenerateTour(TestCase):
                 mode="STORY",
                 duration=60,
                 language="en",
-                creator=creator,
+                creator=self._make_creator(),
             )
 
     @patch("apps.ai_content.services.GoogleMapsFacade")
-    @patch("apps.ai_content.services.genai")
-    def test_empty_steps_raises_value_error(self, mock_genai, mock_maps_cls):
-        """An empty steps list should raise ValueError."""
-        tour_data = {"title": "Tour", "description": "Desc", "steps": []}
+    def test_empty_steps_raises_value_error(self, mock_maps_cls):
+        mock_maps_cls.return_value.search_places.return_value = _candidate_places()
 
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
-
-        mock_facade = mock_maps_cls.return_value
-        mock_facade.search_places.return_value = _candidate_places()
-
-        creator = self._make_creator()
-        service = GeminiService()
+        service = TourGenerationService(
+            providers=[
+                DummyProvider(
+                    payload={"title": "Tour", "description": "Desc", "steps": []}
+                )
+            ]
+        )
 
         with pytest.raises(ValueError, match="non-empty list"):
             service.generate_tour(
@@ -357,34 +254,25 @@ class TestGenerateTour(TestCase):
                 mode="STORY",
                 duration=60,
                 language="en",
-                creator=creator,
+                creator=self._make_creator(),
             )
 
-    # ---- Puzzle fallback -------------------------------------------------
-
     @patch("apps.ai_content.services.GoogleMapsFacade")
-    @patch("apps.ai_content.services.genai")
-    def test_puzzle_fallback_in_puzzle_mode(self, mock_genai, mock_maps_cls):
-        """In PUZZLE mode, missing puzzle data should generate a fallback."""
-        tour_data = _valid_tour_json(include_puzzles=False)
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
-
+    def test_puzzle_fallback_in_puzzle_mode(self, mock_maps_cls):
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
         mock_facade.calculate_route_metrics.return_value = {"success": False}
 
-        creator = self._make_creator()
-        service = GeminiService()
+        service = TourGenerationService(
+            providers=[DummyProvider(payload=_valid_tour_json(include_puzzles=False))]
+        )
         tour = service.generate_tour(
             city="Istanbul",
             theme="History",
             mode="PUZZLE",
             duration=60,
             language="en",
-            creator=creator,
+            creator=self._make_creator(),
         )
 
         puzzles = Puzzle.objects.filter(step__tour=tour)
@@ -392,44 +280,27 @@ class TestGenerateTour(TestCase):
         assert all("name of this location" in p.question for p in puzzles)
 
     @patch("apps.ai_content.services.GoogleMapsFacade")
-    @patch("apps.ai_content.services.genai")
-    def test_no_fallback_in_story_mode(self, mock_genai, mock_maps_cls):
-        """In STORY mode, missing puzzle data should NOT create puzzles."""
-        tour_data = _valid_tour_json(include_puzzles=False)
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
-
+    def test_no_fallback_in_story_mode(self, mock_maps_cls):
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
         mock_facade.calculate_route_metrics.return_value = {"success": False}
 
-        creator = self._make_creator()
-        service = GeminiService()
+        service = TourGenerationService(
+            providers=[DummyProvider(payload=_valid_tour_json(include_puzzles=False))]
+        )
         tour = service.generate_tour(
             city="Istanbul",
             theme="History",
             mode="STORY",
             duration=60,
             language="en",
-            creator=creator,
+            creator=self._make_creator(),
         )
 
         assert Puzzle.objects.filter(step__tour=tour).count() == 0
 
-    # ---- Duration calculation --------------------------------------------
-
     @patch("apps.ai_content.services.GoogleMapsFacade")
-    @patch("apps.ai_content.services.genai")
-    def test_duration_includes_exploration_time(self, mock_genai, mock_maps_cls):
-        """Duration should be walking_time + (num_steps * MINUTES_PER_STEP)."""
-        tour_data = _valid_tour_json(include_puzzles=False)
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
-
+    def test_duration_includes_exploration_time(self, mock_maps_cls):
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
         mock_facade.calculate_route_metrics.return_value = {
@@ -444,32 +315,55 @@ class TestGenerateTour(TestCase):
         }
         mock_facade.estimate_accessibility.return_value = 7
 
-        creator = self._make_creator()
-        service = GeminiService()
+        service = TourGenerationService(
+            providers=[DummyProvider(payload=_valid_tour_json(include_puzzles=False))]
+        )
         tour = service.generate_tour(
             city="Istanbul",
             theme="History",
             mode="STORY",
             duration=60,
             language="en",
-            creator=creator,
+            creator=self._make_creator(),
         )
 
-        # 30 min walking + 2 steps * 5 min = 40 min total
         assert tour.duration_minutes == 40
 
 
-# ---------------------------------------------------------------------------
-# Parsing Tests (unchanged — independent of RAG pipeline)
-# ---------------------------------------------------------------------------
+class TestProviderFallback(TestCase):
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    def test_fallback_provider_used_when_primary_fails(self, mock_maps_cls):
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+
+        failing = DummyProvider(error=RuntimeError("boom"))
+        fallback = DummyProvider(payload=_valid_tour_json(include_puzzles=False))
+
+        from django.contrib.auth import get_user_model
+
+        user = get_user_model().objects.create_user(
+            username="fallback_creator",
+            password="pass123",
+            email="fallback@test.com",
+        )
+
+        service = TourGenerationService(providers=[failing, fallback])
+        tour = service.generate_tour(
+            city="Istanbul",
+            theme="History",
+            mode="STORY",
+            duration=45,
+            language="en",
+            creator=user,
+        )
+
+        assert tour.title == "Historic Istanbul Walking Tour"
 
 
 class TestParseResponse(TestCase):
-    """Tests for GeminiService._parse_response"""
-
     def _service(self):
-        with patch("apps.ai_content.services.genai"):
-            return GeminiService()
+        return TourGenerationService(providers=[DummyProvider(payload=_valid_tour_json())])
 
     def test_plain_json(self):
         data = {"title": "Tour"}
@@ -493,34 +387,13 @@ class TestParseResponse(TestCase):
             self._service()._parse_response("This is not JSON at all")
 
 
-# ---------------------------------------------------------------------------
-# Fuzzy Matching Tests
-# ---------------------------------------------------------------------------
+class TestBuildProvider(TestCase):
+    @patch("apps.ai_content.providers.AzureOpenAIProvider")
+    def test_build_provider_azure(self, mock_cls):
+        build_provider("azure_openai")
+        mock_cls.assert_called_once()
 
-
-class TestFuzzyMatchPlace(TestCase):
-    """Tests for GeminiService._fuzzy_match_place"""
-
-    def test_exact_match(self):
-        candidates = _candidate_places()
-        result = GeminiService._fuzzy_match_place("Hagia Sophia", candidates)
-        assert result is not None
-        assert result["name"] == "Hagia Sophia"
-
-    def test_partial_match(self):
-        candidates = _candidate_places()
-        result = GeminiService._fuzzy_match_place("Hagia Sophia Museum", candidates)
-        assert result is not None
-        assert result["name"] == "Hagia Sophia"
-
-    def test_no_match(self):
-        candidates = _candidate_places()
-        result = GeminiService._fuzzy_match_place(
-            "Completely Unknown Place", candidates
-        )
-        assert result is None
-
-    def test_empty_name(self):
-        candidates = _candidate_places()
-        result = GeminiService._fuzzy_match_place("", candidates)
-        assert result is None
+    @patch("apps.ai_content.providers.GeminiProvider")
+    def test_build_provider_gemini(self, mock_cls):
+        build_provider("gemini")
+        mock_cls.assert_called_once()

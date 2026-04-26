@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import GenerateTourRequestSerializer, GenerateTourResponseSerializer
-from .services import GeminiService
+from .services import TourGenerationService
 
 
 class GenerateTourView(APIView):
@@ -23,7 +23,7 @@ class GenerateTourView(APIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            service = GeminiService()
+            service = TourGenerationService()
             tour = service.generate_tour(
                 city=serializer.validated_data["city"],
                 country=serializer.validated_data.get("country", ""),

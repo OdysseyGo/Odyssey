@@ -9,6 +9,7 @@ drf-nested-routers>=0.93.5
 Pillow>=10.0.0
 djangorestframework-simplejwt>=5.5.1
 google-generativeai>=0.8.0
+openai>=1.51.0
 googlemaps>=4.10.0
 django-filter>=23.0
 django-storages[s3]>=1.14.2

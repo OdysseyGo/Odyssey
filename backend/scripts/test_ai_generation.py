@@ -2,6 +2,7 @@
 """Test script for AI tour generation."""
 
 import json
+import os
 import sys
 import time
 import urllib.parse
@@ -34,6 +35,10 @@ def request(method, endpoint, data=None, token=None):
 
 def run_test():
     ts = int(time.time())
+    provider = os.getenv("AI_PROVIDER", "azure_openai")
+    fallback = os.getenv("AI_FALLBACK_PROVIDER", "gemini")
+
+    print(f"0. AI Provider Config: provider={provider}, fallback={fallback}")
 
     print("1. Creating Test User...")
     user_creds = {
