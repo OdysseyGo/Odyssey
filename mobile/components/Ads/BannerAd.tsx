@@ -9,7 +9,10 @@ type Props = {
   size?: BannerAdSize;
 };
 
-export default function BannerAd({ placement, size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER }: Props) {
+export default function BannerAd({
+  placement,
+  size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER,
+}: Props) {
   const { isAdFree, isReady, getPlacement } = useAds();
   if (!isReady || isAdFree) return null;
 
