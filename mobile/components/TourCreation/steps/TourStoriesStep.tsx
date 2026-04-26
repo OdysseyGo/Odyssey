@@ -4,15 +4,24 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { tourStoriesStepStyles } from './TourStoriesStep.styles';
 import Colors from '@/constants/Colors';
-import { TourLocation } from '../TourCreation.types';
+import {
+  TourCreationData,
+  TourLocation,
+  doesLocationMeetTourRequirements,
+} from '../TourCreation.types';
 import { useTranslation } from 'react-i18next';
 
 type TourStoriesStepProps = {
   locations: TourLocation[];
+  tourType: TourCreationData['tourType'];
   onLocationSelect: (location: TourLocation) => void;
 };
 
-export default function TourStoriesStep({ locations, onLocationSelect }: TourStoriesStepProps) {
+export default function TourStoriesStep({
+  locations,
+  tourType,
+  onLocationSelect,
+}: TourStoriesStepProps) {
   const theme = useColorTheme();
   const styles = tourStoriesStepStyles(theme);
   const color = Colors[theme];
@@ -35,7 +44,7 @@ export default function TourStoriesStep({ locations, onLocationSelect }: TourSto
       <Text style={styles.sectionSubtitle}>{t('creation.stories.subtitle')}</Text>
 
       {locations.map((location) => {
-        const isComplete = location.title.trim().length > 0 && location.story.trim().length > 0;
+        const isComplete = doesLocationMeetTourRequirements(location, tourType);
         return (
           <TouchableOpacity
             key={location.id}
@@ -47,7 +56,7 @@ export default function TourStoriesStep({ locations, onLocationSelect }: TourSto
                 <View style={styles.locationOrderBadge}>
                   <Text style={styles.locationOrderText}>{location.order}</Text>
                 </View>
-                <Text style={styles.locationCardTitle}>
+                <Text style={styles.locationCardTitle} numberOfLines={2} ellipsizeMode="tail">
                   {location.title || t('creation.stories.untitledLocation')}
                 </Text>
               </View>

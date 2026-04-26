@@ -42,7 +42,11 @@ export default function LocationItem({
         <Text style={styles.locationOrderText}>{location.order}</Text>
       </View>
       <View style={styles.locationInfo}>
-        <Text style={[styles.locationTitle, !location.title && styles.locationTitlePlaceholder]}>
+        <Text
+          style={[styles.locationTitle, !location.title && styles.locationTitlePlaceholder]}
+          numberOfLines={2}
+          ellipsizeMode="tail"
+        >
           {location.title || t('creation.location.tapToAddDetails')}
         </Text>
         <Text style={styles.locationCoords}>

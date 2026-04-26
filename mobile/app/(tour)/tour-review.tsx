@@ -1,10 +1,18 @@
 import React from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
-import { createTour, createTourStep } from '@/api/tours';
+import {
+  createTour,
+  createTourStep,
+  setStepArPuzzle,
+  setStepGyroscopePuzzle,
+  setStepPictureComparePuzzle,
+  setStepTriviaPuzzle,
+} from '@/api/tours';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { useTourCreation } from '@/contexts/TourCreationContext';
+import { doesLocationMeetTourRequirements } from '@/components/TourCreation';
 import { TourReviewStep } from '@/components/TourCreation/steps';
 import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
@@ -17,8 +25,21 @@ export default function TourReviewScreen() {
   const { tourData, resetTourData } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { t } = useTranslation();
+  const isReadyToSubmit = tourData.locations.every((location) =>
+    doesLocationMeetTourRequirements(location, tourData.tourType)
+  );
 
   const handleSubmitTour = async () => {
+    if (!isReadyToSubmit) {
+      Alert.alert(
+        t('creation.incompletePuzzleTitle', { defaultValue: 'Complete required puzzles' }),
+        t('creation.incompletePuzzleMessage', {
+          defaultValue: 'Puzzle tours need a valid puzzle at every location before submission.',
+        })
+      );
+      return;
+    }
+
     Alert.alert(t('creation.submitTitle'), t('creation.submitMessage'), [
       { text: t('creation.cancel'), style: 'cancel' },
       {
@@ -38,28 +59,62 @@ export default function TourReviewScreen() {
               is_premium: false,
             });
 
-            const createStepPromises = tourData.locations.map((loc, index) =>
-              createTourStep(tour.id, {
+            console.log('Tour created:', tour.id);
+
+            // 2. Create steps and configure step puzzles using type-specific endpoints.
+            for (const [index, loc] of tourData.locations.entries()) {
+              const createdStep = await createTourStep(tour.id, {
                 title: loc.title || `Stop ${index + 1}`,
                 description: loc.story || '',
                 latitude: Number(loc.latitude).toFixed(8),
                 longitude: Number(loc.longitude).toFixed(8),
                 order: loc.order,
                 image: loc.image,
-                puzzle: loc.puzzle
-                  ? {
-                      puzzle_type: loc.puzzle.puzzle_type,
-                      question: loc.puzzle.question,
-                      options: loc.puzzle.options,
-                      correct_answer: loc.puzzle.correctAnswer,
-                      hint: loc.puzzle.hint,
-                      xp_reward: loc.puzzle.xp_reward,
-                    }
-                  : undefined,
-              })
-            );
+              });
 
-            await Promise.all(createStepPromises);
+              if (!loc.puzzle) {
+                continue;
+              }
+
+              const basePayload = {
+                question: loc.puzzle.question,
+                hint: loc.puzzle.hint,
+                xp_reward: loc.puzzle.xp_reward,
+              };
+
+              if (loc.puzzle.puzzle_type === 'TRIVIA') {
+                await setStepTriviaPuzzle(tour.id, createdStep.id, {
+                  ...basePayload,
+                  options: loc.puzzle.options,
+                  correct_answer: loc.puzzle.correctAnswer,
+                });
+                continue;
+              }
+
+              if (loc.puzzle.puzzle_type === 'PICTURE_COMPARE') {
+                if (
+                  !loc.puzzle.referenceImage ||
+                  !loc.puzzle.referenceImage.startsWith('file://')
+                ) {
+                  throw new Error('PICTURE_COMPARE puzzles require a local reference image.');
+                }
+
+                await setStepPictureComparePuzzle(tour.id, createdStep.id, {
+                  ...basePayload,
+                  referenceImageUri: loc.puzzle.referenceImage,
+                });
+                continue;
+              }
+
+              if (loc.puzzle.puzzle_type === 'AR') {
+                await setStepArPuzzle(tour.id, createdStep.id, basePayload);
+                continue;
+              }
+
+              if (loc.puzzle.puzzle_type === 'GYROSCOPE') {
+                await setStepGyroscopePuzzle(tour.id, createdStep.id, basePayload);
+              }
+            }
 
             Alert.alert(t('creation.successTitle'), t('creation.successMessage'), [
               {
@@ -89,7 +144,7 @@ export default function TourReviewScreen() {
       <CreationFooter
         buttonText={isSubmitting ? t('creation.submitting') : t('creation.submit')}
         onPress={handleSubmitTour}
-        disabled={isSubmitting}
+        disabled={isSubmitting || !isReadyToSubmit}
       />
     </View>
   );

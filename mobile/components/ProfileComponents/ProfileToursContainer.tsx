@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { profileToursContainerStyles } from './ProfileToursContainer.styles';
@@ -8,7 +10,7 @@ import { Tour, TourStatus, getMyTours } from '@/api/tours';
 import ProfileTourCard from './ProfileTourCard';
 import { useTranslation } from 'react-i18next';
 
-export default function ProfileToursContainer({}: ProfileToursContainerProps) {
+export default function ProfileToursContainer(_props: ProfileToursContainerProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => profileToursContainerStyles(theme), [theme]);
   const color = Colors[theme];
@@ -59,6 +61,14 @@ export default function ProfileToursContainer({}: ProfileToursContainerProps) {
           <View style={styles.accentBar} />
           <Text style={styles.title}>{t('profile.myTours')}</Text>
         </View>
+        <TouchableOpacity
+          style={styles.completedToursButton}
+          onPress={() => router.push('/(tour)/my-completed-tours')}
+          activeOpacity={0.75}
+        >
+          <Text style={styles.completedToursButtonText}>{t('profile.completedTours')}</Text>
+          <Ionicons name="chevron-forward" size={16} color={color.primary} />
+        </TouchableOpacity>
       </View>
 
       {/* Segmented control */}

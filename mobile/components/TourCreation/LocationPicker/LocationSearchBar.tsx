@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import {
+  GooglePlacesAutocomplete,
+  GooglePlacesAutocompleteRef,
+} from 'react-native-google-places-autocomplete';
 import * as Location from 'expo-location';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -16,7 +19,7 @@ export default function LocationSearchBar({ onLocationAdd }: LocationSearchBarPr
   const theme = useColorTheme();
   const color = Colors[theme];
   const { t } = useTranslation();
-  const ref = useRef<any>(null);
+  const ref = useRef<GooglePlacesAutocompleteRef>(null);
   const [mapsApiKey, setMapsApiKey] = useState('');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -44,7 +47,9 @@ export default function LocationSearchBar({ onLocationAdd }: LocationSearchBarPr
           const { lat, lng } = details.geometry.location;
           const name = data.structured_formatting.main_text;
           onLocationAdd(lat, lng, name);
+          ref.current?.setAddressText('');
           ref.current?.clear();
+          ref.current?.blur();
         }}
         query={{
           key: mapsApiKey,

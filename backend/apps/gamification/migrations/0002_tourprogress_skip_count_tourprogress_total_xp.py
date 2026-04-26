@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('gamification', '0001_initial'),
+        ("gamification", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tourprogress',
-            name='skip_count',
+            model_name="tourprogress",
+            name="skip_count",
             field=models.IntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='tourprogress',
-            name='total_xp',
+            model_name="tourprogress",
+            name="total_xp",
             field=models.IntegerField(default=0),
         ),
     ]

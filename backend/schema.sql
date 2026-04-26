@@ -6,11 +6,11 @@
 INSERT INTO "user" (
     password, last_login, is_superuser, username, first_name, last_name, 
     email, is_staff, is_active, date_joined, xp, following_count, follower_count, 
-    credit, level, country, user_type, tour_count, rating
+    credit, level, country, user_type, tour_count, rating, avatar_url, is_banned
 ) VALUES (
     '', NULL, false, 'seed_creator', 'Tour', 'Creator',
     'seed_creator@example.com', false, true, NOW(), 0, 0, 0,
-    0, 1, '', 1, 0, 0.0
+    0, 1, '', 1, 0, 0.0, '', false
 ) ON CONFLICT (username) DO NOTHING;
 
 -- Insert Tours (using subquery to get creator id)

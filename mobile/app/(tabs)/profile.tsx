@@ -535,10 +535,6 @@ function ProfileContent() {
     //alert('deneme');
   };
 
-  const handleToursPress = () => {
-    router.push('/(tour)/my-completed-tours');
-  };
-
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       {/* ─── Sticky mini-header (fades in on scroll) ─ */}
@@ -578,7 +574,6 @@ function ProfileContent() {
           {...profileStats}
           onFollowersPress={handleFollowersPress}
           onFollowingPress={handleFollowingPress}
-          onToursPress={handleToursPress}
         />
 
         {/* ─── Actions ─────────────────────────────── */}
@@ -606,15 +601,6 @@ function ProfileContent() {
         </CopilotStep>
         
 
-        {/* ─── Logout ──────────────────────────────── */}
-        <TouchableOpacity
-          style={[styles.logoutButton, { borderColor: theme.error }]}
-          onPress={handleLogout}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="log-out-outline" size={18} color={theme.error} />
-          <Text style={[styles.logoutText, { color: theme.error }]}>{t('profile.logout')}</Text>
-        </TouchableOpacity>
       </Animated.ScrollView>
 
       {/* ─── Modals ────────────────────────────────── */}
@@ -642,7 +628,7 @@ function ProfileContent() {
         animationType="fade"
         onRequestClose={() => setShowSettings(false)}
       >
-        <SettingsScreen onClose={() => setShowSettings(false)} />
+        <SettingsScreen onClose={() => setShowSettings(false)} onLogout={handleLogout} />
       </Modal>
 
       <Modal visible={showTutorials} transparent animationType="fade">
@@ -682,23 +668,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg + 2,
     marginBottom:  Spacing.sm,
     gap: Spacing.md,
-  },
-
-  // Logout
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    marginTop: Spacing.xxl,
-    marginHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: Spacing.borderRadiusFull,
-    borderWidth: 1.5,
-  },
-  logoutText: {
-    fontSize: 15,
-    fontWeight: '600',
   },
 });
 

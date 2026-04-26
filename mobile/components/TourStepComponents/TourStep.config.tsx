@@ -1,6 +1,6 @@
 import { markerColors } from '@/constants/Colors';
 
-export type PuzzleType = 'multiple-choice';
+export type PuzzleType = 'multiple-choice' | 'picture-compare';
 
 export interface MultipleChoiceOption {
   id: string;
@@ -15,7 +15,13 @@ export interface MultipleChoicePuzzle {
   imageUri?: string;
 }
 
-export type Puzzle = MultipleChoicePuzzle;
+export interface PictureComparePuzzle {
+  type: 'picture-compare';
+  question: string;
+  referenceImageUri?: string;
+}
+
+export type Puzzle = MultipleChoicePuzzle | PictureComparePuzzle;
 
 export type TourStepType = 'story' | 'puzzle';
 

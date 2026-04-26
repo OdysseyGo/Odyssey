@@ -6,9 +6,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0003_rename_followee_follow_following_and_more'),
-        ('users', '0005_merge_0003_user_avatar_url_0004_remove_admin_model'),
+        ("users", "0003_rename_followee_follow_following_and_more"),
+        ("users", "0005_merge_0003_user_avatar_url_0004_remove_admin_model"),
     ]
 
-    operations = [
-    ]
+    operations = []
