@@ -5,12 +5,20 @@ from .models import Badge, PictureCompareConfig, TourProgress, UserBadge
 
 @admin.register(Badge)
 class BadgeAdmin(admin.ModelAdmin):
-    list_display = ("name", "description", "created_at")
+    list_display = ("code", "name", "description", "created_at")
+    search_fields = ("code", "name")
 
 
 @admin.register(UserBadge)
 class UserBadgeAdmin(admin.ModelAdmin):
-    list_display = ("user", "badge", "earned_at")
+    list_display = (
+        "user",
+        "badge",
+        "city",
+        "country_code",
+        "mistake_count",
+        "earned_at",
+    )
     list_filter = ("badge",)
 
 

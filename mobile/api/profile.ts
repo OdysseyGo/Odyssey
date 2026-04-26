@@ -2,18 +2,30 @@ import { apiRequest } from './APIClient';
 
 export type Badge = {
   id: number;
+  code?: string | null;
   name: string;
   description: string;
-  icon: string;
-  criteria: string;
+  icon?: string | null;
+  criteria: Record<string, unknown>;
   created_at: string;
+};
+
+export type UserBadge = {
+  id: number;
+  user: number;
+  badge: Badge;
+  city: string;
+  country_code: string;
+  mistake_count?: number | null;
+  source_tour?: number | null;
+  earned_at: string;
 };
 
 export type BadgesListResponse = {
   count: number;
   next?: string;
   previous?: string;
-  results: Badge[];
+  results: UserBadge[];
 };
 
 export const getMyBadges = () =>

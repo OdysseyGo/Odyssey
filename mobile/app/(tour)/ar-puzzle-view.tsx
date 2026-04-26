@@ -2,20 +2,20 @@ import React from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  Viro3DObject,
-  ViroARScene,
-  ViroARSceneNavigator,
-  ViroAmbientLight,
-  ViroText,
-} from '@reactvision/react-viro';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { isViroAvailable, loadViro } from '@/lib/viro';
 
 const MODEL_POSITION: [number, number, number] = [0, 0, -1.2];
 const MODEL_SCALE: [number, number, number] = [0.25, 0.25, 0.25];
 const DEFAULT_MODEL_SCALE_METERS = 1;
 const MIN_MODEL_SCALE_METERS = 0.3;
 const MAX_MODEL_SCALE_METERS = 10;
+const VIRO = loadViro();
+const Viro3DObject = VIRO?.Viro3DObject as any;
+const ViroARScene = VIRO?.ViroARScene as any;
+const ViroARSceneNavigator = VIRO?.ViroARSceneNavigator as any;
+const ViroAmbientLight = VIRO?.ViroAmbientLight as any;
+const ViroText = VIRO?.ViroText as any;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -42,6 +42,10 @@ function toModelWorldPoint(
 }
 
 function ARPuzzleScene(props: any) {
+  if (!ViroARScene) {
+    return null;
+  }
+
   const appProps = props.sceneNavigator.viroAppProps;
   const sceneAssetUrl = appProps?.sceneAssetUrl as string;
   const secretCode = appProps?.secretCode as string;
@@ -113,6 +117,19 @@ export default function ARPuzzleViewScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorState}>
           <Text style={styles.errorText}>Missing AR model asset.</Text>
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <Text style={styles.closeButtonText}>Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!isViroAvailable()) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorState}>
+          <Text style={styles.errorText}>AR view is unavailable in this runtime.</Text>
           <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
             <Text style={styles.closeButtonText}>Back</Text>
           </TouchableOpacity>

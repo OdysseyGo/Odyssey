@@ -27,7 +27,7 @@ import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
 import AvatarSelectionModal from '@/components/ProfileComponents/AvatarSelectionModal';
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import { getMe, User } from '@/api/users';
-import { getMyBadges, Badge } from '@/api/profile';
+import { getMyBadges, UserBadge } from '@/api/profile';
 import { removeAuthToken } from '@/api/auth';
 import { consumeProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -351,7 +351,7 @@ const guestStyles = StyleSheet.create({
 export default function Profile() {
   const [curUser, setCurUser] = useState<User | null>(null);
   const [badgesCount, setBadgesCount] = useState(0);
-  const [badges, setBadges] = useState<Badge[]>([]);
+  const [badges, setBadges] = useState<UserBadge[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasToken, setHasToken] = useState<boolean | null>(null);
   const [fetchError, setFetchError] = useState(false);
@@ -498,13 +498,16 @@ export default function Profile() {
     following: curUser.following_count,
   };
 
-  const formattedBadges = badges.map((badge) => ({
-    id: badge.id.toString(),
-    name: badge.name,
-    icon: badge.icon,
-    description: badge.description,
+  const formattedBadges = badges.map((userBadge) => ({
+    id: userBadge.id.toString(),
+    name: userBadge.badge.name,
+    code: userBadge.badge.code,
+    description: userBadge.badge.description,
     unlocked: true,
-    earnedDate: badge.created_at,
+    city: userBadge.city,
+    countryCode: userBadge.country_code,
+    mistakeCount: userBadge.mistake_count,
+    earnedDate: userBadge.earned_at,
   }));
 
   const handleFollowersPress = () => {

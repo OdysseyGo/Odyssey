@@ -7,7 +7,7 @@ from apps.tours.api.serializers import TourSerializer, TourStepSerializer
 class BadgeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Badge
-        fields = ["id", "name", "description", "icon", "criteria", "created_at"]
+        fields = ["id", "code", "name", "description", "icon", "criteria", "created_at"]
 
 
 class UserBadgeSerializer(serializers.ModelSerializer):
@@ -15,7 +15,16 @@ class UserBadgeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserBadge
-        fields = ["id", "user", "badge", "earned_at"]
+        fields = [
+            "id",
+            "user",
+            "badge",
+            "city",
+            "country_code",
+            "mistake_count",
+            "source_tour",
+            "earned_at",
+        ]
         read_only_fields = ["user", "earned_at"]
 
 

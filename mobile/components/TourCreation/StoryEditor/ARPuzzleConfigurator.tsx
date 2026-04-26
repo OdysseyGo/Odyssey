@@ -13,22 +13,13 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import {
-  Viro3DObject,
-  ViroARScene,
-  ViroARSceneNavigator,
-  ViroAmbientLight,
-  ViroMaterials,
-  ViroPolyline,
-  ViroSphere,
-  ViroText,
-} from '@reactvision/react-viro';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { ARModel, ARModelAnchor, getArModels } from '@/api/tours';
 import { ARPuzzleConfig } from '../TourCreation.types';
+import { isViroAvailable, loadViro } from '@/lib/viro';
 
 type WizardStep = 'catalog' | 'code' | 'review';
 
@@ -51,6 +42,15 @@ const DEFAULT_MODEL_SCALE_METERS = 1;
 const MIN_MODEL_SCALE_METERS = 0.3;
 const MAX_MODEL_SCALE_METERS = 10;
 const HIGHLIGHT_HEIGHT = 0.18;
+const VIRO = loadViro();
+const Viro3DObject = VIRO?.Viro3DObject as any;
+const ViroARScene = VIRO?.ViroARScene as any;
+const ViroARSceneNavigator = VIRO?.ViroARSceneNavigator as any;
+const ViroAmbientLight = VIRO?.ViroAmbientLight as any;
+const ViroMaterials = VIRO?.ViroMaterials as any;
+const ViroPolyline = VIRO?.ViroPolyline as any;
+const ViroSphere = VIRO?.ViroSphere as any;
+const ViroText = VIRO?.ViroText as any;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -65,19 +65,6 @@ function getScaledModelScale(modelScaleMeters: number): [number, number, number]
 }
 
 let materialsReady = false;
-if (!materialsReady) {
-  ViroMaterials.createMaterials({
-    arPuzzleAnchorMarker: {
-      lightingModel: 'Constant',
-      diffuseColor: '#f97316',
-    },
-    arPuzzleAnchorLine: {
-      lightingModel: 'Constant',
-      diffuseColor: '#facc15',
-    },
-  });
-  materialsReady = true;
-}
 
 function getAnchorIndex(model: ARModel | null, anchorId: string | null) {
   if (!model || !anchorId) {
@@ -99,6 +86,10 @@ function toModelWorldPoint(
 }
 
 function ARSelectionScene(props: any) {
+  if (!ViroARScene) {
+    return null;
+  }
+
   const appProps = props.sceneNavigator.viroAppProps as SelectionSceneAppProps;
   const sceneAssetUrl = appProps?.sceneAssetUrl ?? '';
   const secretCode = appProps?.secretCode?.trim() || 'Code';
@@ -183,6 +174,25 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
   );
   const [isScalePanelOpen, setIsScalePanelOpen] = React.useState(false);
   const [sliderWidth, setSliderWidth] = React.useState(0);
+  const viroAvailable = isViroAvailable();
+
+  React.useEffect(() => {
+    if (materialsReady || !ViroMaterials) {
+      return;
+    }
+
+    ViroMaterials.createMaterials({
+      arPuzzleAnchorMarker: {
+        lightingModel: 'Constant',
+        diffuseColor: '#f97316',
+      },
+      arPuzzleAnchorLine: {
+        lightingModel: 'Constant',
+        diffuseColor: '#facc15',
+      },
+    });
+    materialsReady = true;
+  }, []);
 
   const selectedModel = React.useMemo(
     () => models.find((model) => model.id === selectedModelId) ?? null,
@@ -277,10 +287,10 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
     (modelScaleMeters - MIN_MODEL_SCALE_METERS) / (MAX_MODEL_SCALE_METERS - MIN_MODEL_SCALE_METERS);
 
   const openArPreview = (anchor?: ARModelAnchor | null) => {
-    if (!selectedModel || !anchor) return;
+    if (!selectedModel || !anchor || !viroAvailable) return;
 
     router.push({
-      pathname: '/(tour)/ar-preview',
+      pathname: '/(tour)/ar-preview' as any,
       params: {
         sceneAssetUrl: selectedModel.scene_asset_url,
         secretCode,
@@ -427,8 +437,8 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
             <Text style={stylesForTheme.reviewLine}>Position: {selectedAnchor.label}</Text>
           </View>
 
-          <View style={stylesForTheme.reviewActions}>
-            <TouchableOpacity
+              <View style={stylesForTheme.reviewActions}>
+                <TouchableOpacity
               style={stylesForTheme.secondaryButton}
               onPress={() => {
                 setIsScalePanelOpen(false);
@@ -437,14 +447,17 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
             >
               <Text style={stylesForTheme.secondaryButtonText}>Change anchor</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={stylesForTheme.eyePreviewButton}
-              onPress={() => openArPreview(selectedAnchor)}
-            >
-              <Ionicons name="eye-outline" size={20} color={color.white} />
-              <Text style={stylesForTheme.eyePreviewText}>Preview in AR</Text>
-            </TouchableOpacity>
-          </View>
+                <TouchableOpacity
+                  style={stylesForTheme.eyePreviewButton}
+                  onPress={() => openArPreview(selectedAnchor)}
+                  disabled={!viroAvailable}
+                >
+                  <Ionicons name="eye-outline" size={20} color={color.white} />
+                  <Text style={stylesForTheme.eyePreviewText}>
+                    {viroAvailable ? 'Preview in AR' : 'AR unavailable'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
           <View style={stylesForTheme.buttonRow}>
             <TouchableOpacity
@@ -481,7 +494,7 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
             <View style={stylesForTheme.headerSpacer} />
           </View>
 
-          {selectedModel ? (
+          {selectedModel && viroAvailable ? (
             <>
               <View style={stylesForTheme.fullscreenSceneFrame}>
                 <ViroARSceneNavigator
@@ -582,7 +595,9 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
             </>
           ) : (
             <View style={stylesForTheme.centerState}>
-              <Text style={stylesForTheme.errorText}>Select an AR model first.</Text>
+              <Text style={stylesForTheme.errorText}>
+                {selectedModel ? 'AR is unavailable in this runtime.' : 'Select an AR model first.'}
+              </Text>
             </View>
           )}
         </SafeAreaView>
