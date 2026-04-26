@@ -20,4 +20,4 @@ class TourFilter(filters.FilterSet):
 
     class Meta:
         model = Tour
-        fields = ["city", "difficulty", "tour_type", "is_premium", "status"]
+        fields = ["city", "difficulty", "tour_type", "is_premium", "status", "creator"]

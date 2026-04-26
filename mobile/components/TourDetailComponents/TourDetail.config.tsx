@@ -34,6 +34,7 @@ export const MOCK_TOUR: TourDetail = {
   description:
     'Explore the rich history of Istanbul through its most iconic landmarks. This walking tour takes you through centuries of Byzantine and Ottoman heritage, from the majestic Hagia Sophia to the vibrant Grand Bazaar.',
   author: 'Odyssey Travel',
+  authorId: 1,
   authorAvatar: 'https://picsum.photos/100/100',
   coverImage: 'https://picsum.photos/800/400',
   duration: '4 hours',

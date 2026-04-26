@@ -12,6 +12,7 @@ import {
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { useTourCreation } from '@/contexts/TourCreationContext';
+import { doesLocationMeetTourRequirements } from '@/components/TourCreation';
 import { TourReviewStep } from '@/components/TourCreation/steps';
 import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
@@ -24,8 +25,21 @@ export default function TourReviewScreen() {
   const { tourData, resetTourData } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { t } = useTranslation();
+  const isReadyToSubmit = tourData.locations.every((location) =>
+    doesLocationMeetTourRequirements(location, tourData.tourType)
+  );
 
   const handleSubmitTour = async () => {
+    if (!isReadyToSubmit) {
+      Alert.alert(
+        t('creation.incompletePuzzleTitle', { defaultValue: 'Complete required puzzles' }),
+        t('creation.incompletePuzzleMessage', {
+          defaultValue: 'Puzzle tours need a valid puzzle at every location before submission.',
+        })
+      );
+      return;
+    }
+
     Alert.alert(t('creation.submitTitle'), t('creation.submitMessage'), [
       { text: t('creation.cancel'), style: 'cancel' },
       {
@@ -150,7 +164,7 @@ export default function TourReviewScreen() {
       <CreationFooter
         buttonText={isSubmitting ? t('creation.submitting') : t('creation.submit')}
         onPress={handleSubmitTour}
-        disabled={isSubmitting}
+        disabled={isSubmitting || !isReadyToSubmit}
       />
     </View>
   );

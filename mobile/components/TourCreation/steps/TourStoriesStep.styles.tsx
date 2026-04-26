@@ -41,6 +41,9 @@ export const tourStoriesStepStyles = (theme: ThemeName) => {
     locationCardLeft: {
       flexDirection: 'row',
       alignItems: 'center',
+      flex: 1,
+      minWidth: 0,
+      paddingRight: Spacing.md,
     },
     locationOrderBadge: {
       width: 28,
@@ -60,6 +63,8 @@ export const tourStoriesStepStyles = (theme: ThemeName) => {
       fontSize: 16,
       fontWeight: '600',
       color: color.text,
+      flex: 1,
+      flexShrink: 1,
     },
     locationCardDescription: {
       fontSize: 12,

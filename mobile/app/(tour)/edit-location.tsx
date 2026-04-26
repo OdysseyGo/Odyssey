@@ -11,7 +11,7 @@ import WritingTips from '@/components/TourCreation/StoryEditor/WritingTips';
 import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditorFooter';
 import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
 import { CreationHeader } from '@/components/TourCreation/common';
-import { Puzzle } from '@/components/TourCreation';
+import { Puzzle, doesLocationMeetTourRequirements } from '@/components/TourCreation';
 import { useTranslation } from 'react-i18next';
 
 export default function EditLocationScreen() {

@@ -157,6 +157,7 @@ export type TourFilters = {
   tour_type?: TourType;
   is_premium?: boolean;
   status?: TourStatus;
+  creator?: number;
   min_distance?: number;
   max_distance?: number;
   min_duration?: number;
@@ -185,6 +186,7 @@ export async function getTours(
     if (filters.tour_type) params.tour_type = filters.tour_type;
     if (filters.is_premium !== undefined) params.is_premium = filters.is_premium;
     if (filters.status) params.status = filters.status;
+    if (filters.creator) params.creator = filters.creator;
     if (filters.min_distance) params.min_distance = filters.min_distance;
     if (filters.max_distance) params.max_distance = filters.max_distance;
     if (filters.min_duration) params.min_duration = filters.min_duration;
@@ -405,6 +407,25 @@ export async function getMyCompletedTours(
     url: '/api/tours/my-completed-tours/',
     params,
     auth: true,
+    signal,
+  });
+}
+
+/**
+ * Fetch published tours whose first step falls inside the map bounding box
+ */
+export async function getToursInBounds(
+  north: number,
+  south: number,
+  east: number,
+  west: number,
+  signal?: AbortSignal
+): Promise<Tour[]> {
+  return apiRequest<Tour[]>({
+    method: 'GET',
+    url: '/api/tours/in-bounds/',
+    params: { north, south, east, west },
+    auth: false,
     signal,
   });
 }
