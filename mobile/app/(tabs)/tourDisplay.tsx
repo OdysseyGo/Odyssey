@@ -372,14 +372,17 @@ function TourDisplayContent() {
       >
         
         {/* ─── Hero Carousel ─────────────────────────────── */}
-        
+
+        <CopilotStep text={t('tutorial.tours.step3text')} order={3} name="toursFeatured">
+        <WalkthroughableView>
         {featuredTours.length > 0 && showFeatured && (
           <FeaturedTourCarousel tours={featuredTours} autoPlayInterval={5000} />
         )}
+        </WalkthroughableView>
+        </CopilotStep>
 
         {/* ─── Popular Tours ─────────────────────────────── */}
-        <CopilotStep text={t('tutorial.tours.step2text')} order={2} name="toursOutro">
-        <WalkthroughableView>
+        
         {showPopular && popularTours.length > 0 && (
           <TourScrollerComp
             title={t('tour.popular')}
@@ -387,8 +390,7 @@ function TourDisplayContent() {
             accentColor={theme.primary}
           />
         )}
-        </WalkthroughableView>
-        </CopilotStep>
+      
 
         {/* ─── Continent Sections ────────────────────────── */}
         {shownContinents.map(({ continent, tours }, index) => (
@@ -440,6 +442,8 @@ function TourDisplayContent() {
             </Text>
           </View>
           
+          <CopilotStep text={t('tutorial.tours.step2text')} order={2} name="toursSearch">
+          <WalkthroughableView>
           <TouchableOpacity
             style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
             activeOpacity={0.7}
@@ -447,6 +451,8 @@ function TourDisplayContent() {
           >
             <Ionicons name="search" size={20} color={theme.text} />
           </TouchableOpacity>
+          </WalkthroughableView>
+          </CopilotStep>
           
         </View>
         </WalkthroughableView>
@@ -506,7 +512,9 @@ function TourDisplayContent() {
         </ScrollView>
       </BlurView>
 
+     
       <CreateTourButton />
+        
     </View>
   );
 }

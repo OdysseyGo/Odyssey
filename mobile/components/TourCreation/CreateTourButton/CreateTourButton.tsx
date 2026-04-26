@@ -7,6 +7,9 @@ import { createTourButtonStyles } from './CreateTourButton.styles';
 import Colors from '@/constants/Colors';
 import { isLoggedIn } from '@/api/auth';
 import { useTranslation } from 'react-i18next';
+import { CopilotProvider, CopilotStep, walkthroughable } from 'react-native-copilot';
+
+const WalkthroughableView = walkthroughable(View);
 
 export default function CreateTourButton() {
   const theme = useColorTheme();
@@ -27,18 +30,19 @@ export default function CreateTourButton() {
   };
 
   return (
-    <View
-      style={{
+
+     <CopilotStep text={t('tutorial.tours.step4text')} order={4} name="createTourStep">
+            <WalkthroughableView   style={{
         position: 'absolute',
         bottom: 24,
         right: 24,
         alignItems: 'center',
         justifyContent: 'center',
-      }}
-    >
+      }}>
       <TouchableOpacity style={styles.floatingButton} onPress={handlePress} activeOpacity={0.8}>
         <Ionicons name="add" size={30} color={color.white} />
       </TouchableOpacity>
-    </View>
+    </WalkthroughableView>
+    </CopilotStep>
   );
 }

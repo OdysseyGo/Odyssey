@@ -551,7 +551,11 @@
     },
     "tours": {
       "label": "Tutorial de Tours",
-      "desc": "Aprende a navegar e interactuar con los tours."
+      "desc": "Aprende a navegar e interactuar con los tours.",
+      "step1text": "¡Bienvenido al tutorial de tours!",
+      "step2text": "Puedes buscar tours aquí.",
+      "step3text": "¡Puedes ver los mejores tours destacados aquí!",
+      "step4text": "¡Para crear tours generados por IA, presiona aquí!"
     }
   }
 }
