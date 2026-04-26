@@ -50,7 +50,11 @@ export interface TourCreationData {
   tourType: 'STORY' | 'PUZZLE' | 'HYBRID';
   estimatedDuration: number; // in minutes
   locations: TourLocation[];
+  country?: string;
+  countryCode?: string;
   city?: string;
+  cityLatitude?: number;
+  cityLongitude?: number;
 }
 
 export const TOUR_CATEGORIES = [
@@ -86,7 +90,11 @@ export const createEmptyTourData = (): TourCreationData => ({
   tourType: 'STORY',
   estimatedDuration: 60,
   locations: [],
+  country: '',
+  countryCode: '',
   city: '',
+  cityLatitude: undefined,
+  cityLongitude: undefined,
 });
 
 export const createNewLocation = (

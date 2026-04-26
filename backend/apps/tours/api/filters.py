@@ -15,6 +15,8 @@ class TourFilter(filters.FilterSet):
     difficulty = filters.ChoiceFilter(choices=Tour.DIFFICULTY_CHOICES)
     city = filters.CharFilter(lookup_expr="icontains")
     category = filters.CharFilter(lookup_expr="iexact")
+    country = filters.CharFilter(lookup_expr="icontains")
+    country_code = filters.CharFilter(lookup_expr="iexact")
     min_accessibility = filters.NumberFilter(
         field_name="accessibility_rating", lookup_expr="gte"
     )
@@ -24,6 +26,8 @@ class TourFilter(filters.FilterSet):
         fields = [
             "category",
             "city",
+            "country",
+            "country_code",
             "difficulty",
             "tour_type",
             "is_premium",
