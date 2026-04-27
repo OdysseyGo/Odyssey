@@ -1,21 +1,19 @@
 """Grant rewarded-ad rewards to users.
 
-Idempotent on `admob_transaction_id`. CREDITS rewards are written through the
-KAN-58 `apps.payments.services.credit_service.CreditService` so they show up in
-the existing `Transaction` ledger; AI_SLOT and HINT rewards are stored as
-unconsumed `RewardedAdGrant` rows that the AI / puzzle endpoints redeem later.
+Idempotent on `admob_transaction_id`. CREDITS rewards increment `User.credit`
+directly. AI_SLOT, HINT, and REVIVE rewards are stored as unconsumed
+`RewardedAdGrant` rows that the relevant feature endpoints redeem later.
 """
 
 import logging
 
 from django.db import IntegrityError
 from django.db import transaction as db_transaction
+from django.db.models import F
 
 from apps.ads.models import AdPlacement, RewardedAdGrant
 
 logger = logging.getLogger(__name__)
-
-AD_REWARD_TRANSACTION_TYPE = "AD_REWARD"
 
 
 class RewardServiceError(Exception):
@@ -58,24 +56,15 @@ def grant(
             return existing, False
 
         if placement.reward_type == AdPlacement.CREDITS:
-            _credit_user(user, amount, placement)
+            _credit_user(user, amount)
             grant_row.consumed_at = grant_row.granted_at
             grant_row.save(update_fields=["consumed_at"])
 
         return grant_row, True
 
 
-def _credit_user(user, amount, placement):
-    """Credit the user via KAN-58 CreditService. Lazy import — payments app
-    is not present on branches without KAN-58."""
-    from apps.payments.services.credit_service import CreditService
-
-    CreditService.add_credits(
-        user=user,
-        amount=amount,
-        transaction_type=AD_REWARD_TRANSACTION_TYPE,
-        description=f"Rewarded ad: {placement.key}",
-    )
+def _credit_user(user, amount):
+    type(user).objects.filter(pk=user.pk).update(credit=F("credit") + amount)
 
 
 def consume(grant_row: RewardedAdGrant, context: dict):

@@ -12,10 +12,10 @@ type Props = {
 };
 
 export default function RewardedAdButton({ placement, label, onEarned, disabled }: Props) {
-  const { isAdFree, isReady } = useAds();
+  const { isReady } = useAds();
   const { status, show, available } = useRewardedAd(placement);
 
-  if (!isReady || isAdFree || !available) return null;
+  if (!isReady || !available) return null;
 
   const isLoading = status === 'loading' || status === 'idle';
   const isShowing = status === 'showing';

@@ -12,12 +12,12 @@ function uuid() {
 }
 
 export function useInterstitial(placementKey: string) {
-  const { isAdFree, isReady, getPlacement } = useAds();
+  const { isReady, getPlacement } = useAds();
   const adRef = useRef<InterstitialAd | null>(null);
   const loadedRef = useRef(false);
 
   useEffect(() => {
-    if (!isReady || isAdFree) return;
+    if (!isReady) return;
     const placement = getPlacement(placementKey);
     if (!placement || placement.ad_format !== 'INTERSTITIAL') return;
     if (placement.remaining_today <= 0) return;
@@ -42,7 +42,7 @@ export function useInterstitial(placementKey: string) {
       adRef.current = null;
       loadedRef.current = false;
     };
-  }, [isReady, isAdFree, placementKey, getPlacement]);
+  }, [isReady, placementKey, getPlacement]);
 
   const show = async (): Promise<boolean> => {
     if (!adRef.current || !loadedRef.current) return false;

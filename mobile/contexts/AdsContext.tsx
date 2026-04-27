@@ -10,7 +10,6 @@ import { getAdConfig, AdPlacement } from '@/api/ads';
 import { getMe, User } from '@/api/users';
 
 interface AdsState {
-  isAdFree: boolean;
   isReady: boolean;
   placements: Map<string, AdPlacement>;
   user: User | null;
@@ -25,7 +24,6 @@ const AdsContext = createContext<AdsContextType | undefined>(undefined);
 
 export function AdsProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AdsState>({
-    isAdFree: false,
     isReady: false,
     placements: new Map(),
     user: null,
@@ -34,14 +32,14 @@ export function AdsProvider({ children }: { children: ReactNode }) {
   const refresh = async () => {
     const token = await SecureStore.getItemAsync('userToken');
     if (!token) {
-      setState({ isAdFree: false, isReady: true, placements: new Map(), user: null });
+      setState({ isReady: true, placements: new Map(), user: null });
       return;
     }
 
     try {
       const [config, user] = await Promise.all([getAdConfig(), getMe()]);
       const placements = new Map(config.placements.map((p) => [p.key, p]));
-      setState({ isAdFree: config.is_ad_free, isReady: true, placements, user });
+      setState({ isReady: true, placements, user });
     } catch (err) {
       console.warn('AdsContext: failed to fetch config', err);
       setState((s) => ({ ...s, isReady: true }));
@@ -62,7 +60,6 @@ export function AdsProvider({ children }: { children: ReactNode }) {
       await refresh();
       if (cancelled) return;
 
-      // If user is ad-free, skip SDK init entirely.
       const token = await SecureStore.getItemAsync('userToken');
       if (!token) return;
 

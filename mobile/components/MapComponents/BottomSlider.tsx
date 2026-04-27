@@ -11,7 +11,6 @@ import TourNavigation from '../TourStepComponents/TourNavigation';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { completeStep, skipStep } from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
 import { useRewardedAd } from '@/components/Ads/useRewardedAd';
-import { useAds } from '@/contexts/AdsContext';
 
 const BOTTOM_SHEET_ANIMATION_DURATION = Animations.bottomSheet.animationDuration;
 
@@ -37,7 +36,6 @@ export default function BottomSlider({
     confirmLocation,
   } = useActiveTour();
 
-  const { isAdFree } = useAds();
   const rewardedSkip = useRewardedAd('rewarded_hint');
   const skipUsingAdRef = useRef(false);
 
@@ -143,7 +141,7 @@ export default function BottomSlider({
   ]);
 
   const handleSkipPress = useCallback(() => {
-    if (isAdFree || !rewardedSkip.available || rewardedSkip.status !== 'loaded') {
+    if (!rewardedSkip.available || rewardedSkip.status !== 'loaded') {
       handleSkip();
       return;
     }
@@ -170,7 +168,7 @@ export default function BottomSlider({
         },
       ]
     );
-  }, [isAdFree, rewardedSkip, handleSkip, t]);
+  }, [rewardedSkip, handleSkip, t]);
 
   const handleNavigatePrev = useCallback(() => {
     if (currentStepIndex > 0) {

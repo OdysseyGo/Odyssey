@@ -18,11 +18,13 @@ class AdPlacement(models.Model):
     CREDITS = "CREDITS"
     AI_SLOT = "AI_SLOT"
     HINT = "HINT"
+    REVIVE = "REVIVE"
     REWARD_TYPE_CHOICES = [
         (NONE, "None"),
         (CREDITS, "Credits"),
         (AI_SLOT, "AI Generation Slot"),
         (HINT, "Puzzle Hint or Skip"),
+        (REVIVE, "Tour Revive After Failure"),
     ]
 
     key = models.SlugField(max_length=64, unique=True)
@@ -81,10 +83,12 @@ class RewardedAdGrant(models.Model):
     CREDITS = "CREDITS"
     AI_SLOT = "AI_SLOT"
     HINT = "HINT"
+    REVIVE = "REVIVE"
     REWARD_TYPE_CHOICES = [
         (CREDITS, "Credits"),
         (AI_SLOT, "AI Generation Slot"),
         (HINT, "Puzzle Hint or Skip"),
+        (REVIVE, "Tour Revive After Failure"),
     ]
 
     user = models.ForeignKey(

@@ -13,8 +13,8 @@ export default function BannerAd({
   placement,
   size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER,
 }: Props) {
-  const { isAdFree, isReady, getPlacement } = useAds();
-  if (!isReady || isAdFree) return null;
+  const { isReady, getPlacement } = useAds();
+  if (!isReady) return null;
 
   const adPlacement = getPlacement(placement);
   if (!adPlacement || adPlacement.ad_format !== 'BANNER') return null;

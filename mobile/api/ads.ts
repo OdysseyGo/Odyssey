@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 import { apiRequest } from './APIClient';
 
 export type AdFormat = 'BANNER' | 'INTERSTITIAL' | 'REWARDED';
-export type RewardType = 'NONE' | 'CREDITS' | 'AI_SLOT' | 'HINT';
+export type RewardType = 'NONE' | 'CREDITS' | 'AI_SLOT' | 'HINT' | 'REVIVE';
 
 export type AdPlacement = {
   key: string;
@@ -16,7 +16,6 @@ export type AdPlacement = {
 };
 
 export type AdConfigResponse = {
-  is_ad_free: boolean;
   placements: AdPlacement[];
 };
 

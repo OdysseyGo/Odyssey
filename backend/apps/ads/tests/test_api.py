@@ -1,5 +1,4 @@
 import uuid
-from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -57,11 +56,11 @@ def rewarded_hint(db):
     )
 
 
-def test_config_returns_placements_for_free_user(client, banner, rewarded_credits):
+def test_config_returns_enabled_placements(client, banner, rewarded_credits):
     resp = client.get("/api/ads/config/?platform=ios")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["is_ad_free"] is False
+    assert "is_ad_free" not in body
     keys = {p["key"] for p in body["placements"]}
     assert keys == {"profile_banner", "rewarded_credits"}
 
@@ -71,12 +70,6 @@ def test_config_hides_disabled_placements(client, banner):
     banner.save()
     resp = client.get("/api/ads/config/?platform=ios")
     assert resp.json()["placements"] == []
-
-
-def test_config_ad_free_user_sees_empty_placements(client, banner):
-    with patch("apps.ads.api.views.is_user_ad_free", return_value=True):
-        resp = client.get("/api/ads/config/?platform=ios")
-    assert resp.json() == {"is_ad_free": True, "placements": []}
 
 
 def test_impression_logged(client, user, banner):
@@ -116,23 +109,25 @@ def test_impression_frequency_capped(client, user, banner):
 
 
 def test_reward_service_grant_credits_idempotent(user, rewarded_credits):
-    with patch("apps.ads.services.reward_service._credit_user") as credit:
-        first, created1 = reward_service.grant(
-            user=user,
-            placement=rewarded_credits,
-            admob_transaction_id="tx-1",
-        )
-        assert created1 is True
-        assert credit.call_count == 1
+    starting = user.credit
+    first, created1 = reward_service.grant(
+        user=user,
+        placement=rewarded_credits,
+        admob_transaction_id="tx-1",
+    )
+    assert created1 is True
+    user.refresh_from_db()
+    assert user.credit == starting + rewarded_credits.reward_amount
 
-        second, created2 = reward_service.grant(
-            user=user,
-            placement=rewarded_credits,
-            admob_transaction_id="tx-1",
-        )
-        assert created2 is False
-        assert second.id == first.id
-        assert credit.call_count == 1  # not called again on replay
+    second, created2 = reward_service.grant(
+        user=user,
+        placement=rewarded_credits,
+        admob_transaction_id="tx-1",
+    )
+    assert created2 is False
+    assert second.id == first.id
+    user.refresh_from_db()
+    assert user.credit == starting + rewarded_credits.reward_amount  # no double-credit
 
 
 def test_reward_service_hint_unconsumed(user, rewarded_hint):
@@ -162,10 +157,9 @@ def test_consume_endpoint_marks_consumed_then_409(client, user, rewarded_hint):
 
 
 def test_consume_endpoint_rejects_credits_grant(client, user, rewarded_credits):
-    with patch("apps.ads.services.reward_service._credit_user"):
-        grant_row, _ = reward_service.grant(
-            user=user, placement=rewarded_credits, admob_transaction_id="tx-c"
-        )
+    grant_row, _ = reward_service.grant(
+        user=user, placement=rewarded_credits, admob_transaction_id="tx-c"
+    )
 
     resp = client.post(
         f"/api/ads/rewards/{grant_row.id}/consume/", {"context": {}}, format="json"

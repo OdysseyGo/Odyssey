@@ -17,7 +17,6 @@ export type User = {
   tour_count: number;
   rating: number;
   avatar_url: string;
-  is_ad_free?: boolean;
   credit?: number;
 };
 

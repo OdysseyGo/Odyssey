@@ -15,6 +15,7 @@ import { isLoggedIn } from '@/api/auth';
 import { useTranslation } from 'react-i18next';
 
 import { createTourProgress, getInProgressTour } from '@/api/tourProgress';
+import { useInterstitial } from '@/components/Ads/useInterstitial';
 
 export default function TourDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -22,6 +23,7 @@ export default function TourDetailPage() {
   const { startTour } = useActiveTour();
   const { t } = useTranslation();
   const [starting, setStarting] = useState(false);
+  const tourStartInterstitial = useInterstitial('tour_start_interstitial');
 
   const handleStartTour = async () => {
     const loggedIn = await isLoggedIn();
@@ -53,6 +55,7 @@ export default function TourDetailPage() {
         const tourData = await getTour(tourIdNum);
         const progressResponse = await createTourProgress({ tour_id: tourIdNum });
         startTour(tourData, progressResponse.id);
+        await tourStartInterstitial.show();
         router.replace('/(tabs)/map');
       }
     } catch (err: any) {

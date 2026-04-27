@@ -6,7 +6,7 @@ import { resolveAdUnitId } from './adUnitIds';
 type Status = 'idle' | 'loading' | 'loaded' | 'showing' | 'rewarded' | 'closed' | 'error';
 
 export function useRewardedAd(placementKey: string) {
-  const { isAdFree, isReady, getPlacement, user } = useAds();
+  const { isReady, getPlacement, user } = useAds();
   const adRef = useRef<RewardedAd | null>(null);
   const [status, setStatus] = useState<Status>('idle');
   const rewardedRef = useRef(false);
@@ -14,7 +14,7 @@ export function useRewardedAd(placementKey: string) {
   const placement = getPlacement(placementKey);
 
   const load = useCallback(() => {
-    if (!isReady || isAdFree || !placement || placement.ad_format !== 'REWARDED' || !user) return;
+    if (!isReady || !placement || placement.ad_format !== 'REWARDED' || !user) return;
 
     const ad = RewardedAd.createForAdRequest(resolveAdUnitId(placement), {
       requestNonPersonalizedAdsOnly: true,
@@ -44,7 +44,7 @@ export function useRewardedAd(placementKey: string) {
       closedSub();
       errorSub();
     };
-  }, [isReady, isAdFree, placement, user]);
+  }, [isReady, placement, user]);
 
   useEffect(() => {
     const cleanup = load();
@@ -66,5 +66,5 @@ export function useRewardedAd(placementKey: string) {
     }
   }, [status]);
 
-  return { status, show, reload: load, available: !!placement && !isAdFree && isReady };
+  return { status, show, reload: load, available: !!placement && isReady };
 }

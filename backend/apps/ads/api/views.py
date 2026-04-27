@@ -12,7 +12,6 @@ from apps.ads.models import AdImpression, AdPlacement, RewardedAdGrant
 from apps.ads.services import reward_service
 from apps.ads.services.admob_ssv import SsvVerificationError, verify_ssv
 
-from .permissions import is_user_ad_free
 from .serializers import (
     AdImpressionCreateSerializer,
     AdPlacementSerializer,
@@ -38,17 +37,11 @@ class AdConfigView(APIView):
 
     def get(self, request):
         platform = _platform_from_request(request)
-        ad_free = is_user_ad_free(request.user)
-
-        if ad_free:
-            placements_data = []
-        else:
-            placements_qs = AdPlacement.objects.filter(enabled=True)
-            placements_data = AdPlacementSerializer(
-                placements_qs, many=True, context={"platform": platform}
-            ).data
-
-        return Response({"is_ad_free": ad_free, "placements": placements_data})
+        placements_qs = AdPlacement.objects.filter(enabled=True)
+        placements_data = AdPlacementSerializer(
+            placements_qs, many=True, context={"platform": platform}
+        ).data
+        return Response({"placements": placements_data})
 
 
 class AdImpressionView(APIView):

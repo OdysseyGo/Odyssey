@@ -223,7 +223,7 @@ Follow the steps below to configure S3 for your environment:
 
 #### Advertisements (Google AdMob)
 
-Odyssey shows banner, interstitial, and rewarded ads via Google AdMob. Free users see ads; users with an active Premium subscription (`is_ad_free=true` on `/api/users/me/`) are excluded — the SDK is not even initialized for them. Rewarded ads are verified server-to-server with AdMob Server-Side Verification (SSV) and grant **credits**, **free AI tour slots**, or **puzzle hints**.
+Odyssey shows banner, interstitial, and rewarded ads via Google AdMob. Rewarded ads are verified server-to-server with AdMob Server-Side Verification (SSV) and grant **credits**, **free AI tour slots**, **puzzle hints/skips**, or **tour revives** (the revive flow is reserved for a future feature; the backend ledger is ready).
 
 Backend lives in `backend/apps/ads/` (mounted at `/api/ads/`). Mobile lives in `mobile/contexts/AdsContext.tsx` and `mobile/components/Ads/`.
 
@@ -239,7 +239,7 @@ Backend lives in `backend/apps/ads/` (mounted at `/api/ads/`). Mobile lives in `
    | key | ad_format | reward_type | reward_amount |
    |---|---|---|---|
    | `profile_banner` | BANNER | NONE | 0 |
-   | `tour_list_banner` | BANNER | NONE | 0 |
+   | `tour_start_interstitial` | INTERSTITIAL | NONE | 0 |
    | `tour_complete_interstitial` | INTERSTITIAL | NONE | 0 |
    | `rewarded_credits` | REWARDED | CREDITS | 50 |
    | `rewarded_ai_slot` | REWARDED | AI_SLOT | 1 |
