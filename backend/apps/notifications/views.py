@@ -32,3 +32,25 @@ class DeviceTokenViewSet(viewsets.ModelViewSet):
             DeviceTokenSerializer(device_token).data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
         )
+    
+    @action(detail=True, methods=['post'])
+    def test_push(self, request, pk=None):
+        """Trigger a test push notification to a specific saved token"""
+        device_token_obj = self.get_object()
+        
+        apns = APNsService()
+        alert = {
+            "title": "Test Push",
+            "body": "If you see this, the APNs integration is working!"
+        }
+        
+        success = apns.send_notification(
+            device_token=device_token_obj.device_token,
+            alert_dict=alert,
+            badge=1
+        )
+        
+        if success:
+            return Response({"detail": "Test notification sent successfully."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Failed to send notification."}, status=status.HTTP_400_BAD_REQUEST)
