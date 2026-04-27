@@ -244,6 +244,7 @@ Backend lives in `backend/apps/ads/` (mounted at `/api/ads/`). Mobile lives in `
    | `rewarded_credits` | REWARDED | CREDITS | 50 |
    | `rewarded_ai_slot` | REWARDED | AI_SLOT | 1 |
    | `rewarded_hint` | REWARDED | HINT | 1 |
+   | `rewarded_hint_reveal` | REWARDED | HINT | 1 |
 
    Leave `ad_unit_id_ios`/`ad_unit_id_android` blank in development — the mobile app falls back to AdMob's test ad unit IDs whenever `__DEV__` is true. Set real ad unit IDs only for the production build.
 

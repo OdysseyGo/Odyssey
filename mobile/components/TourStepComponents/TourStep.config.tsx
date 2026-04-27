@@ -13,12 +13,14 @@ export interface MultipleChoicePuzzle {
   question: string;
   options: MultipleChoiceOption[];
   imageUri?: string;
+  hint?: string;
 }
 
 export interface PictureComparePuzzle {
   type: 'picture-compare';
   question: string;
   referenceImageUri?: string;
+  hint?: string;
 }
 
 export type Puzzle = MultipleChoicePuzzle | PictureComparePuzzle;

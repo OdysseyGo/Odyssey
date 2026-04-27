@@ -24,6 +24,7 @@ import Colors from '@/constants/Colors';
 import { submitPictureCompare } from '@/api/tourProgress';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import SquareCameraOverlayCapture from '@/components/common/SquareCameraOverlayCapture';
+import RewardedHintReveal from '@/components/Ads/RewardedHintReveal';
 
 interface StoryStepViewProps {
   step: StoryStep;
@@ -318,6 +319,8 @@ function PuzzleStepView({ step, isSolved, onSolve }: PuzzleStepViewProps) {
           onSolve={onSolve}
         />
       )}
+
+      {!isSolved && step.puzzle.hint ? <RewardedHintReveal hint={step.puzzle.hint} /> : null}
     </ScrollView>
   );
 }
