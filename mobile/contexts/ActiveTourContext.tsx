@@ -35,7 +35,7 @@ interface ActiveTourContextType extends ActiveTourState {
   setHighestStepIndex: (index: number) => void;
   solveStep: (stepId: string, xpReward?: number) => void;
   confirmLocation: (stepId: string) => void;
-  recordSkip: () => void;
+  recordSkip: (countsAsMistake?: boolean) => void;
   recordWrongAnswer: () => void;
   recordAnswer: (stepId: string, optionId: string) => void;
   recordAttempt: (stepId: string) => void;
@@ -219,10 +219,10 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const recordSkip = useCallback(() => {
+  const recordSkip = useCallback((countsAsMistake: boolean = true) => {
     setState((prev) => ({
       ...prev,
-      skipCount: prev.skipCount + 1,
+      skipCount: countsAsMistake ? prev.skipCount + 1 : prev.skipCount,
     }));
   }, []);
 
