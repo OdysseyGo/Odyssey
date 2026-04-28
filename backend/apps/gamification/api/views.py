@@ -166,7 +166,7 @@ class TourProgressViewSet(
                 user.tour_count += 1
                 user.save()
 
-                BadgeService.check_badges(user)
+                BadgeService.check_badges(user, completed_progress=progress)
                 message = "Tour completed!"
 
         return {

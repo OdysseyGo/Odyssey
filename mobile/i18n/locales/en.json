@@ -202,7 +202,9 @@
     "medium": "Medium",
     "hard": "Hard",
     "readMore": "Read more",
-    "readLess": "Read less"
+    "readLess": "Read less",
+    "lockedStopTitle": "Hidden stop",
+    "lockedStopMessage": "Start the tour and solve the puzzle to reveal this stop."
   },
   "tabs": {
     "settings": "Settings",

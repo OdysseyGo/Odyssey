@@ -6,7 +6,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
-import { getViroModule, VIRO_UNAVAILABLE_MESSAGE } from '@/utils/viro';
+import { getViroModule, isViroAvailable, VIRO_UNAVAILABLE_MESSAGE } from '@/utils/viro';
 
 const MODEL_POSITION: [number, number, number] = [0, 0, -1.2];
 const MODEL_SCALE: [number, number, number] = [0.25, 0.25, 0.25];
@@ -137,6 +137,24 @@ export default function ARPreviewScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: color.foreground }]}>
         <View style={styles.errorState}>
           <Text style={[styles.errorText, { color: color.text }]}>Missing AR model asset.</Text>
+          <TouchableOpacity
+            style={[styles.closeButton, { backgroundColor: color.primary }]}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.closeButtonText}>Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!isViroAvailable()) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: color.foreground }]}>
+        <View style={styles.errorState}>
+          <Text style={[styles.errorText, { color: color.text }]}>
+            AR preview is unavailable in this runtime.
+          </Text>
           <TouchableOpacity
             style={[styles.closeButton, { backgroundColor: color.primary }]}
             onPress={() => router.back()}

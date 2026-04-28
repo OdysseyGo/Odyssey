@@ -16,6 +16,7 @@ export function mapApiTourToDetail(tour: Tour, t: (key: string) => string): Tour
     latitude: parseFloat(step.latitude),
     longitude: parseFloat(step.longitude),
     order: step.order,
+    hasPuzzle: Boolean(step.puzzle),
   }));
 
   const difficultyMap: Record<string, TourDetail['difficulty']> = {

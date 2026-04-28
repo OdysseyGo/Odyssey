@@ -36,6 +36,7 @@ export default function MapScreen() {
     progressId,
     currentStepIndex,
     solvedSteps,
+    locationConfirmedSteps,
     earnedXP,
     endTour,
     resumeActiveTour,
@@ -122,13 +123,13 @@ export default function MapScreen() {
 
   const visibleMarkers = useMemo(() => {
     if (!tour || !isActive) return [];
-    return getVisibleMarkers(tour, currentStepIndex, solvedSteps);
-  }, [tour, isActive, currentStepIndex, solvedSteps]);
+    return getVisibleMarkers(tour, currentStepIndex, solvedSteps, locationConfirmedSteps);
+  }, [tour, isActive, currentStepIndex, solvedSteps, locationConfirmedSteps]);
 
   const visibleRoute = useMemo(() => {
     if (!tour || !isActive) return [];
-    return getVisibleRoute(tour, currentStepIndex, solvedSteps);
-  }, [tour, isActive, currentStepIndex, solvedSteps]);
+    return getVisibleRoute(tour, currentStepIndex, solvedSteps, locationConfirmedSteps);
+  }, [tour, isActive, currentStepIndex, solvedSteps, locationConfirmedSteps]);
 
   const initialRegion = useMemo(() => {
     if (!tour || !isActive || tour.steps.length === 0) {
