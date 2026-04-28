@@ -382,7 +382,7 @@ function ArCodeView({ puzzle, isSolved, onSolve }: ArCodeViewProps) {
       }
 
       router.push({
-        pathname: '/ar-puzzle-view',
+        pathname: '/(tour)/ar-puzzle-view' as any,
         params: {
           sceneAssetUrl: puzzle.sceneAssetUrl,
           secretCode: puzzle.secretCode ?? '',

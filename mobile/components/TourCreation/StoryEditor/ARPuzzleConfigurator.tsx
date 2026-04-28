@@ -42,6 +42,8 @@ const DEFAULT_MODEL_SCALE_METERS = 1;
 const MIN_MODEL_SCALE_METERS = 0.3;
 const MAX_MODEL_SCALE_METERS = 10;
 const HIGHLIGHT_HEIGHT = 0.18;
+const VIRO = getViroModule();
+const ViroMaterials = VIRO?.ViroMaterials as any;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -193,6 +195,24 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
   const [isScalePanelOpen, setIsScalePanelOpen] = React.useState(false);
   const [sliderWidth, setSliderWidth] = React.useState(0);
 
+  React.useEffect(() => {
+    if (materialsReady || !ViroMaterials) {
+      return;
+    }
+
+    ViroMaterials.createMaterials({
+      arPuzzleAnchorMarker: {
+        lightingModel: 'Constant',
+        diffuseColor: '#f97316',
+      },
+      arPuzzleAnchorLine: {
+        lightingModel: 'Constant',
+        diffuseColor: '#facc15',
+      },
+    });
+    materialsReady = true;
+  }, []);
+
   const selectedModel = React.useMemo(
     () => models.find((model) => model.id === selectedModelId) ?? null,
     [models, selectedModelId]
@@ -301,7 +321,7 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
     }
 
     router.push({
-      pathname: '/(tour)/ar-preview',
+      pathname: '/(tour)/ar-preview' as any,
       params: {
         sceneAssetUrl: selectedModel.scene_asset_url,
         secretCode,
@@ -463,9 +483,12 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
             <TouchableOpacity
               style={stylesForTheme.eyePreviewButton}
               onPress={() => openArPreview(selectedAnchor)}
+              disabled={!viroAvailable}
             >
               <Ionicons name="eye-outline" size={20} color={color.white} />
-              <Text style={stylesForTheme.eyePreviewText}>Preview in AR</Text>
+              <Text style={stylesForTheme.eyePreviewText}>
+                {viroAvailable ? 'Preview in AR' : 'AR unavailable'}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -504,7 +527,7 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
             <View style={stylesForTheme.headerSpacer} />
           </View>
 
-          {selectedModel ? (
+          {selectedModel && viroAvailable ? (
             <>
               <View style={stylesForTheme.fullscreenSceneFrame}>
                 {ViroARSceneNavigator ? (
@@ -611,7 +634,9 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
             </>
           ) : (
             <View style={stylesForTheme.centerState}>
-              <Text style={stylesForTheme.errorText}>Select an AR model first.</Text>
+              <Text style={stylesForTheme.errorText}>
+                {selectedModel ? 'AR is unavailable in this runtime.' : 'Select an AR model first.'}
+              </Text>
             </View>
           )}
         </SafeAreaView>
