@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Modal,
-  Pressable,
-  StyleProp,
-  Text,
-  TouchableOpacity,
-  ViewStyle,
-} from 'react-native';
+import { Modal, Pressable, StyleProp, Text, TouchableOpacity, ViewStyle } from 'react-native';
 import { Check, ChevronDown, Globe2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
