@@ -195,42 +195,51 @@ class AdminTourViewSet(ModelViewSet):
     @action(detail=True, methods=["post"], url_path="approve")
     def approve(self, request, pk=None):
         tour = self.get_object()
-        city_latitude = request.data.get("city_latitude")
-        city_longitude = request.data.get("city_longitude")
-        if not tour.city:
+
+        print()
+        print()
+        print()
+        print(f"DEBUG: {tour}, {tour.city}, {tour.country}")
+        print()
+        print()
+        print()
+
+        if not tour.city or not tour.country:
             return Response(
-                {"city": "City is required before publishing a tour."},
+                {"location": "City and Country are required before publishing a tour."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if city_latitude is None or city_longitude is None:
-            return Response(
-                {"city": "City coordinates are required before publishing a tour."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        try:
-            city_latitude = float(city_latitude)
-            city_longitude = float(city_longitude)
-        except (TypeError, ValueError):
-            return Response(
-                {"city": "City coordinates are invalid."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+
         if not tour.steps.exists():
             return Response(
                 {"steps": "At least one tour stop is required before publishing."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not GoogleMapsFacade().tour_has_step_in_city(
+                
+        facade = GoogleMapsFacade()
+    
+        city_lat, city_lon = facade.geocode_location(
+            name=tour.city,
+            city=tour.city,  
+            fallback_lat=0.0,
+            fallback_lng=0.0
+        )
+
+        has_step_in_city = facade.tour_has_step_in_city(
             tour,
-            city_latitude=city_latitude,
-            city_longitude=city_longitude,
-        ):
+            city_latitude=city_lat,
+            city_longitude=city_lon
+        )
+
+        if not has_step_in_city:
             return Response(
                 {"city": "At least one tour stop must be inside the selected city."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
         tour.status = Tour.PUBLISHED
         tour.save(update_fields=["status"])
+        
         return Response({"detail": "Tour approved and published."})
 
     @action(detail=True, methods=["post"], url_path="reject")
