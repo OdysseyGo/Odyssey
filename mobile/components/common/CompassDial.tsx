@@ -79,7 +79,7 @@ export default function CompassDial({
   }, [animatedHeading, heading]);
 
   const dialRotationStyle = useAnimatedStyle(() => ({
-    transform: [{ rotateZ: `${animatedHeading.value}deg` }],
+    transform: [{ rotateZ: `${-animatedHeading.value}deg` }],
   }));
 
   const dial = useMemo(() => {

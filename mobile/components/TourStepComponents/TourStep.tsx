@@ -53,10 +53,12 @@ import {
 } from '@/utils/compass';
 
 const COMPASS_FEEDBACK_INTERVAL_DEGREES = 10;
-const COMPASS_SOLVE_TOLERANCE_DEGREES = 10;
+const COMPASS_FEEDBACK_BAND_SHIFT = 1;
+const COMPASS_SOLVE_TOLERANCE_DEGREES = 20;
 const COMPASS_SOLVE_HOLD_MS = 1200;
 const COMPASS_SOLVE_GRACE_MS = 120;
 const COMPASS_SENSOR_UPDATE_MS = 50;
+const COMPASS_PROXIMITY_RANGE_DEGREES = 50;
 const COMPASS_HEADING_SMOOTHING_ALPHA_SLOW = 0.16;
 const COMPASS_HEADING_SMOOTHING_ALPHA_MEDIUM = 0.3;
 const COMPASS_HEADING_SMOOTHING_ALPHA_FAST = 0.45;
@@ -657,7 +659,7 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
     }
 
     const delta = circularDeltaDegrees(heading, targetHeading);
-    const proximityLinear = Math.max(0, 1 - delta / 45);
+    const proximityLinear = Math.max(0, 1 - delta / COMPASS_PROXIMITY_RANGE_DEGREES);
     const proximity = Math.pow(proximityLinear, 1.6);
     proximityProgress.value = proximity;
     setResonanceLevel(proximity);
@@ -696,7 +698,7 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
       return;
     }
 
-    const band = Math.floor(delta / COMPASS_FEEDBACK_INTERVAL_DEGREES);
+    const band = Math.max(0, Math.floor(delta / COMPASS_FEEDBACK_INTERVAL_DEGREES) - COMPASS_FEEDBACK_BAND_SHIFT);
     const clampedBand = Math.min(band, COMPASS_HAPTIC_COOLDOWN_MS_BY_BAND.length - 1);
     if (now >= nextPulseAtMsRef.current) {
       if (clampedBand <= 1) {

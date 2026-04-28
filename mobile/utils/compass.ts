@@ -70,11 +70,11 @@ export const headingFromSensors = (
       const horizontalNorm = normalizeVector(horizontal);
       if (horizontalNorm) {
         const angle = (Math.atan2(horizontalNorm.x, horizontalNorm.y) * 180) / Math.PI;
-        return normalizeHeading(angle + headingOffsetDegrees);
+        return normalizeHeading(360 - angle + headingOffsetDegrees);
       }
     }
   }
 
   const fallbackAngle = (Math.atan2(magneticField.x, magneticField.y) * 180) / Math.PI;
-  return normalizeHeading(fallbackAngle + headingOffsetDegrees);
+  return normalizeHeading(360 - fallbackAngle + headingOffsetDegrees);
 };
