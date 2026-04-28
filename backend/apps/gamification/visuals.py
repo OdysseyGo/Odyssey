@@ -222,7 +222,9 @@ class BadgeVisualFileRepository:
             return
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = _default_payload()
-        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
     @classmethod
     def read(cls) -> dict:
@@ -243,7 +245,9 @@ class BadgeVisualFileRepository:
             path.parent.mkdir(parents=True, exist_ok=True)
 
             normalized = {
-                "template": _merge_dict(_empty_like_default(), payload.get("template") or {}),
+                "template": _merge_dict(
+                    _empty_like_default(), payload.get("template") or {}
+                ),
                 "overrides": payload.get("overrides") or [],
                 "meta": payload.get("meta") or {"version": 1},
             }
@@ -298,9 +302,10 @@ class BadgeVisualService:
         existing = None
         for item in overrides:
             if (
-                (item.get("badge_code") or "").strip().upper() == normalized_badge_code
-                and _normalize_country_code(item.get("country_code")) == normalized_country
-            ):
+                item.get("badge_code") or ""
+            ).strip().upper() == normalized_badge_code and _normalize_country_code(
+                item.get("country_code")
+            ) == normalized_country:
                 existing = item
                 break
 
@@ -310,9 +315,7 @@ class BadgeVisualService:
             existing["badge_code"] = normalized_badge_code
             saved = existing
         else:
-            next_id = (
-                max([int(item.get("id", 0)) for item in overrides] + [0]) + 1
-            )
+            next_id = max([int(item.get("id", 0)) for item in overrides] + [0]) + 1
             saved = {
                 "id": next_id,
                 "badge_code": normalized_badge_code,

@@ -5,7 +5,7 @@ let cachedViroModule: any | null | undefined;
 function hasLinkedViroNativeModules() {
   return Boolean(
     NativeModules?.VRTMaterialManager &&
-      (NativeModules?.VRTARSceneNavigator || NativeModules?.VRTSceneNavigator)
+    (NativeModules?.VRTARSceneNavigator || NativeModules?.VRTSceneNavigator)
   );
 }
 

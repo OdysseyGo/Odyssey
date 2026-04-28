@@ -149,7 +149,9 @@ class BadgeService:
         newly_earned = []
         if completed_progress is not None:
             newly_earned.extend(
-                BadgeService._award_city_first_completion_badge(user, completed_progress)
+                BadgeService._award_city_first_completion_badge(
+                    user, completed_progress
+                )
             )
         newly_earned.extend(BadgeService._award_xp_milestone_badges(user))
         return newly_earned

@@ -23,14 +23,14 @@ from apps.admin_dashboard.api.pagination import AdminPagination
 from apps.admin_dashboard.api.permissions import IsStaffUser
 from apps.admin_dashboard.api.serializers import (
     AdminARModelSerializer,
-    BadgeVisualBundleSerializer,
-    BadgeVisualOverrideSerializer,
-    BadgeVisualTemplateSerializer,
     AdminTourDetailSerializer,
     AdminTourListSerializer,
     AdminUserDetailSerializer,
     AdminUserListSerializer,
     AdminUserUpdateSerializer,
+    BadgeVisualBundleSerializer,
+    BadgeVisualOverrideSerializer,
+    BadgeVisualTemplateSerializer,
     BanRecordSerializer,
     BanUserSerializer,
     BulkUserActionSerializer,
@@ -417,7 +417,9 @@ class BadgeVisualViewSet(ViewSet):
     def update_template(self, request):
         serializer = BadgeVisualTemplateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        saved = BadgeVisualService.save_template(serializer.validated_data.get("config") or {})
+        saved = BadgeVisualService.save_template(
+            serializer.validated_data.get("config") or {}
+        )
         return Response(
             {
                 "config": saved.get("template") or BadgeVisualService.load_template(),
@@ -444,11 +446,15 @@ class BadgeVisualViewSet(ViewSet):
         )
         return Response(self._serialize_override(saved))
 
-    @action(detail=False, methods=["delete"], url_path=r"overrides/(?P<override_id>\d+)")
+    @action(
+        detail=False, methods=["delete"], url_path=r"overrides/(?P<override_id>\d+)"
+    )
     def delete_override(self, request, override_id=None):
         deleted = BadgeVisualService.delete_override(int(override_id))
         if not deleted:
-            return Response({"detail": "Override not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Override not found."}, status=status.HTTP_404_NOT_FOUND
+            )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["get"], url_path="export")

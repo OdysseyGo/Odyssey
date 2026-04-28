@@ -230,7 +230,9 @@ class BadgeVisualOverrideSerializer(serializers.Serializer):
     def validate_country_code(self, value):
         normalized = (value or "").strip().upper()
         if normalized and (len(normalized) != 2 or not normalized.isalpha()):
-            raise serializers.ValidationError("country_code must be a 2-letter ISO code.")
+            raise serializers.ValidationError(
+                "country_code must be a 2-letter ISO code."
+            )
         return normalized
 
     def validate_badge(self, value):
@@ -277,7 +279,9 @@ def _validate_badge_visual_config(config, *, partial=False):
                 lower = -2 if key in ("x", "y") else 0.01
                 _validate_number(f"flag.{key}", config["flag"][key], lower, 3)
         if "rotation_deg" in config["flag"]:
-            _validate_number("flag.rotation_deg", config["flag"]["rotation_deg"], -180, 180)
+            _validate_number(
+                "flag.rotation_deg", config["flag"]["rotation_deg"], -180, 180
+            )
 
     if "text" in config and isinstance(config["text"], dict):
         if "x" in config["text"]:
@@ -285,7 +289,9 @@ def _validate_badge_visual_config(config, *, partial=False):
         if "y" in config["text"]:
             _validate_number("text.y", config["text"]["y"], -2, 3)
         if "rotation_deg" in config["text"]:
-            _validate_number("text.rotation_deg", config["text"]["rotation_deg"], -180, 180)
+            _validate_number(
+                "text.rotation_deg", config["text"]["rotation_deg"], -180, 180
+            )
         if "font_scale" in config["text"]:
             _validate_number("text.font_scale", config["text"]["font_scale"], 0.2, 4)
         for key in ("scale_x", "scale_y"):
@@ -300,7 +306,9 @@ def _validate_badge_visual_config(config, *, partial=False):
                 _validate_number(f"text_plate.{key}", config["text_plate"][key], -2, 3)
         for key in ("width", "height"):
             if key in config["text_plate"]:
-                _validate_number(f"text_plate.{key}", config["text_plate"][key], 0.01, 3)
+                _validate_number(
+                    f"text_plate.{key}", config["text_plate"][key], 0.01, 3
+                )
         if "rotation_deg" in config["text_plate"]:
             _validate_number(
                 "text_plate.rotation_deg",
@@ -310,7 +318,9 @@ def _validate_badge_visual_config(config, *, partial=False):
             )
         for key in ("shape_tl", "shape_tr", "shape_br", "shape_bl"):
             if key in config["text_plate"]:
-                _validate_number(f"text_plate.{key}", config["text_plate"][key], -0.5, 1.5)
+                _validate_number(
+                    f"text_plate.{key}", config["text_plate"][key], -0.5, 1.5
+                )
 
     if "palette" in config and isinstance(config["palette"], dict):
         allowed_tiers = set(DEFAULT_BADGE_VISUAL_CONFIG["palette"].keys())
@@ -346,7 +356,9 @@ def _validate_badge_visual_config(config, *, partial=False):
             unknown_colors = set(tier_palette.keys()) - allowed_colors
             if unknown_colors:
                 raise serializers.ValidationError(
-                    {"palette": f"{tier} has unsupported keys: {sorted(unknown_colors)}"}
+                    {
+                        "palette": f"{tier} has unsupported keys: {sorted(unknown_colors)}"
+                    }
                 )
             for color_key, color_value in tier_palette.items():
                 if color_key in {

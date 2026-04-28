@@ -470,8 +470,8 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
             <Text style={stylesForTheme.reviewLine}>Position: {selectedAnchor.label}</Text>
           </View>
 
-              <View style={stylesForTheme.reviewActions}>
-                <TouchableOpacity
+          <View style={stylesForTheme.reviewActions}>
+            <TouchableOpacity
               style={stylesForTheme.secondaryButton}
               onPress={() => {
                 setIsScalePanelOpen(false);
@@ -480,17 +480,17 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
             >
               <Text style={stylesForTheme.secondaryButtonText}>Change anchor</Text>
             </TouchableOpacity>
-                <TouchableOpacity
-                  style={stylesForTheme.eyePreviewButton}
-                  onPress={() => openArPreview(selectedAnchor)}
-                  disabled={!viroAvailable}
-                >
-                  <Ionicons name="eye-outline" size={20} color={color.white} />
-                  <Text style={stylesForTheme.eyePreviewText}>
-                    {viroAvailable ? 'Preview in AR' : 'AR unavailable'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+            <TouchableOpacity
+              style={stylesForTheme.eyePreviewButton}
+              onPress={() => openArPreview(selectedAnchor)}
+              disabled={!viroAvailable}
+            >
+              <Ionicons name="eye-outline" size={20} color={color.white} />
+              <Text style={stylesForTheme.eyePreviewText}>
+                {viroAvailable ? 'Preview in AR' : 'AR unavailable'}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={stylesForTheme.buttonRow}>
             <TouchableOpacity

@@ -62,7 +62,9 @@ export default function ProfileBadgesContainer({
               fallbackLabel={badge.name}
               visualConfig={badge.visualConfig as any}
             />
-            <Text style={styles.badgeName} numberOfLines={2}>{badge.name}</Text>
+            <Text style={styles.badgeName} numberOfLines={2}>
+              {badge.name}
+            </Text>
             {badge.city ? (
               <Text style={styles.badgeMetaText} numberOfLines={1}>
                 {badge.city} · {normalizeCountryCode(badge.countryCode)}

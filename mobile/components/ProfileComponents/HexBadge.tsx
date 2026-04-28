@@ -296,7 +296,13 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function rotatePoint(x: number, y: number, cx: number, cy: number, angleDeg: number): [number, number] {
+function rotatePoint(
+  x: number,
+  y: number,
+  cx: number,
+  cy: number,
+  angleDeg: number
+): [number, number] {
   const angle = (angleDeg * Math.PI) / 180;
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
@@ -318,19 +324,26 @@ function buildTextPlatePoints(textPlate: Required<BadgeVisualConfig>['text_plate
 
   const p1: [number, number] = [x + clamp(textPlate.shape_tl ?? 0.18, -0.5, 1.5) * width, y];
   const p2: [number, number] = [x + clamp(textPlate.shape_tr ?? 1, -0.5, 1.5) * width, y];
-  const p3: [number, number] = [x + clamp(textPlate.shape_br ?? 0.82, -0.5, 1.5) * width, y + height];
+  const p3: [number, number] = [
+    x + clamp(textPlate.shape_br ?? 0.82, -0.5, 1.5) * width,
+    y + height,
+  ];
   const p4: [number, number] = [x + clamp(textPlate.shape_bl ?? 0, -0.5, 1.5) * width, y + height];
 
   const cx = x + width / 2;
   const cy = y + height / 2;
-  const rotated = [p1, p2, p3, p4].map((point) =>
-    rotatePoint(point[0], point[1], cx, cy, angle),
-  );
+  const rotated = [p1, p2, p3, p4].map((point) => rotatePoint(point[0], point[1], cx, cy, angle));
 
   return asPoints(rotated);
 }
 
-function pivotTransform(x: number, y: number, rotation: number, scaleX: number, scaleY: number): string {
+function pivotTransform(
+  x: number,
+  y: number,
+  rotation: number,
+  scaleX: number,
+  scaleY: number
+): string {
   return `translate(${x}, ${y}) rotate(${rotation}) scale(${scaleX}, ${scaleY}) translate(${-x}, ${-y})`;
 }
 
@@ -365,8 +378,16 @@ export default function HexBadge({ code, city, countryCode, fallbackLabel, visua
       <Svg width={WIDTH} height={HEIGHT}>
         <Defs>
           <LinearGradient id="hexBackground" x1="0%" y1="0%" x2="0%" y2="100%">
-            <Stop offset="0%" stopColor={palette.frame_fill_top} stopOpacity={palette.frame_fill_opacity} />
-            <Stop offset="100%" stopColor={palette.frame_fill_bottom} stopOpacity={palette.frame_fill_opacity} />
+            <Stop
+              offset="0%"
+              stopColor={palette.frame_fill_top}
+              stopOpacity={palette.frame_fill_opacity}
+            />
+            <Stop
+              offset="100%"
+              stopColor={palette.frame_fill_bottom}
+              stopOpacity={palette.frame_fill_opacity}
+            />
           </LinearGradient>
           <LinearGradient id="plateFill" x1="0%" y1="0%" x2="100%" y2="100%">
             <Stop offset="0%" stopColor={palette.fill_top} />
@@ -438,7 +459,7 @@ export default function HexBadge({ code, city, countryCode, fallbackLabel, visua
               textY,
               config.text.rotation_deg ?? -60,
               config.text.scale_x ?? 1,
-              config.text.scale_y ?? 1,
+              config.text.scale_y ?? 1
             )}
           >
             {label}

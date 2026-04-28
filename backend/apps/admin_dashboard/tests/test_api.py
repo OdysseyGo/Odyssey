@@ -1,6 +1,6 @@
-from io import BytesIO
 import os
 import tempfile
+from io import BytesIO
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -552,7 +552,9 @@ class BadgeVisualViewSetTests(APITestCase):
             format="json",
         )
         override_id = upsert_response.data["id"]
-        response = self.client.delete(f"/api/admin/badge-visuals/overrides/{override_id}/")
+        response = self.client.delete(
+            f"/api/admin/badge-visuals/overrides/{override_id}/"
+        )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         payload = BadgeVisualFileRepository.read()
         self.assertEqual(payload["overrides"], [])
@@ -561,7 +563,9 @@ class BadgeVisualViewSetTests(APITestCase):
         response = self.client.get("/api/admin/badge-visuals/export/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response["Content-Type"], "application/json")
-        self.assertIn("attachment; filename=\"badge_visuals.json\"", response["Content-Disposition"])
+        self.assertIn(
+            'attachment; filename="badge_visuals.json"', response["Content-Disposition"]
+        )
 
     def test_requires_staff(self):
         self.client.force_authenticate(user=self.user)

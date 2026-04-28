@@ -100,7 +100,9 @@ class BadgeAwardingTests(TestCase):
             skip_count=3,
             failed_attempts=2,
         )
-        earned = BadgeService.check_badges(self.user, completed_progress=second_progress)
+        earned = BadgeService.check_badges(
+            self.user, completed_progress=second_progress
+        )
 
         self.assertFalse(any(name.startswith("City ") for name in earned))
         self.assertEqual(
