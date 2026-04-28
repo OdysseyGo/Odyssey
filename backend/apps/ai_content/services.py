@@ -9,7 +9,7 @@ import google.generativeai as genai
 from django.db import transaction
 
 from apps.tours.models import Puzzle, Tour, TourStep, TriviaPuzzleDetail
-from apps.tours.utils import GoogleMapsFacade
+from apps.tours.utils import GoogleMapsFacade, normalize_tour_country
 
 logger = logging.getLogger(__name__)
 
@@ -184,6 +184,10 @@ class GeminiService:
         tour_data["steps"] = self._nearest_neighbor_order(tour_data["steps"])
 
         # ---- Step 5: Persist to database ----
+        canonical_country, canonical_country_code = normalize_tour_country(
+            country=country,
+            country_code=country_code,
+        )
         with transaction.atomic():
             tour = Tour.objects.create(
                 title=tour_data["title"],
@@ -194,8 +198,8 @@ class GeminiService:
                 difficulty=tour_data.get("difficulty", "MEDIUM"),
                 duration_minutes=duration,
                 city=city,
-                country=country,
-                country_code=country_code,
+                country=canonical_country,
+                country_code=canonical_country_code,
                 status=Tour.ARCHIVED,
             )
 

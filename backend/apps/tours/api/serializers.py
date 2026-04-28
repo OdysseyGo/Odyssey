@@ -13,7 +13,7 @@ from apps.tours.models import (
     TourStep,
     TriviaPuzzleDetail,
 )
-from apps.tours.utils import GoogleMapsFacade
+from apps.tours.utils import GoogleMapsFacade, normalize_tour_country
 from apps.users.api.serializers import UserSerializer
 
 DEFAULT_PICTURE_COMPARE_THRESHOLD = 0.7
@@ -424,10 +424,43 @@ class TourSerializer(serializers.ModelSerializer):
         # Assign current user as creator
         validated_data.pop("city_latitude", None)
         validated_data.pop("city_longitude", None)
+        self._canonicalize_country_fields(validated_data)
         validated_data["creator"] = self.context["request"].user
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         validated_data.pop("city_latitude", None)
         validated_data.pop("city_longitude", None)
+        self._canonicalize_country_fields(validated_data)
         return super().update(instance, validated_data)
+
+    def _canonicalize_country_fields(self, validated_data):
+        if self.instance is None:
+            current_country = ""
+            current_country_code = ""
+        else:
+            current_country = self.instance.country
+            current_country_code = self.instance.country_code
+
+        incoming_has_country = "country" in validated_data
+        incoming_has_country_code = "country_code" in validated_data
+
+        effective_country = validated_data.get("country", current_country)
+        effective_country_code = validated_data.get("country_code", current_country_code)
+
+        # Normalize explicit incoming text fields even when no code is available.
+        if incoming_has_country:
+            validated_data["country"] = (validated_data.get("country") or "").strip()
+        if incoming_has_country_code:
+            validated_data["country_code"] = (validated_data.get("country_code") or "").strip().upper()
+
+        if not effective_country_code:
+            return
+
+        # Keep backend storage language-agnostic by deriving canonical country from ISO code.
+        canonical_country, canonical_country_code = normalize_tour_country(
+            country=effective_country,
+            country_code=effective_country_code,
+        )
+        validated_data["country"] = canonical_country
+        validated_data["country_code"] = canonical_country_code

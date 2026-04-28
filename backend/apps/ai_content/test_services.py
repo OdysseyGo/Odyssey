@@ -12,6 +12,7 @@ import pytest
 from django.test import TestCase
 
 from apps.tours.models import Puzzle, Tour, TourStep
+from apps.tours.utils import normalize_tour_country
 
 from .services import GeminiService
 
@@ -213,6 +214,37 @@ class TestGenerateTour(TestCase):
         # Should use the verified coordinates from _candidate_places, NOT (41.0, 29.0)
         assert float(steps[0].latitude) == pytest.approx(41.00860, abs=1e-5)
         assert float(steps[0].longitude) == pytest.approx(28.98020, abs=1e-5)
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
+    def test_country_is_canonicalized_from_country_code(self, mock_genai, mock_maps_cls):
+        tour_data = _valid_tour_json(include_puzzles=False)
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
+
+        creator = self._make_creator()
+        service = GeminiService()
+        tour = service.generate_tour(
+            city="Istanbul",
+            country="Türkiye",
+            country_code="tr",
+            theme="History",
+            mode="STORY",
+            duration=60,
+            language="tr",
+            creator=creator,
+        )
+
+        expected_country, expected_country_code = normalize_tour_country("Türkiye", "tr")
+        assert tour.country == expected_country
+        assert tour.country_code == expected_country_code
 
     # ---- RAG pipeline: no places found raises ValueError -----------------
 

@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.tours.models import Tour
+from apps.tours.utils import normalize_tour_country
 
 User = get_user_model()
 
@@ -83,3 +84,60 @@ class TourCreationApiTests(APITestCase):
         self.assertEqual(tour.steps.count(), 2)
         step1 = tour.steps.get(order=0)
         self.assertEqual(step1.title, "Eiffel Tower")
+
+    def test_create_tour_canonicalizes_country_from_country_code(self):
+        canonical_country, canonical_country_code = normalize_tour_country(
+            country="Fransa",
+            country_code="fr",
+        )
+        response = self.client.post(
+            "/api/tours/",
+            {
+                "title": "Localized Country Tour",
+                "description": "Country should be canonicalized.",
+                "tour_type": "STORY",
+                "category": "History",
+                "difficulty": "EASY",
+                "duration_minutes": 45,
+                "city": "Paris",
+                "country": "Fransa",
+                "country_code": "fr",
+                "status": "DRAFT",
+                "is_premium": False,
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        tour = Tour.objects.get(pk=response.data["id"])
+        self.assertEqual(tour.country, canonical_country)
+        self.assertEqual(tour.country_code, canonical_country_code)
+
+    def test_update_tour_keeps_country_canonical_when_country_code_exists(self):
+        tour = Tour.objects.create(
+            title="Draft Tour",
+            description="desc",
+            creator=self.user,
+            tour_type="STORY",
+            category="History",
+            difficulty="EASY",
+            duration_minutes=30,
+            city="Paris",
+            country="France",
+            country_code="FR",
+            status=Tour.DRAFT,
+            is_premium=False,
+        )
+        canonical_country, canonical_country_code = normalize_tour_country(
+            country="Fransa",
+            country_code="FR",
+        )
+
+        response = self.client.patch(
+            f"/api/tours/{tour.id}/",
+            {"country": "Fransa"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        tour.refresh_from_db()
+        self.assertEqual(tour.country, canonical_country)
+        self.assertEqual(tour.country_code, canonical_country_code)

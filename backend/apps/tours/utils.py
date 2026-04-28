@@ -4,6 +4,7 @@ import os
 from typing import Any, Dict, List, Optional
 
 import googlemaps
+import pycountry
 
 from .models import Tour, TourStep
 
@@ -16,6 +17,29 @@ STREET_CIRCUITY_FACTOR = 1.3
 WALKING_PACE_M_PER_MIN = 80.0
 CIRCULAR_THRESHOLD_M = 200.0
 LONG_LEG_TRANSPORT_THRESHOLD_M = 2000.0
+
+
+def normalize_tour_country(country: str | None, country_code: str | None) -> tuple[str, str]:
+    """
+    Normalize country fields for persistence.
+
+    - country_code is normalized to uppercase.
+    - when country_code maps to an ISO-3166 alpha-2 country, country is canonicalized
+      to that country's English name.
+    - if mapping fails, keep the provided country text unchanged.
+    """
+    normalized_country = (country or "").strip()
+    normalized_country_code = (country_code or "").strip().upper()
+
+    if not normalized_country_code:
+        return normalized_country, ""
+
+    matched_country = pycountry.countries.get(alpha_2=normalized_country_code)
+    if matched_country is None:
+        return normalized_country, normalized_country_code
+
+    canonical_country = getattr(matched_country, "name", "").strip() or normalized_country
+    return canonical_country, normalized_country_code
 
 
 class GoogleMapsFacade:

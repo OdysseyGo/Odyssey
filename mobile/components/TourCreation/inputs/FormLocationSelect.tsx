@@ -50,7 +50,7 @@ export default function FormLocationSelect({
   const theme = useColorTheme();
   const color = Colors[theme];
   const styles = formLocationSelectStyles(theme);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const isEffectivelyDisabled = disabled;
   const [query, setQuery] = useState(value);
@@ -84,7 +84,7 @@ export default function FormLocationSelect({
         let mapped: PlaceSuggestion[] = [];
 
         if (types === '(regions)') {
-          const countries = await fetchCountrySuggestions(trimmedQuery);
+          const countries = await fetchCountrySuggestions(trimmedQuery, i18n.language);
           mapped = countries.slice(0, 10).map((country) => ({
             id: `country:${country.country_code || country.name}`,
             label: country.name,
@@ -95,12 +95,22 @@ export default function FormLocationSelect({
             longitude: undefined,
           }));
         } else {
-          const cities = await fetchCitySuggestions(trimmedQuery, countryCode, countryName);
+          const cities = await fetchCitySuggestions(
+            trimmedQuery,
+            countryCode,
+            countryName,
+            i18n.language
+          );
           mapped = cities.slice(0, 10).map((city) => ({
             id: `city:${city.name}:${city.country_code}`,
             label: city.name,
             value: city.name,
-            description: city.country_code ? `${city.name}, ${city.country_code}` : city.name,
+            description:
+              city.state_name && city.country_name
+                ? `${city.name}, ${city.state_name}, ${city.country_name}`
+                : city.country_name
+                  ? `${city.name}, ${city.country_name}`
+                  : city.name,
             countryCode: city.country_code || countryCode || '',
             latitude: city.latitude,
             longitude: city.longitude,
@@ -126,7 +136,7 @@ export default function FormLocationSelect({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [canSearch, countryCode, countryName, query, types]);
+  }, [canSearch, countryCode, countryName, i18n.language, query, types]);
 
   const handleSelect = (suggestion: PlaceSuggestion) => {
     if (isSelectingRef.current) return;
