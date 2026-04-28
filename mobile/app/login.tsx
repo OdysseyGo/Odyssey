@@ -28,6 +28,7 @@ import { Spacing } from '@/constants/Spacing';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEIGHT * 0.36;
+const AUTH_INPUT_MAX_LENGTH = 50;
 
 export default function LoginScreen() {
   const colorScheme = useColorTheme();
@@ -178,6 +179,7 @@ export default function LoginScreen() {
                 }}
                 placeholder={t('auth.usernamePlaceholder')}
                 autoCapitalize="none"
+                maxLength={AUTH_INPUT_MAX_LENGTH}
                 returnKeyType="next"
                 onSubmitEditing={() => passwordRef.current?.focus()}
                 error={errors.username}
@@ -194,6 +196,7 @@ export default function LoginScreen() {
                 secureTextEntry
                 showPasswordToggle
                 autoCapitalize="none"
+                maxLength={AUTH_INPUT_MAX_LENGTH}
                 returnKeyType="done"
                 onSubmitEditing={handleLogin}
                 error={errors.password}

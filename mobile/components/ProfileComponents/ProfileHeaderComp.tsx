@@ -53,21 +53,23 @@ export default function ProfileHeaderComp({
       {/* Subtle depth overlay at bottom of header */}
       <View style={styles.bottomGlow} />
 
-      <TouchableOpacity
-        onPress={onSettingsPress}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel={settingsAccessibilityLabel}
-        style={[
-          styles.settingsButton,
-          {
-            top: insets.top + Spacing.md,
-            right: Spacing.lg,
-          },
-        ]}
-      >
-        <Ionicons name="settings-outline" size={Spacing.lg} color={color.primary} />
-      </TouchableOpacity>
+      {onSettingsPress ? (
+        <TouchableOpacity
+          onPress={onSettingsPress}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={settingsAccessibilityLabel}
+          style={[
+            styles.settingsButton,
+            {
+              top: insets.top + Spacing.md,
+              right: Spacing.lg,
+            },
+          ]}
+        >
+          <Ionicons name="settings-outline" size={Spacing.lg} color={color.primary} />
+        </TouchableOpacity>
+      ) : null}
 
       {/* Avatar with parallax + scale animation */}
       <Animated.View
