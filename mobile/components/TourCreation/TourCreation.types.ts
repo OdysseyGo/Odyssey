@@ -73,9 +73,9 @@ export interface TourCreationData {
   locations: TourLocation[];
   country?: string;
   countryCode?: string;
-  city?: string;
-  cityLatitude?: number;
-  cityLongitude?: number;
+  state?: string;
+  stateLatitude?: number;
+  stateLongitude?: number;
 }
 
 export const TOUR_CATEGORIES = [
@@ -113,9 +113,9 @@ export const createEmptyTourData = (): TourCreationData => ({
   locations: [],
   country: '',
   countryCode: '',
-  city: '',
-  cityLatitude: undefined,
-  cityLongitude: undefined,
+  state: '',
+  stateLatitude: undefined,
+  stateLongitude: undefined,
 });
 
 export const createNewLocation = (

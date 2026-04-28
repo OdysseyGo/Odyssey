@@ -56,6 +56,17 @@ async function getAccessToken() {
 
 const WalkthroughableView = walkthroughable(View);
 
+const OptionalCopilot = ({ disable, text, order, name, style, children }: any) => {
+  if (disable) {
+    return <View style={style}>{children}</View>;
+  }
+  return (
+    <CopilotStep text={text} order={order} name={name}>
+      <WalkthroughableView style={style}>{children}</WalkthroughableView>
+    </CopilotStep>
+  );
+};
+
 // ─────────────────────────────────────────────────────────
 // Skeleton shimmer
 // ─────────────────────────────────────────────────────────
@@ -351,7 +362,7 @@ const guestStyles = StyleSheet.create({
 // Main component
 // ─────────────────────────────────────────────────────────
 
-function ProfileContent() {
+function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }) {
   const [curUser, setCurUser] = useState<User | null>(null);
   const [badgesCount, setBadgesCount] = useState(0);
   const [badges, setBadges] = useState<UserBadge[]>([]);
@@ -563,43 +574,38 @@ function ProfileContent() {
           useNativeDriver: false,
         })}
       >
-        <CopilotStep text={t('tutorial.profile.step1text')} order={1} name="profileIntro">
-          <WalkthroughableView>
-            {/* ─── Header ──────────────────────────────── */}
-            <ProfileHeaderComp {...profileHeader} scrollY={scrollY} />
-          </WalkthroughableView>
-        </CopilotStep>
+        <OptionalCopilot text={t('tutorial.profile.step1text')} order={1} name="profileIntro">
+          {/* ─── Header ──────────────────────────────── */}
+          <ProfileHeaderComp {...profileHeader} scrollY={scrollY} disableCopilot={disableCopilot} />
+        </OptionalCopilot>
 
         {/* ─── Stats (overlaps header) ─────────────── */}
         <ProfileStatsComp
           {...profileStats}
           onFollowersPress={handleFollowersPress}
           onFollowingPress={handleFollowingPress}
+          disableCopilot={disableCopilot}
         />
 
         {/* ─── Actions ─────────────────────────────── */}
-        <CopilotStep text={t('tutorial.profile.step4text')} order={4} name="friendsStep">
-          <WalkthroughableView>
-            <View style={styles.actionsRow}>
-              <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
-              <ProfileFollowingFeedButton />
-            </View>
-          </WalkthroughableView>
-        </CopilotStep>
+        <OptionalCopilot text={t('tutorial.profile.step4text')} order={4} name="friendsStep">
+          <View style={styles.actionsRow}>
+            <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
+            <ProfileFollowingFeedButton />
+          </View>
+        </OptionalCopilot>
 
         {/* ─── Badges ──────────────────────────────── */}
-        <CopilotStep text={t('tutorial.profile.step5text')} order={5} name="badgeStep">
+        <OptionalCopilot text={t('tutorial.profile.step5text')} order={5} name="badgeStep">
           <WalkthroughableView>
             <ProfileBadgesContainer badges={formattedBadges} title={t('profile.badges')} />
           </WalkthroughableView>
-        </CopilotStep>
+        </OptionalCopilot>
 
         {/* ─── My Tours ────────────────────────────── */}
-        <CopilotStep text={t('tutorial.profile.step6text')} order={6} name="tourCreatorStep">
-          <WalkthroughableView>
-            <ProfileToursContainer />
-          </WalkthroughableView>
-        </CopilotStep>
+        <OptionalCopilot text={t('tutorial.profile.step6text')} order={6} name="tourCreatorStep">
+          <ProfileToursContainer />
+        </OptionalCopilot>
 
         <View style={{ paddingHorizontal: 16, marginVertical: 12 }}>
           <RewardedAdButton
@@ -716,7 +722,7 @@ const errorStyles = StyleSheet.create({
   },
 });
 
-export default function Profile() {
+export default function Profile({ disableCopilot = false }: { disableCopilot?: boolean }) {
   const colorTheme = useColorTheme();
 
   return (
@@ -735,7 +741,7 @@ export default function Profile() {
       }}
       backdropColor="rgba(10, 20, 40, 0.9)"
     >
-      <ProfileContent />
+      <ProfileContent disableCopilot={disableCopilot} />
     </CopilotProvider>
   );
 }

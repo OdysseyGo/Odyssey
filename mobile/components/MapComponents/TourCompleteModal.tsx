@@ -7,7 +7,6 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import getStyles from './TourCompleteModal.styles';
 import { TourCompleteModalProps } from './TourCompleteModal.config';
-import { useInterstitial } from '@/components/Ads/useInterstitial';
 
 export default function TourCompleteModal({
   visible,
@@ -26,17 +25,6 @@ export default function TourCompleteModal({
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const bounceAnim = useRef(new Animated.Value(0)).current;
-
-  const interstitial = useInterstitial('tour_complete_interstitial');
-  const shownRef = useRef(false);
-
-  useEffect(() => {
-    if (visible && !shownRef.current) {
-      shownRef.current = true;
-      interstitial.show().catch(() => {});
-    }
-    if (!visible) shownRef.current = false;
-  }, [visible, interstitial]);
 
   useEffect(() => {
     if (visible) {

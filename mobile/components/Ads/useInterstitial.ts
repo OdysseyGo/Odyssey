@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { InterstitialAd, AdEventType } from 'react-native-google-mobile-ads';
 import { useAds } from '@/contexts/AdsContext';
 import { reportImpression } from '@/api/ads';
@@ -44,17 +44,57 @@ export function useInterstitial(placementKey: string) {
     };
   }, [isReady, placementKey, getPlacement]);
 
-  const show = async (): Promise<boolean> => {
+  const show = useCallback(async (): Promise<boolean> => {
     if (!adRef.current || !loadedRef.current) return false;
+
+    const ad = adRef.current;
+
     try {
-      await adRef.current.show();
-      reportImpression(placementKey, uuid()).catch(() => {});
+      await new Promise<void>((resolve) => {
+        let closedSub: () => void = () => {};
+        let errorSub: () => void = () => {};
+        let fallbackTimer: ReturnType<typeof setTimeout>;
+        let settled = false;
+
+        const cleanup = () => {
+          if (settled) return;
+          settled = true;
+          closedSub();
+          errorSub();
+          clearTimeout(fallbackTimer);
+        };
+
+        closedSub = ad.addAdEventListener(AdEventType.CLOSED, () => {
+          cleanup();
+          loadedRef.current = false;
+          resolve();
+        });
+        errorSub = ad.addAdEventListener(AdEventType.ERROR, () => {
+          cleanup();
+          loadedRef.current = false;
+          resolve();
+        });
+        fallbackTimer = setTimeout(() => {
+          cleanup();
+          resolve();
+        }, 30000);
+
+        ad.show()
+          .then(() => reportImpression(placementKey, uuid()).catch(() => {}))
+          .catch((err) => {
+            console.warn('Interstitial show failed', err);
+            cleanup();
+            loadedRef.current = false;
+            resolve();
+          });
+      });
+
       return true;
     } catch (err) {
       console.warn('Interstitial show failed', err);
       return false;
     }
-  };
+  }, [placementKey]);
 
   return { show, isLoaded: () => loadedRef.current };
 }

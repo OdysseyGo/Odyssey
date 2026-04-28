@@ -26,6 +26,7 @@ export interface PictureComparePuzzle {
 export interface ArCodePuzzle {
   type: 'ar-code';
   question: string;
+  hint?: string;
   sceneAssetUrl?: string;
   secretCode?: string;
   anchorPosition?: {
@@ -76,6 +77,7 @@ export interface TourStepProps {
   step: TourStep;
   isSolved: boolean;
   onSolve: () => void;
+  onAnswered?: () => void;
 }
 
 export const exampleTour: Tour = {

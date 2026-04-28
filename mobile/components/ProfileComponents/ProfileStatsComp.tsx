@@ -8,6 +8,17 @@ import { CopilotStep, walkthroughable } from 'react-native-copilot';
 
 const WalkthroughableView = walkthroughable(View);
 
+const OptionalCopilot = ({ disable, text, order, name, style, children }: any) => {
+  if (disable) {
+    return <View style={style}>{children}</View>;
+  }
+  return (
+    <CopilotStep text={text} order={order} name={name}>
+      <WalkthroughableView style={style}>{children}</WalkthroughableView>
+    </CopilotStep>
+  );
+};
+
 export default function ProfileStatsComp({
   xp,
   tours,
@@ -18,6 +29,7 @@ export default function ProfileStatsComp({
   onBadgesPress,
   onFollowersPress,
   onFollowingPress,
+  disableCopilot = false,
 }: Props) {
   const theme = useColorTheme();
   const styles = profileStatsCompStyles(theme);
@@ -55,16 +67,20 @@ export default function ProfileStatsComp({
   );
 
   return (
-    <CopilotStep text={t('tutorial.profile.step3text')} order={3} name="statsStep">
-      <WalkthroughableView style={styles.card}>
-        {/* Achievement row */}
-        <View style={styles.row}>{achievementStats.map((s, i) => renderStat(s, i))}</View>
+    <OptionalCopilot
+      text={t('tutorial.profile.step3text')}
+      order={3}
+      name="statsStep"
+      style={styles.card}
+      disable={disableCopilot}
+    >
+      {/* Achievement row */}
+      <View style={styles.row}>{achievementStats.map((s, i) => renderStat(s, i))}</View>
 
-        <View style={styles.hDivider} />
+      <View style={styles.hDivider} />
 
-        {/* Social row */}
-        <View style={styles.row}>{socialStats.map((s, i) => renderStat(s, i))}</View>
-      </WalkthroughableView>
-    </CopilotStep>
+      {/* Social row */}
+      <View style={styles.row}>{socialStats.map((s, i) => renderStat(s, i))}</View>
+    </OptionalCopilot>
   );
 }

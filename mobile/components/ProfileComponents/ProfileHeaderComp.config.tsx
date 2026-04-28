@@ -10,6 +10,7 @@ export type ProfileHeaderProps = {
   onTutorialsPress?: () => void;
   tutorialsAccessibilityLabel?: string;
   scrollY?: Animated.Value;
+  disableCopilot?: boolean;
 };
 
 export const exampleProfileHeader: ProfileHeaderProps = {
