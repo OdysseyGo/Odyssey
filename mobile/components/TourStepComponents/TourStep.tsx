@@ -1151,7 +1151,14 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
           stepId={step.id}
         />
       ) : step.puzzle.type === 'ar-code' ? (
-        <ArCodeView key={step.id} puzzle={step.puzzle} isSolved={isSolved} onSolve={onSolve} onAnswered={onAnswered} stepId={step.id}/>
+        <ArCodeView
+          key={step.id}
+          puzzle={step.puzzle}
+          isSolved={isSolved}
+          onSolve={onSolve}
+          onAnswered={onAnswered}
+          stepId={step.id}
+        />
       ) : step.puzzle.type === 'compass-bearing' ? (
         <CompassView key={step.id} puzzle={step.puzzle} isSolved={isSolved} onSolve={onSolve} />
       ) : (

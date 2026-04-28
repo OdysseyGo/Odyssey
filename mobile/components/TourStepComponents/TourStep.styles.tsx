@@ -328,6 +328,7 @@ export default function getStyles(theme: ThemeName) {
       textAlign: 'center',
       marginTop: 10,
       maxWidth: 300,
+    },
     exhaustedText: {
       color: color.error,
     },
