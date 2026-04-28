@@ -46,13 +46,13 @@ class BadgeService:
         cls._ensure_badge(
             cls.CITY_SILVER_CODE,
             name="City Silver",
-            description="Completed your first tour in a city with one or two mistakes.",
+            description="Completed your first tour in a city with one mistake.",
             criteria={"kind": "city_first_completion", "tier": "silver"},
         )
         cls._ensure_badge(
             cls.CITY_BRONZE_CODE,
             name="City Bronze",
-            description="Completed your first tour in a city with more than two mistakes.",
+            description="Completed your first tour in a city with two mistakes.",
             criteria={"kind": "city_first_completion", "tier": "bronze"},
         )
         for xp_threshold, code, name in cls.XP_MILESTONES:
@@ -67,9 +67,11 @@ class BadgeService:
     def _city_badge_code_from_mistakes(mistake_count):
         if mistake_count == 0:
             return BadgeService.CITY_GOLD_CODE
-        if mistake_count <= 2:
+        if mistake_count == 1:
             return BadgeService.CITY_SILVER_CODE
-        return BadgeService.CITY_BRONZE_CODE
+        if mistake_count == 2:
+            return BadgeService.CITY_BRONZE_CODE
+        return None
 
     @staticmethod
     def _award_or_upgrade_city_badge(user, completed_progress):
@@ -96,6 +98,8 @@ class BadgeService:
             + ar_picture_badge_penalty
         )
         badge_code = BadgeService._city_badge_code_from_mistakes(mistake_count)
+        if not badge_code:
+            return []
         badge = Badge.objects.filter(code=badge_code).first()
         if badge is None:
             return []

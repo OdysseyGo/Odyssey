@@ -40,7 +40,7 @@ class BadgeTierFromSkipsApiTests(APITestCase):
                 longitude=str(32.8 + i * 0.001),
             )
 
-    def test_all_skipped_steps_award_bronze_city_badge(self):
+    def test_all_skipped_steps_award_no_city_badge(self):
         create_response = self.client.post(
             "/api/tour-progress/",
             {"tour_id": self.tour.id},
@@ -62,6 +62,4 @@ class BadgeTierFromSkipsApiTests(APITestCase):
             country_code="TR",
         ).first()
 
-        self.assertIsNotNone(badge)
-        self.assertEqual(badge.badge.code, BadgeService.CITY_BRONZE_CODE)
-        self.assertEqual(badge.mistake_count, 3)
+        self.assertIsNone(badge)

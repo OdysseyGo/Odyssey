@@ -75,11 +75,11 @@ class BadgeAwardingTests(TestCase):
 
         earned = BadgeService.check_badges(self.user, completed_progress=progress)
 
-        self.assertTrue(any(name == "City Silver" for name in earned))
+        self.assertTrue(any(name == "City Bronze" for name in earned))
         self.assertTrue(
             UserBadge.objects.filter(
                 user=self.user,
-                badge__code=BadgeService.CITY_SILVER_CODE,
+                badge__code=BadgeService.CITY_BRONZE_CODE,
                 city="Paris",
                 country_code="FR",
                 mistake_count=2,
@@ -205,5 +205,5 @@ class BadgeAwardingTests(TestCase):
             city="Lisbon",
             country_code="PT",
         )
-        self.assertEqual(badge.badge.code, BadgeService.CITY_SILVER_CODE)
+        self.assertEqual(badge.badge.code, BadgeService.CITY_BRONZE_CODE)
         self.assertEqual(badge.mistake_count, 2)
