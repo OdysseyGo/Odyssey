@@ -180,6 +180,9 @@ class GeminiService:
                     step_data["latitude"] = verified_lat
                     step_data["longitude"] = verified_lng
 
+        # ---- Step 4b: Reorder stops geometrically to eliminate zigzag ----
+        tour_data["steps"] = self._nearest_neighbor_order(tour_data["steps"])
+
         # ---- Step 5: Persist to database ----
         with transaction.atomic():
             tour = Tour.objects.create(
@@ -289,6 +292,35 @@ class GeminiService:
             + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlng / 2) ** 2
         )
         return radius_km * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    @staticmethod
+    def _nearest_neighbor_order(steps: list[dict]) -> list[dict]:
+        """Reorder a list of steps so consecutive stops are geographically close.
+
+        Keeps the AI's first step as the entry point (preserving narrative
+        intro) and then greedily picks the nearest unvisited stop. Cheap,
+        deterministic, and good enough to eliminate visual zigzag for
+        small N (typical tours have 4-12 stops).
+        """
+        if len(steps) < 3:
+            return steps
+
+        remaining = list(steps[1:])
+        ordered = [steps[0]]
+        current = steps[0]
+        while remaining:
+            nearest_idx = min(
+                range(len(remaining)),
+                key=lambda i: GeminiService._haversine_km(
+                    float(current["latitude"]),
+                    float(current["longitude"]),
+                    float(remaining[i]["latitude"]),
+                    float(remaining[i]["longitude"]),
+                ),
+            )
+            current = remaining.pop(nearest_idx)
+            ordered.append(current)
+        return ordered
 
     @staticmethod
     def _cluster_candidates(candidates: list[dict], keep: int) -> list[dict]:

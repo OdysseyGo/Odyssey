@@ -343,45 +343,39 @@ class GoogleMapsFacade:
 
     def estimate_accessibility(self, data: Dict[str, Any]) -> int:
         """
-        Comprehensive accessibility rating (1-10).
-        10 = Very Easy, 1 = Very Hard
+        Walkability rating (1-10). 10 = very easy, 1 = very hard.
 
-        Factors:
-        - Total Distance (Base penalty)
-        - Duration (Base penalty)
-        - Elevation Gain (Steepness penalty)
-        - Max Leg Distance (Pacing penalty)
-        - Requires Transport (Complexity penalty)
+        Distance is the primary signal; elevation and an unusually long
+        single leg add secondary penalties. Duration is intentionally not
+        used — it correlates with distance for walking tours and would
+        double-count.
         """
-        # Unpack
-        dist = data.get("total_distance", 0)
-        dur = data.get("duration_minutes", 0)
-        elev = data.get("elevation_gain", 0)
-        max_leg = data.get("max_leg_distance", 0)
+        dist_km = data.get("total_distance", 0) / 1000.0
+        elev = data.get("elevation_gain", 0) or 0
+        max_leg_km = data.get("max_leg_distance", 0) / 1000.0
         req_transport = data.get("requires_transport", False)
 
         score = 10.0
 
-        # 1. Distance Penalty: -1 per 1km (1000m)
-        score -= dist / 1000
+        # Distance: free under 3 km, then -0.6 per extra km, capped at -5.
+        if dist_km > 3:
+            score -= min(5.0, (dist_km - 3) * 0.6)
 
-        # 2. Duration Penalty: -1 per 30 mins
-        score -= dur / 30
+        # Elevation: free under 50 m, then -1 per extra 100 m, capped at -3.
+        if elev > 50:
+            score -= min(3.0, (elev - 50) / 100.0)
 
-        # 3. Elevation Penalty: -1 per 30m gain (approx 10 floors)
-        score -= elev / 30
-
-        # 4. Pacing Penalty: -1 if max leg > 1km, -2 if > 2km (already handled by transport flag logic approx)
-        # Let's be linear: -0.5 per 500m of max leg
-        score -= max_leg / 1000
-
-        # 5. Transport Complexity: -2 flat if transport likely needed
-        if req_transport:
+        # Pacing: long single legs make the tour harder to break up.
+        if max_leg_km > 2.5:
             score -= 2
+        elif max_leg_km > 1.5:
+            score -= 1
 
-        # Cap range
-        final_score = int(round(score))
-        return max(1, min(10, final_score))
+        # Transport: small extra penalty for routes that effectively need it.
+        if req_transport:
+            score -= 1
+
+        return max(1, min(10, int(round(score))))
 
 
 def _haversine_fallback_metrics(steps: List[TourStep]) -> Dict[str, Any]:
