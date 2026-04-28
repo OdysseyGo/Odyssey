@@ -25,6 +25,7 @@ import ProfileBadgesContainer from '@/components/ProfileComponents/ProfileBadges
 import ProfileToursContainer from '@/components/ProfileComponents/ProfileToursContainer';
 import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
 import AvatarSelectionModal from '@/components/ProfileComponents/AvatarSelectionModal';
+import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import { getMe, User } from '@/api/users';
 import { getMyBadges, Badge } from '@/api/profile';
@@ -184,6 +185,7 @@ function GuestScreen({
     <View style={[guestStyles.root, { backgroundColor: theme.headerGradientTop }]}>
       {/* ── Hero ── */}
       <View style={[guestStyles.hero, { paddingTop: insets.top, height: GUEST_HERO_HEIGHT }]}>
+        <AuthLanguageSelector style={{ top: insets.top + 12 }} />
         <View
           style={[guestStyles.iconRing, { backgroundColor: theme.profileGuestIconRingBackground }]}
         >

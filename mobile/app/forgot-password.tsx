@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
+import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
 import BackButton from '@/components/common/BackButton';
 import { getByUsername, resetPassword } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -141,6 +142,7 @@ export default function ForgotPasswordScreen() {
             color="rgba(255,255,255,0.9)"
             style={[styles.backButton, { top: insets.top + 12 }]}
           />
+          <AuthLanguageSelector style={{ top: insets.top + 12 }} />
           <View style={styles.logoArea}>
             <View style={styles.iconRing}>
               <Ionicons name="compass" size={46} color="#FFFFFF" />
