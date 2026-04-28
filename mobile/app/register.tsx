@@ -481,7 +481,7 @@ export default function RegisterScreen() {
         visible={showSuccessModal}
         transparent
         animationType="fade"
-        onRequestClose={() => router.replace('/login')}
+        onRequestClose={() => router.dismissTo('/login')}
       >
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { backgroundColor: theme.background }]}>
@@ -502,7 +502,7 @@ export default function RegisterScreen() {
             </Text>
             <TouchableOpacity
               style={[styles.successButton, { backgroundColor: theme.primary }]}
-              onPress={() => router.replace('/login')}
+              onPress={() => router.dismissTo('/login')}
             >
               <Text style={[styles.modalButtonPrimaryText, { color: theme.white }]}>
                 {t('auth.login')}
