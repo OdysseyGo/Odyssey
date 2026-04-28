@@ -1,5 +1,8 @@
+import json
+
 from django.db import transaction
 from django.db.models import Avg, Count, Q
+from django.http import HttpResponse
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
@@ -43,8 +46,7 @@ from apps.admin_dashboard.api.serializers import (
 from apps.admin_dashboard.models import BanRecord, Report
 from apps.admin_dashboard.services.analytics import AnalyticsService
 from apps.gamification.models import (
-    BadgeVisualOverride,
-    BadgeVisualTemplate,
+    Badge,
     PictureCompareConfig,
     TourProgress,
 )
@@ -374,34 +376,52 @@ class PictureCompareConfigViewSet(ViewSet):
 class BadgeVisualViewSet(ViewSet):
     permission_classes = [IsStaffUser]
 
+    @staticmethod
+    def _badge_code_id_maps():
+        code_to_id = {}
+        id_to_code = {}
+        for badge in Badge.objects.all().values("id", "code"):
+            badge_code = (badge.get("code") or "").strip().upper()
+            badge_id = badge.get("id")
+            if badge_code:
+                code_to_id[badge_code] = badge_id
+                id_to_code[badge_id] = badge_code
+        return code_to_id, id_to_code
+
+    @classmethod
+    def _serialize_override(cls, item):
+        code_to_id, _ = cls._badge_code_id_maps()
+        badge_code = (item.get("badge_code") or "").strip().upper()
+        return {
+            "id": int(item.get("id", 0)),
+            "badge": code_to_id.get(badge_code),
+            "badge_code": badge_code,
+            "country_code": (item.get("country_code") or "").strip().upper(),
+            "config": item.get("config") or {},
+            "updated_at": "",
+        }
+
     def list(self, request):
-        template = BadgeVisualTemplate.load()
-        overrides = BadgeVisualOverride.objects.select_related("badge").order_by(
-            "badge_id",
-            "country_code",
-            "-updated_at",
-        )
+        payload = BadgeVisualService.read_payload()
         payload = {
-            "template": BadgeVisualService.load_template(),
-            "overrides": BadgeVisualOverrideSerializer(overrides, many=True).data,
+            "template": payload.get("template") or BadgeVisualService.load_template(),
+            "overrides": [
+                self._serialize_override(item)
+                for item in (payload.get("overrides") or [])
+            ],
         }
         serializer = BadgeVisualBundleSerializer(payload)
         return Response(serializer.data)
 
     @action(detail=False, methods=["post"], url_path="template")
     def update_template(self, request):
-        template = BadgeVisualTemplate.load()
-        serializer = BadgeVisualTemplateSerializer(
-            template,
-            data=request.data,
-            partial=True,
-        )
+        serializer = BadgeVisualTemplateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        saved = BadgeVisualService.save_template(serializer.validated_data.get("config") or {})
         return Response(
             {
-                "config": BadgeVisualService.load_template(),
-                "updated_at": template.updated_at,
+                "config": saved.get("template") or BadgeVisualService.load_template(),
+                "updated_at": timezone.now().isoformat(),
             }
         )
 
@@ -410,19 +430,36 @@ class BadgeVisualViewSet(ViewSet):
         serializer = BadgeVisualOverrideSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        override, _ = BadgeVisualOverride.objects.update_or_create(
-            badge=data.get("badge"),
-            country_code=data.get("country_code", ""),
-            defaults={"config": data.get("config", {})},
+        _, id_to_code = self._badge_code_id_maps()
+        badge_id = data.get("badge")
+        badge_code = (
+            (id_to_code.get(badge_id) if badge_id else None)
+            or data.get("badge_code")
+            or ""
         )
-        return Response(BadgeVisualOverrideSerializer(override).data)
+        _, saved = BadgeVisualService.upsert_override(
+            badge_code=badge_code,
+            country_code=data.get("country_code", ""),
+            config=data.get("config", {}),
+        )
+        return Response(self._serialize_override(saved))
 
     @action(detail=False, methods=["delete"], url_path=r"overrides/(?P<override_id>\d+)")
     def delete_override(self, request, override_id=None):
-        deleted, _ = BadgeVisualOverride.objects.filter(id=override_id).delete()
+        deleted = BadgeVisualService.delete_override(int(override_id))
         if not deleted:
             return Response({"detail": "Override not found."}, status=status.HTTP_404_NOT_FOUND)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=["get"], url_path="export")
+    def export(self, request):
+        body = BadgeVisualService.read_payload()
+        response = HttpResponse(
+            json.dumps(body, indent=2, sort_keys=True) + "\n",
+            content_type="application/json",
+        )
+        response["Content-Disposition"] = 'attachment; filename="badge_visuals.json"'
+        return response
 
 
 # ── Content Moderation ───────────────────────────────────────────────

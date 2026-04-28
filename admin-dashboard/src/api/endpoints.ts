@@ -95,6 +95,9 @@ export const upsertBadgeVisualOverride = (data: {
 export const deleteBadgeVisualOverride = (id: number) =>
   api.delete(`/admin/badge-visuals/overrides/${id}/`);
 
+export const exportBadgeVisualConfig = () =>
+  api.get("/admin/badge-visuals/export/", { responseType: "blob" });
+
 // Reports
 export const getReports = (params?: Record<string, string | number>) =>
   api.get("/admin/reports/", { params });

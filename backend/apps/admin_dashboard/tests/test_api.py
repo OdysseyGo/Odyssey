@@ -1,4 +1,6 @@
 from io import BytesIO
+import os
+import tempfile
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -8,7 +10,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.admin_dashboard.models import BanRecord, Report
-from apps.gamification.models import Badge, BadgeVisualOverride, PictureCompareConfig
+from apps.gamification.models import Badge, PictureCompareConfig
+from apps.gamification.visuals import BadgeVisualFileRepository
 from apps.tours.models import ARModel, Review, Tour, TourStep
 
 User = get_user_model()
@@ -486,7 +489,23 @@ class BadgeVisualViewSetTests(APITestCase):
             description="Badge",
             criteria={"kind": "city_first_completion"},
         )
+        self._badge_visuals_tmpdir = tempfile.TemporaryDirectory()
+        self._original_badge_visual_path = os.environ.get("BADGE_VISUAL_CONFIG_PATH")
+        os.environ["BADGE_VISUAL_CONFIG_PATH"] = os.path.join(
+            self._badge_visuals_tmpdir.name,
+            "badge_visuals.json",
+        )
+        BadgeVisualFileRepository.write(
+            {"template": {}, "overrides": [], "meta": {"version": 1}}
+        )
         self.client.force_authenticate(user=self.admin)
+
+    def tearDown(self):
+        if self._original_badge_visual_path is None:
+            os.environ.pop("BADGE_VISUAL_CONFIG_PATH", None)
+        else:
+            os.environ["BADGE_VISUAL_CONFIG_PATH"] = self._original_badge_visual_path
+        self._badge_visuals_tmpdir.cleanup()
 
     def test_list_bundle(self):
         response = self.client.get("/api/admin/badge-visuals/")
@@ -517,17 +536,32 @@ class BadgeVisualViewSetTests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["country_code"], "FR")
-        self.assertEqual(BadgeVisualOverride.objects.count(), 1)
+        self.assertEqual(response.data["badge"], self.badge.id)
+        payload = BadgeVisualFileRepository.read()
+        self.assertEqual(len(payload["overrides"]), 1)
+        self.assertEqual(payload["overrides"][0]["badge_code"], "CITY_GOLD")
 
     def test_delete_override(self):
-        override = BadgeVisualOverride.objects.create(
-            badge=self.badge,
-            country_code="TR",
-            config={"flag": {"x": 0.12}},
+        upsert_response = self.client.post(
+            "/api/admin/badge-visuals/overrides/",
+            {
+                "badge": self.badge.id,
+                "country_code": "TR",
+                "config": {"flag": {"x": 0.12}},
+            },
+            format="json",
         )
-        response = self.client.delete(f"/api/admin/badge-visuals/overrides/{override.id}/")
+        override_id = upsert_response.data["id"]
+        response = self.client.delete(f"/api/admin/badge-visuals/overrides/{override_id}/")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(BadgeVisualOverride.objects.filter(id=override.id).exists())
+        payload = BadgeVisualFileRepository.read()
+        self.assertEqual(payload["overrides"], [])
+
+    def test_export_config(self):
+        response = self.client.get("/api/admin/badge-visuals/export/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertIn("attachment; filename=\"badge_visuals.json\"", response["Content-Disposition"])
 
     def test_requires_staff(self):
         self.client.force_authenticate(user=self.user)

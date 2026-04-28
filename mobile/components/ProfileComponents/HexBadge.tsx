@@ -21,6 +21,19 @@ type TierPalette = {
   inner_fill: string;
   border: string;
   text: string;
+  border_color: string;
+  inner_border_color: string;
+  frame_fill_top: string;
+  frame_fill_bottom: string;
+  frame_fill_opacity: number;
+  fill_top: string;
+  fill_bottom: string;
+  fill_opacity: number;
+  text_plate_fill: string;
+  text_plate_fill_opacity: number;
+  text_plate_stroke: string;
+  text_plate_stroke_opacity: number;
+  text_plate_stroke_width: number;
 };
 
 type BadgeVisualConfig = {
@@ -29,14 +42,6 @@ type BadgeVisualConfig = {
     inner_points?: string;
     stroke_width?: number;
     inner_stroke_width?: number;
-    border_color?: string;
-    inner_border_color?: string;
-    frame_fill_top?: string;
-    frame_fill_bottom?: string;
-    frame_fill_opacity?: number;
-    fill_top?: string;
-    fill_bottom?: string;
-    fill_opacity?: number;
   };
   flag?: {
     x?: number;
@@ -65,11 +70,6 @@ type BadgeVisualConfig = {
     shape_tr?: number;
     shape_br?: number;
     shape_bl?: number;
-    fill?: string;
-    fill_opacity?: number;
-    stroke?: string;
-    stroke_opacity?: number;
-    stroke_width?: number;
   };
   palette?: Partial<Record<BadgeTier, Partial<TierPalette>>>;
 };
@@ -91,42 +91,133 @@ const DEFAULT_VISUAL_PALETTE: Record<BadgeTier, TierPalette> = {
     inner_fill: BADGE_TIER_PALETTE.gold.innerFill,
     border: BADGE_TIER_PALETTE.gold.border,
     text: BADGE_TIER_PALETTE.gold.text,
+    border_color: BADGE_TIER_PALETTE.gold.border,
+    inner_border_color: BADGE_TIER_PALETTE.gold.border,
+    frame_fill_top: '#ffffff',
+    frame_fill_bottom: '#dbe4f4',
+    frame_fill_opacity: 0.98,
+    fill_top: '#f8fafc',
+    fill_bottom: '#e2e8f0',
+    fill_opacity: 0.24,
+    text_plate_fill: '#ffffff',
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: BADGE_TIER_PALETTE.gold.border,
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
   silver: {
     outer_fill: BADGE_TIER_PALETTE.silver.outerFill,
     inner_fill: BADGE_TIER_PALETTE.silver.innerFill,
     border: BADGE_TIER_PALETTE.silver.border,
     text: BADGE_TIER_PALETTE.silver.text,
+    border_color: BADGE_TIER_PALETTE.silver.border,
+    inner_border_color: BADGE_TIER_PALETTE.silver.border,
+    frame_fill_top: '#ffffff',
+    frame_fill_bottom: '#dbe4f4',
+    frame_fill_opacity: 0.98,
+    fill_top: '#f8fafc',
+    fill_bottom: '#e2e8f0',
+    fill_opacity: 0.24,
+    text_plate_fill: '#ffffff',
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: BADGE_TIER_PALETTE.silver.border,
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
   bronze: {
     outer_fill: BADGE_TIER_PALETTE.bronze.outerFill,
     inner_fill: BADGE_TIER_PALETTE.bronze.innerFill,
     border: BADGE_TIER_PALETTE.bronze.border,
     text: BADGE_TIER_PALETTE.bronze.text,
+    border_color: BADGE_TIER_PALETTE.bronze.border,
+    inner_border_color: BADGE_TIER_PALETTE.bronze.border,
+    frame_fill_top: '#ffffff',
+    frame_fill_bottom: '#dbe4f4',
+    frame_fill_opacity: 0.98,
+    fill_top: '#f8fafc',
+    fill_bottom: '#e2e8f0',
+    fill_opacity: 0.24,
+    text_plate_fill: '#ffffff',
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: BADGE_TIER_PALETTE.bronze.border,
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
   xp1: {
     outer_fill: BADGE_TIER_PALETTE.xp1.outerFill,
     inner_fill: BADGE_TIER_PALETTE.xp1.innerFill,
     border: BADGE_TIER_PALETTE.xp1.border,
     text: BADGE_TIER_PALETTE.xp1.text,
+    border_color: BADGE_TIER_PALETTE.xp1.border,
+    inner_border_color: BADGE_TIER_PALETTE.xp1.border,
+    frame_fill_top: '#ffffff',
+    frame_fill_bottom: '#dbe4f4',
+    frame_fill_opacity: 0.98,
+    fill_top: '#f8fafc',
+    fill_bottom: '#e2e8f0',
+    fill_opacity: 0.24,
+    text_plate_fill: '#ffffff',
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: BADGE_TIER_PALETTE.xp1.border,
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
   xp2: {
     outer_fill: BADGE_TIER_PALETTE.xp2.outerFill,
     inner_fill: BADGE_TIER_PALETTE.xp2.innerFill,
     border: BADGE_TIER_PALETTE.xp2.border,
     text: BADGE_TIER_PALETTE.xp2.text,
+    border_color: BADGE_TIER_PALETTE.xp2.border,
+    inner_border_color: BADGE_TIER_PALETTE.xp2.border,
+    frame_fill_top: '#ffffff',
+    frame_fill_bottom: '#dbe4f4',
+    frame_fill_opacity: 0.98,
+    fill_top: '#f8fafc',
+    fill_bottom: '#e2e8f0',
+    fill_opacity: 0.24,
+    text_plate_fill: '#ffffff',
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: BADGE_TIER_PALETTE.xp2.border,
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
   xp3: {
     outer_fill: BADGE_TIER_PALETTE.xp3.outerFill,
     inner_fill: BADGE_TIER_PALETTE.xp3.innerFill,
     border: BADGE_TIER_PALETTE.xp3.border,
     text: BADGE_TIER_PALETTE.xp3.text,
+    border_color: BADGE_TIER_PALETTE.xp3.border,
+    inner_border_color: BADGE_TIER_PALETTE.xp3.border,
+    frame_fill_top: '#ffffff',
+    frame_fill_bottom: '#dbe4f4',
+    frame_fill_opacity: 0.98,
+    fill_top: '#f8fafc',
+    fill_bottom: '#e2e8f0',
+    fill_opacity: 0.24,
+    text_plate_fill: '#ffffff',
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: BADGE_TIER_PALETTE.xp3.border,
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
   neutral: {
     outer_fill: BADGE_TIER_PALETTE.neutral.outerFill,
     inner_fill: BADGE_TIER_PALETTE.neutral.innerFill,
     border: BADGE_TIER_PALETTE.neutral.border,
     text: BADGE_TIER_PALETTE.neutral.text,
+    border_color: BADGE_TIER_PALETTE.neutral.border,
+    inner_border_color: BADGE_TIER_PALETTE.neutral.border,
+    frame_fill_top: '#ffffff',
+    frame_fill_bottom: '#dbe4f4',
+    frame_fill_opacity: 0.98,
+    fill_top: '#f8fafc',
+    fill_bottom: '#e2e8f0',
+    fill_opacity: 0.24,
+    text_plate_fill: '#ffffff',
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: BADGE_TIER_PALETTE.neutral.border,
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
 };
 
@@ -136,14 +227,6 @@ const DEFAULT_CONFIG: Required<BadgeVisualConfig> = {
     inner_points: '50,12 84.64,32 84.64,72 50,92 15.36,72 15.36,32',
     stroke_width: 2,
     inner_stroke_width: 1.2,
-    border_color: '#64748b',
-    inner_border_color: '#64748b',
-    frame_fill_top: '#ffffff',
-    frame_fill_bottom: '#dbe4f4',
-    frame_fill_opacity: 0.98,
-    fill_top: '#f8fafc',
-    fill_bottom: '#e2e8f0',
-    fill_opacity: 0.24,
   },
   flag: {
     x: -0.2,
@@ -172,11 +255,6 @@ const DEFAULT_CONFIG: Required<BadgeVisualConfig> = {
     shape_tr: 1,
     shape_br: 0.82,
     shape_bl: 0,
-    fill: '#ffffff',
-    fill_opacity: 0.78,
-    stroke: '#64748b',
-    stroke_opacity: 0.7,
-    stroke_width: 1,
   },
   palette: DEFAULT_VISUAL_PALETTE,
 };
@@ -287,12 +365,12 @@ export default function HexBadge({ code, city, countryCode, fallbackLabel, visua
       <Svg width={WIDTH} height={HEIGHT}>
         <Defs>
           <LinearGradient id="hexBackground" x1="0%" y1="0%" x2="0%" y2="100%">
-            <Stop offset="0%" stopColor={config.hex.frame_fill_top || '#ffffff'} stopOpacity={config.hex.frame_fill_opacity ?? 0.98} />
-            <Stop offset="100%" stopColor={config.hex.frame_fill_bottom || '#dbe4f4'} stopOpacity={config.hex.frame_fill_opacity ?? 0.98} />
+            <Stop offset="0%" stopColor={palette.frame_fill_top} stopOpacity={palette.frame_fill_opacity} />
+            <Stop offset="100%" stopColor={palette.frame_fill_bottom} stopOpacity={palette.frame_fill_opacity} />
           </LinearGradient>
           <LinearGradient id="plateFill" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor={config.hex.fill_top || palette.outer_fill} />
-            <Stop offset="100%" stopColor={config.hex.fill_bottom || palette.inner_fill} />
+            <Stop offset="0%" stopColor={palette.fill_top} />
+            <Stop offset="100%" stopColor={palette.fill_bottom} />
           </LinearGradient>
           <ClipPath id="flagClip">
             <Polygon points={config.flag.clip_points} />
@@ -305,14 +383,14 @@ export default function HexBadge({ code, city, countryCode, fallbackLabel, visua
         <Polygon
           points={config.hex.outer_points}
           fill="url(#hexBackground)"
-          stroke={config.hex.border_color || palette.border}
+          stroke={palette.border_color}
           strokeWidth={config.hex.stroke_width}
         />
         <Polygon
           points={config.hex.inner_points}
           fill="url(#plateFill)"
-          fillOpacity={config.hex.fill_opacity ?? 0.24}
-          stroke={config.hex.inner_border_color || config.hex.border_color || palette.border}
+          fillOpacity={palette.fill_opacity}
+          stroke={palette.inner_border_color}
           strokeOpacity={0.42}
           strokeWidth={config.hex.inner_stroke_width}
         />
@@ -340,11 +418,11 @@ export default function HexBadge({ code, city, countryCode, fallbackLabel, visua
 
           <Polygon
             points={buildTextPlatePoints(config.text_plate)}
-            fill={config.text_plate.fill}
-            fillOpacity={config.text_plate.fill_opacity}
-            stroke={config.text_plate.stroke || palette.border}
-            strokeOpacity={config.text_plate.stroke_opacity}
-            strokeWidth={config.text_plate.stroke_width || 1}
+            fill={palette.text_plate_fill}
+            fillOpacity={palette.text_plate_fill_opacity}
+            stroke={palette.text_plate_stroke}
+            strokeOpacity={palette.text_plate_stroke_opacity}
+            strokeWidth={palette.text_plate_stroke_width}
           />
 
           <SvgText

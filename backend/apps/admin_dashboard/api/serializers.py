@@ -3,7 +3,7 @@ import json
 from rest_framework import serializers
 
 from apps.admin_dashboard.models import BanRecord, Report
-from apps.gamification.models import Badge, BadgeVisualOverride, BadgeVisualTemplate, PictureCompareConfig
+from apps.gamification.models import Badge, PictureCompareConfig
 from apps.gamification.visuals import DEFAULT_BADGE_VISUAL_CONFIG
 from apps.tours.models import ARModel, Puzzle, Review, Tour, TourStep
 from apps.users.models import User
@@ -212,30 +212,20 @@ class PictureCompareConfigSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class BadgeVisualTemplateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BadgeVisualTemplate
-        fields = ["config", "updated_at"]
-        read_only_fields = ["updated_at"]
+class BadgeVisualTemplateSerializer(serializers.Serializer):
+    config = serializers.JSONField(required=True)
 
     def validate_config(self, value):
         return _validate_badge_visual_config(value, partial=True)
 
 
-class BadgeVisualOverrideSerializer(serializers.ModelSerializer):
-    badge_code = serializers.CharField(source="badge.code", read_only=True)
-
-    class Meta:
-        model = BadgeVisualOverride
-        fields = [
-            "id",
-            "badge",
-            "badge_code",
-            "country_code",
-            "config",
-            "updated_at",
-        ]
-        read_only_fields = ["id", "badge_code", "updated_at"]
+class BadgeVisualOverrideSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    badge = serializers.IntegerField(required=False, allow_null=True)
+    badge_code = serializers.CharField(required=False, allow_blank=True)
+    country_code = serializers.CharField(required=False, allow_blank=True, default="")
+    config = serializers.JSONField(required=True)
+    updated_at = serializers.CharField(required=False, allow_blank=True)
 
     def validate_country_code(self, value):
         normalized = (value or "").strip().upper()
@@ -244,7 +234,7 @@ class BadgeVisualOverrideSerializer(serializers.ModelSerializer):
         return normalized
 
     def validate_badge(self, value):
-        if value and not Badge.objects.filter(id=value.id).exists():
+        if value and not Badge.objects.filter(id=value).exists():
             raise serializers.ValidationError("badge does not exist.")
         return value
 
@@ -321,11 +311,6 @@ def _validate_badge_visual_config(config, *, partial=False):
         for key in ("shape_tl", "shape_tr", "shape_br", "shape_bl"):
             if key in config["text_plate"]:
                 _validate_number(f"text_plate.{key}", config["text_plate"][key], -0.5, 1.5)
-        for key in ("fill_opacity", "stroke_opacity"):
-            if key in config["text_plate"]:
-                _validate_number(f"text_plate.{key}", config["text_plate"][key], 0, 1)
-        if "stroke_width" in config["text_plate"]:
-            _validate_number("text_plate.stroke_width", config["text_plate"]["stroke_width"], 0, 8)
 
     if "palette" in config and isinstance(config["palette"], dict):
         allowed_tiers = set(DEFAULT_BADGE_VISUAL_CONFIG["palette"].keys())
@@ -339,13 +324,52 @@ def _validate_badge_visual_config(config, *, partial=False):
                 raise serializers.ValidationError(
                     {"palette": f"{tier} must be an object."}
                 )
-            allowed_colors = {"outer_fill", "inner_fill", "border", "text"}
+            allowed_colors = {
+                "outer_fill",
+                "inner_fill",
+                "border",
+                "text",
+                "border_color",
+                "inner_border_color",
+                "frame_fill_top",
+                "frame_fill_bottom",
+                "fill_top",
+                "fill_bottom",
+                "frame_fill_opacity",
+                "fill_opacity",
+                "text_plate_fill",
+                "text_plate_fill_opacity",
+                "text_plate_stroke",
+                "text_plate_stroke_opacity",
+                "text_plate_stroke_width",
+            }
             unknown_colors = set(tier_palette.keys()) - allowed_colors
             if unknown_colors:
                 raise serializers.ValidationError(
                     {"palette": f"{tier} has unsupported keys: {sorted(unknown_colors)}"}
                 )
             for color_key, color_value in tier_palette.items():
+                if color_key in {
+                    "frame_fill_opacity",
+                    "fill_opacity",
+                    "text_plate_fill_opacity",
+                    "text_plate_stroke_opacity",
+                }:
+                    _validate_number(
+                        f"palette.{tier}.{color_key}",
+                        color_value,
+                        0,
+                        1,
+                    )
+                    continue
+                if color_key in {"text_plate_stroke_width"}:
+                    _validate_number(
+                        f"palette.{tier}.{color_key}",
+                        color_value,
+                        0,
+                        8,
+                    )
+                    continue
                 if not isinstance(color_value, str):
                     raise serializers.ValidationError(
                         {"palette": f"{tier}.{color_key} must be a string."}
@@ -361,19 +385,6 @@ def _validate_badge_visual_config(config, *, partial=False):
                 0.1,
                 10,
             )
-        for key in ("border_color", "inner_border_color"):
-            if key in config["hex"] and not isinstance(config["hex"][key], str):
-                raise serializers.ValidationError({f"hex.{key}": "must be a string"})
-        for key in ("fill_top", "fill_bottom"):
-            if key in config["hex"] and not isinstance(config["hex"][key], str):
-                raise serializers.ValidationError({f"hex.{key}": "must be a string"})
-        for key in ("frame_fill_top", "frame_fill_bottom"):
-            if key in config["hex"] and not isinstance(config["hex"][key], str):
-                raise serializers.ValidationError({f"hex.{key}": "must be a string"})
-        if "fill_opacity" in config["hex"]:
-            _validate_number("hex.fill_opacity", config["hex"]["fill_opacity"], 0, 1)
-        if "frame_fill_opacity" in config["hex"]:
-            _validate_number("hex.frame_fill_opacity", config["hex"]["frame_fill_opacity"], 0, 1)
 
     return config
 

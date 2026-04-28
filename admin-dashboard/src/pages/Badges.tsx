@@ -3,6 +3,7 @@ import type { MouseEvent as ReactMouseEvent } from "react";
 
 import {
   deleteBadgeVisualOverride,
+  exportBadgeVisualConfig,
   getBadgeVisualBundle,
   updateBadgeVisualTemplate,
   upsertBadgeVisualOverride,
@@ -28,6 +29,19 @@ type TierPalette = {
   inner_fill: string;
   border: string;
   text: string;
+  border_color: string;
+  inner_border_color: string;
+  frame_fill_top: string;
+  frame_fill_bottom: string;
+  frame_fill_opacity: number;
+  fill_top: string;
+  fill_bottom: string;
+  fill_opacity: number;
+  text_plate_fill: string;
+  text_plate_fill_opacity: number;
+  text_plate_stroke: string;
+  text_plate_stroke_opacity: number;
+  text_plate_stroke_width: number;
 };
 
 type VisualConfig = {
@@ -58,23 +72,10 @@ type VisualConfig = {
     shape_tr: number;
     shape_br: number;
     shape_bl: number;
-    fill: string;
-    fill_opacity: number;
-    stroke: string;
-    stroke_opacity: number;
-    stroke_width: number;
   };
   hex: {
     stroke_width: number;
     inner_stroke_width: number;
-    border_color: string;
-    inner_border_color: string;
-    frame_fill_top: string;
-    frame_fill_bottom: string;
-    frame_fill_opacity: number;
-    fill_top: string;
-    fill_bottom: string;
-    fill_opacity: number;
     outer_points?: string;
     inner_points?: string;
   };
@@ -122,42 +123,133 @@ const DEFAULT_PALETTE: Record<BadgeTier, TierPalette> = {
     inner_fill: "#fcd34d",
     border: "#b45309",
     text: "#78350f",
+    border_color: "#b45309",
+    inner_border_color: "#b45309",
+    frame_fill_top: "#ffffff",
+    frame_fill_bottom: "#dbe4f4",
+    frame_fill_opacity: 0.98,
+    fill_top: "#f8fafc",
+    fill_bottom: "#e2e8f0",
+    fill_opacity: 0.24,
+    text_plate_fill: "#ffffff",
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: "#b45309",
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
   silver: {
     outer_fill: "#f1f5f9",
     inner_fill: "#cbd5e1",
     border: "#475569",
     text: "#1e293b",
+    border_color: "#475569",
+    inner_border_color: "#475569",
+    frame_fill_top: "#ffffff",
+    frame_fill_bottom: "#dbe4f4",
+    frame_fill_opacity: 0.98,
+    fill_top: "#f8fafc",
+    fill_bottom: "#e2e8f0",
+    fill_opacity: 0.24,
+    text_plate_fill: "#ffffff",
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: "#475569",
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
   bronze: {
     outer_fill: "#ffedd5",
     inner_fill: "#fdba74",
     border: "#9a3412",
     text: "#7c2d12",
+    border_color: "#9a3412",
+    inner_border_color: "#9a3412",
+    frame_fill_top: "#ffffff",
+    frame_fill_bottom: "#dbe4f4",
+    frame_fill_opacity: 0.98,
+    fill_top: "#f8fafc",
+    fill_bottom: "#e2e8f0",
+    fill_opacity: 0.24,
+    text_plate_fill: "#ffffff",
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: "#9a3412",
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
   xp1: {
     outer_fill: "#dbeafe",
     inner_fill: "#93c5fd",
     border: "#1d4ed8",
     text: "#1e3a8a",
+    border_color: "#1d4ed8",
+    inner_border_color: "#1d4ed8",
+    frame_fill_top: "#ffffff",
+    frame_fill_bottom: "#dbe4f4",
+    frame_fill_opacity: 0.98,
+    fill_top: "#f8fafc",
+    fill_bottom: "#e2e8f0",
+    fill_opacity: 0.24,
+    text_plate_fill: "#ffffff",
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: "#1d4ed8",
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
   xp2: {
     outer_fill: "#dcfce7",
     inner_fill: "#86efac",
     border: "#15803d",
     text: "#14532d",
+    border_color: "#15803d",
+    inner_border_color: "#15803d",
+    frame_fill_top: "#ffffff",
+    frame_fill_bottom: "#dbe4f4",
+    frame_fill_opacity: 0.98,
+    fill_top: "#f8fafc",
+    fill_bottom: "#e2e8f0",
+    fill_opacity: 0.24,
+    text_plate_fill: "#ffffff",
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: "#15803d",
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
   xp3: {
     outer_fill: "#ede9fe",
     inner_fill: "#c4b5fd",
     border: "#6d28d9",
     text: "#4c1d95",
+    border_color: "#6d28d9",
+    inner_border_color: "#6d28d9",
+    frame_fill_top: "#ffffff",
+    frame_fill_bottom: "#dbe4f4",
+    frame_fill_opacity: 0.98,
+    fill_top: "#f8fafc",
+    fill_bottom: "#e2e8f0",
+    fill_opacity: 0.24,
+    text_plate_fill: "#ffffff",
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: "#6d28d9",
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
   neutral: {
     outer_fill: "#e2e8f0",
     inner_fill: "#cbd5e1",
     border: "#64748b",
     text: "#0f172a",
+    border_color: "#64748b",
+    inner_border_color: "#64748b",
+    frame_fill_top: "#ffffff",
+    frame_fill_bottom: "#dbe4f4",
+    frame_fill_opacity: 0.98,
+    fill_top: "#f8fafc",
+    fill_bottom: "#e2e8f0",
+    fill_opacity: 0.24,
+    text_plate_fill: "#ffffff",
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: "#64748b",
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
   },
 };
 
@@ -210,12 +302,13 @@ function getCountries(): CountryOption[] {
 }
 
 function mergeConfig(base: VisualConfig, patch?: Partial<VisualConfig>): VisualConfig {
+  const mergedPalette = mergePalette(base.palette || DEFAULT_PALETTE, patch?.palette as any);
   return {
     hex: { ...base.hex, ...(patch?.hex || {}) },
     flag: { ...base.flag, ...(patch?.flag || {}) },
     text: { ...base.text, ...(patch?.text || {}) },
     text_plate: { ...base.text_plate, ...(patch?.text_plate || {}) },
-    palette: mergePalette(base.palette || DEFAULT_PALETTE, patch?.palette as any),
+    palette: mergedPalette,
   };
 }
 
@@ -297,12 +390,12 @@ function BadgeRender({
     <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} width="100%" height="100%">
       <defs>
         <linearGradient id={`${clipId}-bg`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={config.hex.frame_fill_top || "#ffffff"} stopOpacity={config.hex.frame_fill_opacity ?? 0.98} />
-          <stop offset="100%" stopColor={config.hex.frame_fill_bottom || "#dbe4f4"} stopOpacity={config.hex.frame_fill_opacity ?? 0.98} />
+          <stop offset="0%" stopColor={palette.frame_fill_top} stopOpacity={palette.frame_fill_opacity} />
+          <stop offset="100%" stopColor={palette.frame_fill_bottom} stopOpacity={palette.frame_fill_opacity} />
         </linearGradient>
         <linearGradient id={`${clipId}-plate`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={config.hex.fill_top || palette.outer_fill} />
-          <stop offset="100%" stopColor={config.hex.fill_bottom || palette.inner_fill} />
+          <stop offset="0%" stopColor={palette.fill_top} />
+          <stop offset="100%" stopColor={palette.fill_bottom} />
         </linearGradient>
         <clipPath id={`${clipId}-flag`}>
           <polygon points={config.flag.clip_points || DEFAULT_FLAG_CLIP} />
@@ -315,14 +408,14 @@ function BadgeRender({
       <polygon
         points={config.hex.outer_points || DEFAULT_OUTER_POINTS}
         fill={`url(#${clipId}-bg)`}
-        stroke={config.hex.border_color || palette.border}
+        stroke={palette.border_color}
         strokeWidth={config.hex.stroke_width}
       />
       <polygon
         points={config.hex.inner_points || DEFAULT_INNER_POINTS}
         fill={`url(#${clipId}-plate)`}
-        fillOpacity={config.hex.fill_opacity ?? 0.24}
-        stroke={config.hex.inner_border_color || config.hex.border_color || palette.border}
+        fillOpacity={palette.fill_opacity}
+        stroke={palette.inner_border_color}
         strokeOpacity="0.42"
         strokeWidth={config.hex.inner_stroke_width}
       />
@@ -342,11 +435,11 @@ function BadgeRender({
 
         <polygon
           points={textPlatePoints(config.text_plate)}
-          fill={config.text_plate.fill}
-          fillOpacity={config.text_plate.fill_opacity}
-          stroke={config.text_plate.stroke || palette.border}
-          strokeOpacity={config.text_plate.stroke_opacity}
-          strokeWidth={config.text_plate.stroke_width || 1}
+          fill={palette.text_plate_fill}
+          fillOpacity={palette.text_plate_fill_opacity}
+          stroke={palette.text_plate_stroke}
+          strokeOpacity={palette.text_plate_stroke_opacity}
+          strokeWidth={palette.text_plate_stroke_width}
         />
 
         <text
@@ -566,6 +659,19 @@ export default function Badges() {
     );
   }
 
+  function updateTierPalette(partial: Partial<TierPalette>) {
+    setEditingConfig((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        palette: {
+          ...prev.palette,
+          [selectedTier]: { ...prev.palette[selectedTier], ...partial },
+        },
+      };
+    });
+  }
+
   function onPointerDownMove(currentTarget: TransformTarget, event: ReactMouseEvent<HTMLDivElement>) {
     if (!editingConfig) return;
     event.preventDefault();
@@ -699,6 +805,23 @@ export default function Badges() {
       setOverrides((prev) => prev.filter((item) => item.id !== overrideMatches.id));
     } catch {
       setError("Unable to delete override.");
+    }
+  }
+
+  async function handleExportJson() {
+    try {
+      const response = await exportBadgeVisualConfig();
+      const blob = new Blob([response.data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "badge_visuals.json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("Unable to export badge visuals JSON.");
     }
   }
 
@@ -929,50 +1052,7 @@ export default function Badges() {
                 onChange={(e) => updateTextPlate({ shape_bl: Number(e.target.value) })}
               />
             ) : null}
-            {target === "text_plate" ? (
-              <Input
-                type="number"
-                step="0.05"
-                value={editingConfig.text_plate.fill_opacity}
-                onChange={(e) => updateTextPlate({ fill_opacity: Number(e.target.value) })}
-              />
-            ) : null}
-            {target === "text_plate" ? (
-              <Input
-                type="number"
-                step="0.05"
-                value={editingConfig.text_plate.stroke_opacity}
-                onChange={(e) => updateTextPlate({ stroke_opacity: Number(e.target.value) })}
-              />
-            ) : null}
-            {target === "text_plate" ? (
-              <Input
-                type="number"
-                step="0.1"
-                value={editingConfig.text_plate.stroke_width}
-                onChange={(e) => updateTextPlate({ stroke_width: Number(e.target.value) })}
-              />
-            ) : null}
           </div>
-
-          {target === "text_plate" ? (
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <label className="flex items-center gap-2">Fill
-                <Input
-                  type="color"
-                  value={editingConfig.text_plate.fill}
-                  onChange={(e) => updateTextPlate({ fill: e.target.value })}
-                />
-              </label>
-              <label className="flex items-center gap-2">Stroke
-                <Input
-                  type="color"
-                  value={editingConfig.text_plate.stroke}
-                  onChange={(e) => updateTextPlate({ stroke: e.target.value })}
-                />
-              </label>
-            </div>
-          ) : null}
 
           {target === "text_plate" ? (
             <div className="space-y-2">
@@ -998,197 +1078,92 @@ export default function Badges() {
                 <Input
                   type="color"
                   value={tierPalette.outer_fill}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setEditingConfig((prev) => {
-                      if (!prev) return prev;
-                      return {
-                        ...prev,
-                        palette: {
-                          ...prev.palette,
-                          [selectedTier]: { ...prev.palette[selectedTier], outer_fill: value },
-                        },
-                      };
-                    });
-                  }}
+                  onChange={(e) => updateTierPalette({ outer_fill: e.target.value })}
                 />
               </label>
               <label className="flex items-center gap-2">Inner
                 <Input
                   type="color"
                   value={tierPalette.inner_fill}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setEditingConfig((prev) => {
-                      if (!prev) return prev;
-                      return {
-                        ...prev,
-                        palette: {
-                          ...prev.palette,
-                          [selectedTier]: { ...prev.palette[selectedTier], inner_fill: value },
-                        },
-                      };
-                    });
-                  }}
+                  onChange={(e) => updateTierPalette({ inner_fill: e.target.value })}
                 />
               </label>
               <label className="flex items-center gap-2">Border
                 <Input
                   type="color"
                   value={tierPalette.border}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setEditingConfig((prev) => {
-                      if (!prev) return prev;
-                      return {
-                        ...prev,
-                        palette: {
-                          ...prev.palette,
-                          [selectedTier]: { ...prev.palette[selectedTier], border: value },
-                        },
-                      };
-                    });
-                  }}
+                  onChange={(e) => updateTierPalette({ border: e.target.value })}
                 />
               </label>
               <label className="flex items-center gap-2">Text
                 <Input
                   type="color"
                   value={tierPalette.text}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setEditingConfig((prev) => {
-                      if (!prev) return prev;
-                      return {
-                        ...prev,
-                        palette: {
-                          ...prev.palette,
-                          [selectedTier]: { ...prev.palette[selectedTier], text: value },
-                        },
-                      };
-                    });
-                  }}
+                  onChange={(e) => updateTierPalette({ text: e.target.value })}
                 />
               </label>
             </div>
           </div>
 
           <div className="space-y-2">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Border edge colors</div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Border edge colors (tier)</div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <label className="flex items-center gap-2">Outer edge
-                <Input
-                  type="color"
-                  value={editingConfig.hex.border_color || "#64748b"}
-                  onChange={(e) =>
-                    setEditingConfig((prev) =>
-                      prev
-                        ? { ...prev, hex: { ...prev.hex, border_color: e.target.value } }
-                        : prev,
-                    )
-                  }
-                />
+                <Input type="color" value={tierPalette.border_color} onChange={(e) => updateTierPalette({ border_color: e.target.value })} />
               </label>
               <label className="flex items-center gap-2">Inner edge
-                <Input
-                  type="color"
-                  value={editingConfig.hex.inner_border_color || editingConfig.hex.border_color || "#64748b"}
-                  onChange={(e) =>
-                    setEditingConfig((prev) =>
-                      prev
-                        ? { ...prev, hex: { ...prev.hex, inner_border_color: e.target.value } }
-                        : prev,
-                    )
-                  }
-                />
+                <Input type="color" value={tierPalette.inner_border_color} onChange={(e) => updateTierPalette({ inner_border_color: e.target.value })} />
               </label>
             </div>
           </div>
 
           <div className="space-y-2">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Border band fill (between edges)</div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Border band fill (tier)</div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <label className="flex items-center gap-2">Top
-                <Input
-                  type="color"
-                  value={editingConfig.hex.frame_fill_top || "#ffffff"}
-                  onChange={(e) =>
-                    setEditingConfig((prev) =>
-                      prev ? { ...prev, hex: { ...prev.hex, frame_fill_top: e.target.value } } : prev,
-                    )
-                  }
-                />
+                <Input type="color" value={tierPalette.frame_fill_top} onChange={(e) => updateTierPalette({ frame_fill_top: e.target.value })} />
               </label>
               <label className="flex items-center gap-2">Bottom
-                <Input
-                  type="color"
-                  value={editingConfig.hex.frame_fill_bottom || "#dbe4f4"}
-                  onChange={(e) =>
-                    setEditingConfig((prev) =>
-                      prev ? { ...prev, hex: { ...prev.hex, frame_fill_bottom: e.target.value } } : prev,
-                    )
-                  }
-                />
+                <Input type="color" value={tierPalette.frame_fill_bottom} onChange={(e) => updateTierPalette({ frame_fill_bottom: e.target.value })} />
               </label>
               <label className="flex items-center gap-2">Opacity
-                <Input
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={editingConfig.hex.frame_fill_opacity ?? 0.98}
-                  onChange={(e) =>
-                    setEditingConfig((prev) =>
-                      prev
-                        ? { ...prev, hex: { ...prev.hex, frame_fill_opacity: Number(e.target.value) } }
-                        : prev,
-                    )
-                  }
-                />
+                <Input type="number" min="0" max="1" step="0.05" value={tierPalette.frame_fill_opacity} onChange={(e) => updateTierPalette({ frame_fill_opacity: Number(e.target.value) })} />
               </label>
             </div>
           </div>
 
           <div className="space-y-2">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Badge interior fill</div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Badge interior fill (tier)</div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <label className="flex items-center gap-2">Top
-                <Input
-                  type="color"
-                  value={editingConfig.hex.fill_top || "#f8fafc"}
-                  onChange={(e) =>
-                    setEditingConfig((prev) =>
-                      prev ? { ...prev, hex: { ...prev.hex, fill_top: e.target.value } } : prev,
-                    )
-                  }
-                />
+                <Input type="color" value={tierPalette.fill_top} onChange={(e) => updateTierPalette({ fill_top: e.target.value })} />
               </label>
               <label className="flex items-center gap-2">Bottom
-                <Input
-                  type="color"
-                  value={editingConfig.hex.fill_bottom || "#e2e8f0"}
-                  onChange={(e) =>
-                    setEditingConfig((prev) =>
-                      prev ? { ...prev, hex: { ...prev.hex, fill_bottom: e.target.value } } : prev,
-                    )
-                  }
-                />
+                <Input type="color" value={tierPalette.fill_bottom} onChange={(e) => updateTierPalette({ fill_bottom: e.target.value })} />
               </label>
               <label className="flex items-center gap-2">Opacity
-                <Input
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={editingConfig.hex.fill_opacity ?? 0.24}
-                  onChange={(e) =>
-                    setEditingConfig((prev) =>
-                      prev
-                        ? { ...prev, hex: { ...prev.hex, fill_opacity: Number(e.target.value) } }
-                        : prev,
-                    )
-                  }
-                />
+                <Input type="number" min="0" max="1" step="0.05" value={tierPalette.fill_opacity} onChange={(e) => updateTierPalette({ fill_opacity: Number(e.target.value) })} />
+              </label>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Text plate colors (tier)</div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <label className="flex items-center gap-2">Fill
+                <Input type="color" value={tierPalette.text_plate_fill} onChange={(e) => updateTierPalette({ text_plate_fill: e.target.value })} />
+              </label>
+              <label className="flex items-center gap-2">Stroke
+                <Input type="color" value={tierPalette.text_plate_stroke} onChange={(e) => updateTierPalette({ text_plate_stroke: e.target.value })} />
+              </label>
+              <label className="flex items-center gap-2">Fill opacity
+                <Input type="number" min="0" max="1" step="0.05" value={tierPalette.text_plate_fill_opacity} onChange={(e) => updateTierPalette({ text_plate_fill_opacity: Number(e.target.value) })} />
+              </label>
+              <label className="flex items-center gap-2">Stroke opacity
+                <Input type="number" min="0" max="1" step="0.05" value={tierPalette.text_plate_stroke_opacity} onChange={(e) => updateTierPalette({ text_plate_stroke_opacity: Number(e.target.value) })} />
+              </label>
+              <label className="flex items-center gap-2">Stroke width
+                <Input type="number" min="0" max="8" step="0.1" value={tierPalette.text_plate_stroke_width} onChange={(e) => updateTierPalette({ text_plate_stroke_width: Number(e.target.value) })} />
               </label>
             </div>
           </div>
@@ -1197,6 +1172,7 @@ export default function Badges() {
             <Button onClick={handleSave} disabled={saving} className="flex-1">
               {saving ? "Saving…" : "Save"}
             </Button>
+            <Button variant="outline" onClick={handleExportJson}>Export JSON</Button>
             {scope !== "template" && overrideMatches ? (
               <Button variant="destructive" onClick={handleDeleteOverride}>Delete override</Button>
             ) : null}
