@@ -250,6 +250,7 @@
       }
     },
     "languages": {
+      "system": "Predeterminado del sistema",
       "en": "Inglés",
       "tr": "Turco",
       "es": "Español"

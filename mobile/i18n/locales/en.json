@@ -270,6 +270,7 @@
       }
     },
     "languages": {
+      "system": "System Default",
       "en": "English",
       "tr": "Turkish",
       "es": "Spanish"

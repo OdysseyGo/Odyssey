@@ -270,6 +270,7 @@
       }
     },
     "languages": {
+      "system": "Sistem Varsayılanı",
       "en": "İngilizce",
       "tr": "Türkçe",
       "es": "İspanyolca"
