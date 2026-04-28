@@ -237,8 +237,21 @@ class GeminiService:
                     self._create_ar_puzzle(step, resolved_ar, request=request)
                     continue
 
-                # Create puzzle if present (for PUZZLE and HYBRID modes)
                 puzzle_data = step_data.get("puzzle")
+
+                # If the AI emitted neither a usable AR block nor a puzzle, but
+                # the user asked for AR + we have a catalog, synthesize an AR
+                # puzzle so PUZZLE mode never silently falls back to the lame
+                # "What is the name of this location?" trivia.
+                if include_ar and ar_models and not puzzle_data and mode == "PUZZLE":
+                    synthesized = self._synthesize_ar_puzzle(
+                        ar_models, step_data["title"]
+                    )
+                    if synthesized:
+                        self._create_ar_puzzle(step, synthesized, request=request)
+                        continue
+
+                # Create puzzle if present (for PUZZLE and HYBRID modes)
                 if puzzle_data:
                     puzzle = Puzzle.objects.create(
                         step=step,
@@ -612,7 +625,7 @@ class GeminiService:
             for i, p in enumerate(candidate_places, start=1)
         )
 
-        ar_section = self._build_ar_prompt_section(ar_models or [])
+        ar_section = self._build_ar_prompt_section(ar_models or [], mode)
 
         prompt = f"""You are a tour guide AI. Generate a {mode} tour in {city} with the theme "{theme}".
 {user_instruction}
@@ -708,7 +721,7 @@ Generate the tour now:"""
         ]
 
     @staticmethod
-    def _build_ar_prompt_section(ar_models: list[ARModel]) -> str:
+    def _build_ar_prompt_section(ar_models: list[ARModel], mode: str) -> str:
         if not ar_models:
             return ""
 
@@ -724,16 +737,31 @@ Generate the tour now:"""
             )
         catalog = "\n".join(lines)
 
+        if mode == "PUZZLE":
+            usage_rule = (
+                "Every step MUST have either a regular `puzzle` OR an `ar` block — "
+                "never neither. Prefer `ar` for at least HALF of the steps; pick "
+                "the AR model whose theme/shape fits the stop best."
+            )
+        elif mode == "HYBRID":
+            usage_rule = (
+                "Add an `ar` block on the steps where an AR model thematically "
+                "fits the location. Aim for roughly 1 AR step per 3 stops; the "
+                "rest keep their regular `puzzle`."
+            )
+        else:  # STORY
+            usage_rule = (
+                "On at most 1-2 thematically perfect stops you MAY attach an "
+                "`ar` block as a bonus interactive moment. Skip AR otherwise."
+            )
+
         return f"""
 ═══════════════════════════════════════════════════════════════
-OPTIONAL AR PUZZLES (augmented-reality 3D models you may attach to a step):
+AR PUZZLES (augmented-reality 3D models available for this tour):
 ═══════════════════════════════════════════════════════════════
 {catalog}
 
-If — and only if — an AR model thematically suits a stop, you MAY add an "ar"
-object to that step instead of (not in addition to) a regular "puzzle". Skip
-AR entirely on steps where it doesn't fit. Use AR sparingly: at most one AR
-puzzle per 2 steps, and never more than 3 in the whole tour.
+{usage_rule}
 
 AR object schema:
   "ar": {{
@@ -779,10 +807,17 @@ CRITICAL AR RULES:
         try:
             model_id = int(ar_data.get("model_id"))
         except (TypeError, ValueError):
+            logger.info("AI returned AR block with invalid model_id: %r", ar_data)
             return None
 
         ar_model = ar_lookup.get(model_id)
         if ar_model is None:
+            logger.info(
+                "AI returned AR block referencing unknown model_id=%s "
+                "(catalog ids: %s)",
+                model_id,
+                list(ar_lookup.keys()),
+            )
             return None
 
         anchor_id = str(ar_data.get("anchor_id") or "").strip()
@@ -795,6 +830,11 @@ CRITICAL AR RULES:
             None,
         )
         if anchor is None:
+            logger.info(
+                "AI returned AR block with anchor_id=%r not present on model_id=%s",
+                anchor_id,
+                model_id,
+            )
             return None
 
         try:
@@ -816,6 +856,53 @@ CRITICAL AR RULES:
             or f"Find the AR {ar_model.name} near this spot and enter the secret code.",
             "hint": ar_data.get("hint", ""),
             "xp_reward": int(ar_data.get("xp", 30) or 30),
+            "anchor_position": {
+                "x": float(position.get("x", 0.0)),
+                "y": float(position.get("y", 0.0)),
+                "z": float(position.get("z", 0.0)),
+            },
+        }
+
+    @classmethod
+    def _synthesize_ar_puzzle(
+        cls, ar_models: list[ARModel], step_title: str
+    ) -> Optional[dict]:
+        """Build an AR puzzle from scratch when the AI fails to emit a valid one.
+
+        Picks a random model + first valid anchor and a random secret code so
+        every step in PUZZLE+include_ar mode ends up with an actual AR puzzle
+        instead of the generic 'name of this location' trivia.
+        """
+        ar_model = random.choice(ar_models)
+        anchor = next(
+            (a for a in ar_model.anchors if isinstance(a, dict) and a.get("id")),
+            None,
+        )
+        if anchor is None:
+            return None
+
+        position = anchor.get("position") if isinstance(anchor, dict) else {}
+        if not isinstance(position, dict):
+            position = {}
+
+        logger.info(
+            "Synthesizing AR puzzle for step '%s' with model_id=%s anchor_id=%s",
+            step_title,
+            ar_model.id,
+            anchor.get("id"),
+        )
+
+        return {
+            "ar_model": ar_model,
+            "anchor_id": str(anchor.get("id")),
+            "secret_code": cls._sanitize_secret_code(""),
+            "model_scale_meters": AR_DEFAULT_SCALE,
+            "question": (
+                f"Find the AR {ar_model.name} near {step_title} and enter the "
+                "secret code."
+            ),
+            "hint": f"Look around for the {ar_model.name}.",
+            "xp_reward": 30,
             "anchor_position": {
                 "x": float(position.get("x", 0.0)),
                 "y": float(position.get("y", 0.0)),
