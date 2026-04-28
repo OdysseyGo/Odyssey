@@ -80,9 +80,7 @@ export default function BottomSlider({
     const useSkip = currentStep.type === 'puzzle' && !stepIsSolved;
 
     try {
-      const response = useSkip
-        ? await skipStep(progressId)
-        : await completeStep(progressId);
+      const response = useSkip ? await skipStep(progressId) : await completeStep(progressId);
 
       if (response.is_tour_complete) {
         await onTourComplete?.();

@@ -272,10 +272,10 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
       if (!activeProgress || !activeProgress.id) {
         return;
       }
-  // console.log(activeProgress.tour);
-      
+      // console.log(activeProgress.tour);
+
       // const apiTour = await getTour(activeProgress.tour);
-     
+
       const resumedTour = activeProgress.tour as unknown as ApiTour;
       const resumedCurrentStep = activeProgress.current_step as unknown as
         | number
@@ -286,20 +286,15 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         | null;
       const internalTour = mapApiTourToInternalTour(resumedTour); //çalışıyo çünkü tur objesini getiriyo
 
-
       let currentStepIdx = 0;
       if (resumedCurrentStep) {
         const currentStep = typeof resumedCurrentStep === 'object' ? resumedCurrentStep : null;
-        const targetStepId = currentStep
-          ? String(currentStep.id)
-          : String(resumedCurrentStep);
+        const targetStepId = currentStep ? String(currentStep.id) : String(resumedCurrentStep);
 
         currentStepIdx = internalTour.steps.findIndex((s) => s.id === targetStepId);
 
         if (currentStepIdx === -1 && currentStep && typeof currentStep.order === 'number') {
-          const orderedStep = resumedTour.steps.find(
-            (step) => step.order === currentStep.order
-          );
+          const orderedStep = resumedTour.steps.find((step) => step.order === currentStep.order);
           if (orderedStep) {
             currentStepIdx = internalTour.steps.findIndex((s) => s.id === String(orderedStep.id));
           }

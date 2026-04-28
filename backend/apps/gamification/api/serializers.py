@@ -38,6 +38,7 @@ class UserBadgeSerializer(serializers.ModelSerializer):
 
 
 from django.db.models import Count
+
 from apps.tours.models import PuzzleAttempt, Tour, TourStep
 
 
