@@ -530,9 +530,14 @@
     "tourProgress": "Tour Progress",
     "back": "Back",
     "next": "Next",
-    "finish": "Finish"
+    "finish": "Finish",
+    "answerConfirmTitle": "Lock this answer?",
+    "answerConfirmMessage": "Are you sure? Wrong answers can reduce your badge progress.",
+    "answerConfirmAction": "Answer"
   },
   "common": {
+    "cancel": "Cancel",
+    "ok": "OK",
     "error": "Error",
     "syncError": "Could not sync progress with server."
   },
@@ -565,8 +570,17 @@
     "activeTour": {
       "stepOf": "Step {{current}} of {{total}}",
       "end": "End",
-      "skip": "SKIP",
-      "route": "Route",
+      "skip": "Skip",
+      "skipConfirmTitle": "Skip this step?",
+      "skipConfirmMessage": "You will not earn XP for this step. This action is irreversible.",
+      "skipConfirmAction": "Skip step",
+      "skipBadgeReduction": "Skipping can reduce your badge progress for this tour.",
+      "badgeCurrentLabel": "CURRENT BADGE",
+      "badgeStatusGold": "Gold",
+      "badgeStatusSilver": "Silver",
+      "badgeStatusBronze": "Bronze",
+      "badgeStatusLoss": "No Badge",
+      "route": "Get Directions",
       "directions": "Directions",
       "openIn": "Open this stop in",
       "appleMaps": "Apple Maps",

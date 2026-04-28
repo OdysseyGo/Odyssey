@@ -37,7 +37,9 @@ class UserBadgeSerializer(serializers.ModelSerializer):
         )
 
 
-from apps.tours.models import Tour, TourStep
+from django.db.models import Count
+
+from apps.tours.models import PuzzleAttempt, Tour, TourStep
 
 
 class TourProgressSerializer(serializers.ModelSerializer):
@@ -53,6 +55,7 @@ class TourProgressSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True,
     )
+    step_attempt_counts = serializers.SerializerMethodField()
 
     class Meta:
         model = TourProgress
@@ -68,5 +71,15 @@ class TourProgressSerializer(serializers.ModelSerializer):
             "completed_at",
             "total_xp",
             "skip_count",
+            "wrong_attempt_count",
+            "step_attempt_counts",
         ]
         read_only_fields = ["user", "started_at", "completed_at"]
+
+    def get_step_attempt_counts(self, obj):
+        rows = (
+            PuzzleAttempt.objects.filter(progress=obj, accepted=False)
+            .values("puzzle__step__id")
+            .annotate(count=Count("id"))
+        )
+        return {str(row["puzzle__step__id"]): row["count"] for row in rows}
