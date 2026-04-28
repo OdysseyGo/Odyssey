@@ -1,5 +1,7 @@
 export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE';
 
+export const TOUR_TEXT_FIELD_MAX_LENGTH = 255;
+
 export type ARAnchorPosition = {
   x: number;
   y: number;

@@ -2,7 +2,11 @@ import React, { useMemo } from 'react';
 import { Text, ScrollView } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { tourDetailsStepStyles } from './TourDetailsStep.styles';
-import { TourCreationData, TOUR_CATEGORIES } from '../TourCreation.types';
+import {
+  TourCreationData,
+  TOUR_CATEGORIES,
+  TOUR_TEXT_FIELD_MAX_LENGTH,
+} from '../TourCreation.types';
 import {
   FormInputGroup,
   FormTextArea,
@@ -95,6 +99,7 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
           value={tourData.title}
           onChangeText={(text) => onUpdate({ title: text })}
           placeholder={t('creation.details.tourTitlePlaceholder')}
+          maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
         />
       </FormInputGroup>
 
@@ -103,6 +108,7 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
           value={tourData.description}
           onChangeText={(text) => onUpdate({ description: text })}
           placeholder={t('creation.details.descriptionPlaceholder')}
+          maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
         />
       </FormInputGroup>
 
