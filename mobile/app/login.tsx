@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
+import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
 import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import BackButton from '@/components/common/BackButton';
 import { login, UserCredentials } from '@/api/users';
@@ -119,6 +120,7 @@ export default function LoginScreen() {
             color="rgba(255,255,255,0.9)"
             style={[styles.backButton, { top: insets.top + 12 }]}
           />
+          <AuthLanguageSelector style={{ top: insets.top + 12 }} />
 
           {/* Branding */}
           <View style={styles.logoArea}>

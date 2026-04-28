@@ -10,6 +10,7 @@ export type Props = {
   onBadgesPress?: () => void;
   onFollowersPress?: () => void;
   onFollowingPress?: () => void;
+  disableCopilot?: boolean;
 };
 
 export const exampleProfileStats: Props = {

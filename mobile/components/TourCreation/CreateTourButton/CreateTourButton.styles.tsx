@@ -6,9 +6,6 @@ export const createTourButtonStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     floatingButton: {
-      position: 'absolute',
-      bottom: Spacing.xl,
-      right: Spacing.xl,
       width: 58,
       height: 58,
       borderRadius: 29,

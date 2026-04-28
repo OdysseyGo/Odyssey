@@ -311,7 +311,7 @@ function rotatePoint(
   return [cx + tx * cos - ty * sin, cy + tx * sin + ty * cos];
 }
 
-function asPoints(points: Array<[number, number]>): string {
+function asPoints(points: [number, number][]): string {
   return points.map(([x, y]) => `${x},${y}`).join(' ');
 }
 

@@ -17,12 +17,14 @@ export default function SearchResult({
   duration,
   rating,
   location,
+  onPress,
 }: SearchResultItemProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => searchResultStyles(theme), [theme]);
   const colors = Colors[theme];
 
   const handlePress = () => {
+    onPress?.();
     // Dismiss the search modal first, then navigate to tour
     router.dismiss();
     router.push({
