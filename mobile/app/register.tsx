@@ -11,6 +11,7 @@ import {
   Dimensions,
   TextInput,
   BackHandler,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,6 +28,7 @@ import { Spacing } from '@/constants/Spacing';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.28 : SCREEN_HEIGHT * 0.32;
+const mobileIcon = require('../assets/images/mobile_icon.png');
 
 export default function RegisterScreen() {
   const colorScheme = useColorTheme();
@@ -180,7 +182,7 @@ export default function RegisterScreen() {
           />
           <View style={styles.logoArea}>
             <View style={styles.iconRing}>
-              <Ionicons name="compass" size={40} color="#FFFFFF" />
+              <Image source={mobileIcon} style={styles.logoImage} resizeMode="contain" />
             </View>
             <Text style={styles.appName}>ODYSSEY</Text>
             <Text style={styles.tagline}>{t('auth.registerTagline')}</Text>
@@ -383,20 +385,22 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     left: Spacing.lg,
-    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   logoArea: {
     alignItems: 'center',
     gap: Spacing.xs,
   },
   iconRing: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    width: 84,
+    height: 84,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.xs,
+  },
+  logoImage: {
+    width: 72,
+    height: 72,
+    borderRadius: 16,
   },
   appName: {
     fontSize: 28,

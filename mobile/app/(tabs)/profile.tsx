@@ -8,6 +8,7 @@ import {
   Dimensions,
   Alert,
   Modal,
+  Image,
 } from 'react-native';
 import SettingsScreen from '@/app/profile/settings';
 import { useFocusEffect } from '@react-navigation/native';
@@ -38,6 +39,7 @@ import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/Odyssey
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = 240;
 const GUEST_HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEIGHT * 0.35;
+const mobileIcon = require('../../assets/images/mobile_icon.png');
 
 async function getAccessToken() {
   return await SecureStore.getItemAsync('userToken');
@@ -184,10 +186,8 @@ function GuestScreen({
     <View style={[guestStyles.root, { backgroundColor: theme.headerGradientTop }]}>
       {/* ── Hero ── */}
       <View style={[guestStyles.hero, { paddingTop: insets.top, height: GUEST_HERO_HEIGHT }]}>
-        <View
-          style={[guestStyles.iconRing, { backgroundColor: theme.profileGuestIconRingBackground }]}
-        >
-          <Ionicons name="compass" size={44} color={theme.white} />
+        <View style={guestStyles.iconRing}>
+          <Image source={mobileIcon} style={guestStyles.logoImage} resizeMode="contain" />
         </View>
         <Text style={[guestStyles.appName, { color: theme.white }]}>ODYSSEY</Text>
         <Text style={[guestStyles.tagline, { color: theme.profileGuestTaglineText }]}>
@@ -262,12 +262,16 @@ const guestStyles = StyleSheet.create({
     paddingBottom: Spacing.xxl,
   },
   iconRing: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: 96,
+    height: 96,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
+  },
+  logoImage: {
+    width: 82,
+    height: 82,
+    borderRadius: 18,
   },
   appName: {
     fontSize: 28,
