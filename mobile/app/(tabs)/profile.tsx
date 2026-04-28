@@ -27,6 +27,7 @@ import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
 import AvatarSelectionModal from '@/components/ProfileComponents/AvatarSelectionModal';
 import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
 import AuthButton from '@/components/LoginComponents/AuthButton';
+import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import { getMe, User } from '@/api/users';
 import { getMyBadges, Badge } from '@/api/profile';
 import { removeAuthToken } from '@/api/auth';
@@ -186,11 +187,7 @@ function GuestScreen({
       {/* ── Hero ── */}
       <View style={[guestStyles.hero, { paddingTop: insets.top, height: GUEST_HERO_HEIGHT }]}>
         <AuthLanguageSelector style={{ top: insets.top + 12 }} />
-        <View
-          style={[guestStyles.iconRing, { backgroundColor: theme.profileGuestIconRingBackground }]}
-        >
-          <Ionicons name="compass" size={44} color={theme.white} />
-        </View>
+        <AuthLogo />
         <Text style={[guestStyles.appName, { color: theme.white }]}>ODYSSEY</Text>
         <Text style={[guestStyles.tagline, { color: theme.profileGuestTaglineText }]}>
           {t('auth.tagline')}
@@ -262,14 +259,6 @@ const guestStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingBottom: Spacing.xxl,
-  },
-  iconRing: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.md,
   },
   appName: {
     fontSize: 28,

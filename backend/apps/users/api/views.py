@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate  # login direkt
 from django.db.models import Avg, F, QuerySet  # F dbden çıkarmadan yazıyon
+from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -12,7 +13,13 @@ from apps.tours.api.serializers import TourSerializer
 from apps.tours.models import Tour
 from apps.users.models import Follow, User
 
-from .serializers import FollowingFeedSerializer, FollowSerializer, UserSerializer
+from .serializers import (
+    FollowingFeedSerializer,
+    FollowSerializer,
+    LoginResponseSerializer,
+    LoginSerializer,
+    UserSerializer,
+)
 
 
 class UserViewSet(ModelViewSet):
@@ -38,6 +45,7 @@ class UserViewSet(ModelViewSet):
             }
         )
 
+    @extend_schema(request=LoginSerializer, responses={200: LoginResponseSerializer})
     @action(detail=False, methods=["post"], url_path="login")
     def login(self, request):
         username = request.data.get("username")
