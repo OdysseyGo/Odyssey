@@ -82,6 +82,8 @@ export type FeedTour = {
   country?: string;
   country_code?: string;
   cover_image?: string;
+  cover_image_url?: string;
+  cover_image_attribution?: string;
   created_at: string;
 };
 

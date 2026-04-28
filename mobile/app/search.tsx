@@ -14,13 +14,13 @@ import {
 import { searchScreenStyles } from './search.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
-import { searchTours, Tour } from '@/api/tours';
+import { getTourImageUri, searchTours, Tour } from '@/api/tours';
 
 // Convert API Tour to SearchResultItemProps
 function mapTourToSearchResult(tour: Tour, t: (key: string) => string): SearchResultItemProps {
   return {
     id: tour.id.toString(),
-    image: tour.cover_image || '',
+    image: getTourImageUri(tour),
     title: tour.title,
     author: tour.creator?.username || t('search.unknownAuthor'),
     duration: `${tour.duration_minutes} ${t('tourId.min')}`,

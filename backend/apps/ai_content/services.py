@@ -138,9 +138,11 @@ class GeminiService:
 
         # ---- Step 4: Validate and enrich with verified coordinates ----
         self._validate_tour_data(tour_data, mode)
+        maps_facade = GoogleMapsFacade()
 
         # Build a lookup of verified places by name (case-insensitive)
         places_lookup = {p["name"].strip().lower(): p for p in candidate_places}
+        selected_places_by_step: list[Optional[dict]] = []
 
         # Replace AI coordinates with verified Google Maps coordinates
         for step_data in tour_data["steps"]:
@@ -166,7 +168,6 @@ class GeminiService:
                         "Falling back to geocoding.",
                         step_data["title"],
                     )
-                    maps_facade = GoogleMapsFacade()
                     verified_lat, verified_lng = maps_facade.geocode_location(
                         name=step_data["title"],
                         city=location_query,
@@ -175,6 +176,34 @@ class GeminiService:
                     )
                     step_data["latitude"] = verified_lat
                     step_data["longitude"] = verified_lng
+
+            selected_places_by_step.append(matched_place)
+
+        cover_image_url = ""
+        cover_image_attribution = ""
+        if selected_places_by_step:
+            first_place = selected_places_by_step[0]
+            first_place_id = (
+                str(first_place.get("place_id"))
+                if isinstance(first_place, dict) and first_place.get("place_id")
+                else ""
+            )
+            if first_place_id:
+                photo_data = maps_facade.get_place_photo(first_place_id)
+                if isinstance(photo_data, dict):
+                    cover_image_url = photo_data.get("url", "") or ""
+                    cover_image_attribution = (
+                        photo_data.get("attribution", "") or ""
+                    )
+                else:
+                    logger.warning(
+                        "No Google Places photo found for AI tour cover (place_id=%s)",
+                        first_place_id,
+                    )
+            else:
+                logger.warning(
+                    "No place_id found for first AI tour step; skipping cover image."
+                )
 
         # ---- Step 5: Persist to database ----
         with transaction.atomic():
@@ -189,6 +218,8 @@ class GeminiService:
                 city=city,
                 country=country,
                 country_code=country_code,
+                cover_image_url=cover_image_url,
+                cover_image_attribution=cover_image_attribution,
                 status=Tour.ARCHIVED,
             )
 

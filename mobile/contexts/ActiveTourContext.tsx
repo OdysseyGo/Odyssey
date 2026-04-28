@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { Tour as ApiTour } from '@/api/tours';
+import { getTourImageUri, Tour as ApiTour } from '@/api/tours';
 import {
   Tour,
   TourStep,
@@ -87,7 +87,7 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
     id: apiTour.id.toString(),
     title: apiTour.title,
     description: apiTour.description,
-    coverImageUri: apiTour.cover_image || '',
+    coverImageUri: getTourImageUri(apiTour),
     steps,
   };
 }

@@ -20,6 +20,7 @@ export interface TourDetail {
   authorId: number;
   authorAvatar: string;
   coverImage: string;
+  coverImageAttribution?: string;
   duration: string;
   distance: string;
   rating: number;
@@ -38,6 +39,7 @@ export const MOCK_TOUR: TourDetail = {
   authorId: 1,
   authorAvatar: '',
   coverImage: '',
+  coverImageAttribution: '',
   duration: '4 hours',
   distance: '5.2 km',
   rating: 4.7,

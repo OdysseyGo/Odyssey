@@ -11,6 +11,7 @@ import TourImagePlaceholder from '@/components/common/TourImagePlaceholder';
 
 export default function TourDetailCover({
   coverImage,
+  coverImageAttribution,
   title,
   rating,
   reviewCount,
@@ -58,6 +59,11 @@ export default function TourDetailCover({
             ({reviewCount} {t('tourDetail.reviews')})
           </Text>
         </View>
+        {coverImageAttribution ? (
+          <Text style={styles.overlayAttribution} numberOfLines={1}>
+            Photo: {coverImageAttribution}
+          </Text>
+        ) : null}
       </View>
     </View>
   );

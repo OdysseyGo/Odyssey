@@ -128,6 +128,8 @@ export type Tour = {
   title: string;
   description: string;
   cover_image?: string;
+  cover_image_url?: string;
+  cover_image_attribution?: string;
   creator: User;
   tour_type: TourType;
   category: string;
@@ -148,8 +150,10 @@ export type Tour = {
   average_rating?: number;
 };
 
-export function getTourImageUri(tour: Pick<Tour, 'id' | 'cover_image' | 'creator'>): string {
-  return tour.cover_image || '';
+export function getTourImageUri(
+  tour: Pick<Tour, 'id' | 'cover_image' | 'cover_image_url' | 'creator'>
+): string {
+  return tour.cover_image || tour.cover_image_url || '';
 }
 
 export type ToursResponse = {

@@ -70,5 +70,11 @@ export const tourDetailCoverStyles = (theme: ThemeName) => {
       fontSize: 13,
       opacity: 0.72,
     },
+    overlayAttribution: {
+      color: color.white,
+      fontSize: 11,
+      opacity: 0.75,
+      marginTop: 4,
+    },
   });
 };
