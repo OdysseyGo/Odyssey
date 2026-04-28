@@ -223,8 +223,11 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const apiTour = await getTour(activeProgress.tour);
-      const internalTour = mapApiTourToInternalTour(apiTour);
+      // console.log(activeProgress.tour);
+      
+      // const apiTour = await getTour(activeProgress.tour);
+     
+      const internalTour = mapApiTourToInternalTour(activeProgress.tour); //çalışıyo çünkü tur objesini getiriyo
 
       let currentStepIdx = 0;
       if (activeProgress.current_step) {

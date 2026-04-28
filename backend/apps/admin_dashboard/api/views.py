@@ -196,14 +196,6 @@ class AdminTourViewSet(ModelViewSet):
     def approve(self, request, pk=None):
         tour = self.get_object()
 
-        print()
-        print()
-        print()
-        print(f"DEBUG: {tour}, {tour.city}, {tour.country}")
-        print()
-        print()
-        print()
-
         if not tour.city or not tour.country:
             return Response(
                 {"location": "City and Country are required before publishing a tour."},

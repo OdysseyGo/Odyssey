@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import {
   createTour,
   createTourStep,
+  deleteTour,
   setStepArPuzzle,
   setStepGyroscopePuzzle,
   setStepPictureComparePuzzle,
@@ -55,6 +56,9 @@ export default function TourReviewScreen() {
         text: t('creation.submitConfirm'),
         onPress: async () => {
           setIsSubmitting(true);
+          
+          let createdTourId = null; 
+
           try {
             const tour = await createTour({
               title: tourData.title || 'Untitled Tour',
@@ -72,11 +76,11 @@ export default function TourReviewScreen() {
               is_premium: false,
             });
 
-            console.log('Tour created:', tour.id);
+            createdTourId = tour.id;
+            console.log('Tour created:', createdTourId);
 
-            // 2. Create steps and configure step puzzles using type-specific endpoints.
             for (const [index, loc] of tourData.locations.entries()) {
-              const createdStep = await createTourStep(tour.id, {
+              const createdStep = await createTourStep(createdTourId, {
                 title: loc.title || `Stop ${index + 1}`,
                 description: loc.story || '',
                 latitude: Number(loc.latitude).toFixed(8),
@@ -96,7 +100,7 @@ export default function TourReviewScreen() {
               };
 
               if (loc.puzzle.puzzle_type === 'TRIVIA') {
-                await setStepTriviaPuzzle(tour.id, createdStep.id, {
+                await setStepTriviaPuzzle(createdTourId, createdStep.id, {
                   ...basePayload,
                   options: loc.puzzle.options,
                   correct_answer: loc.puzzle.correctAnswer,
@@ -112,7 +116,7 @@ export default function TourReviewScreen() {
                   throw new Error('PICTURE_COMPARE puzzles require a local reference image.');
                 }
 
-                await setStepPictureComparePuzzle(tour.id, createdStep.id, {
+                await setStepPictureComparePuzzle(createdTourId, createdStep.id, {
                   ...basePayload,
                   referenceImageUri: loc.puzzle.referenceImage,
                 });
@@ -124,7 +128,7 @@ export default function TourReviewScreen() {
                   throw new Error('AR puzzles require a selected model, code, and anchor.');
                 }
 
-                await setStepArPuzzle(tour.id, createdStep.id, {
+                await setStepArPuzzle(createdTourId, createdStep.id, {
                   ...basePayload,
                   scene_asset_url: loc.puzzle.arConfig.sceneAssetUrl,
                   metadata: {
@@ -145,12 +149,11 @@ export default function TourReviewScreen() {
               }
 
               if (loc.puzzle.puzzle_type === 'GYROSCOPE') {
-                await setStepGyroscopePuzzle(tour.id, createdStep.id, basePayload);
+                await setStepGyroscopePuzzle(createdTourId, createdStep.id, basePayload);
               }
             }
 
-            // 3. Publish after all steps are created so backend city/step validation runs once.
-            await updateTour(tour.id, {
+            await updateTour(createdTourId, {
               city: tourData.city || 'Unknown City',
               country: tourData.country || '',
               country_code: tourData.countryCode || '',
@@ -169,6 +172,17 @@ export default function TourReviewScreen() {
               },
             ]);
           } catch (error) {
+            console.error('Submit failed:', error);
+
+            if (createdTourId) {
+              try {
+                console.log(`Hata oluştu! Yarım kalan tur (${createdTourId}) siliniyor...`);
+                await deleteTour(createdTourId); 
+              } catch (deleteError) {
+                console.error('Turu silerken de hata oluştu (Yetim tur kalmış olabilir):', deleteError);
+              }
+            }
+
             Alert.alert(
               t('creation.errorTitle'),
               getSubmitErrorMessage(error, t('creation.errorMessage'))

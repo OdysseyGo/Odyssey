@@ -460,7 +460,7 @@ export async function createTourStep(
         if (k === 'image') {
           formData.append('image', {
             uri: stepData.image,
-            name: 'step_image.jpg',
+            name: `step_image_tour-${tourId}_order-${stepData.order}.jpg`,
             type: 'image/jpeg',
           } as any);
         } else {
