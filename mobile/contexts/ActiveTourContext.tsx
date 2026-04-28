@@ -21,6 +21,7 @@ interface ActiveTourState {
   solvedSteps: Set<string>;
   locationConfirmedSteps: Set<string>;
   stepAnswers: Map<string, string>;
+  stepAttempts: Map<string, number>;
   earnedXP: number;
   skipCount: number;
   wrongAnswerCount: number;
@@ -37,6 +38,7 @@ interface ActiveTourContextType extends ActiveTourState {
   recordSkip: () => void;
   recordWrongAnswer: () => void;
   recordAnswer: (stepId: string, optionId: string) => void;
+  recordAttempt: (stepId: string) => void;
   resetProgress: () => void;
 }
 
@@ -49,6 +51,7 @@ const initialState: ActiveTourState = {
   solvedSteps: new Set(),
   locationConfirmedSteps: new Set(),
   stepAnswers: new Map(),
+  stepAttempts: new Map(),
   earnedXP: 0,
   skipCount: 0,
   wrongAnswerCount: 0,
@@ -179,6 +182,7 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
       solvedSteps: new Set(),
       locationConfirmedSteps: new Set(),
       stepAnswers: new Map(),
+      stepAttempts: new Map(),
       earnedXP: 0,
       skipCount: 0,
       wrongAnswerCount: 0,
@@ -237,6 +241,14 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const recordAttempt = useCallback((stepId: string) => {
+    setState((prev) => {
+      const next = new Map(prev.stepAttempts);
+      next.set(stepId, (next.get(stepId) ?? 0) + 1);
+      return { ...prev, stepAttempts: next };
+    });
+  }, []);
+
   const resetProgress = useCallback(() => {
     setState((prev) => ({
       ...prev,
@@ -244,6 +256,7 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
       solvedSteps: new Set(),
       locationConfirmedSteps: new Set(),
       stepAnswers: new Map(),
+      stepAttempts: new Map(),
       earnedXP: 0,
       skipCount: 0,
       wrongAnswerCount: 0,
@@ -259,9 +272,12 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
       if (!activeProgress || !activeProgress.id) {
         return;
       }
+  // console.log(activeProgress.tour);
+      
+      // const apiTour = await getTour(activeProgress.tour);
+     
+      const internalTour = mapApiTourToInternalTour(activeProgress.tour); //çalışıyo çünkü tur objesini getiriyo
 
-      const apiTour = await getTour(activeProgress.tour);
-      const internalTour = mapApiTourToInternalTour(apiTour);
 
       let currentStepIdx = 0;
       if (activeProgress.current_step) {
@@ -290,9 +306,13 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         highestStepIndex: currentStepIdx,
         solvedSteps: restoredSolvedSteps,
         locationConfirmedSteps: restoredLocationConfirmedSteps,
+        stepAnswers: new Map(),
+        stepAttempts: new Map(
+          Object.entries(activeProgress.step_attempt_counts ?? {}).map(([k, v]) => [k, v])
+        ),
         earnedXP: activeProgress.total_xp,
         skipCount: activeProgress.skip_count,
-        wrongAnswerCount: 0,
+        wrongAnswerCount: activeProgress.wrong_attempt_count,
       });
     } catch (error: any) {
       if (error instanceof ApiError && error.statusCode === 401) {
@@ -318,6 +338,7 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         recordSkip,
         recordWrongAnswer,
         recordAnswer,
+        recordAttempt,
         resetProgress,
       }}
     >

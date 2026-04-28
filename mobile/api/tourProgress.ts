@@ -12,6 +12,8 @@ export type TourProgress = {
   completed_at: string | null;
   total_xp: number;
   skip_count: number;
+  wrong_attempt_count: number;
+  step_attempt_counts: Record<string, number>;
 };
 
 export type CreateTourProgressRequest = {

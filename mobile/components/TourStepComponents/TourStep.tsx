@@ -211,22 +211,28 @@ function MultipleChoiceView({ puzzle, isSolved, onSolve, onAnswered, stepId }: M
   );
 }
 
+const MAX_ATTEMPTS = 3;
+
 interface PictureCompareViewProps {
   puzzle: PictureComparePuzzle;
   isSolved: boolean;
   onSolve: () => void;
+  onAnswered?: () => void;
+  stepId?: string;
 }
 
-function PictureCompareView({ puzzle, isSolved, onSolve }: PictureCompareViewProps) {
+function PictureCompareView({ puzzle, isSolved, onSolve, onAnswered, stepId }: PictureCompareViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
-  const { progressId } = useActiveTour();
+  const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
 
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCameraVisible, setIsCameraVisible] = useState(false);
   const [fullscreenImageUri, setFullscreenImageUri] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string>('');
+  const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
+  const isExhausted = attemptCount >= MAX_ATTEMPTS;
   const referenceImageUri = puzzle.referenceImageUri;
 
   const handleCaptureAndCheck = async () => {
@@ -255,7 +261,15 @@ function PictureCompareView({ puzzle, isSolved, onSolve }: PictureCompareViewPro
         setFeedback(`Matched (${similarityPercent}%).`);
         onSolve();
       } else {
-        setFeedback(`Not close enough (${similarityPercent}%). Try another angle.`);
+        if (stepId) recordAttempt(stepId);
+        const newCount = attemptCount + 1;
+        if (newCount >= MAX_ATTEMPTS) {
+          setFeedback(`Not close enough (${similarityPercent}%). No attempts remaining.`);
+          recordWrongAnswer();
+          onAnswered?.();
+        } else {
+          setFeedback(`Not close enough (${similarityPercent}%). ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`);
+        }
       }
     } catch (error) {
       console.error('submit picture compare failed', error);
@@ -316,10 +330,24 @@ function PictureCompareView({ puzzle, isSolved, onSolve }: PictureCompareViewPro
         </>
       )}
 
+      {!isSolved && (
+        <View style={styles.attemptsRow}>
+          <Text style={styles.attemptsLabel}>Attempts</Text>
+          {Array.from({ length: MAX_ATTEMPTS }, (_, i) => (
+            <MaterialCommunityIcons
+              key={i}
+              name={i < attemptCount ? 'circle' : 'circle-outline'}
+              size={10}
+              color={i < attemptCount ? Colors[theme].error : Colors[theme].subText}
+            />
+          ))}
+        </View>
+      )}
+
       <Pressable
-        style={[styles.captureButton, (isSolved || isSubmitting) && styles.captureButtonDisabled]}
+        style={[styles.captureButton, (isSolved || isSubmitting || isExhausted) && styles.captureButtonDisabled]}
         onPress={handleCaptureAndCheck}
-        disabled={isSolved || isSubmitting}
+        disabled={isSolved || isSubmitting || isExhausted}
       >
         {isSubmitting ? (
           <ActivityIndicator color={Colors[theme].white} />
@@ -328,7 +356,10 @@ function PictureCompareView({ puzzle, isSolved, onSolve }: PictureCompareViewPro
         )}
       </Pressable>
 
-      {feedback ? <Text style={styles.feedbackText}>{feedback}</Text> : null}
+      {feedback ? <Text style={[styles.feedbackText, isExhausted && styles.exhaustedText]}>{feedback}</Text> : null}
+      {isExhausted && !isSolved && (
+        <Text style={styles.exhaustedHint}>Confirm your location and press Next to continue.</Text>
+      )}
 
       <SquareCameraOverlayCapture
         visible={isCameraVisible}
@@ -366,17 +397,21 @@ interface ArCodeViewProps {
   puzzle: ArCodePuzzle;
   isSolved: boolean;
   onSolve: () => void;
+  onAnswered?: () => void;
+  stepId?: string;
 }
 
-function ArCodeView({ puzzle, isSolved, onSolve }: ArCodeViewProps) {
+function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
-  const { progressId } = useActiveTour();
+  const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
 
   const [codeInput, setCodeInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPreparingAr, setIsPreparingAr] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
+  const isExhausted = attemptCount >= MAX_ATTEMPTS;
 
   const ensureArPermissions = async () => {
     const locationPerm = await Location.getForegroundPermissionsAsync();
@@ -461,7 +496,15 @@ function ArCodeView({ puzzle, isSolved, onSolve }: ArCodeViewProps) {
         setFeedback('Code verified.');
         onSolve();
       } else {
-        setFeedback('Code is not correct. Try again.');
+        if (stepId) recordAttempt(stepId);
+        const newCount = attemptCount + 1;
+        if (newCount >= MAX_ATTEMPTS) {
+          setFeedback('Code is not correct. No attempts remaining.');
+          recordWrongAnswer();
+          onAnswered?.();
+        } else {
+          setFeedback(`Code is not correct. ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`);
+        }
       }
     } catch (error) {
       console.error('submit ar code failed', error);
@@ -504,6 +547,20 @@ function ArCodeView({ puzzle, isSolved, onSolve }: ArCodeViewProps) {
 
       <Text style={styles.sectionLabel}>Enter the secret code</Text>
 
+      {!isSolved && (
+        <View style={styles.attemptsRow}>
+          <Text style={styles.attemptsLabel}>Attempts</Text>
+          {Array.from({ length: MAX_ATTEMPTS }, (_, i) => (
+            <MaterialCommunityIcons
+              key={i}
+              name={i < attemptCount ? 'circle' : 'circle-outline'}
+              size={10}
+              color={i < attemptCount ? Colors[theme].error : Colors[theme].subText}
+            />
+          ))}
+        </View>
+      )}
+
       <TextInput
         value={codeInput}
         onChangeText={setCodeInput}
@@ -511,13 +568,13 @@ function ArCodeView({ puzzle, isSolved, onSolve }: ArCodeViewProps) {
         placeholder="Enter secret code"
         autoCapitalize="none"
         autoCorrect={false}
-        editable={!isSolved && !isSubmitting}
+        editable={!isSolved && !isSubmitting && !isExhausted}
       />
 
       <Pressable
-        style={[styles.captureButton, (isSolved || isSubmitting) && styles.captureButtonDisabled]}
+        style={[styles.captureButton, (isSolved || isSubmitting || isExhausted) && styles.captureButtonDisabled]}
         onPress={handleCheckCode}
-        disabled={isSolved || isSubmitting}
+        disabled={isSolved || isSubmitting || isExhausted}
       >
         {isSubmitting ? (
           <ActivityIndicator color={Colors[theme].white} />
@@ -526,7 +583,10 @@ function ArCodeView({ puzzle, isSolved, onSolve }: ArCodeViewProps) {
         )}
       </Pressable>
 
-      {feedback ? <Text style={styles.feedbackText}>{feedback}</Text> : null}
+      {feedback ? <Text style={[styles.feedbackText, isExhausted && styles.exhaustedText]}>{feedback}</Text> : null}
+      {isExhausted && !isSolved && (
+        <Text style={styles.exhaustedHint}>Confirm your location and press Next to continue.</Text>
+      )}
     </View>
   );
 }
@@ -591,13 +651,15 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
           stepId={step.id}
         />
       ) : step.puzzle.type === 'ar-code' ? (
-        <ArCodeView key={step.id} puzzle={step.puzzle} isSolved={isSolved} onSolve={onSolve} />
+        <ArCodeView key={step.id} puzzle={step.puzzle} isSolved={isSolved} onSolve={onSolve} onAnswered={onAnswered} stepId={step.id} />
       ) : (
         <PictureCompareView
           key={step.id}
           puzzle={step.puzzle}
           isSolved={isSolved}
           onSolve={onSolve}
+          onAnswered={onAnswered}
+          stepId={step.id}
         />
       )}
     </ScrollView>

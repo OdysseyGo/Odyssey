@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import models, transaction
 from django.utils import timezone
 from PIL import UnidentifiedImageError
 from rest_framework import mixins, permissions, status, viewsets
@@ -336,6 +336,14 @@ class TourProgressViewSet(
                 }
             )
 
+        failed_count = PuzzleAttempt.objects.filter(
+            progress=progress, puzzle=puzzle, accepted=False
+        ).count()
+        if failed_count == 3:
+            TourProgress.objects.filter(pk=progress.pk).update(
+                wrong_attempt_count=models.F("wrong_attempt_count") + 1
+            )
+
         return Response(
             {
                 "status": "Picture did not match closely enough.",
@@ -345,6 +353,7 @@ class TourProgressViewSet(
                 "processing_ms": attempt.processing_ms,
                 "is_tour_complete": False,
                 "new_step_id": current_step.id,
+                "attempt_count": failed_count,
             }
         )
 
@@ -397,6 +406,16 @@ class TourProgressViewSet(
             accepted=accepted,
         )
 
+        failed_count = None
+        if not accepted:
+            failed_count = PuzzleAttempt.objects.filter(
+                progress=progress, puzzle=puzzle, accepted=False
+            ).count()
+            if failed_count == 3:
+                TourProgress.objects.filter(pk=progress.pk).update(
+                    wrong_attempt_count=models.F("wrong_attempt_count") + 1
+                )
+
         return Response(
             {
                 "status": (
@@ -407,6 +426,7 @@ class TourProgressViewSet(
                 "accepted": accepted,
                 "is_tour_complete": False,
                 "new_step_id": current_step.id,
+                **({"attempt_count": failed_count} if failed_count is not None else {}),
             }
         )
 

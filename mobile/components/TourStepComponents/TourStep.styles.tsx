@@ -286,6 +286,28 @@ export default function getStyles(theme: ThemeName) {
       fontSize: 13,
       lineHeight: 18,
     },
+    exhaustedText: {
+      color: color.error,
+    },
+    exhaustedHint: {
+      fontSize: 13,
+      color: color.subText,
+      lineHeight: 18,
+      fontStyle: 'italic',
+    },
+    attemptsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    attemptsLabel: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: color.subText,
+      textTransform: 'uppercase',
+      letterSpacing: 0.4,
+      marginRight: 2,
+    },
 
     optionsContainer: {
       gap: Spacing.sm,
