@@ -10,6 +10,33 @@ export const searchHeaderStyles = (theme: ThemeName) => {
       paddingTop: Spacing.lg,
       paddingBottom: Spacing.md,
       backgroundColor: color.background,
+      gap: Spacing.md,
+    },
+    segmentedControl: {
+      flexDirection: 'row',
+      backgroundColor: color.foreground,
+      borderRadius: Spacing.borderRadius,
+      padding: 4,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: color.borderLight,
+    },
+    segmentButton: {
+      flex: 1,
+      minHeight: 38,
+      borderRadius: Spacing.borderRadius - 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    segmentButtonActive: {
+      backgroundColor: color.primary,
+    },
+    segmentText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: color.subText,
+    },
+    segmentTextActive: {
+      color: color.white,
     },
     searchContainer: {
       flexDirection: 'row',

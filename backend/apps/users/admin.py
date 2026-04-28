@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Follow, User
+from .models import Follow, SearchHistory, User
 
 
 @admin.register(User)
@@ -24,3 +24,10 @@ class CustomUserAdmin(UserAdmin):
 
 
 admin.site.register(Follow)
+
+
+@admin.register(SearchHistory)
+class SearchHistoryAdmin(admin.ModelAdmin):
+    list_display = ("user", "search_type", "query", "searched_at")
+    list_filter = ("search_type", "searched_at")
+    search_fields = ("user__username", "query")
