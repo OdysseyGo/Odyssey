@@ -1,10 +1,9 @@
 from django.contrib.auth import get_user_model
-from django.db import transaction
+from django.db import models, transaction
 from django.utils import timezone
 from PIL import UnidentifiedImageError
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -82,12 +81,13 @@ class TourProgressViewSet(
             user=user, status=TourProgress.IN_PROGRESS
         ).first()
         if active_progress and active_progress.tour_id != tour.id:
-            raise ValidationError(
+            return Response(
                 {
                     "error": "You already have a tour in progress.",
                     "active_tour_id": active_progress.tour_id,
                     "progress_id": active_progress.id,
-                }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         existing_progress = TourProgress.objects.filter(user=user, tour=tour).first()
@@ -109,6 +109,7 @@ class TourProgressViewSet(
                 existing_progress.skip_count = 0
                 # Preserve one-time XP guarantee on replays, including legacy rows.
                 existing_progress.xp_awarded = True
+                existing_progress.wrong_attempt_count = 0
                 existing_progress.save(
                     update_fields=[
                         "current_step",
@@ -118,6 +119,7 @@ class TourProgressViewSet(
                         "total_xp",
                         "skip_count",
                         "xp_awarded",
+                        "wrong_attempt_count",
                     ]
                 )
 
@@ -293,6 +295,34 @@ class TourProgressViewSet(
             accepted=True,
         ).exists()
 
+    @staticmethod
+    def _skip_counts_as_badge_mistake(progress):
+        current_step = progress.current_step
+        if not current_step or not hasattr(current_step, "puzzle"):
+            return True
+
+        puzzle = current_step.puzzle
+        failed_count = PuzzleAttempt.objects.filter(
+            user=progress.user,
+            progress=progress,
+            puzzle=puzzle,
+            accepted=False,
+        ).count()
+        if failed_count == 0:
+            return True
+
+        if puzzle.puzzle_type in (Puzzle.AR, Puzzle.PICTURE_COMPARE):
+            return failed_count < 3
+
+        return False
+
+    @staticmethod
+    def _trivia_correct_answer(puzzle):
+        detail = getattr(puzzle, "trivia_detail", None)
+        if detail and detail.correct_answer:
+            return detail.correct_answer
+        return puzzle.correct_answer
+
     @action(detail=True, methods=["post"], url_path="complete-step")
     def complete_step(self, request, pk=None):
         progress = self.get_object()
@@ -340,6 +370,78 @@ class TourProgressViewSet(
             return Response({"error": result["error"]}, status=result["status_code"])
         return Response(result)
 
+    @action(detail=True, methods=["post"], url_path="submit-trivia-answer")
+    def submit_trivia_answer(self, request, pk=None):
+        progress = self.get_object()
+
+        if progress.status == TourProgress.COMPLETED:
+            return Response({"error": "Tour is already completed"}, status=400)
+
+        current_step = progress.current_step
+        if not current_step or not hasattr(current_step, "puzzle"):
+            return Response(
+                {"error": "Current step does not have a puzzle."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        puzzle = current_step.puzzle
+        if puzzle.puzzle_type != Puzzle.TRIVIA:
+            return Response(
+                {"error": "Current puzzle is not a TRIVIA puzzle."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        failed_count = PuzzleAttempt.objects.filter(
+            progress=progress, puzzle=puzzle, accepted=False
+        ).count()
+        if failed_count > 0:
+            return Response(
+                {
+                    "error": "Trivia answer has already been used.",
+                    "accepted": False,
+                    "attempt_count": failed_count,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        submitted_answer = str(request.data.get("answer", "")).strip()
+        if not submitted_answer:
+            return Response(
+                {"error": "answer is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        correct_answer = self._trivia_correct_answer(puzzle).strip()
+        accepted = submitted_answer.casefold() == correct_answer.casefold()
+        PuzzleAttempt.objects.create(
+            puzzle=puzzle,
+            user=request.user,
+            progress=progress,
+            accepted=accepted,
+        )
+
+        if not accepted:
+            failed_count = PuzzleAttempt.objects.filter(
+                progress=progress, puzzle=puzzle, accepted=False
+            ).count()
+            TourProgress.objects.filter(pk=progress.pk).update(
+                wrong_attempt_count=models.F("wrong_attempt_count") + 1
+            )
+
+        return Response(
+            {
+                "status": (
+                    "Answer verified. You can continue."
+                    if accepted
+                    else "Answer is not correct. Try again."
+                ),
+                "accepted": accepted,
+                "is_tour_complete": False,
+                "new_step_id": current_step.id,
+                **({"attempt_count": failed_count} if failed_count is not None else {}),
+            }
+        )
+
     @action(detail=True, methods=["post"], url_path="skip-step")
     def skip_step(self, request, pk=None):
         progress = self.get_object()
@@ -352,7 +454,7 @@ class TourProgressViewSet(
             user=request.user,
             award_xp=False,
             step_action_word="skipped",
-            increment_skip_count=True,
+            increment_skip_count=self._skip_counts_as_badge_mistake(progress),
         )
         if result.get("status_code"):
             return Response({"error": result["error"]}, status=result["status_code"])
@@ -437,6 +539,14 @@ class TourProgressViewSet(
                 }
             )
 
+        failed_count = PuzzleAttempt.objects.filter(
+            progress=progress, puzzle=puzzle, accepted=False
+        ).count()
+        if failed_count == 3:
+            TourProgress.objects.filter(pk=progress.pk).update(
+                wrong_attempt_count=models.F("wrong_attempt_count") + 1
+            )
+
         return Response(
             {
                 "status": "Picture did not match closely enough.",
@@ -446,6 +556,7 @@ class TourProgressViewSet(
                 "processing_ms": attempt.processing_ms,
                 "is_tour_complete": False,
                 "new_step_id": current_step.id,
+                "attempt_count": failed_count,
             }
         )
 
@@ -498,6 +609,16 @@ class TourProgressViewSet(
             accepted=accepted,
         )
 
+        failed_count = None
+        if not accepted:
+            failed_count = PuzzleAttempt.objects.filter(
+                progress=progress, puzzle=puzzle, accepted=False
+            ).count()
+            if failed_count == 3:
+                TourProgress.objects.filter(pk=progress.pk).update(
+                    wrong_attempt_count=models.F("wrong_attempt_count") + 1
+                )
+
         return Response(
             {
                 "status": (
@@ -508,55 +629,7 @@ class TourProgressViewSet(
                 "accepted": accepted,
                 "is_tour_complete": False,
                 "new_step_id": current_step.id,
-            }
-        )
-
-    @action(detail=True, methods=["post"], url_path="submit-trivia-answer")
-    def submit_trivia_answer(self, request, pk=None):
-        progress = self.get_object()
-
-        if progress.status == TourProgress.COMPLETED:
-            return Response({"error": "Tour is already completed"}, status=400)
-
-        current_step = progress.current_step
-        if not current_step or not hasattr(current_step, "puzzle"):
-            return Response(
-                {"error": "Current step does not have a puzzle."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        puzzle = current_step.puzzle
-        if puzzle.puzzle_type != Puzzle.TRIVIA:
-            return Response(
-                {"error": "Current puzzle is not a TRIVIA puzzle."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        submitted_answer = str(request.data.get("answer", "")).strip()
-        if not submitted_answer:
-            return Response(
-                {"error": "answer is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        accepted = submitted_answer == str(puzzle.correct_answer).strip()
-        PuzzleAttempt.objects.create(
-            puzzle=puzzle,
-            user=request.user,
-            progress=progress,
-            accepted=accepted,
-        )
-
-        return Response(
-            {
-                "status": (
-                    "Answer verified. You can continue."
-                    if accepted
-                    else "Answer is not correct. Try again."
-                ),
-                "accepted": accepted,
-                "is_tour_complete": False,
-                "new_step_id": current_step.id,
+                **({"attempt_count": failed_count} if failed_count is not None else {}),
             }
         )
 

@@ -350,6 +350,7 @@ export default function UserProfileScreen() {
           currentXp={levelInfo.current_xp}
           xpForCurrentLevel={levelInfo.xp_for_current_level}
           xpForNextLevel={levelInfo.xp_for_next_level}
+          disableCopilot={true}
         />
 
         {/* Stats card — overlaps the header via its built-in marginTop: -32 */}
@@ -376,6 +377,7 @@ export default function UserProfileScreen() {
                     params: { userId: user.id.toString() },
                   })
           }
+          disableCopilot={true}
         />
 
         {/* Follow / Unfollow / Login to Follow */}

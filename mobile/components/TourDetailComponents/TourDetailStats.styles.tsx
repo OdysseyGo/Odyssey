@@ -45,5 +45,25 @@ export const tourDetailStatsStyles = (theme: ThemeName) => {
       textTransform: 'uppercase',
       letterSpacing: 0.6,
     },
+    badgeRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: Spacing.xs,
+      marginTop: -Spacing.sm,
+      marginBottom: Spacing.lg,
+    },
+    badge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 4,
+      borderRadius: 999,
+    },
+    badgeLabel: {
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 0.2,
+    },
   });
 };

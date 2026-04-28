@@ -20,8 +20,23 @@ import { getLevelTier, getNextLevelTitle, isLegendaryLevel, LevelTier } from '@/
 import { profileHeaderCompStyles } from './ProfileHeaderComp.styles';
 import { ProfileHeaderProps } from './ProfileHeaderComp.config';
 import { Spacing } from '@/constants/Spacing';
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
+import { useTranslation } from 'react-i18next';
+
+const WalkthroughableView = walkthroughable(View);
 
 const HEADER_HEIGHT = 240;
+
+const OptionalCopilot = ({ disable, text, order, name, style, children }: any) => {
+  if (disable) {
+    return <View style={style}>{children}</View>;
+  }
+  return (
+    <CopilotStep text={text} order={order} name={name}>
+      <WalkthroughableView style={style}>{children}</WalkthroughableView>
+    </CopilotStep>
+  );
+};
 const FRAME_SIZE = 132;
 const RING_RADIUS = 62;
 const RING_STROKE = 5;
@@ -326,7 +341,10 @@ export default function ProfileHeaderComp({
   onAvatarPress,
   onSettingsPress,
   settingsAccessibilityLabel,
+  onTutorialsPress,
+  tutorialsAccessibilityLabel,
   scrollY,
+  disableCopilot = false,
   level,
   levelTitle,
   xpProgressPercent,
@@ -338,6 +356,7 @@ export default function ProfileHeaderComp({
   const styles = profileHeaderCompStyles(theme);
   const color = Colors[theme];
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const tier = level !== undefined ? getLevelTier(level) : null;
   const gradientColors: [string, string, string] = tier
@@ -403,21 +422,46 @@ export default function ProfileHeaderComp({
           pointerEvents="none"
         />
 
+      {onSettingsPress ? (
+        <TouchableOpacity
+          onPress={onTutorialsPress}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={tutorialsAccessibilityLabel}
+          style={[
+            styles.settingsButton,
+            {
+              top: insets.top + Spacing.md,
+              left: Spacing.lg,
+            },
+          ]}
+        >
+          <Ionicons name="help-outline" size={Spacing.xl} color={color.primary} />
+        </TouchableOpacity>
+      ) : null}
+
+      <OptionalCopilot
+        disable={disableCopilot}
+        text={t('tutorial.profile.step7text')}
+        order={7}
+        name="settingsStep"
+        style={[
+          styles.settingsButton,
+          {
+            top: insets.top + Spacing.md,
+            right: Spacing.lg,
+          },
+        ]}
+      >
         <TouchableOpacity
           onPress={onSettingsPress}
           activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel={settingsAccessibilityLabel}
-          style={[
-            styles.settingsButton,
-            {
-              top: insets.top + Spacing.md,
-              right: Spacing.lg,
-            },
-          ]}
         >
           <Ionicons name="settings-outline" size={Spacing.lg} color={color.primary} />
         </TouchableOpacity>
+      </OptionalCopilot>
 
         <Animated.View
           style={{

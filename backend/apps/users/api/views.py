@@ -1,6 +1,8 @@
 from django.contrib.auth import authenticate  # login direkt
 from django.db.models import Avg, F, QuerySet  # F dbden çıkarmadan yazıyon
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
+from rest_framework import filters
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -11,13 +13,14 @@ from rest_framework_simplejwt.tokens import RefreshToken  # login token
 from apps.gamification.models import TourProgress
 from apps.tours.api.serializers import TourSerializer
 from apps.tours.models import Tour
-from apps.users.models import Follow, User
+from apps.users.models import Follow, SearchHistory, User
 
 from .serializers import (
     FollowingFeedSerializer,
     FollowSerializer,
     LoginResponseSerializer,
     LoginSerializer,
+    SearchHistorySerializer,
     UserSerializer,
 )
 
@@ -25,6 +28,8 @@ from .serializers import (
 class UserViewSet(ModelViewSet):
     queryset: QuerySet[User] = User.objects.all().order_by("id")
     serializer_class = UserSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["username", "first_name", "last_name"]
 
     @action(detail=False, methods=["get"], url_path="get-by-username")
     def get_by_username(self, request):
@@ -143,6 +148,53 @@ class UserViewSet(ModelViewSet):
 
         serializer = FollowingFeedSerializer(completed_progress, many=True)
         return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=["get", "post", "delete"],
+        url_path="search-history",
+        permission_classes=[IsAuthenticated],
+    )
+    def search_history(self, request):
+        if request.method == "GET":
+            search_type = request.query_params.get("search_type")
+            queryset = SearchHistory.objects.filter(user=request.user)
+            if search_type:
+                queryset = queryset.filter(search_type=search_type)
+            serializer = SearchHistorySerializer(queryset[:8], many=True)
+            return Response(serializer.data)
+
+        if request.method == "DELETE":
+            search_type = request.query_params.get("search_type")
+            query = request.query_params.get("query")
+            queryset = SearchHistory.objects.filter(user=request.user)
+            if search_type:
+                queryset = queryset.filter(search_type=search_type)
+            if query:
+                queryset = queryset.filter(query=query)
+            queryset.delete()
+            return Response(status=204)
+
+        serializer = SearchHistorySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        search_history, created = SearchHistory.objects.update_or_create(
+            user=request.user,
+            search_type=serializer.validated_data["search_type"],
+            query=serializer.validated_data["query"],
+            defaults={"searched_at": timezone.now()},
+        )
+        stale_ids = list(
+            SearchHistory.objects.filter(
+                user=request.user,
+                search_type=serializer.validated_data["search_type"],
+            )
+            .order_by("-searched_at")
+            .values_list("id", flat=True)[8:]
+        )
+        if stale_ids:
+            SearchHistory.objects.filter(id__in=stale_ids).delete()
+        response_serializer = SearchHistorySerializer(search_history)
+        return Response(response_serializer.data, status=201 if created else 200)
 
     @action(
         detail=False, methods=["post"], url_path="reset-password"
