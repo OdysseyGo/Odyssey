@@ -147,7 +147,11 @@ export default function SearchScreen() {
       setError(null);
       try {
         if (searchMode === 'tours') {
-          const response = await searchTours(trimmedQuery, { page_size: 20 }, abortController.signal);
+          const response = await searchTours(
+            trimmedQuery,
+            { page_size: 20 },
+            abortController.signal
+          );
           setTourResults(response.results.map((tour) => mapTourToSearchResult(tour, t)));
           setUserResults([]);
         } else {
@@ -183,10 +187,13 @@ export default function SearchScreen() {
     setError(null);
   }, []);
 
-  const handleRecentSearchPress = useCallback((query: string) => {
-    setSearchQuery(query);
-    rememberSearch(query);
-  }, [rememberSearch]);
+  const handleRecentSearchPress = useCallback(
+    (query: string) => {
+      setSearchQuery(query);
+      rememberSearch(query);
+    },
+    [rememberSearch]
+  );
 
   const handleSubmitSearch = useCallback(() => {
     if (searchQuery.trim().length >= MIN_SEARCH_CHARS) {
@@ -277,9 +284,7 @@ export default function SearchScreen() {
         {t('search.keepTypingTitle', { count: MIN_SEARCH_CHARS })}
       </Text>
       <Text style={styles.helperSubText}>
-        {searchMode === 'tours'
-          ? t('search.keepTypingTours')
-          : t('search.keepTypingUsers')}
+        {searchMode === 'tours' ? t('search.keepTypingTours') : t('search.keepTypingUsers')}
       </Text>
     </View>
   );
@@ -343,9 +348,7 @@ export default function SearchScreen() {
           {searchMode === 'tours' ? t('search.discoverTours') : t('search.discoverUsers')}
         </Text>
         <Text style={styles.helperSubText}>
-          {searchMode === 'tours'
-            ? t('search.discoverToursSub')
-            : t('search.discoverUsersSub')}
+          {searchMode === 'tours' ? t('search.discoverToursSub') : t('search.discoverUsersSub')}
         </Text>
       </View>
       {renderSuggestionChips()}
