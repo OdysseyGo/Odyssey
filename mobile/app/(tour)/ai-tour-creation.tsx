@@ -10,6 +10,7 @@ import {
   FormOptionCard,
   FormDurationPicker,
   FormLocationSelect,
+  TOUR_TEXT_FIELD_MAX_LENGTH,
 } from '@/components/TourCreation';
 import {
   AICreationHeader,
@@ -161,6 +162,7 @@ export default function AITourCreation() {
               value={formData.theme}
               onChangeText={(text) => updateFormData({ theme: text })}
               placeholder={t('aiTour.themePlaceholder')}
+              maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
             />
             <ThemeSuggestions
               onSelect={(selectedTheme) => updateFormData({ theme: selectedTheme })}
@@ -207,6 +209,7 @@ export default function AITourCreation() {
               onChangeText={(text) => updateFormData({ additionalDetails: text })}
               placeholder={t('aiTour.additionalDetailsPlaceholder')}
               numberOfLines={4}
+              maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
             />
           </FormInputGroup>
         </ScrollView>

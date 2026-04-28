@@ -205,9 +205,17 @@ function GuestScreen({
   return (
     <View style={[guestStyles.root, { backgroundColor: theme.headerGradientTop }]}>
       {/* ── Hero ── */}
-      <View style={[guestStyles.hero, { paddingTop: insets.top, height: GUEST_HERO_HEIGHT }]}>
+      <View
+        style={[
+          guestStyles.hero,
+          {
+            paddingTop: insets.top + Spacing.lg,
+            height: GUEST_HERO_HEIGHT + insets.top,
+          },
+        ]}
+      >
         <AuthLanguageSelector style={{ top: insets.top + 12 }} />
-        <AuthLogo />
+        <AuthLogo variant="compact" />
         <Text style={[guestStyles.appName, { color: theme.white }]}>ODYSSEY</Text>
         <Text style={[guestStyles.tagline, { color: theme.profileGuestTaglineText }]}>
           {t('auth.tagline')}

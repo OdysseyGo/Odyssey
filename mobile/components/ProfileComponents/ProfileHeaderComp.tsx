@@ -71,21 +71,23 @@ export default function ProfileHeaderComp({
     <View style={[styles.container, { paddingTop: insets.top + Spacing.lg }]}>
       <View style={styles.bottomGlow} />
 
-      <TouchableOpacity
-        onPress={onTutorialsPress}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel={tutorialsAccessibilityLabel}
-        style={[
-          styles.settingsButton,
-          {
-            top: insets.top + Spacing.md,
-            left: Spacing.lg,
-          },
-        ]}
-      >
-        <Ionicons name="help-outline" size={Spacing.xl} color={color.primary} />
-      </TouchableOpacity>
+      {onSettingsPress ? (
+        <TouchableOpacity
+          onPress={onTutorialsPress}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={tutorialsAccessibilityLabel}
+          style={[
+            styles.settingsButton,
+            {
+              top: insets.top + Spacing.md,
+              left: Spacing.lg,
+            },
+          ]}
+        >
+          <Ionicons name="help-outline" size={Spacing.xl} color={color.primary} />
+        </TouchableOpacity>
+      ) : null}
 
       <OptionalCopilot
         disable={disableCopilot}
