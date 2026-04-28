@@ -2,8 +2,6 @@ from django.contrib import admin
 
 from .models import (
     Badge,
-    BadgeVisualOverride,
-    BadgeVisualTemplate,
     PictureCompareConfig,
     TourProgress,
     UserBadge,
@@ -45,14 +43,3 @@ class TourProgressAdmin(admin.ModelAdmin):
 @admin.register(PictureCompareConfig)
 class PictureCompareConfigAdmin(admin.ModelAdmin):
     list_display = ("singleton_id", "similarity_threshold", "updated_at")
-
-
-@admin.register(BadgeVisualTemplate)
-class BadgeVisualTemplateAdmin(admin.ModelAdmin):
-    list_display = ("singleton_id", "updated_at")
-
-
-@admin.register(BadgeVisualOverride)
-class BadgeVisualOverrideAdmin(admin.ModelAdmin):
-    list_display = ("badge", "country_code", "updated_at")
-    search_fields = ("badge__code", "badge__name", "country_code")

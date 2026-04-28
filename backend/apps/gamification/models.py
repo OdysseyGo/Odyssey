@@ -16,53 +16,6 @@ class Badge(models.Model):
         return self.name
 
 
-class BadgeVisualTemplate(models.Model):
-    singleton_id = models.PositiveSmallIntegerField(
-        default=1, unique=True, editable=False
-    )
-    config = models.JSONField(default=dict)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    @classmethod
-    def load(cls):
-        template, _ = cls.objects.get_or_create(singleton_id=1, defaults={"config": {}})
-        return template
-
-    def __str__(self):
-        return "Badge visual template"
-
-
-class BadgeVisualOverride(models.Model):
-    badge = models.ForeignKey(
-        Badge,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="visual_overrides",
-    )
-    country_code = models.CharField(max_length=2, blank=True, default="")
-    config = models.JSONField(default=dict)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["badge", "country_code"],
-                name="uniq_badge_visual_override_badge_country",
-            )
-        ]
-
-    def save(self, *args, **kwargs):
-        self.country_code = (self.country_code or "").strip().upper()[:2]
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        badge_label = self.badge.code if self.badge_id else "GLOBAL"
-        country_label = self.country_code or "ALL"
-        return f"{badge_label} / {country_label}"
-
-
 class UserBadge(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="badges"
