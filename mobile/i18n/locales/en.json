@@ -297,7 +297,10 @@
     "min": "min",
     "stops": "stops",
     "tourInProgressTitle": "Tour in Progress",
-    "tourInProgressMessage": "You already have an active tour! Please finish or quit it before starting a new one."
+    "tourInProgressMessage": "You already have an active tour! Please finish or quit it before starting a new one.",
+    "locationRequiredTitle": "Location permission needed",
+    "locationRequiredMessage": "To start this tour, Odyssey needs access to your location. Please allow location permission in your device settings, then try again.",
+    "locationUnavailableMessage": "We couldn't read your current location. Please turn on location services and try again."
   },
   "creation": {
     "loginRequired": "Login Required",

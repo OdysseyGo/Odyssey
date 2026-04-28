@@ -241,7 +241,10 @@
     "min": "min",
     "stops": "paradas",
     "tourInProgressTitle": "Tour en curso",
-    "tourInProgressMessage": "¡Ya tienes un tour activo! Por favor termínalo o abandónalo antes de iniciar uno nuevo."
+    "tourInProgressMessage": "¡Ya tienes un tour activo! Por favor termínalo o abandónalo antes de iniciar uno nuevo.",
+    "locationRequiredTitle": "Permiso de ubicación necesario",
+    "locationRequiredMessage": "Para iniciar este tour, Odyssey necesita acceso a tu ubicación. Permite el permiso de ubicación en la configuración de tu dispositivo e inténtalo de nuevo.",
+    "locationUnavailableMessage": "No pudimos leer tu ubicación actual. Activa los servicios de ubicación e inténtalo de nuevo."
   },
   "creation": {
     "loginRequired": "Inicio de sesión requerido",

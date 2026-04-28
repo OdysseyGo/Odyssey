@@ -297,7 +297,10 @@
     "min": "dk",
     "stops": "durak",
     "tourInProgressTitle": "Turun devam etmekte",
-    "tourInProgressMessage": "Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et."
+    "tourInProgressMessage": "Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et.",
+    "locationRequiredTitle": "Konum izni gerekli",
+    "locationRequiredMessage": "Bu tura başlamak için Odyssey'nin konumuna erişmesi gerekiyor. Lütfen cihaz ayarlarından konum iznini açıp tekrar dene.",
+    "locationUnavailableMessage": "Mevcut konumunu alamadık. Lütfen konum servislerini açıp tekrar dene."
   },
   "creation": {
     "loginRequired": "Giriş Gerekli",
