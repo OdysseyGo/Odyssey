@@ -207,20 +207,15 @@ class AdminTourViewSet(ModelViewSet):
                 {"steps": "At least one tour stop is required before publishing."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-                
+
         facade = GoogleMapsFacade()
-    
+
         city_lat, city_lon = facade.geocode_location(
-            name=tour.city,
-            city=tour.city,  
-            fallback_lat=0.0,
-            fallback_lng=0.0
+            name=tour.city, city=tour.city, fallback_lat=0.0, fallback_lng=0.0
         )
 
         has_step_in_city = facade.tour_has_step_in_city(
-            tour,
-            city_latitude=city_lat,
-            city_longitude=city_lon
+            tour, city_latitude=city_lat, city_longitude=city_lon
         )
 
         if not has_step_in_city:
@@ -231,7 +226,7 @@ class AdminTourViewSet(ModelViewSet):
 
         tour.status = Tour.PUBLISHED
         tour.save(update_fields=["status"])
-        
+
         return Response({"detail": "Tour approved and published."})
 
     @action(detail=True, methods=["post"], url_path="reject")

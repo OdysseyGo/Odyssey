@@ -5,8 +5,15 @@ from rest_framework import serializers
 from apps.admin_dashboard.models import BanRecord, Report
 from apps.gamification.models import PictureCompareConfig
 from apps.tours.models import (
-    ARModel, Puzzle, Review, Tour, TourStep,
-    TriviaPuzzleDetail, PictureComparePuzzleDetail, ArPuzzleDetail, GyroscopePuzzleDetail 
+    ARModel,
+    ArPuzzleDetail,
+    GyroscopePuzzleDetail,
+    PictureComparePuzzleDetail,
+    Puzzle,
+    Review,
+    Tour,
+    TourStep,
+    TriviaPuzzleDetail,
 )
 from apps.users.models import User
 
@@ -393,29 +400,33 @@ class AdminTourStepSerializer(serializers.ModelSerializer):
 
     def get_has_puzzle(self, obj):
         return hasattr(obj, "puzzle")
-    
+
+
 # ── Puzzle Detail Serializers  ---------------──────────────────────
+
 
 class TriviaPuzzleDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = TriviaPuzzleDetail
         fields = ["options", "correct_answer"]
 
+
 class PictureComparePuzzleDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = PictureComparePuzzleDetail
         fields = ["reference_image", "similarity_threshold"]
+
 
 class ArPuzzleDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArPuzzleDetail
         fields = ["scene_asset_url", "metadata"]
 
+
 class GyroscopePuzzleDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = GyroscopePuzzleDetail
         fields = ["target_pitch", "target_roll", "target_yaw", "tolerance_degrees"]
-
 
 
 class AdminTourListSerializer(serializers.ModelSerializer):

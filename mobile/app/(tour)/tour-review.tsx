@@ -56,8 +56,8 @@ export default function TourReviewScreen() {
         text: t('creation.submitConfirm'),
         onPress: async () => {
           setIsSubmitting(true);
-          
-          let createdTourId = null; 
+
+          let createdTourId = null;
 
           try {
             const tour = await createTour({
@@ -177,9 +177,12 @@ export default function TourReviewScreen() {
             if (createdTourId) {
               try {
                 console.log(`Hata oluştu! Yarım kalan tur (${createdTourId}) siliniyor...`);
-                await deleteTour(createdTourId); 
+                await deleteTour(createdTourId);
               } catch (deleteError) {
-                console.error('Turu silerken de hata oluştu (Yetim tur kalmış olabilir):', deleteError);
+                console.error(
+                  'Turu silerken de hata oluştu (Yetim tur kalmış olabilir):',
+                  deleteError
+                );
               }
             }
 
