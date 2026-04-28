@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.admin_dashboard.models import BanRecord, Report
-from apps.gamification.models import PictureCompareConfig
+from apps.gamification.models import Badge, BadgeVisualOverride, PictureCompareConfig
 from apps.tours.models import ARModel, Review, Tour, TourStep
 
 User = get_user_model()
@@ -464,6 +464,74 @@ class PictureCompareTuningViewSetTests(APITestCase):
     def test_picture_compare_config_requires_staff(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get("/api/admin/picture-compare-config/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class BadgeVisualViewSetTests(APITestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username="admin",
+            email="admin@example.com",
+            password="adminpass123",
+            is_staff=True,
+        )
+        self.user = User.objects.create_user(
+            username="user",
+            email="user@example.com",
+            password="userpass123",
+        )
+        self.badge = Badge.objects.create(
+            code="CITY_GOLD",
+            name="City Gold",
+            description="Badge",
+            criteria={"kind": "city_first_completion"},
+        )
+        self.client.force_authenticate(user=self.admin)
+
+    def test_list_bundle(self):
+        response = self.client.get("/api/admin/badge-visuals/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("template", response.data)
+        self.assertIn("overrides", response.data)
+        self.assertIn("badges", response.data)
+
+    def test_update_template(self):
+        response = self.client.post(
+            "/api/admin/badge-visuals/template/",
+            {"config": {"flag": {"x": 0.2, "width": 0.7}}},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["config"]["flag"]["x"], 0.2)
+        self.assertEqual(response.data["config"]["flag"]["width"], 0.7)
+
+    def test_upsert_override(self):
+        response = self.client.post(
+            "/api/admin/badge-visuals/overrides/",
+            {
+                "badge": self.badge.id,
+                "country_code": "FR",
+                "config": {"text": {"x": 0.6, "rotation_deg": 60}},
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["country_code"], "FR")
+        self.assertEqual(BadgeVisualOverride.objects.count(), 1)
+
+    def test_delete_override(self):
+        override = BadgeVisualOverride.objects.create(
+            badge=self.badge,
+            country_code="TR",
+            config={"flag": {"x": 0.12}},
+        )
+        response = self.client.delete(f"/api/admin/badge-visuals/overrides/{override.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(BadgeVisualOverride.objects.filter(id=override.id).exists())
+
+    def test_requires_staff(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get("/api/admin/badge-visuals/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 

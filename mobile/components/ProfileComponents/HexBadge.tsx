@@ -1,126 +1,372 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Defs, LinearGradient, Polygon, Stop } from 'react-native-svg';
-import CountryFlag from 'react-native-country-flag';
+import { StyleSheet, View } from 'react-native';
+import Svg, {
+  ClipPath,
+  Defs,
+  G,
+  Image as SvgImage,
+  LinearGradient,
+  Polygon,
+  Stop,
+  Text as SvgText,
+} from 'react-native-svg';
 
 import { BADGE_TIER_PALETTE } from '@/constants/badgeTheme';
 import { normalizeCountryCode } from '@/lib/flags';
 import { getBadgeTier, getXpLabel, isCityBadge, isXpBadge } from '@/lib/badgeVisuals';
+
+type BadgeTier = 'gold' | 'silver' | 'bronze' | 'xp1' | 'xp2' | 'xp3' | 'neutral';
+type TierPalette = {
+  outer_fill: string;
+  inner_fill: string;
+  border: string;
+  text: string;
+};
+
+type BadgeVisualConfig = {
+  hex?: {
+    outer_points?: string;
+    inner_points?: string;
+    stroke_width?: number;
+    inner_stroke_width?: number;
+    border_color?: string;
+    inner_border_color?: string;
+    frame_fill_top?: string;
+    frame_fill_bottom?: string;
+    frame_fill_opacity?: number;
+    fill_top?: string;
+    fill_bottom?: string;
+    fill_opacity?: number;
+  };
+  flag?: {
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    rotation_deg?: number;
+    clip_points?: string;
+  };
+  text?: {
+    x?: number;
+    y?: number;
+    rotation_deg?: number;
+    font_scale?: number;
+    scale_x?: number;
+    scale_y?: number;
+    max_chars?: number;
+  };
+  text_plate?: {
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    rotation_deg?: number;
+    shape_tl?: number;
+    shape_tr?: number;
+    shape_br?: number;
+    shape_bl?: number;
+    fill?: string;
+    fill_opacity?: number;
+    stroke?: string;
+    stroke_opacity?: number;
+    stroke_width?: number;
+  };
+  palette?: Partial<Record<BadgeTier, Partial<TierPalette>>>;
+};
 
 type Props = {
   code?: string | null;
   city?: string;
   countryCode?: string;
   fallbackLabel: string;
+  visualConfig?: BadgeVisualConfig | null;
 };
 
-const WIDTH = 98;
-const HEIGHT = 112;
-const OUTER_POINTS = '49,2 90,26 90,86 49,110 8,86 8,26';
-const MID_POINTS = '49,9 84,30 84,82 49,103 14,82 14,30';
-const INNER_POINTS = '49,16 78,33 78,79 49,96 20,79 20,33';
+const WIDTH = 100;
+const HEIGHT = 104;
+const ALL_TIERS: BadgeTier[] = ['gold', 'silver', 'bronze', 'xp1', 'xp2', 'xp3', 'neutral'];
+const DEFAULT_VISUAL_PALETTE: Record<BadgeTier, TierPalette> = {
+  gold: {
+    outer_fill: BADGE_TIER_PALETTE.gold.outerFill,
+    inner_fill: BADGE_TIER_PALETTE.gold.innerFill,
+    border: BADGE_TIER_PALETTE.gold.border,
+    text: BADGE_TIER_PALETTE.gold.text,
+  },
+  silver: {
+    outer_fill: BADGE_TIER_PALETTE.silver.outerFill,
+    inner_fill: BADGE_TIER_PALETTE.silver.innerFill,
+    border: BADGE_TIER_PALETTE.silver.border,
+    text: BADGE_TIER_PALETTE.silver.text,
+  },
+  bronze: {
+    outer_fill: BADGE_TIER_PALETTE.bronze.outerFill,
+    inner_fill: BADGE_TIER_PALETTE.bronze.innerFill,
+    border: BADGE_TIER_PALETTE.bronze.border,
+    text: BADGE_TIER_PALETTE.bronze.text,
+  },
+  xp1: {
+    outer_fill: BADGE_TIER_PALETTE.xp1.outerFill,
+    inner_fill: BADGE_TIER_PALETTE.xp1.innerFill,
+    border: BADGE_TIER_PALETTE.xp1.border,
+    text: BADGE_TIER_PALETTE.xp1.text,
+  },
+  xp2: {
+    outer_fill: BADGE_TIER_PALETTE.xp2.outerFill,
+    inner_fill: BADGE_TIER_PALETTE.xp2.innerFill,
+    border: BADGE_TIER_PALETTE.xp2.border,
+    text: BADGE_TIER_PALETTE.xp2.text,
+  },
+  xp3: {
+    outer_fill: BADGE_TIER_PALETTE.xp3.outerFill,
+    inner_fill: BADGE_TIER_PALETTE.xp3.innerFill,
+    border: BADGE_TIER_PALETTE.xp3.border,
+    text: BADGE_TIER_PALETTE.xp3.text,
+  },
+  neutral: {
+    outer_fill: BADGE_TIER_PALETTE.neutral.outerFill,
+    inner_fill: BADGE_TIER_PALETTE.neutral.innerFill,
+    border: BADGE_TIER_PALETTE.neutral.border,
+    text: BADGE_TIER_PALETTE.neutral.text,
+  },
+};
 
-function getTierLabel(code?: string | null): string {
-  if (!code) {
-    return 'BADGE';
+const DEFAULT_CONFIG: Required<BadgeVisualConfig> = {
+  hex: {
+    outer_points: '50,6 89.84,29 89.84,75 50,98 10.16,75 10.16,29',
+    inner_points: '50,12 84.64,32 84.64,72 50,92 15.36,72 15.36,32',
+    stroke_width: 2,
+    inner_stroke_width: 1.2,
+    border_color: '#64748b',
+    inner_border_color: '#64748b',
+    frame_fill_top: '#ffffff',
+    frame_fill_bottom: '#dbe4f4',
+    frame_fill_opacity: 0.98,
+    fill_top: '#f8fafc',
+    fill_bottom: '#e2e8f0',
+    fill_opacity: 0.24,
+  },
+  flag: {
+    x: -0.2,
+    y: -0.2,
+    width: 1.4,
+    height: 1.4,
+    rotation_deg: -60,
+    clip_points: '50,12 84.64,32 84.64,72 50,92 15.36,72 15.36,32',
+  },
+  text: {
+    x: 0.56,
+    y: 0.78,
+    rotation_deg: -60,
+    font_scale: 1,
+    scale_x: 1,
+    scale_y: 1,
+    max_chars: 22,
+  },
+  text_plate: {
+    x: 0.18,
+    y: 0.62,
+    width: 0.66,
+    height: 0.2,
+    rotation_deg: -60,
+    shape_tl: 0.18,
+    shape_tr: 1,
+    shape_br: 0.82,
+    shape_bl: 0,
+    fill: '#ffffff',
+    fill_opacity: 0.78,
+    stroke: '#64748b',
+    stroke_opacity: 0.7,
+    stroke_width: 1,
+  },
+  palette: DEFAULT_VISUAL_PALETTE,
+};
+
+function mergeVisualConfig(config?: BadgeVisualConfig | null): Required<BadgeVisualConfig> {
+  const basePalette = DEFAULT_VISUAL_PALETTE;
+  const mergedPalette = { ...basePalette } as Record<BadgeTier, TierPalette>;
+  for (const tier of ALL_TIERS) {
+    mergedPalette[tier] = {
+      ...basePalette[tier],
+      ...((config?.palette && config.palette[tier]) || {}),
+    };
   }
-  if (code.startsWith('CITY_')) {
-    return code.replace('CITY_', '');
-  }
-  if (code.startsWith('XP_')) {
-    return 'XP';
-  }
-  return 'BADGE';
+
+  return {
+    hex: { ...DEFAULT_CONFIG.hex, ...(config?.hex || {}) },
+    flag: { ...DEFAULT_CONFIG.flag, ...(config?.flag || {}) },
+    text: { ...DEFAULT_CONFIG.text, ...(config?.text || {}) },
+    text_plate: { ...DEFAULT_CONFIG.text_plate, ...(config?.text_plate || {}) },
+    palette: mergedPalette,
+  };
 }
 
-function getTierGlyph(code?: string | null): string {
-  if (!code) {
-    return '◆';
+function clampText(value: string, maxChars: number): string {
+  if (value.length <= maxChars) {
+    return value;
   }
-  if (code === 'CITY_GOLD') {
-    return '★';
-  }
-  if (code === 'CITY_SILVER') {
-    return '✦';
-  }
-  if (code === 'CITY_BRONZE') {
-    return '◆';
-  }
-  if (code.startsWith('XP_')) {
-    return '⬢';
-  }
-  return '◆';
+  return `${value.slice(0, Math.max(1, maxChars - 1))}…`;
 }
 
-export default function HexBadge({ code, city, countryCode, fallbackLabel }: Props) {
+function buildFlagUrl(countryCode: string): string | null {
+  if (!/^[A-Z]{2}$/.test(countryCode) || countryCode === 'ZZ') {
+    return null;
+  }
+  return `https://flagcdn.com/w320/${countryCode.toLowerCase()}.png`;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function rotatePoint(x: number, y: number, cx: number, cy: number, angleDeg: number): [number, number] {
+  const angle = (angleDeg * Math.PI) / 180;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const tx = x - cx;
+  const ty = y - cy;
+  return [cx + tx * cos - ty * sin, cy + tx * sin + ty * cos];
+}
+
+function asPoints(points: Array<[number, number]>): string {
+  return points.map(([x, y]) => `${x},${y}`).join(' ');
+}
+
+function buildTextPlatePoints(textPlate: Required<BadgeVisualConfig>['text_plate']): string {
+  const x = (textPlate.x ?? 0.18) * WIDTH;
+  const y = (textPlate.y ?? 0.62) * HEIGHT;
+  const width = (textPlate.width ?? 0.66) * WIDTH;
+  const height = (textPlate.height ?? 0.2) * HEIGHT;
+  const angle = textPlate.rotation_deg ?? -60;
+
+  const p1: [number, number] = [x + clamp(textPlate.shape_tl ?? 0.18, -0.5, 1.5) * width, y];
+  const p2: [number, number] = [x + clamp(textPlate.shape_tr ?? 1, -0.5, 1.5) * width, y];
+  const p3: [number, number] = [x + clamp(textPlate.shape_br ?? 0.82, -0.5, 1.5) * width, y + height];
+  const p4: [number, number] = [x + clamp(textPlate.shape_bl ?? 0, -0.5, 1.5) * width, y + height];
+
+  const cx = x + width / 2;
+  const cy = y + height / 2;
+  const rotated = [p1, p2, p3, p4].map((point) =>
+    rotatePoint(point[0], point[1], cx, cy, angle),
+  );
+
+  return asPoints(rotated);
+}
+
+function pivotTransform(x: number, y: number, rotation: number, scaleX: number, scaleY: number): string {
+  return `translate(${x}, ${y}) rotate(${rotation}) scale(${scaleX}, ${scaleY}) translate(${-x}, ${-y})`;
+}
+
+export default function HexBadge({ code, city, countryCode, fallbackLabel, visualConfig }: Props) {
   const tier = getBadgeTier(code);
-  const palette = BADGE_TIER_PALETTE[tier];
-  const cityText = (city || 'Unknown').trim() || 'Unknown';
+  const config = mergeVisualConfig(visualConfig);
+  const palette = config.palette[tier] || DEFAULT_VISUAL_PALETTE[tier];
+
   const normalizedCountryCode = normalizeCountryCode(countryCode);
-  const hasRenderableFlag = normalizedCountryCode !== 'ZZ';
+  const flagUrl = buildFlagUrl(normalizedCountryCode);
+  const cityText = (city || 'Unknown').trim() || 'Unknown';
   const xpLabel = getXpLabel(code);
-  const tierLabel = getTierLabel(code);
-  const tierGlyph = getTierGlyph(code);
+  const primaryLabel = isCityBadge(code)
+    ? `${cityText} · ${normalizedCountryCode}`
+    : isXpBadge(code)
+      ? xpLabel || 'XP'
+      : fallbackLabel;
+  const label = clampText(primaryLabel, Math.round(config.text.max_chars ?? 22));
+
+  const flagX = WIDTH * (config.flag.x ?? -0.2);
+  const flagY = HEIGHT * (config.flag.y ?? -0.2);
+  const flagWidth = WIDTH * (config.flag.width ?? 1.4);
+  const flagHeight = HEIGHT * (config.flag.height ?? 1.4);
+  const flagCenterX = flagX + flagWidth / 2;
+  const flagCenterY = flagY + flagHeight / 2;
+
+  const textX = WIDTH * (config.text.x ?? 0.56);
+  const textY = HEIGHT * (config.text.y ?? 0.79);
 
   return (
     <View style={[styles.wrap, { shadowColor: palette.border }]}>
       <Svg width={WIDTH} height={HEIGHT}>
         <Defs>
-          <LinearGradient id="outerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor={palette.outerFill} />
-            <Stop offset="100%" stopColor={palette.innerFill} />
+          <LinearGradient id="hexBackground" x1="0%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor={config.hex.frame_fill_top || '#ffffff'} stopOpacity={config.hex.frame_fill_opacity ?? 0.98} />
+            <Stop offset="100%" stopColor={config.hex.frame_fill_bottom || '#dbe4f4'} stopOpacity={config.hex.frame_fill_opacity ?? 0.98} />
           </LinearGradient>
-          <LinearGradient id="innerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <Stop offset="0%" stopColor="#ffffff" stopOpacity={0.35} />
-            <Stop offset="100%" stopColor={palette.innerFill} stopOpacity={0.9} />
+          <LinearGradient id="plateFill" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor={config.hex.fill_top || palette.outer_fill} />
+            <Stop offset="100%" stopColor={config.hex.fill_bottom || palette.inner_fill} />
           </LinearGradient>
+          <ClipPath id="flagClip">
+            <Polygon points={config.flag.clip_points} />
+          </ClipPath>
+          <ClipPath id="badgeClip">
+            <Polygon points={config.hex.outer_points} />
+          </ClipPath>
         </Defs>
-        <Polygon points={OUTER_POINTS} fill="url(#outerGrad)" stroke={palette.border} strokeWidth={2} />
+
         <Polygon
-          points={MID_POINTS}
-          fill="transparent"
-          stroke={palette.border}
-          strokeOpacity={0.45}
-          strokeWidth={1.25}
+          points={config.hex.outer_points}
+          fill="url(#hexBackground)"
+          stroke={config.hex.border_color || palette.border}
+          strokeWidth={config.hex.stroke_width}
         />
-        <Polygon points={INNER_POINTS} fill="url(#innerGrad)" />
-        <Polygon points="49,18 65,27 65,43 49,52 33,43 33,27" fill="#ffffff" fillOpacity={0.2} />
+        <Polygon
+          points={config.hex.inner_points}
+          fill="url(#plateFill)"
+          fillOpacity={config.hex.fill_opacity ?? 0.24}
+          stroke={config.hex.inner_border_color || config.hex.border_color || palette.border}
+          strokeOpacity={0.42}
+          strokeWidth={config.hex.inner_stroke_width}
+        />
+
+        <G clipPath="url(#badgeClip)">
+          <G clipPath="url(#flagClip)">
+            {flagUrl ? (
+              <SvgImage
+                x={flagX}
+                y={flagY}
+                width={flagWidth}
+                height={flagHeight}
+                href={{ uri: flagUrl }}
+                preserveAspectRatio="xMidYMid slice"
+                transform={`rotate(${config.flag.rotation_deg ?? -60}, ${flagCenterX}, ${flagCenterY})`}
+              />
+            ) : (
+              <Polygon
+                points={config.flag.clip_points || DEFAULT_CONFIG.flag.clip_points}
+                fill={palette.inner_fill}
+                fillOpacity={0.7}
+              />
+            )}
+          </G>
+
+          <Polygon
+            points={buildTextPlatePoints(config.text_plate)}
+            fill={config.text_plate.fill}
+            fillOpacity={config.text_plate.fill_opacity}
+            stroke={config.text_plate.stroke || palette.border}
+            strokeOpacity={config.text_plate.stroke_opacity}
+            strokeWidth={config.text_plate.stroke_width || 1}
+          />
+
+          <SvgText
+            x={textX}
+            y={textY}
+            fill={palette.text}
+            fontSize={10 * (config.text.font_scale ?? 1)}
+            fontWeight="700"
+            letterSpacing={0.3}
+            textAnchor="middle"
+            transform={pivotTransform(
+              textX,
+              textY,
+              config.text.rotation_deg ?? -60,
+              config.text.scale_x ?? 1,
+              config.text.scale_y ?? 1,
+            )}
+          >
+            {label}
+          </SvgText>
+        </G>
       </Svg>
-      <View style={[styles.tierPill, { backgroundColor: palette.border }]}>
-        <Text style={styles.tierPillText}>
-          {tierGlyph} {tierLabel}
-        </Text>
-      </View>
-      <View style={styles.content}>
-        {isCityBadge(code) ? (
-          <>
-            <View style={styles.flagWrap}>
-              {hasRenderableFlag ? (
-                <CountryFlag
-                  isoCode={normalizedCountryCode.toLowerCase()}
-                  size={20}
-                  style={styles.flag}
-                />
-              ) : (
-                <Text style={[styles.flagFallback, { color: palette.text }]}>--</Text>
-              )}
-            </View>
-            <Text style={[styles.primaryText, { color: palette.text }]} numberOfLines={1}>
-              {cityText}
-            </Text>
-            <Text style={[styles.secondaryText, { color: palette.mutedText }]}>City Tour</Text>
-          </>
-        ) : isXpBadge(code) ? (
-          <>
-            <Text style={[styles.primaryText, { color: palette.text }]}>{xpLabel || 'XP'}</Text>
-            <Text style={[styles.secondaryText, { color: palette.mutedText }]}>Achievement</Text>
-          </>
-        ) : (
-          <Text style={[styles.primaryText, { color: palette.text }]} numberOfLines={2}>
-            {fallbackLabel}
-          </Text>
-        )}
-      </View>
     </View>
   );
 }
@@ -132,56 +378,8 @@ const styles = StyleSheet.create({
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.2,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
-  },
-  tierPill: {
-    position: 'absolute',
-    top: 8,
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    zIndex: 2,
-  },
-  tierPillText: {
-    color: '#ffffff',
-    fontSize: 8,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-  },
-  content: {
-    position: 'absolute',
-    width: 74,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 1,
-    top: 36,
-  },
-  flag: {
-    borderRadius: 999,
-  },
-  flagWrap: {
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  flagFallback: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  primaryText: {
-    fontSize: 11.5,
-    fontWeight: '800',
-    textAlign: 'center',
-    letterSpacing: 0.2,
-  },
-  secondaryText: {
-    fontSize: 8.5,
-    fontWeight: '600',
-    textAlign: 'center',
-    textTransform: 'uppercase',
-    letterSpacing: 0.35,
   },
 });

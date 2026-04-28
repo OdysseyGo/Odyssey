@@ -42,15 +42,8 @@ const DEFAULT_MODEL_SCALE_METERS = 1;
 const MIN_MODEL_SCALE_METERS = 0.3;
 const MAX_MODEL_SCALE_METERS = 10;
 const HIGHLIGHT_HEIGHT = 0.18;
-const VIRO = loadViro();
-const Viro3DObject = VIRO?.Viro3DObject as any;
-const ViroARScene = VIRO?.ViroARScene as any;
-const ViroARSceneNavigator = VIRO?.ViroARSceneNavigator as any;
-const ViroAmbientLight = VIRO?.ViroAmbientLight as any;
+const VIRO = getViroModule();
 const ViroMaterials = VIRO?.ViroMaterials as any;
-const ViroPolyline = VIRO?.ViroPolyline as any;
-const ViroSphere = VIRO?.ViroSphere as any;
-const ViroText = VIRO?.ViroText as any;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -201,7 +194,6 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
   );
   const [isScalePanelOpen, setIsScalePanelOpen] = React.useState(false);
   const [sliderWidth, setSliderWidth] = React.useState(0);
-  const viroAvailable = isViroAvailable();
 
   React.useEffect(() => {
     if (materialsReady || !ViroMaterials) {

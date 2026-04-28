@@ -19,6 +19,7 @@ export type UserBadge = {
   mistake_count?: number | null;
   source_tour?: number | null;
   earned_at: string;
+  visual_config?: Record<string, unknown>;
 };
 
 export type BadgesListResponse = {

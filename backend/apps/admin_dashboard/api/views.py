@@ -20,6 +20,9 @@ from apps.admin_dashboard.api.pagination import AdminPagination
 from apps.admin_dashboard.api.permissions import IsStaffUser
 from apps.admin_dashboard.api.serializers import (
     AdminARModelSerializer,
+    BadgeVisualBundleSerializer,
+    BadgeVisualOverrideSerializer,
+    BadgeVisualTemplateSerializer,
     AdminTourDetailSerializer,
     AdminTourListSerializer,
     AdminUserDetailSerializer,
@@ -39,8 +42,14 @@ from apps.admin_dashboard.api.serializers import (
 )
 from apps.admin_dashboard.models import BanRecord, Report
 from apps.admin_dashboard.services.analytics import AnalyticsService
-from apps.gamification.models import PictureCompareConfig, TourProgress
+from apps.gamification.models import (
+    BadgeVisualOverride,
+    BadgeVisualTemplate,
+    PictureCompareConfig,
+    TourProgress,
+)
 from apps.gamification.picture_compare import compare_picture_similarity
+from apps.gamification.visuals import BadgeVisualService
 from apps.tours.models import ARModel, Review, Tour
 from apps.tours.utils import GoogleMapsFacade
 from apps.users.models import User
@@ -360,6 +369,60 @@ class PictureCompareConfigViewSet(ViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+class BadgeVisualViewSet(ViewSet):
+    permission_classes = [IsStaffUser]
+
+    def list(self, request):
+        template = BadgeVisualTemplate.load()
+        overrides = BadgeVisualOverride.objects.select_related("badge").order_by(
+            "badge_id",
+            "country_code",
+            "-updated_at",
+        )
+        payload = {
+            "template": BadgeVisualService.load_template(),
+            "overrides": BadgeVisualOverrideSerializer(overrides, many=True).data,
+        }
+        serializer = BadgeVisualBundleSerializer(payload)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["post"], url_path="template")
+    def update_template(self, request):
+        template = BadgeVisualTemplate.load()
+        serializer = BadgeVisualTemplateSerializer(
+            template,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {
+                "config": BadgeVisualService.load_template(),
+                "updated_at": template.updated_at,
+            }
+        )
+
+    @action(detail=False, methods=["post"], url_path="overrides")
+    def upsert_override(self, request):
+        serializer = BadgeVisualOverrideSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        override, _ = BadgeVisualOverride.objects.update_or_create(
+            badge=data.get("badge"),
+            country_code=data.get("country_code", ""),
+            defaults={"config": data.get("config", {})},
+        )
+        return Response(BadgeVisualOverrideSerializer(override).data)
+
+    @action(detail=False, methods=["delete"], url_path=r"overrides/(?P<override_id>\d+)")
+    def delete_override(self, request, override_id=None):
+        deleted, _ = BadgeVisualOverride.objects.filter(id=override_id).delete()
+        if not deleted:
+            return Response({"detail": "Override not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # ── Content Moderation ───────────────────────────────────────────────

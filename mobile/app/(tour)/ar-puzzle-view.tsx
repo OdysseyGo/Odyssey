@@ -3,19 +3,13 @@ import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-na
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { getViroModule, VIRO_UNAVAILABLE_MESSAGE } from '@/utils/viro';
+import { getViroModule, isViroAvailable, VIRO_UNAVAILABLE_MESSAGE } from '@/utils/viro';
 
 const MODEL_POSITION: [number, number, number] = [0, 0, -1.2];
 const MODEL_SCALE: [number, number, number] = [0.25, 0.25, 0.25];
 const DEFAULT_MODEL_SCALE_METERS = 1;
 const MIN_MODEL_SCALE_METERS = 0.3;
 const MAX_MODEL_SCALE_METERS = 10;
-const VIRO = loadViro();
-const Viro3DObject = VIRO?.Viro3DObject as any;
-const ViroARScene = VIRO?.ViroARScene as any;
-const ViroARSceneNavigator = VIRO?.ViroARSceneNavigator as any;
-const ViroAmbientLight = VIRO?.ViroAmbientLight as any;
-const ViroText = VIRO?.ViroText as any;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);

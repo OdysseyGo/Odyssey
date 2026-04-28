@@ -509,6 +509,7 @@ export default function Profile() {
     countryCode: userBadge.country_code,
     mistakeCount: userBadge.mistake_count,
     earnedDate: userBadge.earned_at,
+    visualConfig: userBadge.visual_config,
   }));
 
   const handleFollowersPress = () => {

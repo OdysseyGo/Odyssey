@@ -80,6 +80,21 @@ export const getPictureCompareConfig = () =>
 export const updatePictureCompareConfig = (data: Record<string, number>) =>
   api.post("/admin/picture-compare-config/", data);
 
+// Badge visuals
+export const getBadgeVisualBundle = () => api.get("/admin/badge-visuals/");
+
+export const updateBadgeVisualTemplate = (config: Record<string, unknown>) =>
+  api.post("/admin/badge-visuals/template/", { config });
+
+export const upsertBadgeVisualOverride = (data: {
+  badge?: number | null;
+  country_code?: string;
+  config: Record<string, unknown>;
+}) => api.post("/admin/badge-visuals/overrides/", data);
+
+export const deleteBadgeVisualOverride = (id: number) =>
+  api.delete(`/admin/badge-visuals/overrides/${id}/`);
+
 // Reports
 export const getReports = (params?: Record<string, string | number>) =>
   api.get("/admin/reports/", { params });

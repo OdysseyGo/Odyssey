@@ -8,6 +8,7 @@ export type BadgeType = {
   countryCode?: string;
   mistakeCount?: number | null;
   earnedDate?: string;
+  visualConfig?: Record<string, unknown>;
 };
 
 export type ProfileBadgesProps = {
