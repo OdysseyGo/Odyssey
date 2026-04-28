@@ -36,7 +36,6 @@ from .serializers import (
     TriviaPuzzleUpsertSerializer,
 )
 
-
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])
 def google_maps_api_key(request):
@@ -241,13 +240,14 @@ class TourStepViewSet(viewsets.ModelViewSet):
         return step.tour.creator_id == request.user.id or request.user.is_staff
 
     def _upsert_base_puzzle(self, *, step, puzzle_type, data):
+        fixed_xp_reward = Puzzle.fixed_xp_reward_for_type(puzzle_type)
         puzzle, created = Puzzle.objects.get_or_create(
             step=step,
             defaults={
                 "puzzle_type": puzzle_type,
                 "question": data["question"],
                 "hint": data.get("hint", ""),
-                "xp_reward": data.get("xp_reward", 10),
+                "xp_reward": fixed_xp_reward,
                 "correct_answer": "",
             },
         )
@@ -256,7 +256,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
             puzzle.puzzle_type = puzzle_type
             puzzle.question = data["question"]
             puzzle.hint = data.get("hint", "")
-            puzzle.xp_reward = data.get("xp_reward", puzzle.xp_reward)
+            puzzle.xp_reward = fixed_xp_reward
             puzzle.save(
                 update_fields=[
                     "puzzle_type",

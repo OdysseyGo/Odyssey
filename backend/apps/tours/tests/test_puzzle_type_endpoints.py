@@ -101,6 +101,7 @@ class PuzzleTypeEndpointTests(APITestCase):
         detail = TriviaPuzzleDetail.objects.get(puzzle=puzzle)
         self.assertEqual(detail.options, ["A", "B", "C"])
         self.assertEqual(detail.correct_answer, "A")
+        self.assertEqual(puzzle.xp_reward, 25)
 
     def test_set_picture_compare_puzzle_creates_detail_with_threshold(self):
         self.client.post(
@@ -136,6 +137,7 @@ class PuzzleTypeEndpointTests(APITestCase):
         detail = PictureComparePuzzleDetail.objects.get(puzzle=puzzle)
         self.assertAlmostEqual(detail.similarity_threshold, 0.82)
         self.assertTrue(bool(detail.reference_image))
+        self.assertEqual(puzzle.xp_reward, 50)
 
         self.assertFalse(
             TriviaPuzzleDetail.objects.filter(puzzle=puzzle).exists(),
@@ -175,6 +177,7 @@ class PuzzleTypeEndpointTests(APITestCase):
             detail.metadata["anchor_position"],
             {"x": 0.0, "y": 1.2, "z": -1.0},
         )
+        self.assertEqual(puzzle.xp_reward, 50)
 
     def test_set_ar_puzzle_rejects_invalid_secret_code(self):
         response = self.client.post(
@@ -252,3 +255,4 @@ class PuzzleTypeEndpointTests(APITestCase):
         puzzle = Puzzle.objects.get(step=self.step)
         detail = GyroscopePuzzleDetail.objects.get(puzzle=puzzle)
         self.assertEqual(detail.tolerance_degrees, 12.0)
+        self.assertEqual(puzzle.xp_reward, 50)

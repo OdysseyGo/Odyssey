@@ -19,7 +19,7 @@ const BOTTOM_SHEET_ANIMATION_DURATION = Animations.bottomSheet.animationDuration
 export default function BottomSlider({
   onEndTour,
   onTourComplete,
-}: BottomSliderProps & { onTourComplete?: () => Promise<void> | void }) {
+}: BottomSliderProps & { onTourComplete?: (awardedXP: number) => Promise<void> | void }) {
   const { t } = useTranslation();
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -66,7 +66,7 @@ export default function BottomSlider({
       const response = await completeStep(progressId);
 
       if (response.is_tour_complete) {
-        await onTourComplete?.();
+        await onTourComplete?.(response.awarded_xp ?? 0);
       } else if (response.new_step_id) {
         const nextStepIndex = tour.steps.findIndex(
           (s) => s.id === response.new_step_id?.toString()
@@ -114,7 +114,7 @@ export default function BottomSlider({
       const response = await skipStep(progressId);
 
       if (response.is_tour_complete) {
-        await onTourComplete?.();
+        await onTourComplete?.(response.awarded_xp ?? 0);
       } else if (response.new_step_id) {
         const nextStepIndex = tour.steps.findIndex(
           (s) => s.id === response.new_step_id?.toString()

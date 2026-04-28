@@ -26,7 +26,7 @@ import {
 } from './TourStep.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
-import { submitArCode, submitPictureCompare } from '@/api/tourProgress';
+import { submitArCode, submitPictureCompare, submitTriviaAnswer } from '@/api/tourProgress';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import SquareCameraOverlayCapture from '@/components/common/SquareCameraOverlayCapture';
 
@@ -68,23 +68,39 @@ interface MultipleChoiceViewProps {
 function MultipleChoiceView({ puzzle, isSolved, onSolve }: MultipleChoiceViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { progressId } = useActiveTour();
 
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSelectOption = (optionId: string) => {
-    if (isSolved) return;
+  const handleSelectOption = async (optionId: string) => {
+    if (isSolved || isSubmitting) return;
+    if (!progressId) {
+      Alert.alert('Progress missing', 'Could not verify puzzle without active tour progress.');
+      return;
+    }
 
+    setIsSubmitting(true);
     setSelectedOptionId(optionId);
     setHasSubmitted(true);
 
-    const selectedOption = puzzle.options.find((opt) => opt.id === optionId);
-    if (selectedOption?.isCorrect) {
-      setIsCorrect(true);
-      onSolve();
-    } else {
+    const selectedOption = puzzle.options.find((opt) => opt.id === optionId)?.text ?? '';
+    try {
+      const response = await submitTriviaAnswer(progressId, selectedOption);
+      if (response.accepted) {
+        setIsCorrect(true);
+        onSolve();
+      } else {
+        setIsCorrect(false);
+      }
+    } catch (error) {
+      console.error('submit trivia answer failed', error);
+      Alert.alert('Error', 'Could not verify answer with server.');
       setIsCorrect(false);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -119,7 +135,7 @@ function MultipleChoiceView({ puzzle, isSolved, onSolve }: MultipleChoiceViewPro
             key={option.id}
             style={getOptionStyle(option.id)}
             onPress={() => handleSelectOption(option.id)}
-            disabled={isSolved}
+            disabled={isSolved || isSubmitting}
           >
             <View
               style={[

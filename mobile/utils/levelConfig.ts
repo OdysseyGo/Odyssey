@@ -11,7 +11,8 @@ export const LEVEL_TITLES = [
   'Legend',
 ];
 
-export const LEVEL_THRESHOLDS = [0, 200, 400, 700, 1000, 1400, 1800, 2300, 2800, 3500];
+const INITIAL_REQUIRED_XP = 500;
+const LEVEL_GROWTH_MULTIPLIER = 1.25;
 
 export type ComputedLevelInfo = {
   level: number;
@@ -27,18 +28,22 @@ export type ComputedLevelInfo = {
 export function computeLevelInfo(xp: number): ComputedLevelInfo {
   const safeXp = Math.max(0, xp ?? 0);
   let level = 1;
-  for (let i = 0; i < LEVEL_THRESHOLDS.length; i += 1) {
-    if (safeXp >= LEVEL_THRESHOLDS[i]) level = i + 1;
+  let xpForCurrent = 0;
+  let requiredDelta = INITIAL_REQUIRED_XP;
+  let xpForNext = requiredDelta;
+
+  while (safeXp >= xpForNext) {
+    level += 1;
+    xpForCurrent = xpForNext;
+    requiredDelta = Math.ceil(requiredDelta * LEVEL_GROWTH_MULTIPLIER);
+    xpForNext = xpForCurrent + requiredDelta;
   }
-  const idx = level - 1;
-  const xpForCurrent = LEVEL_THRESHOLDS[idx];
-  const isMax = level >= LEVEL_THRESHOLDS.length;
-  const xpForNext = isMax ? xpForCurrent : LEVEL_THRESHOLDS[level];
-  const range = Math.max(0, xpForNext - xpForCurrent);
-  const progress = isMax || range === 0 ? 100 : Math.floor(((safeXp - xpForCurrent) / range) * 100);
+  const titleIdx = Math.max(0, Math.min(level - 1, LEVEL_TITLES.length - 1));
+  const range = Math.max(1, xpForNext - xpForCurrent);
+  const progress = Math.floor(((safeXp - xpForCurrent) / range) * 100);
   return {
     level,
-    title: LEVEL_TITLES[idx],
+    title: LEVEL_TITLES[titleIdx],
     current_xp: safeXp,
     xp_for_current_level: xpForCurrent,
     xp_for_next_level: xpForNext,
@@ -47,8 +52,8 @@ export function computeLevelInfo(xp: number): ComputedLevelInfo {
 }
 
 export function getNextLevelTitle(level: number): string | null {
-  if (level >= LEVEL_TITLES.length) return null;
-  return LEVEL_TITLES[level];
+  if (level >= LEVEL_TITLES.length) return LEVEL_TITLES[LEVEL_TITLES.length - 1];
+  return LEVEL_TITLES[level] ?? LEVEL_TITLES[LEVEL_TITLES.length - 1];
 }
 
 export function isLegendaryLevel(level: number): boolean {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Puzzle, PuzzleType, PUZZLE_TYPE_OPTIONS, createEmptyPuzzle } from '../TourCreation.types';
 import PuzzleQuestion from './PuzzleQuestion';
 import PuzzleOptions from './PuzzleOptions';
@@ -181,25 +181,6 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
 
       <PuzzleHint hint={currentPuzzle.hint} onChange={(text) => handleChange('hint', text)} />
 
-      {/* XP Reward Input */}
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: color.text }]}>{t('creation.puzzle.xpReward')}</Text>
-        <TextInput
-          style={[styles.xpInput, { color: color.text, borderColor: color.borderLight }]}
-          value={String(currentPuzzle.xp_reward)}
-          onChangeText={(text) => {
-            const num = parseInt(text, 10);
-            if (!isNaN(num) && num >= 0) {
-              handleChange('xp_reward', num);
-            } else if (text === '') {
-              handleChange('xp_reward', 0);
-            }
-          }}
-          keyboardType="number-pad"
-          placeholder={t('creation.puzzle.xpPlaceholder')}
-          placeholderTextColor={color.placeholder}
-        />
-      </View>
     </View>
   );
 }

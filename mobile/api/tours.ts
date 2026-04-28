@@ -78,7 +78,6 @@ export type Puzzle = {
 export type PuzzleBaseUpsertPayload = {
   question: string;
   hint?: string;
-  xp_reward?: number;
 };
 
 export type TriviaPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
@@ -534,7 +533,6 @@ export async function setStepPictureComparePuzzle(
   const formData = new FormData();
   formData.append('question', payload.question);
   formData.append('hint', payload.hint || '');
-  formData.append('xp_reward', String(payload.xp_reward ?? 10));
   if (payload.similarity_threshold !== undefined) {
     formData.append('similarity_threshold', String(payload.similarity_threshold));
   }

@@ -72,7 +72,7 @@ class GyroscopePuzzleDetailSerializer(serializers.ModelSerializer):
 class PuzzleBaseUpsertSerializer(serializers.Serializer):
     question = serializers.CharField()
     hint = serializers.CharField(required=False, allow_blank=True, default="")
-    xp_reward = serializers.IntegerField(required=False, min_value=0, default=10)
+    xp_reward = serializers.IntegerField(required=False, min_value=0, default=25)
 
 
 class TriviaPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):

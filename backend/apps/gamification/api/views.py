@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from PIL import UnidentifiedImageError
 from rest_framework import mixins, permissions, status, viewsets
@@ -19,6 +20,9 @@ from apps.gamification.services import BadgeService
 from apps.tours.models import Puzzle, PuzzleAttempt, TourStep
 
 from .serializers import BadgeSerializer, TourProgressSerializer, UserBadgeSerializer
+
+TRIVIA_STEP_XP = 25
+NON_TRIVIA_STEP_XP = 50
 
 
 class BadgeViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
@@ -103,6 +107,8 @@ class TourProgressViewSet(
                 existing_progress.completed_at = None
                 existing_progress.total_xp = 0
                 existing_progress.skip_count = 0
+                # Preserve one-time XP guarantee on replays, including legacy rows.
+                existing_progress.xp_awarded = True
                 existing_progress.save(
                     update_fields=[
                         "current_step",
@@ -111,6 +117,7 @@ class TourProgressViewSet(
                         "completed_at",
                         "total_xp",
                         "skip_count",
+                        "xp_awarded",
                     ]
                 )
 
@@ -145,15 +152,36 @@ class TourProgressViewSet(
         )
 
     def _advance_progress(
-        self, *, progress, user, award_xp, step_action_word="completed"
+        self,
+        *,
+        progress,
+        user,
+        award_xp,
+        step_action_word="completed",
+        increment_skip_count=False,
     ):
-        current_step = progress.current_step
-        next_step = self._get_next_step(progress)
-
-        if award_xp and current_step and hasattr(current_step, "puzzle"):
-            progress.total_xp += current_step.puzzle.xp_reward
+        user_model = get_user_model()
+        awarded_xp = 0
 
         with transaction.atomic():
+            progress = TourProgress.objects.select_for_update().get(pk=progress.pk)
+
+            if progress.status == TourProgress.COMPLETED:
+                return {
+                    "error": "Tour is already completed",
+                    "status_code": status.HTTP_400_BAD_REQUEST,
+                }
+
+            if increment_skip_count:
+                progress.skip_count += 1
+
+            next_step = self._get_next_step(progress)
+
+            if award_xp:
+                progress.total_xp += self._step_xp_for_completion(
+                    progress=progress, user=user
+                )
+
             if next_step:
                 progress.current_step = next_step
                 progress.save()
@@ -164,19 +192,56 @@ class TourProgressViewSet(
                 progress.current_step = None
                 progress.save()
 
-                user.xp += progress.total_xp
-                user.level = LevelService.get_level(user.xp)
-                user.tour_count += 1
-                user.save()
-
-                BadgeService.check_badges(user, completed_progress=progress)
+                locked_user = user_model.objects.select_for_update().get(pk=user.pk)
+                reward_eligible = progress.tour.creator_id != locked_user.id
+                if not progress.xp_awarded:
+                    if reward_eligible:
+                        locked_user.xp += progress.total_xp
+                        locked_user.level = LevelService.get_level(locked_user.xp)
+                        locked_user.tour_count += 1
+                        locked_user.save(update_fields=["xp", "level", "tour_count"])
+                    progress.xp_awarded = True
+                    progress.save(update_fields=["xp_awarded"])
+                    if reward_eligible:
+                        BadgeService.check_badges(locked_user, completed_progress=progress)
+                        awarded_xp = progress.total_xp
                 message = "Tour completed!"
 
         return {
             "status": message,
             "is_tour_complete": progress.status == TourProgress.COMPLETED,
             "new_step_id": next_step.id if next_step else None,
+            "awarded_xp": awarded_xp,
         }
+
+    @staticmethod
+    def _step_xp_for_completion(*, progress, user) -> int:
+        current_step = progress.current_step
+        if current_step is None:
+            return 0
+
+        puzzle = getattr(current_step, "puzzle", None)
+        failed_attempt_count = 0
+        if puzzle:
+            failed_attempt_count = PuzzleAttempt.objects.filter(
+                user=user,
+                progress=progress,
+                puzzle=puzzle,
+                accepted=False,
+            ).count()
+
+            # AR and picture compare tolerate up to 2 failed attempts.
+            if puzzle.puzzle_type in (Puzzle.AR, Puzzle.PICTURE_COMPARE):
+                if failed_attempt_count >= 3:
+                    return 0
+            elif failed_attempt_count > 0:
+                return 0
+
+        if puzzle is None:
+            return TRIVIA_STEP_XP
+        if puzzle.puzzle_type == Puzzle.TRIVIA:
+            return TRIVIA_STEP_XP
+        return NON_TRIVIA_STEP_XP
 
     def _requires_picture_compare_submission(self, progress):
         current_step = progress.current_step
@@ -201,6 +266,22 @@ class TourProgressViewSet(
 
         puzzle = current_step.puzzle
         if puzzle.puzzle_type != Puzzle.AR:
+            return False
+
+        return not PuzzleAttempt.objects.filter(
+            user=progress.user,
+            progress=progress,
+            puzzle=puzzle,
+            accepted=True,
+        ).exists()
+
+    def _requires_trivia_submission(self, progress):
+        current_step = progress.current_step
+        if not current_step or not hasattr(current_step, "puzzle"):
+            return False
+
+        puzzle = current_step.puzzle
+        if puzzle.puzzle_type != Puzzle.TRIVIA:
             return False
 
         return not PuzzleAttempt.objects.filter(
@@ -239,9 +320,22 @@ class TourProgressViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if self._requires_trivia_submission(progress):
+            return Response(
+                {
+                    "error": (
+                        "Trivia puzzles require submit-trivia-answer "
+                        "verification before completion."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         result = self._advance_progress(
             progress=progress, user=request.user, award_xp=True
         )
+        if result.get("status_code"):
+            return Response({"error": result["error"]}, status=result["status_code"])
         return Response(result)
 
     @action(detail=True, methods=["post"], url_path="skip-step")
@@ -251,13 +345,15 @@ class TourProgressViewSet(
         if progress.status == TourProgress.COMPLETED:
             return Response({"error": "Tour is already completed"}, status=400)
 
-        progress.skip_count += 1
         result = self._advance_progress(
             progress=progress,
             user=request.user,
             award_xp=False,
             step_action_word="skipped",
+            increment_skip_count=True,
         )
+        if result.get("status_code"):
+            return Response({"error": result["error"]}, status=result["status_code"])
         return Response(result)
 
     @action(detail=True, methods=["post"], url_path="submit-picture-compare")
@@ -406,6 +502,55 @@ class TourProgressViewSet(
                     "Code verified. You can continue."
                     if accepted
                     else "Code does not match. Try again."
+                ),
+                "accepted": accepted,
+                "is_tour_complete": False,
+                "new_step_id": current_step.id,
+            }
+        )
+
+    @action(detail=True, methods=["post"], url_path="submit-trivia-answer")
+    def submit_trivia_answer(self, request, pk=None):
+        progress = self.get_object()
+
+        if progress.status == TourProgress.COMPLETED:
+            return Response({"error": "Tour is already completed"}, status=400)
+
+        current_step = progress.current_step
+        if not current_step or not hasattr(current_step, "puzzle"):
+            return Response(
+                {"error": "Current step does not have a puzzle."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        puzzle = current_step.puzzle
+        if puzzle.puzzle_type != Puzzle.TRIVIA:
+            return Response(
+                {"error": "Current puzzle is not a TRIVIA puzzle."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        submitted_answer = str(request.data.get("answer", "")).strip()
+        if not submitted_answer:
+            return Response(
+                {"error": "answer is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        accepted = submitted_answer == str(puzzle.correct_answer).strip()
+        PuzzleAttempt.objects.create(
+            puzzle=puzzle,
+            user=request.user,
+            progress=progress,
+            accepted=accepted,
+        )
+
+        return Response(
+            {
+                "status": (
+                    "Answer verified. You can continue."
+                    if accepted
+                    else "Answer is not correct. Try again."
                 ),
                 "accepted": accepted,
                 "is_tour_complete": False,

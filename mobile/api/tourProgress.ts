@@ -22,6 +22,7 @@ export type StepActionResponse = {
   status: string;
   is_tour_complete: boolean;
   new_step_id: number | null;
+  awarded_xp: number;
 };
 
 export type PictureCompareResponse = StepActionResponse & {
@@ -32,6 +33,10 @@ export type PictureCompareResponse = StepActionResponse & {
 };
 
 export type ArCodeResponse = StepActionResponse & {
+  accepted: boolean;
+};
+
+export type TriviaAnswerResponse = StepActionResponse & {
   accepted: boolean;
 };
 
@@ -158,6 +163,23 @@ export async function submitArCode(
     method: 'POST',
     url: `/api/tour-progress/${id}/submit-ar-code/`,
     data: { code },
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Submit a selected answer for a TRIVIA puzzle on the current step.
+ */
+export async function submitTriviaAnswer(
+  id: number,
+  answer: string,
+  signal?: AbortSignal
+): Promise<TriviaAnswerResponse> {
+  return apiRequest<TriviaAnswerResponse, { answer: string }>({
+    method: 'POST',
+    url: `/api/tour-progress/${id}/submit-trivia-answer/`,
+    data: { answer },
     auth: true,
     signal,
   });
