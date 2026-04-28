@@ -155,8 +155,8 @@ export default function ForgotPasswordScreen() {
           style={[
             styles.hero,
             {
-              height: HERO_HEIGHT,
-              paddingTop: insets.top,
+              height: HERO_HEIGHT + insets.top,
+              paddingTop: insets.top + Spacing.lg,
               backgroundColor: theme.headerGradientTop,
             },
             { opacity: heroOpacity, transform: [{ translateY: heroY }] },
@@ -168,7 +168,7 @@ export default function ForgotPasswordScreen() {
           />
           <AuthLanguageSelector style={{ top: insets.top + 12 }} />
           <View style={styles.logoArea}>
-            <AuthLogo />
+            <AuthLogo variant="compact" />
             <Text style={styles.appName}>ODYSSEY</Text>
             <Text style={styles.tagline}>{t('auth.resetTagline')}</Text>
           </View>

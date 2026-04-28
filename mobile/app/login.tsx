@@ -132,8 +132,8 @@ export default function LoginScreen() {
           style={[
             styles.hero,
             {
-              height: HERO_HEIGHT,
-              paddingTop: insets.top,
+              height: HERO_HEIGHT + insets.top,
+              paddingTop: insets.top + Spacing.lg,
               backgroundColor: theme.headerGradientTop,
             },
             { opacity: heroOpacity, transform: [{ translateY: heroY }] },
@@ -148,7 +148,7 @@ export default function LoginScreen() {
 
           {/* Branding */}
           <View style={styles.logoArea}>
-            <AuthLogo />
+            <AuthLogo variant="compact" />
             <Text style={styles.appName}>ODYSSEY</Text>
             <Text style={styles.tagline}>{t('auth.tagline')}</Text>
           </View>
