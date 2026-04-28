@@ -55,9 +55,7 @@ export default function AITourCreation() {
   };
 
   const isFormValid =
-    formData.country.trim() !== '' &&
-    formData.state.trim() !== '' &&
-    formData.theme.trim() !== '';
+    formData.country.trim() !== '' && formData.state.trim() !== '' && formData.theme.trim() !== '';
 
   const handleGenerate = async () => {
     if (!isFormValid) {

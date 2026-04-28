@@ -49,7 +49,9 @@ export async function fetchStateSuggestions(
 
   const states = effectiveCountryCode
     ? State.getStatesOfCountry(effectiveCountryCode) || []
-    : Country.getAllCountries().flatMap((country) => State.getStatesOfCountry(country.isoCode) || []);
+    : Country.getAllCountries().flatMap(
+        (country) => State.getStatesOfCountry(country.isoCode) || []
+      );
 
   const seen = new Set<string>();
   const results: StateSuggestion[] = [];
