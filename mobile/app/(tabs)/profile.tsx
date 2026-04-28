@@ -17,6 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 
+import { CopilotProvider, CopilotStep, walkthroughable } from 'react-native-copilot';
+
 import ProfileHeaderComp from '@/components/ProfileComponents/ProfileHeaderComp';
 import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
 import ProfileAddFriendsButton from '@/components/ProfileComponents/ProfileAddFriendsButton';
@@ -34,6 +36,11 @@ import { consumeProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { ScrollView } from 'react-native';
+import { useAutoStartTour } from '@/hooks/useAutoStartHook';
+import TutorialsModal from '../profile/tutorials';
+import CustomTooltip from '@/components/TutorialComponents/CustomTooltip';
+import CustomStepNumber from '@/components/TutorialComponents/CustomStepNumber';
 import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -43,6 +50,8 @@ const GUEST_HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEI
 async function getAccessToken() {
   return await SecureStore.getItemAsync('userToken');
 }
+
+const WalkthroughableView = walkthroughable(View);
 
 // ─────────────────────────────────────────────────────────
 // Skeleton shimmer
@@ -338,7 +347,7 @@ const guestStyles = StyleSheet.create({
 // Main component
 // ─────────────────────────────────────────────────────────
 
-export default function Profile() {
+function ProfileContent() {
   const [curUser, setCurUser] = useState<User | null>(null);
   const [badgesCount, setBadgesCount] = useState(0);
   const [badges, setBadges] = useState<UserBadge[]>([]);
@@ -349,6 +358,7 @@ export default function Profile() {
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showTutorials, setShowTutorials] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const lastRetryKeyRef = useRef(retryKey);
@@ -360,6 +370,9 @@ export default function Profile() {
   const theme = Colors[colorScheme];
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  useAutoStartTour('PROFILE_TUTORIAL', !loading && !!curUser, scrollViewRef);
 
   const stickyOpacity = scrollY.interpolate({
     inputRange: [HEADER_HEIGHT * 0.5, HEADER_HEIGHT * 0.7],
@@ -478,6 +491,8 @@ export default function Profile() {
     onAvatarPress: () => setShowAvatarModal(true),
     onSettingsPress: () => setShowSettings(true),
     settingsAccessibilityLabel: t('tabs.settings'),
+    onTutorialsPress: () => setShowTutorials(true),
+    tutorialsAccessibilityLabel: t('tabs.tutorials'), //TODO: add this to translations
   };
 
   const profileStats = {
@@ -533,6 +548,7 @@ export default function Profile() {
       </Animated.View>
 
       <Animated.ScrollView
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingBottom:
@@ -543,8 +559,12 @@ export default function Profile() {
           useNativeDriver: false,
         })}
       >
-        {/* ─── Header ──────────────────────────────── */}
-        <ProfileHeaderComp {...profileHeader} scrollY={scrollY} />
+        <CopilotStep text={t('tutorial.profile.step1text')} order={1} name="profileIntro">
+          <WalkthroughableView>
+            {/* ─── Header ──────────────────────────────── */}
+            <ProfileHeaderComp {...profileHeader} scrollY={scrollY} />
+          </WalkthroughableView>
+        </CopilotStep>
 
         {/* ─── Stats (overlaps header) ─────────────── */}
         <ProfileStatsComp
@@ -554,16 +574,28 @@ export default function Profile() {
         />
 
         {/* ─── Actions ─────────────────────────────── */}
-        <View style={styles.actionsRow}>
-          <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
-          <ProfileFollowingFeedButton />
-        </View>
+        <CopilotStep text={t('tutorial.profile.step4text')} order={4} name="friendsStep">
+          <WalkthroughableView>
+            <View style={styles.actionsRow}>
+              <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
+              <ProfileFollowingFeedButton />
+            </View>
+          </WalkthroughableView>
+        </CopilotStep>
 
         {/* ─── Badges ──────────────────────────────── */}
-        <ProfileBadgesContainer badges={formattedBadges} title={t('profile.badges')} />
+        <CopilotStep text={t('tutorial.profile.step5text')} order={5} name="badgeStep">
+          <WalkthroughableView>
+            <ProfileBadgesContainer badges={formattedBadges} title={t('profile.badges')} />
+          </WalkthroughableView>
+        </CopilotStep>
 
         {/* ─── My Tours ────────────────────────────── */}
-        <ProfileToursContainer />
+        <CopilotStep text={t('tutorial.profile.step6text')} order={6} name="tourCreatorStep">
+          <WalkthroughableView>
+            <ProfileToursContainer />
+          </WalkthroughableView>
+        </CopilotStep>
       </Animated.ScrollView>
 
       {/* ─── Modals ────────────────────────────────── */}
@@ -592,6 +624,10 @@ export default function Profile() {
         onRequestClose={() => setShowSettings(false)}
       >
         <SettingsScreen onClose={() => setShowSettings(false)} onLogout={handleLogout} />
+      </Modal>
+
+      <Modal visible={showTutorials} transparent animationType="fade">
+        <TutorialsModal onClose={() => setShowTutorials(false)} />
       </Modal>
     </View>
   );
@@ -625,6 +661,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: Spacing.lg + 2,
+    marginBottom: Spacing.sm,
     gap: Spacing.md,
   },
 });
@@ -664,3 +701,27 @@ const errorStyles = StyleSheet.create({
     lineHeight: 21,
   },
 });
+
+export default function Profile() {
+  const colorTheme = useColorTheme();
+
+  return (
+    <CopilotProvider
+      margin={8}
+      animated={true}
+      overlay="svg"
+      tooltipComponent={CustomTooltip}
+      stepNumberComponent={CustomStepNumber}
+      animationDuration={600}
+      arrowColor={Colors[colorTheme].primary}
+      tooltipStyle={{
+        backgroundColor: 'transparent',
+        padding: 0,
+        borderRadius: 0,
+      }}
+      backdropColor="rgba(10, 20, 40, 0.9)"
+    >
+      <ProfileContent />
+    </CopilotProvider>
+  );
+}
