@@ -55,7 +55,7 @@ export default function AITourCreation() {
   };
 
   const isFormValid =
-    formData.country.trim() !== '' && formData.city.trim() !== '' && formData.theme.trim() !== '';
+    formData.country.trim() !== '' && formData.state.trim() !== '' && formData.theme.trim() !== '';
 
   const handleGenerate = async () => {
     if (!isFormValid) {
@@ -67,7 +67,7 @@ export default function AITourCreation() {
 
     try {
       const response = await generateAITour({
-        city: formData.city.trim(),
+        city: formData.state.trim(),
         country: formData.country.trim(),
         country_code: formData.countryCode.trim(),
         theme: formData.theme.trim(),
@@ -124,33 +124,33 @@ export default function AITourCreation() {
                 updateFormData({
                   country: selectedCountry.value,
                   countryCode: selectedCountry.countryCode || '',
-                  city: '',
-                  cityLatitude: undefined,
-                  cityLongitude: undefined,
+                  state: '',
+                  stateLatitude: undefined,
+                  stateLongitude: undefined,
                 })
               }
             />
           </FormInputGroup>
 
-          <FormInputGroup label={t('aiTour.city')} required>
+          <FormInputGroup label={t('aiTour.state')} required>
             <FormLocationSelect
-              value={formData.city}
+              value={formData.state}
               disabled={!formData.country}
               placeholder={
                 formData.country
-                  ? t('creation.details.cityPlaceholder')
-                  : t('creation.details.cityDisabledPlaceholder', {
+                  ? t('creation.details.statePlaceholder')
+                  : t('creation.details.stateDisabledPlaceholder', {
                       defaultValue: 'Select a country first',
                     })
               }
-              types="(cities)"
+              types="(states)"
               countryCode={formData.countryCode}
               countryName={formData.country}
-              onSelect={(selectedCity) =>
+              onSelect={(selectedState) =>
                 updateFormData({
-                  city: selectedCity.value,
-                  cityLatitude: selectedCity.latitude,
-                  cityLongitude: selectedCity.longitude,
+                  state: selectedState.value,
+                  stateLatitude: selectedState.latitude,
+                  stateLongitude: selectedState.longitude,
                 })
               }
             />

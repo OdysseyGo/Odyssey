@@ -117,33 +117,33 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
             onUpdate({
               country: selectedCountry.value,
               countryCode: selectedCountry.countryCode || '',
-              city: '',
-              cityLatitude: undefined,
-              cityLongitude: undefined,
+              state: '',
+              stateLatitude: undefined,
+              stateLongitude: undefined,
             })
           }
         />
       </FormInputGroup>
 
-      <FormInputGroup label={t('creation.details.city')} required>
+      <FormInputGroup label={t('creation.details.state')} required>
         <FormLocationSelect
-          value={tourData.city}
+          value={tourData.state}
           disabled={!tourData.country}
           placeholder={
             tourData.country
-              ? t('creation.details.cityPlaceholder')
-              : t('creation.details.cityDisabledPlaceholder', {
+              ? t('creation.details.statePlaceholder')
+              : t('creation.details.stateDisabledPlaceholder', {
                   defaultValue: 'Select a country first',
                 })
           }
-          types="(cities)"
+          types="(states)"
           countryCode={tourData.countryCode}
           countryName={tourData.country}
-          onSelect={(selectedCity) =>
+          onSelect={(selectedState) =>
             onUpdate({
-              city: selectedCity.value,
-              cityLatitude: selectedCity.latitude,
-              cityLongitude: selectedCity.longitude,
+              state: selectedState.value,
+              stateLatitude: selectedState.latitude,
+              stateLongitude: selectedState.longitude,
             })
           }
         />
