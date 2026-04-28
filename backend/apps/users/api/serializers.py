@@ -5,6 +5,16 @@ from apps.users.models.SearchHistory import SearchHistory
 from apps.users.models.User import User
 
 
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+
+class LoginResponseSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    refresh = serializers.CharField()
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

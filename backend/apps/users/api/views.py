@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate  # login direkt
 from django.db.models import Avg, F, QuerySet  # F dbden çıkarmadan yazıyon
+from drf_spectacular.utils import extend_schema
 from django.utils import timezone
 from rest_framework import filters
 from rest_framework.decorators import action
@@ -17,9 +18,12 @@ from apps.users.models import Follow, SearchHistory, User
 from .serializers import (
     FollowingFeedSerializer,
     FollowSerializer,
+    LoginResponseSerializer,
+    LoginSerializer,
     SearchHistorySerializer,
     UserSerializer,
 )
+
 
 
 class UserViewSet(ModelViewSet):
@@ -47,6 +51,7 @@ class UserViewSet(ModelViewSet):
             }
         )
 
+    @extend_schema(request=LoginSerializer, responses={200: LoginResponseSerializer})
     @action(detail=False, methods=["post"], url_path="login")
     def login(self, request):
         username = request.data.get("username")
