@@ -8,6 +8,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { AUTH_LANGUAGE_OPTIONS } from './AuthLanguageSelector.config';
 import { authLanguageSelectorStyles as styles } from './AuthLanguageSelector.styles';
+import { SYSTEM_LANGUAGE_PREFERENCE } from '@/i18n/languageConfig';
 
 type AuthLanguageSelectorProps = {
   style?: StyleProp<ViewStyle>;
@@ -17,11 +18,13 @@ export default function AuthLanguageSelector({ style }: AuthLanguageSelectorProp
   const colorScheme = useColorTheme();
   const colors = Colors[colorScheme];
   const { t } = useTranslation();
-  const { language, setLanguage } = useLanguage();
+  const { language, languagePreference, setLanguage } = useLanguage();
   const [modalVisible, setModalVisible] = useState(false);
 
   const currentLanguage =
-    AUTH_LANGUAGE_OPTIONS.find((supportedLanguage) => supportedLanguage.code === language) ??
+    AUTH_LANGUAGE_OPTIONS.find(
+      (supportedLanguage) => supportedLanguage.code === languagePreference
+    ) ??
     AUTH_LANGUAGE_OPTIONS[0];
 
   return (
@@ -34,7 +37,11 @@ export default function AuthLanguageSelector({ style }: AuthLanguageSelectorProp
         accessibilityLabel={t('settings.selectLanguage')}
       >
         <Globe2 size={16} color="#FFFFFF" />
-        <Text style={styles.selectorText}>{currentLanguage.code.toUpperCase()}</Text>
+        <Text style={styles.selectorText}>
+          {currentLanguage.code === SYSTEM_LANGUAGE_PREFERENCE
+            ? language.toUpperCase()
+            : currentLanguage.code.toUpperCase()}
+        </Text>
         <ChevronDown size={14} color="rgba(255,255,255,0.9)" />
       </TouchableOpacity>
 
@@ -51,7 +58,7 @@ export default function AuthLanguageSelector({ style }: AuthLanguageSelectorProp
             </Text>
 
             {AUTH_LANGUAGE_OPTIONS.map((supportedLanguage) => {
-              const isSelected = language === supportedLanguage.code;
+              const isSelected = languagePreference === supportedLanguage.code;
               return (
                 <Pressable
                   key={supportedLanguage.code}
