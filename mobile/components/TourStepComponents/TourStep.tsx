@@ -698,7 +698,10 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
       return;
     }
 
-    const band = Math.max(0, Math.floor(delta / COMPASS_FEEDBACK_INTERVAL_DEGREES) - COMPASS_FEEDBACK_BAND_SHIFT);
+    const band = Math.max(
+      0,
+      Math.floor(delta / COMPASS_FEEDBACK_INTERVAL_DEGREES) - COMPASS_FEEDBACK_BAND_SHIFT
+    );
     const clampedBand = Math.min(band, COMPASS_HAPTIC_COOLDOWN_MS_BY_BAND.length - 1);
     if (now >= nextPulseAtMsRef.current) {
       if (clampedBand <= 1) {
