@@ -35,6 +35,7 @@ class GenerateTourView(APIView):
                 custom_prompt=serializer.validated_data.get("additional_details", ""),
                 include_ar=serializer.validated_data.get("include_ar", False),
                 creator=request.user,
+                request=request,
             )
 
             return Response(

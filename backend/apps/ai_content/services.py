@@ -65,6 +65,7 @@ class GeminiService:
         country: str = "",
         country_code: str = "",
         include_ar: bool = False,
+        request=None,
     ) -> Tour:
         """
         Generate a complete tour with steps and puzzles using RAG.
@@ -233,7 +234,7 @@ class GeminiService:
                 )
 
                 if resolved_ar:
-                    self._create_ar_puzzle(step, resolved_ar)
+                    self._create_ar_puzzle(step, resolved_ar, request=request)
                     continue
 
                 # Create puzzle if present (for PUZZLE and HYBRID modes)
@@ -823,7 +824,7 @@ CRITICAL AR RULES:
         }
 
     @staticmethod
-    def _create_ar_puzzle(step: TourStep, resolved: dict) -> None:
+    def _create_ar_puzzle(step: TourStep, resolved: dict, request=None) -> None:
         ar_model: ARModel = resolved["ar_model"]
         puzzle = Puzzle.objects.create(
             step=step,
@@ -836,7 +837,7 @@ CRITICAL AR RULES:
         )
         ArPuzzleDetail.objects.create(
             puzzle=puzzle,
-            scene_asset_url=ar_model.get_scene_asset_url(),
+            scene_asset_url=ar_model.get_scene_asset_url(request=request),
             metadata={
                 "version": 1,
                 "model_id": ar_model.id,
