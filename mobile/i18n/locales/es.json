@@ -445,9 +445,14 @@
     "tourProgress": "Progreso del tour",
     "back": "Atrás",
     "next": "Siguiente",
-    "finish": "Finalizar"
+    "finish": "Finalizar",
+    "answerConfirmTitle": "¿Confirmar esta respuesta?",
+    "answerConfirmMessage": "¿Seguro? Las respuestas incorrectas pueden reducir el progreso de tu insignia.",
+    "answerConfirmAction": "Responder"
   },
   "common": {
+    "cancel": "Cancelar",
+    "ok": "OK",
     "error": "Error",
     "syncError": "No se pudo sincronizar el progreso con el servidor."
   },
@@ -481,7 +486,14 @@
       "stepOf": "Paso {{current}} de {{total}}",
       "end": "Finalizar",
       "skip": "SALTAR",
-      "route": "Ruta",
+      "skipConfirmTitle": "¿Saltar este paso?",
+      "skipConfirmMessage": "No ganarás XP por este paso. Esta acción es irreversible.",
+      "skipConfirmAction": "Saltar paso",
+      "skipBadgeReduction": "Saltar puede reducir el progreso de tu insignia en este tour.",
+      "badgeStatusGood": "Insignia segura",
+      "badgeStatusRisk": "Insignia en riesgo",
+      "badgeStatusReduced": "Insignia reducida",
+      "route": "Obtener indicaciones",
       "directions": "Indicaciones",
       "openIn": "Abrir esta parada en",
       "appleMaps": "Apple Maps",

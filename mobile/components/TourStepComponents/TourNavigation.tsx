@@ -1,5 +1,5 @@
 import { View, Text, Pressable, Modal, Alert, Platform } from 'react-native';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import getStyles from './TourNavigation.styles';
 import {
   TourNavigationProps,
-  ProgressBarProps,
   NavigationArrowsProps,
   canNavigateForward,
   canNavigateBackward,
@@ -16,45 +15,7 @@ import TourStepComponent from './TourStep';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { openExternalMapsDirections, type ExternalMapsProvider } from '@/utils/externalMaps';
-
-function ProgressBar({ totalSteps, currentStep, solvedSteps, stepIds }: ProgressBarProps) {
-  const theme = useColorTheme();
-  const styles = useMemo(() => getStyles(theme), [theme]);
-  const { t } = useTranslation();
-
-  const progressPercent = totalSteps > 1 ? (currentStep / (totalSteps - 1)) * 100 : 0;
-
-  return (
-    <View style={styles.progressContainer}>
-      <View style={styles.progressHeader}>
-        <Text style={styles.progressText}>{t('tourStep.tourProgress')}</Text>
-        <Text style={styles.progressText}>
-          {currentStep + 1} / {totalSteps}
-        </Text>
-      </View>
-
-      <View style={styles.progressBarBackground}>
-        <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
-      </View>
-
-      <View style={styles.progressDotsContainer}>
-        {stepIds.map((stepId, index) => {
-          const dotStyle: object[] = [styles.progressDot];
-
-          if (index === currentStep) {
-            dotStyle.push(styles.progressDotCurrent);
-          } else if (solvedSteps.has(stepId) || index < currentStep) {
-            dotStyle.push(styles.progressDotCompleted);
-          } else {
-            dotStyle.push(styles.progressDotLocked);
-          }
-
-          return <View key={stepId} style={dotStyle} />;
-        })}
-      </View>
-    </View>
-  );
-}
+import { useActiveTour } from '@/contexts/ActiveTourContext';
 
 function NavigationArrows({
   canGoBack,
@@ -70,17 +31,27 @@ function NavigationArrows({
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const { t } = useTranslation();
+  const nextButtonIsPrimary = canGoForward && !isForwardLocked;
+  const nextContentColor = nextButtonIsPrimary
+    ? Colors[theme].background
+    : canGoForward
+      ? Colors[theme].text
+      : Colors[theme].iconDisabled;
 
   return (
     <View style={styles.navigationContainer}>
       <Pressable
-        style={[styles.navButton, !canGoBack && styles.navButtonDisabled]}
+        style={[
+          styles.navButton,
+          styles.navButtonSecondary,
+          !canGoBack && styles.navButtonDisabled,
+        ]}
         onPress={onBack}
         disabled={!canGoBack}
       >
         <MaterialCommunityIcons
           name="chevron-left"
-          size={24}
+          size={22}
           color={canGoBack ? Colors[theme].iconActive : Colors[theme].iconDisabled}
         />
         <Text style={[styles.navButtonText, !canGoBack && styles.navButtonTextDisabled]}>
@@ -110,13 +81,20 @@ function NavigationArrows({
       <Pressable
         style={[
           styles.navButton,
+          nextButtonIsPrimary && styles.navButtonPrimary,
           !canGoForward && styles.navButtonDisabled,
           isForwardLocked && styles.navButtonLocked,
         ]}
         onPress={onForward}
         disabled={!canGoForward}
       >
-        <Text style={[styles.navButtonText, !canGoForward && styles.navButtonTextDisabled]}>
+        <Text
+          style={[
+            styles.navButtonText,
+            nextButtonIsPrimary && styles.navButtonPrimaryText,
+            !canGoForward && styles.navButtonTextDisabled,
+          ]}
+        >
           {isLastStep ? t('tourStep.finish', 'Finish') : t('tourStep.next')}
         </Text>
         {isForwardLocked ? (
@@ -127,11 +105,7 @@ function NavigationArrows({
             style={styles.lockedIcon}
           />
         ) : (
-          <MaterialCommunityIcons
-            name="chevron-right"
-            size={24}
-            color={canGoForward ? Colors[theme].iconActive : Colors[theme].iconDisabled}
-          />
+          <MaterialCommunityIcons name="chevron-right" size={22} color={nextContentColor} />
         )}
       </Pressable>
     </View>
@@ -152,7 +126,14 @@ export default function TourNavigation({
 }: TourNavigationProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const colors = Colors[theme];
   const [isDirectionsModalVisible, setIsDirectionsModalVisible] = useState(false);
+  const [hasAnsweredCurrentStep, setHasAnsweredCurrentStep] = useState(false);
+  const { skipCount, wrongAnswerCount } = useActiveTour();
+
+  useEffect(() => {
+    setHasAnsweredCurrentStep(false);
+  }, [currentStepIndex]);
   //console.log('Rendering TourNavigation - currentStepIndex:', tour);
   const currentStep = tour.steps[currentStepIndex];
   const isSolved = solvedSteps.has(currentStep.id);
@@ -164,18 +145,32 @@ export default function TourNavigation({
   const canGoBack = canNavigateBackward(currentStepIndex);
   const { t } = useTranslation();
 
+  const hasAnsweredWrong = hasAnsweredCurrentStep && !isSolved;
+
   const isForwardLocked =
-    (currentStep.type === 'puzzle' && !isSolved) || (requiresLocation && !isLocationConfirmed);
+    (currentStep.type === 'puzzle' && !isSolved && !hasAnsweredWrong) ||
+    (requiresLocation && !isLocationConfirmed);
 
   const canGoForward = isLastStep
     ? !isForwardLocked
-    : canNavigateForward(
-        currentStep,
-        currentStepIndex,
-        tour.steps.length,
-        solvedSteps,
-        locationConfirmedSteps
-      );
+    : hasAnsweredWrong
+      ? currentStepIndex < tour.steps.length - 1 && !isForwardLocked
+      : canNavigateForward(
+          currentStep,
+          currentStepIndex,
+          tour.steps.length,
+          solvedSteps,
+          locationConfirmedSteps
+        );
+  const penaltyCount = skipCount + wrongAnswerCount;
+  const skipBadgeColor =
+    penaltyCount === 0 ? '#80ED99' : penaltyCount === 1 ? colors.star : colors.error;
+  const badgeStatusLabel =
+    penaltyCount === 0
+      ? t('map.activeTour.badgeStatusGood')
+      : penaltyCount === 1
+        ? t('map.activeTour.badgeStatusRisk')
+        : t('map.activeTour.badgeStatusReduced');
 
   const handleSolve = () => {
     onStepSolved(currentStep.id);
@@ -235,62 +230,48 @@ export default function TourNavigation({
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Pressable style={styles.endTourButton} onPress={onSkipStep}>
-          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <MaterialCommunityIcons name="skip-forward" size={20} color={Colors[theme].primary} />
-
-            <Text
-              style={{
-                fontSize: 10,
-                color: Colors[theme].primary,
-                fontWeight: 'bold',
-                marginTop: -2,
-              }}
-            >
-              {t('map.activeTour.skip')}
-            </Text>
+        <View style={styles.actionGroup}>
+          <View style={styles.badgeStatusCard}>
+            <View style={[styles.badgeStatusDot, { backgroundColor: skipBadgeColor }]} />
+            <Text style={styles.badgeStatusText}>{badgeStatusLabel}</Text>
           </View>
-        </Pressable>
-        <Pressable
-          style={styles.endTourButton}
-          onPress={() => setIsDirectionsModalVisible(true)}
-          accessibilityRole="button"
-          accessibilityLabel={t('map.activeTour.directions')}
-        >
-          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <MaterialCommunityIcons name="directions" size={20} color={Colors[theme].primary} />
-
-            <Text
-              style={{
-                fontSize: 10,
-                color: Colors[theme].primary,
-                fontWeight: 'bold',
-                marginTop: -2,
-              }}
-            >
-              {t('map.activeTour.route')}
-            </Text>
-          </View>
-        </Pressable>
-        <ProgressBar
-          totalSteps={tour.steps.length}
-          currentStep={currentStepIndex}
-          solvedSteps={solvedSteps}
-          stepIds={tour.steps.map((s) => s.id)}
-        />
+          <Pressable
+            style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
+            onPress={onSkipStep}
+          >
+            <MaterialCommunityIcons name="skip-forward" size={19} color={Colors[theme].primary} />
+            <Text style={styles.actionLabel}>{t('map.activeTour.skip')}</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
+            onPress={() => setIsDirectionsModalVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t('map.activeTour.directions')}
+          >
+            <MaterialCommunityIcons name="directions" size={19} color={Colors[theme].primary} />
+            <Text style={styles.actionLabel}>{t('map.activeTour.route')}</Text>
+          </Pressable>
+        </View>
         {onEndTour && (
-          <Pressable style={styles.endTourButton} onPress={onEndTour}>
-            <MaterialCommunityIcons
-              name="close-circle-outline"
-              size={20}
-              color={Colors[theme].error}
-            />
+          <Pressable
+            style={({ pressed }) => [
+              styles.closeTourButton,
+              pressed && styles.closeTourButtonPressed,
+            ]}
+            onPress={onEndTour}
+          >
+            <MaterialCommunityIcons name="close" size={20} color={Colors[theme].error} />
           </Pressable>
         )}
       </View>
 
       <View style={styles.stepContentContainer}>
-        <TourStepComponent step={currentStep} isSolved={isSolved} onSolve={handleSolve} />
+        <TourStepComponent
+          step={currentStep}
+          isSolved={isSolved}
+          onSolve={handleSolve}
+          onAnswered={() => setHasAnsweredCurrentStep(true)}
+        />
       </View>
 
       <NavigationArrows

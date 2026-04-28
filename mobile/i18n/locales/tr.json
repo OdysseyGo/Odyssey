@@ -504,9 +504,14 @@
     "tourProgress": "Tur İlerlemesi",
     "back": "Geri",
     "next": "İleri",
-    "finish": "Bitir"
+    "finish": "Bitir",
+    "answerConfirmTitle": "Bu cevabı kilitle?",
+    "answerConfirmMessage": "Emin misiniz? Yanlış cevaplar rozet ilerlemenizi azaltabilir.",
+    "answerConfirmAction": "Cevapla"
   },
   "common": {
+    "cancel": "İptal",
+    "ok": "Tamam",
     "error": "Hata",
     "syncError": "İlerleme sunucuyla senkronize edilemedi."
   },
@@ -540,7 +545,14 @@
       "stepOf": "Adım {{current}} / {{total}}",
       "end": "Bitir",
       "skip": "ATLA",
-      "route": "Rota",
+      "skipConfirmTitle": "Bu adımı atla?",
+      "skipConfirmMessage": "Bu adım için XP kazanmayacaksınız. Bu işlem geri alınamaz.",
+      "skipConfirmAction": "Adımı atla",
+      "skipBadgeReduction": "Atlamak bu turdaki rozet ilerlemenizi azaltabilir.",
+      "badgeStatusGood": "Rozet güvende",
+      "badgeStatusRisk": "Rozet riskte",
+      "badgeStatusReduced": "Rozet azaldı",
+      "route": "Yol tarifi al",
       "directions": "Yol Tarifi",
       "openIn": "Bu durağı burada aç",
       "appleMaps": "Apple Maps",

@@ -11,70 +11,85 @@ export default function getStyles(theme: ThemeName) {
 
     headerRow: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
-    },
-
-    endTourButton: {
-      padding: Spacing.sm,
-      marginTop: Spacing.sm,
-      marginRight: Spacing.sm,
-    },
-
-    progressContainer: {
-      flex: 1,
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-    },
-    progressHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: Spacing.xs,
+      paddingHorizontal: Spacing.md,
+      paddingTop: Spacing.sm,
+      paddingBottom: Spacing.xs,
+      gap: Spacing.sm,
+      backgroundColor: color.cardSurface,
     },
-    progressText: {
-      fontSize: 12,
-      color: color.subText,
-      fontWeight: '500',
-    },
-    progressBarBackground: {
-      height: 6,
-      backgroundColor: color.foregroundSecondary,
-      borderRadius: 3,
-      overflow: 'hidden',
-    },
-    progressBarFill: {
-      height: '100%',
-      backgroundColor: color.primary,
-      borderRadius: 3,
-    },
-    progressDotsContainer: {
+
+    actionGroup: {
+      flex: 1,
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginTop: Spacing.xs,
-      paddingHorizontal: 2,
+      alignItems: 'center',
+      gap: Spacing.sm,
     },
-    progressDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: color.foregroundSecondary,
+    badgeStatusCard: {
+      minHeight: 42,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.sm,
+      borderRadius: Spacing.md,
+      borderWidth: 1,
+      borderColor: color.borderLight,
+      gap: Spacing.xs,
     },
-    progressDotCurrent: {
-      backgroundColor: color.secondary,
-      transform: [{ scale: 1.2 }],
+    badgeStatusDot: {
+      width: 9,
+      height: 9,
+      borderRadius: Spacing.borderRadiusFull,
     },
-    progressDotCompleted: {
-      backgroundColor: color.primary,
+    badgeStatusText: {
+      maxWidth: 70,
+      color: color.subText,
+      fontSize: 10,
+      fontWeight: '800',
+      lineHeight: 12,
+      textTransform: 'uppercase',
     },
-    progressDotLocked: {
-      backgroundColor: color.foregroundSecondary,
+    actionButton: {
+      flex: 1,
+      minHeight: 42,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.sm,
+      borderRadius: Spacing.md,
+      backgroundColor: color.cardSurface,
+      borderWidth: 1,
+      borderColor: color.borderLight,
+      gap: Spacing.xs,
+    },
+    actionButtonPressed: {
+      backgroundColor: color.primaryMuted,
+    },
+    actionLabel: {
+      color: color.primary,
+      fontSize: 12,
+      fontWeight: '800',
+    },
+    closeTourButton: {
+      width: 42,
+      height: 42,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: Spacing.md,
+      backgroundColor: color.cardSurface,
+      borderWidth: 1,
+      borderColor: theme === 'dark' ? 'rgba(220, 38, 38, 0.26)' : 'rgba(220, 38, 38, 0.16)',
+    },
+    closeTourButtonPressed: {
+      backgroundColor: theme === 'dark' ? 'rgba(220, 38, 38, 0.12)' : 'rgba(220, 38, 38, 0.07)',
     },
 
     stepContentContainer: {
       flex: 1,
-      paddingTop: Spacing.sm,
+      paddingTop: 0,
       minHeight: 0,
-      maxHeight: '70%',
+      maxHeight: '72%',
     },
 
     navigationContainer: {
@@ -84,19 +99,31 @@ export default function getStyles(theme: ThemeName) {
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.md,
+      paddingTop: Spacing.md,
+      paddingBottom: Spacing.lg,
       marginBottom: Spacing.sm,
       borderTopWidth: 1,
-      borderTopColor: color.foregroundSecondary,
+      borderTopColor: color.borderLight,
+      backgroundColor: color.cardSurface,
     },
     navButton: {
       flexDirection: 'row',
       alignItems: 'center',
+      minWidth: 108,
+      justifyContent: 'center',
       paddingVertical: Spacing.sm,
-      paddingHorizontal: Spacing.md,
-      borderRadius: Spacing.borderRadius,
-      backgroundColor: color.foregroundSecondary,
+      paddingHorizontal: Spacing.lg,
+      borderRadius: Spacing.md,
+      borderWidth: 1,
+      borderColor: color.borderLight,
       gap: Spacing.xs,
+    },
+    navButtonSecondary: {
+      backgroundColor: 'transparent',
+    },
+    navButtonPrimary: {
+      borderColor: color.primary,
+      backgroundColor: color.primary,
     },
     navButtonDisabled: {
       opacity: 0.4,
@@ -106,8 +133,11 @@ export default function getStyles(theme: ThemeName) {
     },
     navButtonText: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: '700',
       color: color.text,
+    },
+    navButtonPrimaryText: {
+      color: color.background,
     },
     navButtonTextDisabled: {
       color: color.subText,
@@ -129,11 +159,14 @@ export default function getStyles(theme: ThemeName) {
     },
 
     locationButtonCompact: {
-      padding: Spacing.sm,
-      borderRadius: Spacing.borderRadius,
-      backgroundColor: color.foregroundSecondary,
+      width: 42,
+      height: 42,
+      borderRadius: Spacing.md,
+      backgroundColor: 'transparent',
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: color.borderLight,
     },
     locationButtonConfirmed: {
       backgroundColor: color.primary,

@@ -14,6 +14,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
 import { Camera } from 'expo-camera';
+import { useTranslation } from 'react-i18next';
 
 import getStyles from './TourStep.styles';
 import {
@@ -39,12 +40,33 @@ function StoryStepView({ step }: StoryStepViewProps) {
   const styles = useMemo(() => getStyles(theme), [theme]);
 
   return (
-    <ScrollView style={styles.storyContainer} showsVerticalScrollIndicator={false}>
-      <Text style={styles.storyTitle}>{step.title}</Text>
-      <Text style={styles.storyDescription}>{step.description}</Text>
+    <ScrollView
+      style={styles.storyContainer}
+      contentContainerStyle={styles.stepScrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.stepTypeRow}>
+        <View style={styles.storyHeroHeader}>
+          <MaterialCommunityIcons
+            name="book-open-page-variant"
+            size={22}
+            color={Colors[theme].primary}
+          />
+          <Text style={styles.storyHeroHeaderText}>Story</Text>
+        </View>
+      </View>
+
+      <View style={styles.storyHeader}>
+        <Text style={styles.storyTitle}>{step.title}</Text>
+      </View>
+
+      <View style={styles.contentCard}>
+        <Text style={styles.storyDescription}>{step.description}</Text>
+      </View>
 
       {step.images && step.images.length > 0 && (
         <View style={styles.storyImagesContainer}>
+          <Text style={styles.sectionLabel}>Scenes from this stop</Text>
           {step.images.map((imageUri, index) => (
             <Image
               key={index}
@@ -63,29 +85,39 @@ interface MultipleChoiceViewProps {
   puzzle: MultipleChoicePuzzle;
   isSolved: boolean;
   onSolve: () => void;
+  onAnswered?: () => void;
 }
 
-function MultipleChoiceView({ puzzle, isSolved, onSolve }: MultipleChoiceViewProps) {
+function MultipleChoiceView({ puzzle, isSolved, onSolve, onAnswered }: MultipleChoiceViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
+  const { recordWrongAnswer } = useActiveTour();
 
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
 
   const handleSelectOption = (optionId: string) => {
-    if (isSolved) return;
+    if (isSolved || hasSubmitted) return;
 
-    setSelectedOptionId(optionId);
-    setHasSubmitted(true);
+    Alert.alert(t('tourStep.answerConfirmTitle'), t('tourStep.answerConfirmMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('tourStep.answerConfirmAction'),
+        onPress: () => {
+          setSelectedOptionId(optionId);
+          setHasSubmitted(true);
+          onAnswered?.();
 
-    const selectedOption = puzzle.options.find((opt) => opt.id === optionId);
-    if (selectedOption?.isCorrect) {
-      setIsCorrect(true);
-      onSolve();
-    } else {
-      setIsCorrect(false);
-    }
+          const selectedOption = puzzle.options.find((opt) => opt.id === optionId);
+          if (selectedOption?.isCorrect) {
+            onSolve();
+          } else {
+            recordWrongAnswer();
+          }
+        },
+      },
+    ]);
   };
 
   const getOptionStyle = (optionId: string) => {
@@ -106,8 +138,11 @@ function MultipleChoiceView({ puzzle, isSolved, onSolve }: MultipleChoiceViewPro
   };
 
   return (
-    <View>
-      <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
+    <View style={styles.puzzleBody}>
+      <View style={styles.questionCard}>
+        <Text style={styles.questionLabel}>Question</Text>
+        <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
+      </View>
 
       {puzzle.imageUri && (
         <Image source={{ uri: puzzle.imageUri }} style={styles.puzzleImage} resizeMode="cover" />
@@ -119,7 +154,7 @@ function MultipleChoiceView({ puzzle, isSolved, onSolve }: MultipleChoiceViewPro
             key={option.id}
             style={getOptionStyle(option.id)}
             onPress={() => handleSelectOption(option.id)}
-            disabled={isSolved}
+            disabled={isSolved || hasSubmitted}
           >
             <View
               style={[
@@ -194,8 +229,11 @@ function PictureCompareView({ puzzle, isSolved, onSolve }: PictureCompareViewPro
   };
 
   return (
-    <View>
-      <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
+    <View style={styles.puzzleBody}>
+      <View style={styles.questionCard}>
+        <Text style={styles.questionLabel}>Photo challenge</Text>
+        <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
+      </View>
 
       <Text style={styles.sectionLabel}>Look around and try to find this!</Text>
       {referenceImageUri ? (
@@ -397,11 +435,14 @@ function ArCodeView({ puzzle, isSolved, onSolve }: ArCodeViewProps) {
   };
 
   return (
-    <View>
-      <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
-      <Text style={styles.sectionLabel}>
-        This is an AR puzzle. Open the model, find the hidden secret code, then enter it below.
-      </Text>
+    <View style={styles.puzzleBody}>
+      <View style={styles.questionCard}>
+        <Text style={styles.questionLabel}>AR challenge</Text>
+        <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
+        <Text style={styles.questionHint}>
+          Open the model, find the hidden secret code, then enter it below.
+        </Text>
+      </View>
 
       <Pressable
         style={[
@@ -452,22 +493,51 @@ interface PuzzleStepViewProps {
   step: PuzzleStep;
   isSolved: boolean;
   onSolve: () => void;
+  onAnswered?: () => void;
 }
 
-function PuzzleStepView({ step, isSolved, onSolve }: PuzzleStepViewProps) {
+function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
 
   return (
-    <ScrollView style={styles.puzzleContainer} showsVerticalScrollIndicator={false}>
-      <View style={styles.puzzleTitleContainer}>
-        <Text style={styles.puzzleTitle}>{step.title}</Text>
+    <ScrollView
+      style={styles.puzzleContainer}
+      contentContainerStyle={styles.stepScrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.stepTypeRow}>
+        <View style={styles.puzzleHeader}>
+          <MaterialCommunityIcons name="puzzle" size={22} color={Colors[theme].primary} />
+          <Text style={styles.puzzleHeaderText}>Puzzle</Text>
+        </View>
         {isSolved && (
-          <MaterialCommunityIcons name="check-circle" size={20} color={Colors[theme].primary} />
+          <View style={styles.solvedPill}>
+            <MaterialCommunityIcons
+              name="check-circle"
+              size={14}
+              color={Colors[theme].background}
+            />
+            <Text style={styles.solvedText}>Solved</Text>
+          </View>
         )}
       </View>
 
-      {step.description && <Text style={styles.puzzleDescription}>{step.description}</Text>}
+      {step.description && (
+        <View style={styles.puzzleStoryBlock}>
+          <View style={styles.storyMiniHeader}>
+            <MaterialCommunityIcons
+              name="book-open-page-variant"
+              size={13}
+              color={Colors[theme].primary}
+            />
+            <Text style={styles.storyMiniHeaderText}>Story</Text>
+          </View>
+          <View style={styles.contentCard}>
+            <Text style={styles.puzzleDescription}>{step.description}</Text>
+          </View>
+        </View>
+      )}
 
       {step.puzzle.type === 'multiple-choice' ? (
         <MultipleChoiceView
@@ -475,6 +545,7 @@ function PuzzleStepView({ step, isSolved, onSolve }: PuzzleStepViewProps) {
           puzzle={step.puzzle}
           isSolved={isSolved}
           onSolve={onSolve}
+          onAnswered={onAnswered}
         />
       ) : step.puzzle.type === 'ar-code' ? (
         <ArCodeView key={step.id} puzzle={step.puzzle} isSolved={isSolved} onSolve={onSolve} />
@@ -490,7 +561,7 @@ function PuzzleStepView({ step, isSolved, onSolve }: PuzzleStepViewProps) {
   );
 }
 
-export default function TourStepComponent({ step, isSolved, onSolve }: TourStepProps) {
+export default function TourStepComponent({ step, isSolved, onSolve, onAnswered }: TourStepProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   return (
@@ -498,7 +569,7 @@ export default function TourStepComponent({ step, isSolved, onSolve }: TourStepP
       {step.type === 'story' && <StoryStepView step={step} />}
 
       {step.type === 'puzzle' && (
-        <PuzzleStepView step={step} isSolved={isSolved} onSolve={onSolve} />
+        <PuzzleStepView step={step} isSolved={isSolved} onSolve={onSolve} onAnswered={onAnswered} />
       )}
     </View>
   );

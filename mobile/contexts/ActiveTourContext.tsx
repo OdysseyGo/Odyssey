@@ -21,6 +21,8 @@ interface ActiveTourState {
   solvedSteps: Set<string>;
   locationConfirmedSteps: Set<string>;
   earnedXP: number;
+  skipCount: number;
+  wrongAnswerCount: number;
 }
 
 interface ActiveTourContextType extends ActiveTourState {
@@ -31,6 +33,8 @@ interface ActiveTourContextType extends ActiveTourState {
   setHighestStepIndex: (index: number) => void;
   solveStep: (stepId: string, xpReward?: number) => void;
   confirmLocation: (stepId: string) => void;
+  recordSkip: () => void;
+  recordWrongAnswer: () => void;
   resetProgress: () => void;
 }
 
@@ -43,6 +47,8 @@ const initialState: ActiveTourState = {
   solvedSteps: new Set(),
   locationConfirmedSteps: new Set(),
   earnedXP: 0,
+  skipCount: 0,
+  wrongAnswerCount: 0,
 };
 
 const ActiveTourContext = createContext<ActiveTourContextType | undefined>(undefined);
@@ -170,6 +176,8 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
       solvedSteps: new Set(),
       locationConfirmedSteps: new Set(),
       earnedXP: 0,
+      skipCount: 0,
+      wrongAnswerCount: 0,
     });
   }, []);
 
@@ -203,6 +211,20 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const recordSkip = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      skipCount: prev.skipCount + 1,
+    }));
+  }, []);
+
+  const recordWrongAnswer = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      wrongAnswerCount: prev.wrongAnswerCount + 1,
+    }));
+  }, []);
+
   const resetProgress = useCallback(() => {
     setState((prev) => ({
       ...prev,
@@ -210,6 +232,8 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
       solvedSteps: new Set(),
       locationConfirmedSteps: new Set(),
       earnedXP: 0,
+      skipCount: 0,
+      wrongAnswerCount: 0,
     }));
   }, []);
 
@@ -254,6 +278,8 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         solvedSteps: restoredSolvedSteps,
         locationConfirmedSteps: restoredLocationConfirmedSteps,
         earnedXP: activeProgress.total_xp,
+        skipCount: activeProgress.skip_count,
+        wrongAnswerCount: 0,
       });
     } catch (error: any) {
       if (error instanceof ApiError && error.statusCode === 401) {
@@ -276,6 +302,8 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         setHighestStepIndex,
         solveStep,
         confirmLocation,
+        recordSkip,
+        recordWrongAnswer,
         resetProgress,
       }}
     >
