@@ -1,4 +1,4 @@
-export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE';
+export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE' | 'COMPASS';
 
 export type ARAnchorPosition = {
   x: number;
@@ -29,12 +29,14 @@ export interface Puzzle {
   xp_reward: number;
   referenceImage?: string;
   arConfig?: ARPuzzleConfig;
+  targetHeadingDegrees?: number;
 }
 
 export const PUZZLE_TYPE_OPTIONS = [
   { value: 'TRIVIA', label: 'Trivia', description: 'Multiple choice question' },
   { value: 'AR', label: 'AR Challenge', description: 'Augmented reality experience' },
   { value: 'GYROSCOPE', label: 'Gyroscope', description: 'Motion-based challenge' },
+  { value: 'COMPASS', label: 'Compass', description: 'Find a target heading' },
   {
     value: 'PICTURE_COMPARE',
     label: 'Picture Compare',
@@ -144,6 +146,15 @@ export const isPuzzleValid = (puzzle?: Puzzle): boolean => {
   if (puzzle.puzzle_type === 'TRIVIA') {
     const options = puzzle.options.map((option) => option.trim()).filter(Boolean);
     return options.length >= 2 && options.includes(puzzle.correctAnswer.trim());
+  }
+
+  if (puzzle.puzzle_type === 'COMPASS') {
+    return (
+      typeof puzzle.targetHeadingDegrees === 'number' &&
+      Number.isInteger(puzzle.targetHeadingDegrees) &&
+      puzzle.targetHeadingDegrees >= 0 &&
+      puzzle.targetHeadingDegrees <= 359
+    );
   }
 
   return true;

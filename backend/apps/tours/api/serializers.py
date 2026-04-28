@@ -5,6 +5,7 @@ from rest_framework import serializers
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
+    CompassPuzzleDetail,
     GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
     Puzzle,
@@ -67,6 +68,12 @@ class GyroscopePuzzleDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = GyroscopePuzzleDetail
         fields = ["target_pitch", "target_roll", "target_yaw", "tolerance_degrees"]
+
+
+class CompassPuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompassPuzzleDetail
+        fields = ["target_heading_degrees"]
 
 
 class PuzzleBaseUpsertSerializer(serializers.Serializer):
@@ -238,11 +245,16 @@ class GyroscopePuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
     tolerance_degrees = serializers.FloatField(required=False, default=15.0)
 
 
+class CompassPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
+    target_heading_degrees = serializers.IntegerField(min_value=0, max_value=359)
+
+
 class PuzzleSerializer(serializers.ModelSerializer):
     trivia = serializers.SerializerMethodField()
     picture_compare = serializers.SerializerMethodField()
     ar = serializers.SerializerMethodField()
     gyroscope = serializers.SerializerMethodField()
+    compass = serializers.SerializerMethodField()
 
     def get_trivia(self, obj):
         detail = getattr(obj, "trivia_detail", None)
@@ -268,6 +280,12 @@ class PuzzleSerializer(serializers.ModelSerializer):
             return None
         return GyroscopePuzzleDetailSerializer(detail, context=self.context).data
 
+    def get_compass(self, obj):
+        detail = getattr(obj, "compass_detail", None)
+        if detail is None:
+            return None
+        return CompassPuzzleDetailSerializer(detail, context=self.context).data
+
     class Meta:
         model = Puzzle
         fields = [
@@ -280,6 +298,7 @@ class PuzzleSerializer(serializers.ModelSerializer):
             "picture_compare",
             "ar",
             "gyroscope",
+            "compass",
         ]
 
 
