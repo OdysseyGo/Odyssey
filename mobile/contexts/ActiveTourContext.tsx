@@ -276,14 +276,34 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
       
       // const apiTour = await getTour(activeProgress.tour);
      
-      const internalTour = mapApiTourToInternalTour(activeProgress.tour); //çalışıyo çünkü tur objesini getiriyo
+      const resumedTour = activeProgress.tour as unknown as ApiTour;
+      const resumedCurrentStep = activeProgress.current_step as unknown as
+        | number
+        | {
+            id?: number | string;
+            order?: number;
+          }
+        | null;
+      const internalTour = mapApiTourToInternalTour(resumedTour); //çalışıyo çünkü tur objesini getiriyo
 
 
       let currentStepIdx = 0;
-      if (activeProgress.current_step) {
-        const targetStepId = String(activeProgress.current_step);
+      if (resumedCurrentStep) {
+        const currentStep = typeof resumedCurrentStep === 'object' ? resumedCurrentStep : null;
+        const targetStepId = currentStep
+          ? String(currentStep.id)
+          : String(resumedCurrentStep);
 
         currentStepIdx = internalTour.steps.findIndex((s) => s.id === targetStepId);
+
+        if (currentStepIdx === -1 && currentStep && typeof currentStep.order === 'number') {
+          const orderedStep = resumedTour.steps.find(
+            (step) => step.order === currentStep.order
+          );
+          if (orderedStep) {
+            currentStepIdx = internalTour.steps.findIndex((s) => s.id === String(orderedStep.id));
+          }
+        }
 
         if (currentStepIdx === -1) {
           console.warn('Warning: Step ID not found in tour!');
