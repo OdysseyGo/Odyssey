@@ -337,7 +337,6 @@ class TourSerializer(serializers.ModelSerializer):
             "city_latitude",
             "city_longitude",
             "cover_image",
-            "cover_image_url",
             "cover_image_attribution",
             "status",
             "created_at",
@@ -351,7 +350,6 @@ class TourSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "average_rating",
-            "cover_image_url",
             "cover_image_attribution",
         ]
 
@@ -360,10 +358,8 @@ class TourSerializer(serializers.ModelSerializer):
         current_status = getattr(instance, "status", Tour.DRAFT)
         status_value = attrs.get("status", current_status)
         current_cover_image = getattr(instance, "cover_image", None)
-        current_cover_image_url = getattr(instance, "cover_image_url", None)
         cover_image = attrs.get("cover_image", current_cover_image)
-        cover_image_url = attrs.get("cover_image_url", current_cover_image_url)
-        has_cover = bool(cover_image or cover_image_url)
+        has_cover = bool(cover_image)
         city = attrs.get("city", getattr(instance, "city", ""))
         city_latitude = attrs.get("city_latitude")
         city_longitude = attrs.get("city_longitude")

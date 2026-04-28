@@ -57,7 +57,7 @@ class TourValidationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("cover_image", response.data)
 
-    def test_publish_tour_allows_cover_image_url_without_file(self):
+    def test_publish_tour_requires_cover_image_file(self):
         tour = Tour.objects.create(
             title="AI Draft Tour",
             description="D",
@@ -70,7 +70,6 @@ class TourValidationTests(APITestCase):
             country="France",
             country_code="FR",
             status=Tour.DRAFT,
-            cover_image_url="https://example.com/cover.jpg",
         )
         self.client.post(
             f"/api/tours/{tour.id}/steps/",
@@ -98,7 +97,8 @@ class TourValidationTests(APITestCase):
                 format="json",
             )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("cover_image", response.data)
 
     def test_create_step_almost_empty_fields(self):
         # Create valid tour first

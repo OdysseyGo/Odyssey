@@ -5,15 +5,15 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { aiTourCreationStyles } from './ai-tour-creation.styles';
 import {
   FormInputGroup,
-  FormTextInput,
   FormTextArea,
+  FormChipSelect,
   FormOptionCard,
   FormDurationPicker,
   FormLocationSelect,
+  TOUR_CATEGORIES,
 } from '@/components/TourCreation';
 import {
   AICreationHeader,
-  ThemeSuggestions,
   LanguageSelector,
   GenerateButton,
   LoadingOverlay,
@@ -49,6 +49,23 @@ export default function AITourCreation() {
     ],
     [t]
   );
+
+  const categoryKeyMap = useMemo(
+    () =>
+      Object.fromEntries(
+        TOUR_CATEGORIES.map((cat) => [t(`creation.categories.${cat.toLowerCase()}`), cat])
+      ),
+    [t]
+  );
+
+  const translatedCategories = useMemo(
+    () => TOUR_CATEGORIES.map((cat) => t(`creation.categories.${cat.toLowerCase()}`)),
+    [t]
+  ) as unknown as readonly string[];
+
+  const selectedTranslatedCategory = formData.theme
+    ? t(`creation.categories.${formData.theme.toLowerCase()}`)
+    : '';
 
   const updateFormData = (updates: Partial<AITourFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -157,13 +174,12 @@ export default function AITourCreation() {
           </FormInputGroup>
 
           <FormInputGroup label={t('aiTour.theme')} required>
-            <FormTextInput
-              value={formData.theme}
-              onChangeText={(text) => updateFormData({ theme: text })}
-              placeholder={t('aiTour.themePlaceholder')}
-            />
-            <ThemeSuggestions
-              onSelect={(selectedTheme) => updateFormData({ theme: selectedTheme })}
+            <FormChipSelect
+              options={translatedCategories}
+              selectedValue={selectedTranslatedCategory}
+              onSelect={(translatedValue) =>
+                updateFormData({ theme: categoryKeyMap[translatedValue] ?? translatedValue })
+              }
             />
           </FormInputGroup>
 

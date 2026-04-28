@@ -128,7 +128,6 @@ export type Tour = {
   title: string;
   description: string;
   cover_image?: string;
-  cover_image_url?: string;
   cover_image_attribution?: string;
   creator: User;
   tour_type: TourType;
@@ -151,9 +150,9 @@ export type Tour = {
 };
 
 export function getTourImageUri(
-  tour: Pick<Tour, 'id' | 'cover_image' | 'cover_image_url' | 'creator'>
+  tour: Pick<Tour, 'id' | 'cover_image' | 'creator'>
 ): string {
-  return tour.cover_image || tour.cover_image_url || '';
+  return tour.cover_image || '';
 }
 
 export type ToursResponse = {

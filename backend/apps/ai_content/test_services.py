@@ -214,7 +214,7 @@ class TestGenerateTour(TestCase):
 
     @patch("apps.ai_content.services.GoogleMapsFacade")
     @patch("apps.ai_content.services.genai")
-    def test_ai_tour_sets_cover_image_url_from_first_place(
+    def test_ai_tour_saves_cover_image_file_from_first_place(
         self, mock_genai, mock_maps_cls
     ):
         tour_data = _valid_tour_json(include_puzzles=False)
@@ -233,17 +233,23 @@ class TestGenerateTour(TestCase):
 
         creator = self._make_creator()
         service = GeminiService()
-        tour = service.generate_tour(
-            city="Istanbul",
-            theme="History",
-            mode="STORY",
-            duration=60,
-            language="en",
-            creator=creator,
-        )
+        with patch.object(
+            GeminiService,
+            "_download_place_photo",
+            return_value=(b"fake-image-bytes", ".jpg"),
+        ):
+            tour = service.generate_tour(
+                city="Istanbul",
+                theme="History",
+                mode="STORY",
+                duration=60,
+                language="en",
+                creator=creator,
+            )
 
-        assert tour.cover_image_url == "https://example.com/cover.jpg"
         assert tour.cover_image_attribution == "Google"
+        assert bool(tour.cover_image)
+        assert tour.cover_image.name.endswith(".jpg")
 
     # ---- RAG pipeline: no places found raises ValueError -----------------
 

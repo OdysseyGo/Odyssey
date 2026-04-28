@@ -63,9 +63,9 @@ const FeedCard = React.memo(function FeedCard({ item, styles, color, t }: FeedCa
         style={styles.card}
         activeOpacity={1}
       >
-        {item.tour.cover_image || item.tour.cover_image_url ? (
+        {item.tour.cover_image ? (
           <Image
-            source={{ uri: item.tour.cover_image || item.tour.cover_image_url }}
+            source={{ uri: item.tour.cover_image }}
             style={styles.image}
           />
         ) : (
