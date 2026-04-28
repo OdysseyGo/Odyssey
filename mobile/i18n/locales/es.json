@@ -354,7 +354,7 @@
       "difficulty": "Dificultad"
     },
     "story": {
-      "coverImage": "Imagen de portada (opcional)",
+      "coverImage": "Imagen de portada",
       "imagePickerTitle": "Selector de imagen",
       "imagePickerMessage": "El selector de imágenes requiere que expo-image-picker esté instalado.",
       "ok": "OK",

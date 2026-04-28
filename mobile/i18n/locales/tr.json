@@ -413,7 +413,7 @@
       "difficulty": "Zorluk"
     },
     "story": {
-      "coverImage": "Kapak Görseli (İsteğe Bağlı)",
+      "coverImage": "Kapak Görseli",
       "imagePickerTitle": "Görsel Seçici",
       "imagePickerMessage": "Görsel seçici işlevi expo-image-picker kurulumunu gerektirir.",
       "ok": "Tamam",
