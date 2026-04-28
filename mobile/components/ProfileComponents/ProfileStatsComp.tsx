@@ -4,6 +4,9 @@ import { profileStatsCompStyles } from './ProfileStatsComp.styles';
 import { Props } from './ProfileStatsComp.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { useTranslation } from 'react-i18next';
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
+
+const WalkthroughableView = walkthroughable(View);
 
 export default function ProfileStatsComp({
   xp,
@@ -52,14 +55,16 @@ export default function ProfileStatsComp({
   );
 
   return (
-    <View style={styles.card}>
-      {/* Achievement row: XP · Tours · Badges */}
-      <View style={styles.row}>{achievementStats.map((s, i) => renderStat(s, i))}</View>
+    <CopilotStep text={t('tutorial.profile.step3text')} order={3} name="statsStep">
+      <WalkthroughableView style={styles.card}>
+        {/* Achievement row */}
+        <View style={styles.row}>{achievementStats.map((s, i) => renderStat(s, i))}</View>
 
-      <View style={styles.hDivider} />
+        <View style={styles.hDivider} />
 
-      {/* Social row: Followers · Following */}
-      <View style={styles.row}>{socialStats.map((s, i) => renderStat(s, i))}</View>
-    </View>
+        {/* Social row */}
+        <View style={styles.row}>{socialStats.map((s, i) => renderStat(s, i))}</View>
+      </WalkthroughableView>
+    </CopilotStep>
   );
 }

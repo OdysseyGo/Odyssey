@@ -330,6 +330,13 @@ class TourSerializer(serializers.ModelSerializer):
             "difficulty",
             "duration_minutes",
             "total_distance",
+            "walking_distance",
+            "elevation_gain",
+            "max_leg_distance",
+            "requires_transport",
+            "is_circular",
+            "accessibility_rating",
+            "metrics_calculated",
             "is_premium",
             "city",
             "country",
@@ -344,7 +351,20 @@ class TourSerializer(serializers.ModelSerializer):
             "reviews",
             "average_rating",
         ]
-        read_only_fields = ["creator", "created_at", "updated_at", "average_rating"]
+        read_only_fields = [
+            "creator",
+            "created_at",
+            "updated_at",
+            "average_rating",
+            "total_distance",
+            "walking_distance",
+            "elevation_gain",
+            "max_leg_distance",
+            "requires_transport",
+            "is_circular",
+            "accessibility_rating",
+            "metrics_calculated",
+        ]
 
     def validate(self, attrs):
         instance = self.instance

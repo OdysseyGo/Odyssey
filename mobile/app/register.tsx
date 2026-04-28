@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
+import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
 import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import BackButton from '@/components/common/BackButton';
 import { createUser, CreateUserPayload } from '@/api/users';
@@ -213,7 +214,8 @@ export default function RegisterScreen() {
               color="rgba(255,255,255,0.9)"
               style={[styles.backButton, { top: insets.top + 12 }]}
             />
-            <View style={styles.logoArea}>
+            <AuthLanguageSelector style={{ top: insets.top + 12 }} />
+          <View style={styles.logoArea}>
               <AuthLogo variant="compact" />
               <Text style={styles.appName}>ODYSSEY</Text>
               <Text style={styles.tagline}>{t('auth.registerTagline')}</Text>

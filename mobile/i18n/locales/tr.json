@@ -92,7 +92,9 @@
     "tabs": {
       "published": "Yayınlandı",
       "drafts": "Taslaklar",
-      "archived": "Arşivlendi"
+      "archived": "Arşivlendi",
+      "settings": "Ayarlar",
+      "tutorials": "Rehberler"
     },
     "emptyPublished": "Henüz yayınlanmış tur yok. Topluluğa katılmak için bir tur yayınla!",
     "emptyDraft": "Taslak tur yok. Yeni bir tur oluşturmaya başla!",
@@ -175,16 +177,35 @@
   },
   "search": {
     "placeholder": "Tur, destinasyon ara...",
+    "userPlaceholder": "Kullanıcı adı veya isim ara...",
+    "toursTab": "Turlar",
+    "usersTab": "Kullanıcılar",
     "unknownAuthor": "Bilinmiyor",
     "unknownLocation": "Bilinmeyen konum",
     "notAvailable": "Yok",
     "noToursFound": "Tur bulunamadı",
+    "noToursFoundFor": "\"{{query}}\" için tur bulunamadı",
     "noToursFoundSub": "Farklı bir destinasyon, tur adı veya rehber aramayı deneyin",
+    "noUsersFound": "Kullanıcı bulunamadı",
+    "noUsersFoundFor": "\"{{query}}\" için kullanıcı bulunamadı",
+    "noUsersFoundSub": "Farklı bir kullanıcı adı veya isim deneyin",
     "searchFailed": "Arama başarısız",
     "searching": "Turlar aranıyor...",
+    "searchingUsers": "Kullanıcılar aranıyor...",
     "results": "Arama Sonuçları",
     "toursCount": "{{count}} tur",
+    "usersCount": "{{count}} kullanıcı",
+    "userMeta": "{{followers}} takipçi · {{tours}} tur",
     "recentSearch": "Son Aramalar",
+    "recentTourSearches": "Son tur aramaları",
+    "recentUserSearches": "Son kullanıcı aramaları",
+    "discoverTours": "Sonraki rotanı bul",
+    "discoverToursSub": "Şehir, tema, kategori veya tur adıyla ara.",
+    "discoverUsers": "Gezginleri ve üreticileri bul",
+    "discoverUsersSub": "Profil açmak için kullanıcı adı veya gerçek isimle ara.",
+    "keepTypingTitle": "En az {{count}} karakter yaz",
+    "keepTypingTours": "Biraz daha detay daha iyi tur eşleşmeleri bulmaya yardımcı olur.",
+    "keepTypingUsers": "Kullanıcıları kullanıcı adı, ad veya soyad ile ara.",
     "clearAll": "Hepsini Temizle"
   },
   "tourDetail": {
@@ -193,7 +214,11 @@
     "startTour": "Tura Başla",
     "duration": "Süre",
     "distance": "Mesafe",
+    "distanceUnknown": "Mesafe",
     "difficulty": "Zorluk",
+    "loop": "Döngü turu",
+    "transport": "Ulaşım gerekli",
+    "estimated": "Tahmini değerler",
     "notFound": "Tur bulunamadı",
     "reviews": "Yorumlar",
     "noReviews": "Bu tur hakkında yorum bulunamadı.",
@@ -252,6 +277,7 @@
       }
     },
     "languages": {
+      "system": "Sistem Varsayılanı",
       "en": "İngilizce",
       "tr": "Türkçe",
       "es": "İspanyolca"
@@ -587,5 +613,32 @@
   },
   "badges": {
     "noBadges": "Henüz rozet yok"
+  },
+  "tutorial": {
+    "title": "Yardım ve Rehberler",
+    "section": "Mevcut Rehberler",
+    "skip": "Geç",
+    "previous": "Önceki",
+    "finish": "Bitir",
+    "next": "İleri",
+    "profile": {
+      "label": "Profil Rehberi",
+      "desc": "İstatistiklerini nasıl kontrol edeceğini, geçmiş turları nasıl inceleyeceğini, arkadaşlarını ve avatarını nasıl yöneteceğini öğren.",
+      "step1text": "Profil rehberine hoş geldin!",
+      "step2text": "Bu senin avatarın! Değiştirmek için avatarına dokun.",
+      "step3text": "Odyssey XP'ni takip et, tamamlanan turları puanla ve takipçilerini kontrol et!",
+      "step4text": "Diğer gezginleri takip et ve gezilerini paylaş!",
+      "step5text": "Kazandığın rozetlere göz at!",
+      "step6text": "Oluşturduğun (yayınlanmış, taslak ve arşivlenmiş) turları bu sekmeden kontrol et.",
+      "step7text": "Hesap ayarlarını veya uygulama tercihlerini ayarlar sekmesinden değiştirebilirsin."
+    },
+    "tours": {
+      "label": "Turlar Rehberi",
+      "desc": "Turlar arasında nasıl gezineceğini ve etkileşimde bulunacağını öğren.",
+      "step1text": "Turlar eğitimine hoş geldiniz!",
+      "step2text": "Turları buradan arayabilirsiniz.",
+      "step3text": "Öne çıkan en iyi turları burada görebilirsiniz!",
+      "step4text": "Yapay zeka üretimi turlar oluşturmak için buraya dokunun!"
+    }
   }
 }

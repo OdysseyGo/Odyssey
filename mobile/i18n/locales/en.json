@@ -92,7 +92,9 @@
     "tabs": {
       "published": "Published",
       "drafts": "Drafts",
-      "archived": "Archived"
+      "archived": "Archived",
+      "settings": "Settings",
+      "tutorials": "Tutorials"
     },
     "emptyPublished": "No published tours yet. Publish a tour to share it with the community!",
     "emptyDraft": "No draft tours. Start creating a new tour!",
@@ -175,16 +177,35 @@
   },
   "search": {
     "placeholder": "Search tours, destinations...",
+    "userPlaceholder": "Search users by username or name...",
+    "toursTab": "Tours",
+    "usersTab": "Users",
     "unknownAuthor": "Unknown",
     "unknownLocation": "Unknown location",
     "notAvailable": "N/A",
     "noToursFound": "No tours found",
+    "noToursFoundFor": "No tours found for \"{{query}}\"",
     "noToursFoundSub": "Try searching for a different destination, tour name, or guide",
+    "noUsersFound": "No users found",
+    "noUsersFoundFor": "No users found for \"{{query}}\"",
+    "noUsersFoundSub": "Try a different username or name",
     "searchFailed": "Search failed",
     "searching": "Searching tours...",
+    "searchingUsers": "Searching users...",
     "results": "Search Results",
     "toursCount": "{{count}} tours",
+    "usersCount": "{{count}} users",
+    "userMeta": "{{followers}} followers · {{tours}} tours",
     "recentSearch": "Recent Searches",
+    "recentTourSearches": "Recent tour searches",
+    "recentUserSearches": "Recent user searches",
+    "discoverTours": "Find your next route",
+    "discoverToursSub": "Search by city, theme, category, or tour name.",
+    "discoverUsers": "Find explorers and creators",
+    "discoverUsersSub": "Search by username or real name to open a profile.",
+    "keepTypingTitle": "Type at least {{count}} characters",
+    "keepTypingTours": "A little more detail helps find better tour matches.",
+    "keepTypingUsers": "Search users by username, first name, or last name.",
     "clearAll": "Clear All"
   },
   "tourDetail": {
@@ -193,7 +214,11 @@
     "startTour": "Start Tour",
     "duration": "Duration",
     "distance": "Distance",
+    "distanceUnknown": "Distance",
     "difficulty": "Difficulty",
+    "loop": "Loop tour",
+    "transport": "Transport needed",
+    "estimated": "Estimated metrics",
     "notFound": "Tour not found",
     "reviews": "Reviews",
     "noReviews": "No reviews found for this tour.",
@@ -252,6 +277,7 @@
       }
     },
     "languages": {
+      "system": "System Default",
       "en": "English",
       "tr": "Turkish",
       "es": "Spanish"
@@ -587,5 +613,32 @@
   },
   "badges": {
     "noBadges": "No badges yet"
+  },
+  "tutorial": {
+    "title": "Help & Tutorials",
+    "section": "Available Tutorials",
+    "skip": "Skip",
+    "previous": "Previous",
+    "finish": "Finish",
+    "next": "Next",
+    "profile": {
+      "label": "Profile Tutorial",
+      "desc": "Learn how to check your stats, review past tours, manage friends and avatar.",
+      "step1text": "Welcome to the profile tutorial!",
+      "step2text": "This is your avatar! Tap your avatar to change it.",
+      "step3text": "Track your Odyssey XP and check your followers!",
+      "step4text": "Find other travelers to join on your journey!",
+      "step5text": "Check out the badges you earned!",
+      "step6text": "Check your created (published, draft and archived) tours on this tab! You can also rate your tour with the completed tours button.",
+      "step7text": "You can change your account settings or your app preferences in the settings tab."
+    },
+    "tours": {
+      "label": "Tours Tutorial",
+      "desc": "Learn how to navigate and interact with tours.",
+      "step1text": "Welcome to the tours tutorial!",
+      "step2text": "You can search tours here.",
+      "step3text": "You can see the top featured tours here!",
+      "step4text": "To create tours, press here. You can generate Personal or AI-generated tours!"
+    }
   }
 }
