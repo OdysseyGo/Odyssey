@@ -9,6 +9,7 @@ export interface TourStop {
   latitude: number;
   longitude: number;
   order: number;
+  hasPuzzle: boolean;
 }
 
 export interface TourDetail {
@@ -26,6 +27,11 @@ export interface TourDetail {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   stops: TourStop[];
   tags: string[];
+  elevationGain?: number;
+  requiresTransport?: boolean;
+  isCircular?: boolean;
+  accessibilityRating?: number;
+  metricsCalculated?: boolean;
 }
 
 export const MOCK_TOUR: TourDetail = {
@@ -50,6 +56,7 @@ export const MOCK_TOUR: TourDetail = {
       latitude: 41.0086,
       longitude: 28.9802,
       order: 1,
+      hasPuzzle: false,
     },
     {
       id: '2',
@@ -58,6 +65,7 @@ export const MOCK_TOUR: TourDetail = {
       latitude: 41.0054,
       longitude: 28.9768,
       order: 2,
+      hasPuzzle: true,
     },
     {
       id: '3',
@@ -66,6 +74,7 @@ export const MOCK_TOUR: TourDetail = {
       latitude: 41.0115,
       longitude: 28.9833,
       order: 3,
+      hasPuzzle: false,
     },
     {
       id: '4',
@@ -74,6 +83,7 @@ export const MOCK_TOUR: TourDetail = {
       latitude: 41.0106,
       longitude: 28.9681,
       order: 4,
+      hasPuzzle: false,
     },
   ],
   tags: ['History', 'Architecture', 'Walking', 'Culture'],

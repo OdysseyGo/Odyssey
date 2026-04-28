@@ -19,6 +19,8 @@ import { useTranslation } from 'react-i18next';
 
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
+import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
+import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import BackButton from '@/components/common/BackButton';
 import { createUser, CreateUserPayload } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -178,10 +180,9 @@ export default function RegisterScreen() {
             color="rgba(255,255,255,0.9)"
             style={[styles.backButton, { top: insets.top + 12 }]}
           />
+          <AuthLanguageSelector style={{ top: insets.top + 12 }} />
           <View style={styles.logoArea}>
-            <View style={styles.iconRing}>
-              <Ionicons name="compass" size={40} color="#FFFFFF" />
-            </View>
+            <AuthLogo variant="compact" />
             <Text style={styles.appName}>ODYSSEY</Text>
             <Text style={styles.tagline}>{t('auth.registerTagline')}</Text>
           </View>
@@ -383,20 +384,10 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     left: Spacing.lg,
-    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   logoArea: {
     alignItems: 'center',
     gap: Spacing.xs,
-  },
-  iconRing: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.xs,
   },
   appName: {
     fontSize: 28,

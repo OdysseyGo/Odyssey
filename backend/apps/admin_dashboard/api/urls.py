@@ -2,9 +2,11 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from apps.admin_dashboard.api.views import (
+    AdminARModelViewSet,
     AdminTourViewSet,
     AdminUserViewSet,
     AnalyticsViewSet,
+    BadgeVisualViewSet,
     PictureCompareConfigViewSet,
     PictureCompareTuningViewSet,
     ReportViewSet,
@@ -14,6 +16,7 @@ from apps.admin_dashboard.api.views import (
 router = DefaultRouter()
 router.register(r"users", AdminUserViewSet, basename="admin-user")
 router.register(r"tours", AdminTourViewSet, basename="admin-tour")
+router.register(r"ar-models", AdminARModelViewSet, basename="admin-ar-model")
 router.register(r"analytics", AnalyticsViewSet, basename="admin-analytics")
 router.register(r"reports", ReportViewSet, basename="admin-report")
 router.register(
@@ -25,6 +28,11 @@ router.register(
     r"picture-compare-config",
     PictureCompareConfigViewSet,
     basename="admin-picture-compare-config",
+)
+router.register(
+    r"badge-visuals",
+    BadgeVisualViewSet,
+    basename="admin-badge-visuals",
 )
 
 urlpatterns = [

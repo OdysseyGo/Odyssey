@@ -166,7 +166,7 @@ class TourProgressViewSet(
                 user.tour_count += 1
                 user.save()
 
-                BadgeService.check_badges(user)
+                BadgeService.check_badges(user, completed_progress=progress)
                 message = "Tour completed!"
 
         return {
@@ -191,6 +191,22 @@ class TourProgressViewSet(
             accepted=True,
         ).exists()
 
+    def _requires_ar_code_submission(self, progress):
+        current_step = progress.current_step
+        if not current_step or not hasattr(current_step, "puzzle"):
+            return False
+
+        puzzle = current_step.puzzle
+        if puzzle.puzzle_type != Puzzle.AR:
+            return False
+
+        return not PuzzleAttempt.objects.filter(
+            user=progress.user,
+            progress=progress,
+            puzzle=puzzle,
+            accepted=True,
+        ).exists()
+
     @action(detail=True, methods=["post"], url_path="complete-step")
     def complete_step(self, request, pk=None):
         progress = self.get_object()
@@ -204,6 +220,17 @@ class TourProgressViewSet(
                     "error": (
                         "Picture compare puzzles require submit-picture-compare "
                         "verification before completion."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if self._requires_ar_code_submission(progress):
+            return Response(
+                {
+                    "error": (
+                        "AR puzzles require submit-ar-code verification "
+                        "before completion."
                     )
                 },
                 status=status.HTTP_400_BAD_REQUEST,
@@ -351,6 +378,68 @@ class TourProgressViewSet(
                 "similarity_score": attempt.similarity_score,
                 "threshold_used": threshold,
                 "processing_ms": attempt.processing_ms,
+                "is_tour_complete": False,
+                "new_step_id": current_step.id,
+            }
+        )
+
+    @action(detail=True, methods=["post"], url_path="submit-ar-code")
+    def submit_ar_code(self, request, pk=None):
+        progress = self.get_object()
+
+        if progress.status == TourProgress.COMPLETED:
+            return Response({"error": "Tour is already completed"}, status=400)
+
+        current_step = progress.current_step
+        if not current_step or not hasattr(current_step, "puzzle"):
+            return Response(
+                {"error": "Current step does not have a puzzle."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        puzzle = current_step.puzzle
+        if puzzle.puzzle_type != Puzzle.AR:
+            return Response(
+                {"error": "Current puzzle is not an AR puzzle."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        detail = getattr(puzzle, "ar_detail", None)
+        metadata = detail.metadata if detail else {}
+        expected_code = (
+            str(metadata.get("secret_code")).strip()
+            if isinstance(metadata, dict) and metadata.get("secret_code") is not None
+            else ""
+        )
+        if not expected_code:
+            return Response(
+                {"error": "AR puzzle secret code is not configured."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        submitted_code = str(request.data.get("code", "")).strip()
+        if not submitted_code:
+            return Response(
+                {"error": "code is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        accepted = submitted_code.upper() == expected_code.upper()
+        PuzzleAttempt.objects.create(
+            puzzle=puzzle,
+            user=request.user,
+            progress=progress,
+            accepted=accepted,
+        )
+
+        return Response(
+            {
+                "status": (
+                    "Code verified. You can continue."
+                    if accepted
+                    else "Code does not match. Try again."
+                ),
+                "accepted": accepted,
                 "is_tour_complete": False,
                 "new_step_id": current_step.id,
             }

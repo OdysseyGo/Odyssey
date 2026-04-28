@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { storyEditorFooterStyles } from './StoryEditorFooter.styles';
@@ -32,7 +32,10 @@ export default function StoryEditorFooter({
     <View style={styles.footer}>
       <TouchableOpacity
         style={[styles.saveButton, !isValid && styles.saveButtonDisabled]}
-        onPress={onSave}
+        onPress={() => {
+          Keyboard.dismiss();
+          onSave();
+        }}
         disabled={!isValid}
       >
         <Text style={styles.saveButtonText}>{t('creation.story.saveLocation')}</Text>
@@ -41,7 +44,10 @@ export default function StoryEditorFooter({
       <View style={styles.navigationButtons}>
         <TouchableOpacity
           style={[styles.navButton, !hasPrev && styles.navButtonDisabled]}
-          onPress={onNavigatePrev}
+          onPress={() => {
+            Keyboard.dismiss();
+            onNavigatePrev?.();
+          }}
           disabled={!hasPrev}
         >
           <Ionicons name="chevron-back" size={20} color={color.text} />
@@ -49,7 +55,10 @@ export default function StoryEditorFooter({
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.navButton, !hasNext && styles.navButtonDisabled]}
-          onPress={onNavigateNext}
+          onPress={() => {
+            Keyboard.dismiss();
+            onNavigateNext?.();
+          }}
           disabled={!hasNext}
         >
           <Text style={styles.navButtonText}>{t('creation.story.next')}</Text>

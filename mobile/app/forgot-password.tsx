@@ -18,6 +18,8 @@ import { useTranslation } from 'react-i18next';
 
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
+import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
+import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import BackButton from '@/components/common/BackButton';
 import { getByUsername, resetPassword } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -141,10 +143,9 @@ export default function ForgotPasswordScreen() {
             color="rgba(255,255,255,0.9)"
             style={[styles.backButton, { top: insets.top + 12 }]}
           />
+          <AuthLanguageSelector style={{ top: insets.top + 12 }} />
           <View style={styles.logoArea}>
-            <View style={styles.iconRing}>
-              <Ionicons name="compass" size={46} color="#FFFFFF" />
-            </View>
+            <AuthLogo />
             <Text style={styles.appName}>ODYSSEY</Text>
             <Text style={styles.tagline}>{t('auth.resetTagline')}</Text>
           </View>
@@ -292,20 +293,10 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     left: Spacing.lg,
-    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   logoArea: {
     alignItems: 'center',
     gap: Spacing.xs,
-  },
-  iconRing: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.sm,
   },
   appName: {
     fontSize: 30,

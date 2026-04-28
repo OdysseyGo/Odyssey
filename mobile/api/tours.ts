@@ -21,6 +21,36 @@ export type ArPuzzleDetail = {
   metadata?: Record<string, any>;
 };
 
+export type ARModelAnchor = {
+  id: string;
+  label: string;
+  description?: string;
+  position: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  rotation?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  scale?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+};
+
+export type ARModel = {
+  id: number;
+  slug: string;
+  name: string;
+  preview_image_url: string;
+  scene_asset_url: string;
+  anchors: ARModelAnchor[];
+};
+
 export type GyroscopePuzzleDetail = {
   target_pitch: number;
   target_roll: number;
@@ -103,8 +133,19 @@ export type Tour = {
   difficulty: Difficulty;
   duration_minutes: number;
   total_distance?: number;
+  walking_distance?: number;
+  elevation_gain?: number;
+  max_leg_distance?: number;
+  requires_transport?: boolean;
+  is_circular?: boolean;
+  accessibility_rating?: number;
+  metrics_calculated?: boolean;
   is_premium: boolean;
   city: string;
+  country?: string;
+  country_code?: string;
+  city_latitude?: number;
+  city_longitude?: number;
   status: TourStatus;
   created_at: string;
   updated_at: string;
@@ -122,7 +163,11 @@ export type ToursResponse = {
 
 export type TourFilters = {
   search?: string;
+  category?: string;
+  continent?: string;
   city?: string;
+  country?: string;
+  country_code?: string;
   difficulty?: Difficulty;
   tour_type?: TourType;
   is_premium?: boolean;
@@ -151,7 +196,11 @@ export async function getTours(
 
   if (filters) {
     if (filters.search) params.search = filters.search;
+    if (filters.category) params.category = filters.category;
+    if (filters.continent) params.continent = filters.continent;
     if (filters.city) params.city = filters.city;
+    if (filters.country) params.country = filters.country;
+    if (filters.country_code) params.country_code = filters.country_code;
     if (filters.difficulty) params.difficulty = filters.difficulty;
     if (filters.tour_type) params.tour_type = filters.tour_type;
     if (filters.is_premium !== undefined) params.is_premium = filters.is_premium;
@@ -218,7 +267,7 @@ export async function getToursByCategory(
   filters?: TourFilters,
   signal?: AbortSignal
 ): Promise<ToursResponse> {
-  return getTours({ ...filters, search: category }, signal);
+  return getTours({ ...filters, category }, signal);
 }
 
 /**
@@ -521,6 +570,15 @@ export async function setStepArPuzzle(
     method: 'POST',
     url: `/api/tours/${tourId}/steps/${stepId}/set-ar-puzzle/`,
     data: payload,
+    auth: true,
+    signal,
+  });
+}
+
+export async function getArModels(signal?: AbortSignal): Promise<ARModel[]> {
+  return apiRequest<ARModel[]>({
+    method: 'GET',
+    url: '/api/tours/ar-models/',
     auth: true,
     signal,
   });

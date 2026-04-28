@@ -31,6 +31,10 @@ export type PictureCompareResponse = StepActionResponse & {
   processing_ms: number;
 };
 
+export type ArCodeResponse = StepActionResponse & {
+  accepted: boolean;
+};
+
 export type DeleteTourProgressRequest = {
   id: number;
 };
@@ -141,6 +145,23 @@ export async function submitPictureCompare(
     method: 'POST',
     url: `/api/tour-progress/${id}/submit-picture-compare/`,
     data: formData,
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Submit a code guess for an AR puzzle on the current step.
+ */
+export async function submitArCode(
+  id: number,
+  code: string,
+  signal?: AbortSignal
+): Promise<ArCodeResponse> {
+  return apiRequest<ArCodeResponse, { code: string }>({
+    method: 'POST',
+    url: `/api/tour-progress/${id}/submit-ar-code/`,
+    data: { code },
     auth: true,
     signal,
   });

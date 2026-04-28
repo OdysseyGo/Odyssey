@@ -9,6 +9,7 @@ from rest_framework.response import Response
 
 from apps.gamification.models import TourProgress
 from apps.tours.models import (
+    ARModel,
     ArPuzzleDetail,
     GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
@@ -20,10 +21,12 @@ from apps.tours.models import (
 )
 
 from ..permissions import IsCreatorOrReadOnly
+from ..utils import recalculate_tour_metrics
 from .filters import TourFilter
 from .pagination import TourPagination
 from .serializers import (
     DEFAULT_PICTURE_COMPARE_THRESHOLD,
+    ARModelSerializer,
     ArPuzzleUpsertSerializer,
     GyroscopePuzzleUpsertSerializer,
     PictureComparePuzzleUpsertSerializer,
@@ -36,7 +39,7 @@ from .serializers import (
 
 
 @api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.AllowAny])
 def google_maps_api_key(request):
     return Response({"key": os.getenv("GOOGLE_MAPS_API_KEY", "")})
 
@@ -56,7 +59,7 @@ class TourViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter,
     ]
     filterset_class = TourFilter
-    search_fields = ["title", "description", "category", "city"]
+    search_fields = ["title", "description", "category", "city", "country"]
     ordering_fields = [
         "created_at",
         "average_rating",
@@ -66,7 +69,25 @@ class TourViewSet(viewsets.ModelViewSet):
     ]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        first_lat = Subquery(
+            TourStep.objects.filter(tour=OuterRef("pk"))
+            .order_by("order")
+            .values("latitude")[:1]
+        )
+        first_lng = Subquery(
+            TourStep.objects.filter(tour=OuterRef("pk"))
+            .order_by("order")
+            .values("longitude")[:1]
+        )
+
+        queryset = (
+            super()
+            .get_queryset()
+            .annotate(
+                first_lat=first_lat,
+                first_lng=first_lng,
+            )
+        )
         status = self.request.query_params.get("status")
         if status:
             queryset = queryset.filter(status=status)
@@ -83,6 +104,21 @@ class TourViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="ar-models",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def ar_models(self, request):
+        queryset = ARModel.objects.filter(is_active=True).order_by("sort_order", "id")
+        serializer = ARModelSerializer(
+            queryset,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data)
 
     @action(
         detail=False,
@@ -200,7 +236,17 @@ class TourStepViewSet(viewsets.ModelViewSet):
         return TourStep.objects.filter(tour_id=self.kwargs["tour_pk"]).order_by("order")
 
     def perform_create(self, serializer):
-        serializer.save(tour_id=self.kwargs["tour_pk"])
+        step = serializer.save(tour_id=self.kwargs["tour_pk"])
+        recalculate_tour_metrics(step.tour)
+
+    def perform_update(self, serializer):
+        step = serializer.save()
+        recalculate_tour_metrics(step.tour)
+
+    def perform_destroy(self, instance):
+        tour = instance.tour
+        instance.delete()
+        recalculate_tour_metrics(tour)
 
     def _user_can_edit_step_puzzle(self, request, step):
         return step.tour.creator_id == request.user.id or request.user.is_staff
@@ -429,7 +475,10 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        payload = ArPuzzleUpsertSerializer(data=request.data)
+        payload = ArPuzzleUpsertSerializer(
+            data=request.data,
+            context={"request": request},
+        )
         payload.is_valid(raise_exception=True)
         data = payload.validated_data
 

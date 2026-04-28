@@ -19,7 +19,7 @@ import { useInterstitial } from '@/components/Ads/useInterstitial';
 
 export default function TourDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { tour, loading, error, fetchTour } = useTourDetailScreen(id || '');
+  const { tour, showAllStops, loading, error, fetchTour } = useTourDetailScreen(id || '');
   const { startTour } = useActiveTour();
   const { t } = useTranslation();
   const [starting, setStarting] = useState(false);
@@ -87,5 +87,12 @@ export default function TourDetailPage() {
     return <TourDetailScreenError error={error || 'Tour not found'} onRetry={fetchTour} />;
   }
 
-  return <TourDetailScreenContent tour={tour} onStartTour={handleStartTour} starting={starting} />;
+  return (
+    <TourDetailScreenContent
+      tour={tour}
+      onStartTour={handleStartTour}
+      starting={starting}
+      showAllStops={showAllStops}
+    />
+  );
 }

@@ -1,7 +1,18 @@
 from rest_framework import serializers
 
 from apps.users.models.Follow import Follow
+from apps.users.models.SearchHistory import SearchHistory
 from apps.users.models.User import User
+
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+
+class LoginResponseSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    refresh = serializers.CharField()
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -54,6 +65,25 @@ class FollowSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class SearchHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SearchHistory
+        fields = ["id", "search_type", "query", "searched_at"]
+        read_only_fields = ["id", "searched_at"]
+
+    def validate_search_type(self, value):
+        valid_types = {choice[0] for choice in SearchHistory.SEARCH_TYPE_CHOICES}
+        if value not in valid_types:
+            raise serializers.ValidationError("Invalid search type.")
+        return value
+
+    def validate_query(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("Query is required.")
+        return value
+
+
 class FollowingFeedSerializer(serializers.Serializer):
     """Serializer for completed tours in the following feed."""
 
@@ -73,6 +103,8 @@ class FollowingFeedSerializer(serializers.Serializer):
             "difficulty": tour.difficulty,
             "duration_minutes": tour.duration_minutes,
             "city": tour.city,
+            "country": tour.country,
+            "country_code": tour.country_code,
             "cover_image": tour.cover_image.url if tour.cover_image else None,
             "created_at": tour.created_at,
         }

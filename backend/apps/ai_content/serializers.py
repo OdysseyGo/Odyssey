@@ -5,6 +5,18 @@ class GenerateTourRequestSerializer(serializers.Serializer):
     """Serializer for AI tour generation request."""
 
     city = serializers.CharField(max_length=100, help_text="City name (e.g., Paris)")
+    country = serializers.CharField(
+        max_length=100,
+        required=False,
+        allow_blank=True,
+        help_text="Country name (e.g., France)",
+    )
+    country_code = serializers.CharField(
+        max_length=2,
+        required=False,
+        allow_blank=True,
+        help_text="ISO 3166-1 alpha-2 country code (e.g., FR)",
+    )
     theme = serializers.CharField(
         max_length=100, help_text="Tour theme (e.g., Haunted History)"
     )

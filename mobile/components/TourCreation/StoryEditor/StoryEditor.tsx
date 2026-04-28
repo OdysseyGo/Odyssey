@@ -68,7 +68,11 @@ export default function StoryEditor({
       >
         <StoryEditorHeader onClose={onCancel} onSave={handleSave} isValid={isValid} />
 
-        <ScrollView style={styles.scrollContent}>
+        <ScrollView
+          style={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
           <LocationBadge currentStop={location.order} totalStops={totalLocations} />
 
           <StoryInputField

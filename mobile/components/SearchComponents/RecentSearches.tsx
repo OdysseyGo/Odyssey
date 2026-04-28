@@ -10,13 +10,17 @@ import Colors from '@/constants/Colors';
 interface RecentSearchesProps {
   searches: string[];
   onSearchPress: (query: string) => void;
+  onRemoveSearch?: (query: string) => void;
   onClearAll: () => void;
+  title?: string;
 }
 
 export default function RecentSearches({
   searches,
   onSearchPress,
+  onRemoveSearch,
   onClearAll,
+  title,
 }: RecentSearchesProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => recentSearchesStyles(theme), [theme]);
@@ -30,7 +34,7 @@ export default function RecentSearches({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t('search.recentSearch')}</Text>
+        <Text style={styles.title}>{title || t('search.recentSearch')}</Text>
         <Pressable onPress={onClearAll}>
           <Text style={styles.clearAllText}>{t('search.clearAll')}</Text>
         </Pressable>
@@ -39,6 +43,18 @@ export default function RecentSearches({
         <Pressable key={index} style={styles.searchItem} onPress={() => onSearchPress(search)}>
           <FontAwesome name="clock-o" size={18} color={colors.subText} style={styles.searchIcon} />
           <Text style={styles.searchText}>{search}</Text>
+          {onRemoveSearch ? (
+            <Pressable
+              onPress={(event) => {
+                event.stopPropagation();
+                onRemoveSearch(search);
+              }}
+              hitSlop={10}
+              style={styles.removeButton}
+            >
+              <FontAwesome name="times-circle" size={16} color={colors.subText} />
+            </Pressable>
+          ) : null}
           <FontAwesome
             name="arrow-right"
             size={14}

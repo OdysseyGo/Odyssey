@@ -6,6 +6,8 @@ import { profileBadgesContainerStyles } from './ProfileBadgesContainer.styles';
 import { ProfileBadgesContainerProps } from './ProfileBadgesContainer.config';
 import Colors from '@/constants/Colors';
 import { useTranslation } from 'react-i18next';
+import { normalizeCountryCode } from '@/lib/flags';
+import HexBadge from './HexBadge';
 
 export default function ProfileBadgesContainer({
   badges = [],
@@ -53,10 +55,21 @@ export default function ProfileBadgesContainer({
             key={badge.id}
             style={[styles.badgeCard, badge.unlocked && styles.badgeCardUnlocked]}
           >
-            <Text style={styles.badgeIcon}>{badge.icon}</Text>
+            <HexBadge
+              code={badge.code}
+              city={badge.city}
+              countryCode={badge.countryCode}
+              fallbackLabel={badge.name}
+              visualConfig={badge.visualConfig as any}
+            />
             <Text style={styles.badgeName} numberOfLines={2}>
               {badge.name}
             </Text>
+            {badge.city ? (
+              <Text style={styles.badgeMetaText} numberOfLines={1}>
+                {badge.city} · {normalizeCountryCode(badge.countryCode)}
+              </Text>
+            ) : null}
           </View>
         ))}
 
