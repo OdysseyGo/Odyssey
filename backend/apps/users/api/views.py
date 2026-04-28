@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate  # login direkt
 from django.db.models import Avg, F, QuerySet  # F dbden çıkarmadan yazıyon
-from drf_spectacular.utils import extend_schema
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema
 from rest_framework import filters
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
@@ -23,7 +23,6 @@ from .serializers import (
     SearchHistorySerializer,
     UserSerializer,
 )
-
 
 
 class UserViewSet(ModelViewSet):
