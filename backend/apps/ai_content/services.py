@@ -2,14 +2,28 @@ import json
 import logging
 import math
 import os
+import random
 import re
+import string
 from typing import Optional
 
 import google.generativeai as genai
 from django.db import transaction
 
-from apps.tours.models import Puzzle, Tour, TourStep, TriviaPuzzleDetail
+from apps.tours.models import (
+    ARModel,
+    ArPuzzleDetail,
+    Puzzle,
+    Tour,
+    TourStep,
+    TriviaPuzzleDetail,
+)
 from apps.tours.utils import GoogleMapsFacade
+
+AR_SECRET_CODE_REGEX = re.compile(r"^[A-Za-z0-9]{4,12}$")
+AR_MIN_SCALE = 0.3
+AR_MAX_SCALE = 10.0
+AR_DEFAULT_SCALE = 1.0
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +64,7 @@ class GeminiService:
         custom_prompt: str = "",
         country: str = "",
         country_code: str = "",
+        include_ar: bool = False,
     ) -> Tour:
         """
         Generate a complete tour with steps and puzzles using RAG.
@@ -85,6 +100,7 @@ class GeminiService:
             )
 
         # ---- Step 2: Build RAG prompt with verified places ----
+        ar_models = self._load_ar_catalog() if include_ar else []
         prompt = self._build_prompt(
             location_query,
             theme,
@@ -94,6 +110,7 @@ class GeminiService:
             custom_prompt,
             candidate_places,
             num_steps,
+            ar_models,
         )
 
         # ---- Step 3: Generate creative content via Gemini (with retries) ----
@@ -199,6 +216,7 @@ class GeminiService:
                 status=Tour.ARCHIVED,
             )
 
+            ar_lookup = {m.id: m for m in ar_models}
             for idx, step_data in enumerate(tour_data["steps"], start=1):
                 step = TourStep.objects.create(
                     tour=tour,
@@ -208,6 +226,15 @@ class GeminiService:
                     latitude=step_data["latitude"],
                     longitude=step_data["longitude"],
                 )
+
+                ar_data = step_data.get("ar") if include_ar else None
+                resolved_ar = (
+                    self._resolve_ar_puzzle(ar_data, ar_lookup) if ar_data else None
+                )
+
+                if resolved_ar:
+                    self._create_ar_puzzle(step, resolved_ar)
+                    continue
 
                 # Create puzzle if present (for PUZZLE and HYBRID modes)
                 puzzle_data = step_data.get("puzzle")
@@ -520,6 +547,7 @@ class GeminiService:
         custom_prompt: str,
         candidate_places: list[dict],
         num_steps: int,
+        ar_models: list[ARModel] | None = None,
     ) -> str:
         """
         Build a RAG prompt that constrains Gemini to select from verified
@@ -583,6 +611,8 @@ class GeminiService:
             for i, p in enumerate(candidate_places, start=1)
         )
 
+        ar_section = self._build_ar_prompt_section(ar_models or [])
+
         prompt = f"""You are a tour guide AI. Generate a {mode} tour in {city} with the theme "{theme}".
 {user_instruction}
 LANGUAGE: Generate all content in {language}.
@@ -617,7 +647,7 @@ OUTPUT FORMAT (strict JSON):
 }}
 
 {puzzle_instruction}
-
+{ar_section}
 Generate the tour now:"""
 
         return prompt
@@ -662,4 +692,158 @@ Generate the tour now:"""
         raise ValueError(
             "Failed to parse AI response as JSON. "
             "The model did not return valid JSON."
+        )
+
+    # ------------------------------------------------------------------
+    # AR support
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _load_ar_catalog() -> list[ARModel]:
+        return [
+            m
+            for m in ARModel.objects.filter(is_active=True).order_by("sort_order", "id")
+            if isinstance(m.anchors, list) and m.anchors
+        ]
+
+    @staticmethod
+    def _build_ar_prompt_section(ar_models: list[ARModel]) -> str:
+        if not ar_models:
+            return ""
+
+        lines = []
+        for m in ar_models:
+            anchor_descriptors = ", ".join(
+                f'"{a.get("id")}"' + (f' ({a.get("label")})' if a.get("label") else "")
+                for a in m.anchors
+                if isinstance(a, dict) and a.get("id")
+            )
+            lines.append(
+                f'  - model_id={m.id}, name="{m.name}", anchors=[{anchor_descriptors}]'
+            )
+        catalog = "\n".join(lines)
+
+        return f"""
+═══════════════════════════════════════════════════════════════
+OPTIONAL AR PUZZLES (augmented-reality 3D models you may attach to a step):
+═══════════════════════════════════════════════════════════════
+{catalog}
+
+If — and only if — an AR model thematically suits a stop, you MAY add an "ar"
+object to that step instead of (not in addition to) a regular "puzzle". Skip
+AR entirely on steps where it doesn't fit. Use AR sparingly: at most one AR
+puzzle per 2 steps, and never more than 3 in the whole tour.
+
+AR object schema:
+  "ar": {{
+      "model_id": <int from the list above>,
+      "anchor_id": "<one of that model's anchor ids>",
+      "secret_code": "<4-12 letters/digits, themed to the location, e.g. ATHENA1>",
+      "model_scale_meters": <number between 0.3 and 10.0>,
+      "question": "Find the AR <model name> near this spot and enter the secret code.",
+      "hint": "<short hint where to look>",
+      "xp": 30
+  }}
+
+CRITICAL AR RULES:
+- The secret_code MUST be 4-12 alphanumeric characters only (A-Z, a-z, 0-9). No spaces, no punctuation, no accents.
+- model_id MUST be one of the integer ids listed above; anchor_id MUST belong to that model.
+- A step can have EITHER "puzzle" OR "ar", not both. AR replaces the regular puzzle for that step.
+"""
+
+    @staticmethod
+    def _sanitize_secret_code(raw) -> str:
+        cleaned = re.sub(r"[^A-Za-z0-9]", "", str(raw or ""))[:12]
+        if len(cleaned) < 4:
+            pad = "".join(
+                random.choices(
+                    string.ascii_uppercase + string.digits, k=4 - len(cleaned)
+                )
+            )
+            cleaned = (cleaned + pad)[:12]
+        return cleaned
+
+    def _resolve_ar_puzzle(
+        self, ar_data: dict, ar_lookup: dict[int, ARModel]
+    ) -> Optional[dict]:
+        """Validate AI-generated AR data against the catalog.
+
+        Returns a normalized dict ready for persistence, or None if the AI
+        picked a model/anchor that doesn't exist (in which case we silently
+        skip AR on that step rather than failing the whole tour).
+        """
+        if not isinstance(ar_data, dict):
+            return None
+
+        try:
+            model_id = int(ar_data.get("model_id"))
+        except (TypeError, ValueError):
+            return None
+
+        ar_model = ar_lookup.get(model_id)
+        if ar_model is None:
+            return None
+
+        anchor_id = str(ar_data.get("anchor_id") or "").strip()
+        anchor = next(
+            (
+                a
+                for a in ar_model.anchors
+                if isinstance(a, dict) and str(a.get("id")) == anchor_id
+            ),
+            None,
+        )
+        if anchor is None:
+            return None
+
+        try:
+            scale = float(ar_data.get("model_scale_meters", AR_DEFAULT_SCALE))
+        except (TypeError, ValueError):
+            scale = AR_DEFAULT_SCALE
+        scale = min(max(scale, AR_MIN_SCALE), AR_MAX_SCALE)
+
+        position = anchor.get("position") if isinstance(anchor, dict) else {}
+        if not isinstance(position, dict):
+            position = {}
+
+        return {
+            "ar_model": ar_model,
+            "anchor_id": anchor_id,
+            "secret_code": self._sanitize_secret_code(ar_data.get("secret_code")),
+            "model_scale_meters": scale,
+            "question": ar_data.get("question")
+            or f"Find the AR {ar_model.name} near this spot and enter the secret code.",
+            "hint": ar_data.get("hint", ""),
+            "xp_reward": int(ar_data.get("xp", 30) or 30),
+            "anchor_position": {
+                "x": float(position.get("x", 0.0)),
+                "y": float(position.get("y", 0.0)),
+                "z": float(position.get("z", 0.0)),
+            },
+        }
+
+    @staticmethod
+    def _create_ar_puzzle(step: TourStep, resolved: dict) -> None:
+        ar_model: ARModel = resolved["ar_model"]
+        puzzle = Puzzle.objects.create(
+            step=step,
+            puzzle_type=Puzzle.AR,
+            question=resolved["question"],
+            options=None,
+            correct_answer="",
+            hint=resolved["hint"],
+            xp_reward=resolved["xp_reward"],
+        )
+        ArPuzzleDetail.objects.create(
+            puzzle=puzzle,
+            scene_asset_url=ar_model.get_scene_asset_url(),
+            metadata={
+                "version": 1,
+                "model_id": ar_model.id,
+                "anchor_id": resolved["anchor_id"],
+                "placement_mode": "anchor",
+                "secret_code": resolved["secret_code"],
+                "model_scale_meters": resolved["model_scale_meters"],
+                "anchor_position": resolved["anchor_position"],
+            },
         )
