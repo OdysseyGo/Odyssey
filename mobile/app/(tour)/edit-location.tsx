@@ -11,7 +11,11 @@ import WritingTips from '@/components/TourCreation/StoryEditor/WritingTips';
 import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditorFooter';
 import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
 import { CreationHeader } from '@/components/TourCreation/common';
-import { Puzzle, doesLocationMeetTourRequirements } from '@/components/TourCreation';
+import {
+  Puzzle,
+  TOUR_TEXT_FIELD_MAX_LENGTH,
+  doesLocationMeetTourRequirements,
+} from '@/components/TourCreation';
 import { useTranslation } from 'react-i18next';
 
 export default function EditLocationScreen() {
@@ -170,6 +174,7 @@ export default function EditLocationScreen() {
             value={title}
             onChangeText={setTitle}
             placeholder={t('creation.editLocation.titlePlaceholder')}
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <StoryInputField
@@ -177,6 +182,7 @@ export default function EditLocationScreen() {
             value={address}
             onChangeText={setAddress}
             placeholder={t('creation.editLocation.addressPlaceholder')}
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <ImageUploadSection image={image} onImageChange={setImage} />
@@ -189,6 +195,7 @@ export default function EditLocationScreen() {
             hint={t('creation.editLocation.storyHint')}
             multiline
             showCharacterCount
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           {isPuzzleMode && (

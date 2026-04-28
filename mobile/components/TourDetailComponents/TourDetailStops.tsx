@@ -61,15 +61,14 @@ export default function TourDetailStops({ stops, showAllStops = false }: TourDet
             {/* Content card */}
             <View style={[styles.stopContent, isLast && styles.stopContentLast]}>
               <View style={[styles.stopCard, isLocked && styles.stopCardLocked]}>
-                <Text style={[styles.stopTitle, isLocked && styles.stopTitleLocked]}>
-                  {stop.title}
-                </Text>
-                <Text
-                  style={[styles.stopDescription, isLocked && styles.stopDescriptionLocked]}
-                  numberOfLines={3}
-                >
-                  {stop.description}
-                </Text>
+                {!isLocked ? (
+                  <>
+                    <Text style={styles.stopTitle}>{stop.title}</Text>
+                    <Text style={styles.stopDescription} numberOfLines={3}>
+                      {stop.description}
+                    </Text>
+                  </>
+                ) : null}
                 {isLocked && (
                   <>
                     <BlurView intensity={36} tint={theme} style={styles.stopBlur} />

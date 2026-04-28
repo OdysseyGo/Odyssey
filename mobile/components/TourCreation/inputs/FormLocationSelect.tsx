@@ -3,7 +3,7 @@ import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'reac
 import { useTranslation } from 'react-i18next';
 
 import Colors from '@/constants/Colors';
-import { fetchCitySuggestions, fetchCountrySuggestions } from '@/api/locations';
+import { fetchCountrySuggestions, fetchStateSuggestions } from '@/api/locations';
 import { useColorTheme } from '@/utils/useColorTheme';
 
 import { formLocationSelectStyles } from './FormLocationSelect.styles';
@@ -20,7 +20,7 @@ type FormLocationSelectProps = {
   value?: string;
   placeholder: string;
   disabled?: boolean;
-  types: '(regions)' | '(cities)';
+  types: '(regions)' | '(states)';
   countryCode?: string;
   countryName?: string;
   onSelect: (value: LocationSelectValue) => void;
@@ -95,15 +95,15 @@ export default function FormLocationSelect({
             longitude: undefined,
           }));
         } else {
-          const cities = await fetchCitySuggestions(trimmedQuery, countryCode, countryName);
-          mapped = cities.slice(0, 10).map((city) => ({
-            id: `city:${city.name}:${city.country_code}`,
-            label: city.name,
-            value: city.name,
-            description: city.country_code ? `${city.name}, ${city.country_code}` : city.name,
-            countryCode: city.country_code || countryCode || '',
-            latitude: city.latitude,
-            longitude: city.longitude,
+          const states = await fetchStateSuggestions(trimmedQuery, countryCode, countryName);
+          mapped = states.slice(0, 10).map((state) => ({
+            id: `state:${state.name}:${state.country_code}`,
+            label: state.name,
+            value: state.name,
+            description: state.country_code ? `${state.name}, ${state.country_code}` : state.name,
+            countryCode: state.country_code || countryCode || '',
+            latitude: state.latitude,
+            longitude: state.longitude,
           }));
         }
 
@@ -133,13 +133,13 @@ export default function FormLocationSelect({
     isSelectingRef.current = true;
     setSelectionError('');
 
-    if (types === '(cities)' && countryCode && suggestion.countryCode) {
+    if (types === '(states)' && countryCode && suggestion.countryCode) {
       const selectedCode = suggestion.countryCode.toLowerCase();
       const expectedCode = countryCode.toLowerCase();
       if (selectedCode !== expectedCode) {
         setSelectionError(
-          t('creation.details.cityCountryMismatch', {
-            defaultValue: 'Selected city is not in the selected country.',
+          t('creation.details.stateCountryMismatch', {
+            defaultValue: 'Selected state is not in the selected country.',
           })
         );
         setIsFocused(true);

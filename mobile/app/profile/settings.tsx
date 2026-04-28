@@ -26,12 +26,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
-
-const SUPPORTED_LANGUAGES = [
-  { code: 'en', labelKey: 'settings.languages.en' },
-  { code: 'tr', labelKey: 'settings.languages.tr' },
-  { code: 'es', labelKey: 'settings.languages.es' },
-];
+import { SUPPORTED_LANGUAGE_OPTIONS } from '@/i18n/languageConfig';
 
 type SettingsGroup = {
   title: string;
@@ -55,7 +50,7 @@ export default function SettingsScreen({
   onLogout?: () => void;
 }) {
   const { t } = useTranslation();
-  const { language, setLanguage } = useLanguage();
+  const { language, languagePreference, setLanguage } = useLanguage();
   const { themePreference, setThemePreference } = useTheme();
   const colorTheme = useColorTheme();
   const colors = Colors[colorTheme];
@@ -118,8 +113,14 @@ export default function SettingsScreen({
           icon: Globe,
           label: t('settings.language'),
           labelKey: 'settings.language',
-          description: t(`settings.languages.${language}`),
-          descriptionKey: `settings.languages.${language}`,
+          description:
+            languagePreference === 'system'
+              ? `${t('settings.languages.system')} (${t(`settings.languages.${language}`)})`
+              : t(`settings.languages.${language}`),
+          descriptionKey:
+            languagePreference === 'system'
+              ? 'settings.languages.system'
+              : `settings.languages.${language}`,
         },
         {
           key: 'appearance',
@@ -485,7 +486,7 @@ export default function SettingsScreen({
               {t('settings.selectLanguage')}
             </Text>
 
-            {SUPPORTED_LANGUAGES.map((lang) => (
+            {SUPPORTED_LANGUAGE_OPTIONS.map((lang) => (
               <Pressable
                 key={lang.code}
                 style={({ pressed }) => [
@@ -501,7 +502,7 @@ export default function SettingsScreen({
                 <Text style={[styles.languageLabel, { color: colors.text }]}>
                   {t(lang.labelKey)}
                 </Text>
-                {language === lang.code && <Check size={18} color={colors.primary} />}
+                {languagePreference === lang.code && <Check size={18} color={colors.primary} />}
               </Pressable>
             ))}
           </RNView>

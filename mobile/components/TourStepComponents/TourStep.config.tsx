@@ -84,6 +84,7 @@ export interface TourStepProps {
   step: TourStep;
   isSolved: boolean;
   onSolve: () => void;
+  onAnswered?: () => void;
 }
 
 export const exampleTour: Tour = {

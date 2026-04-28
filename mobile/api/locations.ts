@@ -1,11 +1,11 @@
-import { City, Country } from 'country-state-city';
+import { Country, State } from 'country-state-city';
 
 export type CountrySuggestion = {
   name: string;
   country_code: string;
 };
 
-export type CitySuggestion = {
+export type StateSuggestion = {
   name: string;
   country_code: string;
   latitude: number;
@@ -31,11 +31,11 @@ export async function fetchCountrySuggestions(query: string): Promise<CountrySug
   return countries;
 }
 
-export async function fetchCitySuggestions(
+export async function fetchStateSuggestions(
   query: string,
   countryCode?: string,
   countryName?: string
-): Promise<CitySuggestion[]> {
+): Promise<StateSuggestion[]> {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return [];
 
@@ -47,26 +47,28 @@ export async function fetchCitySuggestions(
     )?.isoCode ||
     '';
 
-  const cities = effectiveCountryCode
-    ? City.getCitiesOfCountry(effectiveCountryCode) || []
-    : City.getAllCities();
+  const states = effectiveCountryCode
+    ? State.getStatesOfCountry(effectiveCountryCode) || []
+    : Country.getAllCountries().flatMap(
+        (country) => State.getStatesOfCountry(country.isoCode) || []
+      );
 
   const seen = new Set<string>();
-  const results: CitySuggestion[] = [];
+  const results: StateSuggestion[] = [];
 
-  for (const city of cities) {
-    const name = (city.name || '').trim();
+  for (const state of states) {
+    const name = (state.name || '').trim();
     if (!name || !name.toLowerCase().includes(normalized)) continue;
-    const lat = Number(city.latitude);
-    const lng = Number(city.longitude);
+    const lat = Number(state.latitude);
+    const lng = Number(state.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
-    const cityCountryCode = (city.countryCode || effectiveCountryCode || '').toUpperCase();
-    const key = `${name.toLowerCase()}|${cityCountryCode}`;
+    const stateCountryCode = (state.countryCode || effectiveCountryCode || '').toUpperCase();
+    const key = `${name.toLowerCase()}|${stateCountryCode}`;
     if (seen.has(key)) continue;
     seen.add(key);
     results.push({
       name,
-      country_code: cityCountryCode,
+      country_code: stateCountryCode,
       latitude: lat,
       longitude: lng,
     });

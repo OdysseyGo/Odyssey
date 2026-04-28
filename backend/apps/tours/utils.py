@@ -1,13 +1,21 @@
+import logging
 import math
 import os
 from typing import Any, Dict, List, Optional
 
 import googlemaps
 
-from .models import TourStep
+from .models import Tour, TourStep
+
+logger = logging.getLogger(__name__)
 
 GOOGLE_MAPS_TIMEOUT_SECONDS = 5
 CITY_MATCH_RADIUS_KM = 100.0
+
+STREET_CIRCUITY_FACTOR = 1.3
+WALKING_PACE_M_PER_MIN = 80.0
+CIRCULAR_THRESHOLD_M = 200.0
+LONG_LEG_TRANSPORT_THRESHOLD_M = 2000.0
 
 
 class GoogleMapsFacade:
@@ -335,42 +343,153 @@ class GoogleMapsFacade:
 
     def estimate_accessibility(self, data: Dict[str, Any]) -> int:
         """
-        Comprehensive accessibility rating (1-10).
-        10 = Very Easy, 1 = Very Hard
+        Walkability rating (1-10). 10 = very easy, 1 = very hard.
 
-        Factors:
-        - Total Distance (Base penalty)
-        - Duration (Base penalty)
-        - Elevation Gain (Steepness penalty)
-        - Max Leg Distance (Pacing penalty)
-        - Requires Transport (Complexity penalty)
+        Distance is the primary signal; elevation and an unusually long
+        single leg add secondary penalties. Duration is intentionally not
+        used — it correlates with distance for walking tours and would
+        double-count.
         """
-        # Unpack
-        dist = data.get("total_distance", 0)
-        dur = data.get("duration_minutes", 0)
-        elev = data.get("elevation_gain", 0)
-        max_leg = data.get("max_leg_distance", 0)
+        dist_km = data.get("total_distance", 0) / 1000.0
+        elev = data.get("elevation_gain", 0) or 0
+        max_leg_km = data.get("max_leg_distance", 0) / 1000.0
         req_transport = data.get("requires_transport", False)
 
         score = 10.0
 
-        # 1. Distance Penalty: -1 per 1km (1000m)
-        score -= dist / 1000
+        # Distance: free under 3 km, then -0.6 per extra km, capped at -5.
+        if dist_km > 3:
+            score -= min(5.0, (dist_km - 3) * 0.6)
 
-        # 2. Duration Penalty: -1 per 30 mins
-        score -= dur / 30
+        # Elevation: free under 50 m, then -1 per extra 100 m, capped at -3.
+        if elev > 50:
+            score -= min(3.0, (elev - 50) / 100.0)
 
-        # 3. Elevation Penalty: -1 per 30m gain (approx 10 floors)
-        score -= elev / 30
-
-        # 4. Pacing Penalty: -1 if max leg > 1km, -2 if > 2km (already handled by transport flag logic approx)
-        # Let's be linear: -0.5 per 500m of max leg
-        score -= max_leg / 1000
-
-        # 5. Transport Complexity: -2 flat if transport likely needed
-        if req_transport:
+        # Pacing: long single legs make the tour harder to break up.
+        if max_leg_km > 2.5:
             score -= 2
+        elif max_leg_km > 1.5:
+            score -= 1
 
-        # Cap range
-        final_score = int(round(score))
-        return max(1, min(10, final_score))
+        # Transport: small extra penalty for routes that effectively need it.
+        if req_transport:
+            score -= 1
+
+        return max(1, min(10, int(round(score))))
+
+
+def _haversine_fallback_metrics(steps: List[TourStep]) -> Dict[str, Any]:
+    if len(steps) < 2:
+        return {"success": False}
+
+    sorted_steps = sorted(steps, key=lambda s: s.order)
+    total_distance = 0.0
+    max_leg = 0.0
+
+    for a, b in zip(sorted_steps, sorted_steps[1:]):
+        straight_m = (
+            GoogleMapsFacade._haversine_km(
+                float(a.latitude),
+                float(a.longitude),
+                float(b.latitude),
+                float(b.longitude),
+            )
+            * 1000
+        )
+        leg_m = straight_m * STREET_CIRCUITY_FACTOR
+        total_distance += leg_m
+        max_leg = max(max_leg, leg_m)
+
+    end_dist_m = (
+        GoogleMapsFacade._haversine_km(
+            float(sorted_steps[0].latitude),
+            float(sorted_steps[0].longitude),
+            float(sorted_steps[-1].latitude),
+            float(sorted_steps[-1].longitude),
+        )
+        * 1000
+    )
+
+    return {
+        "total_distance": total_distance,
+        "walking_distance": total_distance,
+        "duration_minutes": int(total_distance / WALKING_PACE_M_PER_MIN),
+        "elevation_gain": 0.0,
+        "max_leg_distance": max_leg,
+        "requires_transport": max_leg > LONG_LEG_TRANSPORT_THRESHOLD_M,
+        "is_circular": end_dist_m < CIRCULAR_THRESHOLD_M,
+        "success": True,
+        "estimated": True,
+    }
+
+
+def recalculate_tour_metrics(tour: Tour) -> None:
+    """Compute distance/elevation/accessibility for a manually-built tour.
+
+    Tries the Google Directions+Elevation pipeline first; falls back to a
+    haversine estimate so the tour always has a non-zero distance once it
+    has at least two stops. Does not touch tour.duration_minutes — that
+    field is user-controlled for manual tours.
+    """
+    try:
+        steps = list(tour.steps.all())
+        if len(steps) < 2:
+            tour.total_distance = 0.0
+            tour.walking_distance = 0.0
+            tour.elevation_gain = 0.0
+            tour.max_leg_distance = 0.0
+            tour.requires_transport = False
+            tour.is_circular = False
+            tour.metrics_calculated = False
+            tour.accessibility_rating = None
+            tour.save(
+                update_fields=[
+                    "total_distance",
+                    "walking_distance",
+                    "elevation_gain",
+                    "max_leg_distance",
+                    "requires_transport",
+                    "is_circular",
+                    "metrics_calculated",
+                    "accessibility_rating",
+                    "updated_at",
+                ]
+            )
+            return
+
+        facade = GoogleMapsFacade()
+        metrics = facade.calculate_route_metrics(steps)
+
+        if not metrics.get("success"):
+            logger.info(
+                "Directions API failed for tour %s; using haversine fallback.",
+                tour.pk,
+            )
+            metrics = _haversine_fallback_metrics(steps)
+
+        if not metrics.get("success"):
+            return
+
+        tour.total_distance = metrics.get("total_distance", 0.0)
+        tour.walking_distance = metrics.get("walking_distance", 0.0)
+        tour.elevation_gain = metrics.get("elevation_gain", 0.0)
+        tour.max_leg_distance = metrics.get("max_leg_distance", 0.0)
+        tour.requires_transport = metrics.get("requires_transport", False)
+        tour.is_circular = metrics.get("is_circular", False)
+        tour.metrics_calculated = True
+        tour.accessibility_rating = facade.estimate_accessibility(metrics)
+        tour.save(
+            update_fields=[
+                "total_distance",
+                "walking_distance",
+                "elevation_gain",
+                "max_leg_distance",
+                "requires_transport",
+                "is_circular",
+                "metrics_calculated",
+                "accessibility_rating",
+                "updated_at",
+            ]
+        )
+    except Exception as e:
+        logger.warning("Failed to recalculate tour metrics for %s: %s", tour.pk, e)
