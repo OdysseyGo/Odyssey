@@ -6,9 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tours', '0012_alter_picturecomparepuzzledetail_reference_image_and_more'),
-        ('tours', '0012_merge_0009_tour_country_tour_country_code_0011_remove_puzzleattempt_attempt_image'),
+        ("tours", "0012_alter_picturecomparepuzzledetail_reference_image_and_more"),
+        (
+            "tours",
+            "0012_merge_0009_tour_country_tour_country_code_0011_remove_puzzleattempt_attempt_image",
+        ),
     ]
 
-    operations = [
-    ]
+    operations = []
