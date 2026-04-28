@@ -46,7 +46,9 @@ class LevelService:
     @classmethod
     def get_level_info(cls, xp: int) -> dict:
         safe_xp = max(0, xp)
-        level, current_threshold, next_threshold = cls._level_state_from_total_xp(safe_xp)
+        level, current_threshold, next_threshold = cls._level_state_from_total_xp(
+            safe_xp
+        )
         title_index = min(level - 1, len(LEVEL_TITLES) - 1)
         title = LEVEL_TITLES[title_index]
         xp_in_level = safe_xp - current_threshold

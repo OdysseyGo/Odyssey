@@ -641,7 +641,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg + 2,
     gap: Spacing.md,
   },
-
 });
 
 const errorStyles = StyleSheet.create({

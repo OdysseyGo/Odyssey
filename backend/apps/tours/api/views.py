@@ -36,6 +36,7 @@ from .serializers import (
     TriviaPuzzleUpsertSerializer,
 )
 
+
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])
 def google_maps_api_key(request):

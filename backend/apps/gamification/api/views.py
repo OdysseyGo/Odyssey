@@ -1,5 +1,5 @@
-from django.db import transaction
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.utils import timezone
 from PIL import UnidentifiedImageError
 from rest_framework import mixins, permissions, status, viewsets
@@ -203,7 +203,9 @@ class TourProgressViewSet(
                     progress.xp_awarded = True
                     progress.save(update_fields=["xp_awarded"])
                     if reward_eligible:
-                        BadgeService.check_badges(locked_user, completed_progress=progress)
+                        BadgeService.check_badges(
+                            locked_user, completed_progress=progress
+                        )
                         awarded_xp = progress.total_xp
                 message = "Tour completed!"
 

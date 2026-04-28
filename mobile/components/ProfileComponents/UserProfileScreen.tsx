@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, View, Text, TouchableOpacity, ActivityIndicator, Animated, StyleSheet } from 'react-native';
+import {
+  Alert,
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Animated,
+  StyleSheet,
+} from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

@@ -11,8 +11,12 @@ User = get_user_model()
 
 class BadgeTierFromSkipsApiTests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="skip_badge_user", password="password")
-        self.creator = User.objects.create_user(username="skip_badge_creator", password="password")
+        self.user = User.objects.create_user(
+            username="skip_badge_user", password="password"
+        )
+        self.creator = User.objects.create_user(
+            username="skip_badge_creator", password="password"
+        )
         self.client.force_authenticate(user=self.user)
 
         self.tour = Tour.objects.create(

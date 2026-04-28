@@ -13,7 +13,9 @@ User = get_user_model()
 class TourXpRulesTests(APITestCase):
     def setUp(self):
         self.player = User.objects.create_user(username="xp_user", password="password")
-        self.creator = User.objects.create_user(username="tour_creator", password="password")
+        self.creator = User.objects.create_user(
+            username="tour_creator", password="password"
+        )
         self.client.force_authenticate(user=self.player)
 
     def _create_tour_with_single_step(self, *, title="XP Tour"):
@@ -40,11 +42,15 @@ class TourXpRulesTests(APITestCase):
 
     def test_skipped_step_gives_no_xp(self):
         tour, _ = self._create_tour_with_single_step(title="Skip Tour")
-        create_response = self.client.post("/api/tour-progress/", {"tour_id": tour.id}, format="json")
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
 
         progress_id = create_response.data["id"]
-        skip_response = self.client.post(f"/api/tour-progress/{progress_id}/skip-step/", format="json")
+        skip_response = self.client.post(
+            f"/api/tour-progress/{progress_id}/skip-step/", format="json"
+        )
         self.assertEqual(skip_response.status_code, status.HTTP_200_OK)
 
         self.player.refresh_from_db()
@@ -75,7 +81,9 @@ class TourXpRulesTests(APITestCase):
             },
         )
 
-        create_response = self.client.post("/api/tour-progress/", {"tour_id": tour.id}, format="json")
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
         progress_id = create_response.data["id"]
 
         wrong_response = self.client.post(
@@ -106,7 +114,9 @@ class TourXpRulesTests(APITestCase):
         self.assertEqual(self.player.xp, 50)
 
     def test_three_wrong_ar_attempts_then_correct_gives_zero_step_xp(self):
-        tour, step = self._create_tour_with_single_step(title="Three Wrong AR Attempts Tour")
+        tour, step = self._create_tour_with_single_step(
+            title="Three Wrong AR Attempts Tour"
+        )
         puzzle = Puzzle.objects.create(
             step=step,
             puzzle_type=Puzzle.AR,
@@ -128,7 +138,9 @@ class TourXpRulesTests(APITestCase):
             },
         )
 
-        create_response = self.client.post("/api/tour-progress/", {"tour_id": tour.id}, format="json")
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
         progress_id = create_response.data["id"]
 
         for _ in range(3):
@@ -160,7 +172,9 @@ class TourXpRulesTests(APITestCase):
         self.assertEqual(self.player.xp, 0)
 
     def test_three_wrong_picture_compare_attempts_then_accept_gives_zero_step_xp(self):
-        tour, step = self._create_tour_with_single_step(title="Three Wrong Picture Attempts Tour")
+        tour, step = self._create_tour_with_single_step(
+            title="Three Wrong Picture Attempts Tour"
+        )
         puzzle = Puzzle.objects.create(
             step=step,
             puzzle_type=Puzzle.PICTURE_COMPARE,
@@ -170,7 +184,9 @@ class TourXpRulesTests(APITestCase):
             xp_reward=50,
         )
 
-        create_response = self.client.post("/api/tour-progress/", {"tour_id": tour.id}, format="json")
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
         progress_id = create_response.data["id"]
         progress = TourProgress.objects.get(id=progress_id)
 
@@ -200,7 +216,9 @@ class TourXpRulesTests(APITestCase):
         self.assertEqual(self.player.xp, 0)
 
     def test_wrong_trivia_then_correct_gives_zero_step_xp(self):
-        tour, step = self._create_tour_with_single_step(title="Wrong Trivia Attempt Tour")
+        tour, step = self._create_tour_with_single_step(
+            title="Wrong Trivia Attempt Tour"
+        )
         Puzzle.objects.create(
             step=step,
             puzzle_type=Puzzle.TRIVIA,
@@ -211,7 +229,9 @@ class TourXpRulesTests(APITestCase):
             xp_reward=25,
         )
 
-        create_response = self.client.post("/api/tour-progress/", {"tour_id": tour.id}, format="json")
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
         progress_id = create_response.data["id"]
 
         wrong_response = self.client.post(
@@ -253,7 +273,9 @@ class TourXpRulesTests(APITestCase):
             xp_reward=25,
         )
 
-        create_response = self.client.post("/api/tour-progress/", {"tour_id": tour.id}, format="json")
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
         progress_id = create_response.data["id"]
 
         answer_response = self.client.post(
@@ -297,7 +319,9 @@ class TourXpRulesTests(APITestCase):
             },
         )
 
-        create_response = self.client.post("/api/tour-progress/", {"tour_id": tour.id}, format="json")
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
         progress_id = create_response.data["id"]
 
         answer_response = self.client.post(
@@ -321,7 +345,9 @@ class TourXpRulesTests(APITestCase):
     def test_completed_tour_does_not_award_xp_twice(self):
         tour, _ = self._create_tour_with_single_step(title="Replay Tour")
 
-        create_response = self.client.post("/api/tour-progress/", {"tour_id": tour.id}, format="json")
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
         first_progress_id = create_response.data["id"]
         first_complete = self.client.post(
             f"/api/tour-progress/{first_progress_id}/complete-step/",
@@ -334,7 +360,9 @@ class TourXpRulesTests(APITestCase):
         self.assertEqual(self.player.xp, 25)
         self.assertEqual(self.player.tour_count, 1)
 
-        replay_response = self.client.post("/api/tour-progress/", {"tour_id": tour.id}, format="json")
+        replay_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
         self.assertEqual(replay_response.status_code, status.HTTP_200_OK)
         replay_progress_id = replay_response.data["id"]
 
@@ -363,7 +391,9 @@ class TourXpRulesTests(APITestCase):
             xp_awarded=False,
         )
 
-        create_response = self.client.post("/api/tour-progress/", {"tour_id": tour.id}, format="json")
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
         self.assertEqual(create_response.status_code, status.HTTP_200_OK)
         self.assertEqual(create_response.data["id"], legacy_progress.id)
 
@@ -383,7 +413,9 @@ class TourXpRulesTests(APITestCase):
         self.player.level = 1
         self.player.save(update_fields=["xp", "level"])
 
-        create_response = self.client.post("/api/tour-progress/", {"tour_id": tour.id}, format="json")
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
         progress_id = create_response.data["id"]
         complete_response = self.client.post(
             f"/api/tour-progress/{progress_id}/complete-step/",
@@ -425,7 +457,9 @@ class TourXpRulesTests(APITestCase):
             xp_reward=25,
         )
 
-        create_response = self.client.post("/api/tour-progress/", {"tour_id": tour.id}, format="json")
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
         progress_id = create_response.data["id"]
 
         answer_response = self.client.post(

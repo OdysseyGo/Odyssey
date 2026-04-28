@@ -180,7 +180,6 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
       )}
 
       <PuzzleHint hint={currentPuzzle.hint} onChange={(text) => handleChange('hint', text)} />
-
     </View>
   );
 }
