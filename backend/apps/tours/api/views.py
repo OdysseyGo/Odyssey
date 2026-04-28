@@ -21,6 +21,7 @@ from apps.tours.models import (
 )
 
 from ..permissions import IsCreatorOrReadOnly
+from ..utils import recalculate_tour_metrics
 from .filters import TourFilter
 from .pagination import TourPagination
 from .serializers import (
@@ -235,7 +236,17 @@ class TourStepViewSet(viewsets.ModelViewSet):
         return TourStep.objects.filter(tour_id=self.kwargs["tour_pk"]).order_by("order")
 
     def perform_create(self, serializer):
-        serializer.save(tour_id=self.kwargs["tour_pk"])
+        step = serializer.save(tour_id=self.kwargs["tour_pk"])
+        recalculate_tour_metrics(step.tour)
+
+    def perform_update(self, serializer):
+        step = serializer.save()
+        recalculate_tour_metrics(step.tour)
+
+    def perform_destroy(self, instance):
+        tour = instance.tour
+        instance.delete()
+        recalculate_tour_metrics(tour)
 
     def _user_can_edit_step_puzzle(self, request, step):
         return step.tour.creator_id == request.user.id or request.user.is_staff

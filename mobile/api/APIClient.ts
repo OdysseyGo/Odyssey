@@ -100,6 +100,13 @@ export async function apiRequest<TResponse = unknown, TBody = Record<string, unk
     const response = await apiClient.request<TResponse>(requestConfig);
     return response.data;
   } catch (error: any) {
+    console.log('[apiRequest] failed', {
+      url: `${apiClient.defaults.baseURL ?? ''}${url}`,
+      method,
+      code: error?.code,
+      message: error?.message,
+      hasResponse: Boolean(error?.response),
+    });
     if (error.response) {
       // Server responded with error status
       const statusCode = error.response.status;
@@ -121,10 +128,10 @@ export async function apiRequest<TResponse = unknown, TBody = Record<string, unk
         undefined,
         error
       );
-    } else if (error.message === 'Network Error' || !navigator.onLine) {
+    } else if (error.message === 'Network Error') {
       // Network error
       throw new ApiError(
-        'Network error. Please check your internet connection.' + requestConfig.baseURL,
+        `Network error reaching ${apiClient.defaults.baseURL ?? '(no baseURL)'}${url}`,
         undefined,
         error
       );
