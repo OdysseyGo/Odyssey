@@ -8,7 +8,6 @@ import {
   Dimensions,
   Alert,
   Modal,
-  Image,
 } from 'react-native';
 import SettingsScreen from '@/app/profile/settings';
 import { useFocusEffect } from '@react-navigation/native';
@@ -27,6 +26,7 @@ import ProfileToursContainer from '@/components/ProfileComponents/ProfileToursCo
 import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
 import AvatarSelectionModal from '@/components/ProfileComponents/AvatarSelectionModal';
 import AuthButton from '@/components/LoginComponents/AuthButton';
+import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import { getMe, User } from '@/api/users';
 import { getMyBadges, Badge } from '@/api/profile';
 import { removeAuthToken } from '@/api/auth';
@@ -39,7 +39,6 @@ import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/Odyssey
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = 240;
 const GUEST_HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEIGHT * 0.35;
-const mobileIcon = require('../../assets/images/mobile_icon.png');
 
 async function getAccessToken() {
   return await SecureStore.getItemAsync('userToken');
@@ -186,9 +185,7 @@ function GuestScreen({
     <View style={[guestStyles.root, { backgroundColor: theme.headerGradientTop }]}>
       {/* ── Hero ── */}
       <View style={[guestStyles.hero, { paddingTop: insets.top, height: GUEST_HERO_HEIGHT }]}>
-        <View style={guestStyles.iconRing}>
-          <Image source={mobileIcon} style={guestStyles.logoImage} resizeMode="contain" />
-        </View>
+        <AuthLogo />
         <Text style={[guestStyles.appName, { color: theme.white }]}>ODYSSEY</Text>
         <Text style={[guestStyles.tagline, { color: theme.profileGuestTaglineText }]}>
           {t('auth.tagline')}
@@ -260,18 +257,6 @@ const guestStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingBottom: Spacing.xxl,
-  },
-  iconRing: {
-    width: 96,
-    height: 96,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.md,
-  },
-  logoImage: {
-    width: 82,
-    height: 82,
-    borderRadius: 18,
   },
   appName: {
     fontSize: 28,

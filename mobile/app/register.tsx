@@ -11,7 +11,6 @@ import {
   Dimensions,
   TextInput,
   BackHandler,
-  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
+import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import BackButton from '@/components/common/BackButton';
 import { createUser, CreateUserPayload } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -28,7 +28,6 @@ import { Spacing } from '@/constants/Spacing';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.28 : SCREEN_HEIGHT * 0.32;
-const mobileIcon = require('../assets/images/mobile_icon.png');
 
 export default function RegisterScreen() {
   const colorScheme = useColorTheme();
@@ -181,9 +180,7 @@ export default function RegisterScreen() {
             style={[styles.backButton, { top: insets.top + 12 }]}
           />
           <View style={styles.logoArea}>
-            <View style={styles.iconRing}>
-              <Image source={mobileIcon} style={styles.logoImage} resizeMode="contain" />
-            </View>
+            <AuthLogo variant="compact" />
             <Text style={styles.appName}>ODYSSEY</Text>
             <Text style={styles.tagline}>{t('auth.registerTagline')}</Text>
           </View>
@@ -389,18 +386,6 @@ const styles = StyleSheet.create({
   logoArea: {
     alignItems: 'center',
     gap: Spacing.xs,
-  },
-  iconRing: {
-    width: 84,
-    height: 84,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.xs,
-  },
-  logoImage: {
-    width: 72,
-    height: 72,
-    borderRadius: 16,
   },
   appName: {
     fontSize: 28,
