@@ -162,9 +162,12 @@ class UserViewSet(ModelViewSet):
 
         if request.method == "DELETE":
             search_type = request.query_params.get("search_type")
+            query = request.query_params.get("query")
             queryset = SearchHistory.objects.filter(user=request.user)
             if search_type:
                 queryset = queryset.filter(search_type=search_type)
+            if query:
+                queryset = queryset.filter(query=query)
             queryset.delete()
             return Response(status=204)
 

@@ -29,6 +29,9 @@ type RecentSearchesByMode = Record<SearchMode, string[]>;
 
 const RECENT_SEARCHES_STORAGE_KEY = 'odyssey:recent-searches:v1';
 const MAX_RECENT_SEARCHES = 8;
+const MIN_SEARCH_CHARS = 2;
+const TOUR_SUGGESTIONS = ['Istanbul', 'History', 'Food', 'Walking tour'];
+const USER_SUGGESTIONS = ['creator', 'guide', 'traveler'];
 
 // Convert API Tour to SearchResultItemProps
 function mapTourToSearchResult(tour: Tour, t: (key: string) => string): SearchResultItemProps {
@@ -129,10 +132,12 @@ export default function SearchScreen() {
 
   // Search with debounce
   useEffect(() => {
-    if (!searchQuery.trim()) {
+    const trimmedQuery = searchQuery.trim();
+    if (!trimmedQuery || trimmedQuery.length < MIN_SEARCH_CHARS) {
       setTourResults([]);
       setUserResults([]);
       setError(null);
+      setIsLoading(false);
       return;
     }
 
@@ -142,15 +147,13 @@ export default function SearchScreen() {
       setError(null);
       try {
         if (searchMode === 'tours') {
-          const response = await searchTours(searchQuery, { page_size: 20 }, abortController.signal);
+          const response = await searchTours(trimmedQuery, { page_size: 20 }, abortController.signal);
           setTourResults(response.results.map((tour) => mapTourToSearchResult(tour, t)));
           setUserResults([]);
-          rememberSearch(searchQuery, 'tours');
         } else {
-          const response = await searchUsers(searchQuery, abortController.signal);
+          const response = await searchUsers(trimmedQuery, abortController.signal);
           setUserResults(response.results);
           setTourResults([]);
-          rememberSearch(searchQuery, 'users');
         }
       } catch (err: any) {
         if (err.name !== 'AbortError') {
@@ -167,7 +170,7 @@ export default function SearchScreen() {
       clearTimeout(timer);
       abortController.abort();
     };
-  }, [rememberSearch, searchMode, searchQuery, t]);
+  }, [searchMode, searchQuery, t]);
 
   const handleSearchChange = useCallback((query: string) => {
     setSearchQuery(query);
@@ -186,8 +189,18 @@ export default function SearchScreen() {
   }, [rememberSearch]);
 
   const handleSubmitSearch = useCallback(() => {
-    rememberSearch(searchQuery);
+    if (searchQuery.trim().length >= MIN_SEARCH_CHARS) {
+      rememberSearch(searchQuery);
+    }
   }, [rememberSearch, searchQuery]);
+
+  const handleSuggestionPress = useCallback(
+    (query: string) => {
+      setSearchQuery(query);
+      rememberSearch(query);
+    },
+    [rememberSearch]
+  );
 
   const handleModeChange = useCallback((mode: SearchMode) => {
     setSearchMode(mode);
@@ -207,6 +220,27 @@ export default function SearchScreen() {
     });
   }, [persistRecentSearches, searchMode]);
 
+  const handleRemoveRecentSearch = useCallback(
+    (query: string) => {
+      setRecentSearches((current) => {
+        const next = {
+          ...current,
+          [searchMode]: current[searchMode].filter(
+            (item) => item.toLowerCase() !== query.toLowerCase()
+          ),
+        };
+        persistRecentSearches(next);
+        getAuthToken()
+          .then((token) => {
+            if (token) clearSearchHistory(searchMode, query).catch(() => {});
+          })
+          .catch(() => {});
+        return next;
+      });
+    },
+    [persistRecentSearches, searchMode]
+  );
+
   const handleUserPress = useCallback(
     (user: User) => {
       rememberSearch(searchQuery);
@@ -223,10 +257,29 @@ export default function SearchScreen() {
     <View style={styles.emptyContainer}>
       <FontAwesome name="search" size={48} color={colors.subText} style={styles.emptyIcon} />
       <Text style={styles.emptyText}>
-        {searchMode === 'tours' ? t('search.noToursFound') : t('search.noUsersFound')}
+        {searchMode === 'tours'
+          ? t('search.noToursFoundFor', { query: searchQuery.trim() })
+          : t('search.noUsersFoundFor', { query: searchQuery.trim() })}
       </Text>
       <Text style={styles.emptySubText}>
         {searchMode === 'tours' ? t('search.noToursFoundSub') : t('search.noUsersFoundSub')}
+      </Text>
+      {renderSuggestionChips()}
+    </View>
+  );
+
+  const renderTooShortState = () => (
+    <View style={styles.helperState}>
+      <View style={styles.helperIconWrap}>
+        <FontAwesome name="keyboard-o" size={22} color={colors.primary} />
+      </View>
+      <Text style={styles.helperTitle}>
+        {t('search.keepTypingTitle', { count: MIN_SEARCH_CHARS })}
+      </Text>
+      <Text style={styles.helperSubText}>
+        {searchMode === 'tours'
+          ? t('search.keepTypingTours')
+          : t('search.keepTypingUsers')}
       </Text>
     </View>
   );
@@ -250,6 +303,52 @@ export default function SearchScreen() {
       <Text style={styles.loadingText}>
         {searchMode === 'tours' ? t('search.searching') : t('search.searchingUsers')}
       </Text>
+    </View>
+  );
+
+  const renderSuggestionChips = () => {
+    const suggestions = searchMode === 'tours' ? TOUR_SUGGESTIONS : USER_SUGGESTIONS;
+
+    return (
+      <View style={styles.suggestionWrap}>
+        {suggestions.map((suggestion) => (
+          <Pressable
+            key={suggestion}
+            onPress={() => handleSuggestionPress(suggestion)}
+            style={({ pressed }) => [styles.suggestionChip, pressed && { opacity: 0.72 }]}
+          >
+            <FontAwesome
+              name={searchMode === 'tours' ? 'map-marker' : 'user'}
+              size={13}
+              color={colors.primary}
+            />
+            <Text style={styles.suggestionText}>{suggestion}</Text>
+          </Pressable>
+        ))}
+      </View>
+    );
+  };
+
+  const renderDiscoveryState = () => (
+    <View style={styles.discoveryContainer}>
+      <View style={styles.discoveryHero}>
+        <View style={styles.helperIconWrap}>
+          <FontAwesome
+            name={searchMode === 'tours' ? 'map' : 'users'}
+            size={22}
+            color={colors.primary}
+          />
+        </View>
+        <Text style={styles.helperTitle}>
+          {searchMode === 'tours' ? t('search.discoverTours') : t('search.discoverUsers')}
+        </Text>
+        <Text style={styles.helperSubText}>
+          {searchMode === 'tours'
+            ? t('search.discoverToursSub')
+            : t('search.discoverUsersSub')}
+        </Text>
+      </View>
+      {renderSuggestionChips()}
     </View>
   );
 
@@ -301,17 +400,29 @@ export default function SearchScreen() {
         </Text>
       </View>
       {searchMode === 'tours'
-        ? tourResults.map((tour) => <SearchResult key={tour.id} {...tour} />)
+        ? tourResults.map((tour) => (
+            <SearchResult
+              key={tour.id}
+              {...tour}
+              onPress={() => rememberSearch(searchQuery, 'tours')}
+            />
+          ))
         : userResults.map(renderUserResult)}
     </View>
   );
 
   const activeRecentSearches = recentSearches[searchMode];
   const activeResultCount = searchMode === 'tours' ? tourResults.length : userResults.length;
-  const showRecentSearches = !searchQuery.trim() && activeRecentSearches.length > 0;
-  const showEmptyState = searchQuery.trim() && !isLoading && !error && activeResultCount === 0;
-  const showResults = searchQuery.trim() && !isLoading && !error && activeResultCount > 0;
-  const showError = searchQuery.trim() && !isLoading && error !== null;
+  const trimmedQuery = searchQuery.trim();
+  const showRecentSearches = !trimmedQuery && activeRecentSearches.length > 0;
+  const showDiscoveryState = !trimmedQuery && activeRecentSearches.length === 0;
+  const showTooShortState =
+    trimmedQuery.length > 0 && trimmedQuery.length < MIN_SEARCH_CHARS && !isLoading;
+  const showEmptyState =
+    trimmedQuery.length >= MIN_SEARCH_CHARS && !isLoading && !error && activeResultCount === 0;
+  const showResults =
+    trimmedQuery.length >= MIN_SEARCH_CHARS && !isLoading && !error && activeResultCount > 0;
+  const showError = trimmedQuery.length >= MIN_SEARCH_CHARS && !isLoading && error !== null;
 
   return (
     <View style={styles.container}>
@@ -335,10 +446,18 @@ export default function SearchScreen() {
           <RecentSearches
             searches={activeRecentSearches}
             onSearchPress={handleRecentSearchPress}
+            onRemoveSearch={handleRemoveRecentSearch}
             onClearAll={handleClearRecentSearches}
+            title={
+              searchMode === 'tours'
+                ? t('search.recentTourSearches')
+                : t('search.recentUserSearches')
+            }
           />
         )}
 
+        {showDiscoveryState && renderDiscoveryState()}
+        {showTooShortState && renderTooShortState()}
         {isLoading && renderLoading()}
         {showError && renderError()}
         {showEmptyState && renderEmptyState()}

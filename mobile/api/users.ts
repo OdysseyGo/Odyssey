@@ -141,11 +141,14 @@ export const saveSearchHistory = (searchType: SearchHistoryType, query: string) 
     data: { search_type: searchType, query },
   });
 
-export const clearSearchHistory = (searchType?: SearchHistoryType) =>
+export const clearSearchHistory = (searchType?: SearchHistoryType, query?: string) =>
   apiRequest<void>({
     method: 'delete',
     url: '/api/users/search-history/',
-    params: searchType ? { search_type: searchType } : undefined,
+    params: {
+      ...(searchType ? { search_type: searchType } : {}),
+      ...(query ? { query } : {}),
+    },
   });
 
 /**
