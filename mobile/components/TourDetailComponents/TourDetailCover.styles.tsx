@@ -15,6 +15,10 @@ export const tourDetailCoverStyles = (theme: ThemeName) => {
       width: '100%',
       height: '100%',
     },
+    coverImagePlaceholder: {
+      width: '100%',
+      height: '100%',
+    },
     topGradient: {
       position: 'absolute',
       top: 0,

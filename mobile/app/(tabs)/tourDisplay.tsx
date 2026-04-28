@@ -57,7 +57,7 @@ function mapTourToDisplayProps(
 ): TourDisplayProps {
   return {
     id: tour.id.toString(),
-    image: tour.steps?.[0]?.image || '',
+    image: tour.cover_image || '',
     title: tour.title,
     author: tour.creator?.username || 'Unknown',
     duration: `${tour.duration_minutes} ${t('tourId.min')}`,

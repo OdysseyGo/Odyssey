@@ -127,6 +127,7 @@ export type Tour = {
   id: number;
   title: string;
   description: string;
+  cover_image?: string;
   creator: User;
   tour_type: TourType;
   category: string;
@@ -177,6 +178,42 @@ export type TourFilters = {
 };
 
 // API Functions
+
+function isLocalFileUri(value: unknown): value is string {
+  return typeof value === 'string' && value.startsWith('file://');
+}
+
+function appendTourField(formData: FormData, key: string, value: unknown) {
+  if (value === undefined) return;
+  if (value === null) {
+    formData.append(key, '');
+    return;
+  }
+  if (typeof value === 'boolean') {
+    formData.append(key, value ? 'true' : 'false');
+    return;
+  }
+  formData.append(key, String(value));
+}
+
+function toTourPayload(tourData: Partial<Tour>): Partial<Tour> | FormData {
+  const { cover_image, ...rest } = tourData;
+  if (!isLocalFileUri(cover_image)) {
+    if (typeof cover_image === 'string' && /^https?:\/\//i.test(cover_image)) {
+      return rest;
+    }
+    return tourData;
+  }
+
+  const formData = new FormData();
+  Object.entries(rest).forEach(([key, value]) => appendTourField(formData, key, value));
+  formData.append('cover_image', {
+    uri: cover_image,
+    name: 'cover_image.jpg',
+    type: 'image/jpeg',
+  } as any);
+  return formData;
+}
 
 /**
  * Fetch all tours with optional filters and search
@@ -289,10 +326,11 @@ export async function getToursByType(
  * Create a new tour (requires authentication)
  */
 export async function createTour(tourData: Partial<Tour>, signal?: AbortSignal): Promise<Tour> {
-  return apiRequest<Tour, Partial<Tour>>({
+  const data = toTourPayload(tourData);
+  return apiRequest<Tour, typeof data>({
     method: 'POST',
     url: '/api/tours/',
-    data: tourData,
+    data,
     auth: true,
     signal,
   });
@@ -306,10 +344,11 @@ export async function updateTour(
   tourData: Partial<Tour>,
   signal?: AbortSignal
 ): Promise<Tour> {
-  return apiRequest<Tour, Partial<Tour>>({
+  const data = toTourPayload(tourData);
+  return apiRequest<Tour, typeof data>({
     method: 'PATCH',
     url: `/api/tours/${tourId}/`,
-    data: tourData,
+    data,
     auth: true,
     signal,
   });

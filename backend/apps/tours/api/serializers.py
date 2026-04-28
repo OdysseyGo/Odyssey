@@ -350,6 +350,8 @@ class TourSerializer(serializers.ModelSerializer):
         instance = self.instance
         current_status = getattr(instance, "status", Tour.DRAFT)
         status_value = attrs.get("status", current_status)
+        current_cover_image = getattr(instance, "cover_image", None)
+        cover_image = attrs.get("cover_image", current_cover_image)
         city = attrs.get("city", getattr(instance, "city", ""))
         city_latitude = attrs.get("city_latitude")
         city_longitude = attrs.get("city_longitude")
@@ -366,6 +368,10 @@ class TourSerializer(serializers.ModelSerializer):
         )
 
         if status_value == Tour.PUBLISHED and (is_publishing or is_location_update):
+            if not cover_image:
+                raise serializers.ValidationError(
+                    {"cover_image": "Cover image is required before publishing a tour."}
+                )
             if not city:
                 raise serializers.ValidationError(
                     {"city": "City is required before publishing a tour."}
@@ -397,6 +403,11 @@ class TourSerializer(serializers.ModelSerializer):
                         )
                     }
                 )
+
+        if instance is None and not cover_image:
+            raise serializers.ValidationError(
+                {"cover_image": "Cover image is required when creating a tour."}
+            )
 
         return attrs
 

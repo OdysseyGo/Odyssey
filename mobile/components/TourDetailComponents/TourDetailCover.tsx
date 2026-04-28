@@ -7,6 +7,7 @@ import { TourDetailCoverProps } from './TourDetailCover.config';
 import { tourDetailCoverStyles } from './TourDetailCover.styles';
 import { STAR } from '@/constants/Symbols';
 import { useTranslation } from 'react-i18next';
+import TourImagePlaceholder from '@/components/common/TourImagePlaceholder';
 
 export default function TourDetailCover({
   coverImage,
@@ -21,7 +22,15 @@ export default function TourDetailCover({
 
   return (
     <View style={styles.coverContainer}>
-      <Image source={{ uri: coverImage }} style={styles.coverImage} resizeMode="cover" />
+      {coverImage ? (
+        <Image source={{ uri: coverImage }} style={styles.coverImage} resizeMode="cover" />
+      ) : (
+        <TourImagePlaceholder
+          style={styles.coverImagePlaceholder}
+          iconSize={42}
+          label="No tour image"
+        />
+      )}
 
       {/* Top gradient: dark → transparent (keeps white header icons readable) */}
       <LinearGradient

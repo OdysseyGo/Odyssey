@@ -8,6 +8,7 @@ import { searchResultStyles } from './SearchResult.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { STAR } from '@/constants/Symbols';
 import Colors from '@/constants/Colors';
+import TourImagePlaceholder from '@/components/common/TourImagePlaceholder';
 
 export default function SearchResult({
   id,
@@ -36,7 +37,11 @@ export default function SearchResult({
       onPress={handlePress}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.7 }]}
     >
-      <Image source={{ uri: image }} style={styles.image} />
+      {image ? (
+        <Image source={{ uri: image }} style={styles.image} />
+      ) : (
+        <TourImagePlaceholder style={styles.imagePlaceholder} iconSize={24} label="No image" />
+      )}
       <View style={styles.infoContainer}>
         <Text style={styles.title} numberOfLines={1}>
           {title}

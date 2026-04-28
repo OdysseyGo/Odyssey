@@ -32,7 +32,7 @@ export function mapApiTourToDetail(tour: Tour, t: (key: string) => string): Tour
     author: tour.creator?.username || 'Unknown',
     authorId: tour.creator?.id || 0,
     authorAvatar: tour.creator?.avatar_url || '',
-    coverImage: tour.steps?.[0]?.image || `https://picsum.photos/800/400?random=${tour.id}`,
+    coverImage: tour.cover_image || '',
     duration: `${tour.duration_minutes} ${t('tourId.min')}`,
     distance:
       tour.total_distance != null && tour.total_distance > 0

@@ -20,7 +20,7 @@ import { searchTours, Tour } from '@/api/tours';
 function mapTourToSearchResult(tour: Tour, t: (key: string) => string): SearchResultItemProps {
   return {
     id: tour.id.toString(),
-    image: tour.steps?.[0]?.image || `https://picsum.photos/400/320?random=${tour.id}`,
+    image: tour.cover_image || '',
     title: tour.title,
     author: tour.creator?.username || t('search.unknownAuthor'),
     duration: `${tour.duration_minutes} ${t('tourId.min')}`,

@@ -1,5 +1,5 @@
 export interface TourDetailCoverProps {
-  coverImage: string;
+  coverImage?: string;
   title: string;
   rating: number;
   reviewCount: number;

@@ -87,8 +87,7 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
     id: apiTour.id.toString(),
     title: apiTour.title,
     description: apiTour.description,
-    coverImageUri:
-      apiTour.steps?.[0]?.image || `https://picsum.photos/800/400?random=${apiTour.id}`,
+    coverImageUri: apiTour.cover_image || '',
     steps,
   };
 }
