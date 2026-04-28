@@ -181,7 +181,7 @@ export default function TourNavigation({
   const colors = Colors[theme];
   const [isDirectionsModalVisible, setIsDirectionsModalVisible] = useState(false);
   const [hasAnsweredCurrentStep, setHasAnsweredCurrentStep] = useState(false);
-  const { skipCount, wrongAnswerCount, stepAnswers } = useActiveTour();
+  const { skipCount, wrongAnswerCount, stepAnswers, stepAttempts } = useActiveTour();
 
   useEffect(() => {
     setHasAnsweredCurrentStep(false);
@@ -197,7 +197,13 @@ export default function TourNavigation({
   const canGoBack = canNavigateBackward(currentStepIndex);
   const { t } = useTranslation();
 
-  const hasAnsweredWrong = (hasAnsweredCurrentStep || stepAnswers.has(currentStep.id)) && !isSolved;
+  const hasPersistedTriviaWrongAttempt =
+    currentStep.type === 'puzzle' &&
+    currentStep.puzzle.type === 'multiple-choice' &&
+    (stepAttempts.get(currentStep.id) ?? 0) > 0;
+  const hasAnsweredWrong =
+    (hasAnsweredCurrentStep || stepAnswers.has(currentStep.id) || hasPersistedTriviaWrongAttempt) &&
+    !isSolved;
 
   const isForwardLocked =
     (currentStep.type === 'puzzle' && !isSolved && !hasAnsweredWrong) ||
@@ -260,11 +266,21 @@ export default function TourNavigation({
     crossScale.setValue(0.3);
     Animated.sequence([
       Animated.parallel([
-        Animated.spring(popupTranslateY, { toValue: 0, useNativeDriver: true, speed: 18, bounciness: 6 }),
+        Animated.spring(popupTranslateY, {
+          toValue: 0,
+          useNativeDriver: true,
+          speed: 18,
+          bounciness: 6,
+        }),
         Animated.timing(popupOpacity, { toValue: 1, duration: 180, useNativeDriver: true }),
       ]),
       Animated.parallel([
-        Animated.spring(crossScale, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 10 }),
+        Animated.spring(crossScale, {
+          toValue: 1,
+          useNativeDriver: true,
+          speed: 14,
+          bounciness: 10,
+        }),
         Animated.timing(crossOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
       ]),
       Animated.delay(1800),
@@ -348,7 +364,11 @@ export default function TourNavigation({
                   { opacity: crossOpacity, transform: [{ scale: crossScale }] },
                 ]}
               >
-                <MaterialCommunityIcons name="close-circle" size={34} color="rgba(220, 38, 38, 0.88)" />
+                <MaterialCommunityIcons
+                  name="close-circle"
+                  size={34}
+                  color="rgba(220, 38, 38, 0.88)"
+                />
               </Animated.View>
             </View>
             <Text style={[styles.tierPopupLabel, { color: TIER_COLORS[tierPopup.from] }]}>
@@ -367,10 +387,12 @@ export default function TourNavigation({
       <View style={styles.headerRow}>
         <View style={styles.actionGroup}>
           <View style={[styles.badgeStatusCard, { borderColor: skipBadgeColor }]}>
-            <TierMiniHex tier={currentTier} scale={0.40} />
+            <TierMiniHex tier={currentTier} scale={0.4} />
             <View style={styles.badgeStatusTextGroup}>
               <Text style={styles.badgeStatusEyebrow}>{t('map.activeTour.badgeCurrentLabel')}</Text>
-              <Text style={[styles.badgeStatusText, { color: skipBadgeColor }]}>{badgeStatusLabel}</Text>
+              <Text style={[styles.badgeStatusText, { color: skipBadgeColor }]}>
+                {badgeStatusLabel}
+              </Text>
             </View>
           </View>
           <Pressable

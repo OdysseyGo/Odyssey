@@ -28,7 +28,7 @@ import {
 } from './TourStep.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
-import { submitArCode, submitPictureCompare } from '@/api/tourProgress';
+import { submitArCode, submitPictureCompare, submitTriviaAnswer } from '@/api/tourProgress';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import SquareCameraOverlayCapture from '@/components/common/SquareCameraOverlayCapture';
 
@@ -90,15 +90,27 @@ interface MultipleChoiceViewProps {
   stepId?: string;
 }
 
-function MultipleChoiceView({ puzzle, isSolved, onSolve, onAnswered, stepId }: MultipleChoiceViewProps) {
+function MultipleChoiceView({
+  puzzle,
+  isSolved,
+  onSolve,
+  onAnswered,
+  stepId,
+}: MultipleChoiceViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const { t } = useTranslation();
-  const { recordWrongAnswer, recordAnswer, stepAnswers } = useActiveTour();
+  const { progressId, recordWrongAnswer, recordAnswer, stepAnswers, stepAttempts } =
+    useActiveTour();
 
-  const persistedAnswer = stepId ? stepAnswers.get(stepId) ?? null : null;
+  const persistedAnswer = stepId ? (stepAnswers.get(stepId) ?? null) : null;
+  const persistedWrongAttemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
+  const hasPersistedWrongAttempt = persistedWrongAttemptCount > 0 && !persistedAnswer && !isSolved;
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(persistedAnswer);
-  const [hasSubmitted, setHasSubmitted] = useState(persistedAnswer !== null);
+  const [hasSubmitted, setHasSubmitted] = useState(
+    persistedAnswer !== null || hasPersistedWrongAttempt
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const bounceAnim = useRef(new Animated.Value(1)).current;
@@ -121,29 +133,61 @@ function MultipleChoiceView({ puzzle, isSolved, onSolve, onAnswered, stepId }: M
   };
 
   const handleSelectOption = (optionId: string) => {
-    if (isSolved || hasSubmitted) return;
+    if (isSolved || hasSubmitted || hasPersistedWrongAttempt || isSubmitting) return;
 
     Alert.alert(t('tourStep.answerConfirmTitle'), t('tourStep.answerConfirmMessage'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('tourStep.answerConfirmAction'),
-        onPress: () => {
-          setSelectedOptionId(optionId);
-          setHasSubmitted(true);
-          onAnswered?.();
-          if (stepId) recordAnswer(stepId, optionId);
-
+        onPress: async () => {
           const selectedOption = puzzle.options.find((opt) => opt.id === optionId);
-          if (selectedOption?.isCorrect) {
-            onSolve();
-            runBounce();
-          } else {
-            recordWrongAnswer();
-            runShake();
+          if (!selectedOption) return;
+
+          if (!progressId) {
+            Alert.alert(
+              'Progress missing',
+              'Could not verify puzzle without active tour progress.'
+            );
+            return;
+          }
+
+          setSelectedOptionId(optionId);
+          setIsSubmitting(true);
+          try {
+            const response = await submitTriviaAnswer(progressId, selectedOption.text);
+            setHasSubmitted(true);
+            onAnswered?.();
+            if (stepId) recordAnswer(stepId, optionId);
+
+            if (response.accepted) {
+              onSolve();
+              runBounce();
+            } else {
+              recordWrongAnswer();
+              runShake();
+            }
+          } catch (error) {
+            setSelectedOptionId(null);
+            console.error('submit trivia answer failed', error);
+            Alert.alert(t('common.error'), t('common.syncError'));
+          } finally {
+            setIsSubmitting(false);
           }
         },
       },
     ]);
+  };
+
+  const getOptionIndicator = (optionId: string) => {
+    if (isSubmitting && selectedOptionId === optionId) {
+      return <ActivityIndicator size="small" color={Colors[theme].background} />;
+    }
+
+    if (selectedOptionId === optionId) {
+      return <MaterialCommunityIcons name="check" size={14} color={Colors[theme].background} />;
+    }
+
+    return null;
   };
 
   const getOptionStyle = (optionId: string) => {
@@ -176,7 +220,8 @@ function MultipleChoiceView({ puzzle, isSolved, onSolve, onAnswered, stepId }: M
 
       <View style={styles.optionsContainer}>
         {puzzle.options.map((option) => {
-          const isWrongSelected = hasSubmitted && selectedOptionId === option.id && !option.isCorrect;
+          const isWrongSelected =
+            hasSubmitted && selectedOptionId === option.id && !option.isCorrect;
           const isCorrectRevealed = (hasSubmitted || isSolved) && option.isCorrect;
           const animStyle = isWrongSelected
             ? { transform: [{ translateX: shakeAnim }] }
@@ -189,7 +234,7 @@ function MultipleChoiceView({ puzzle, isSolved, onSolve, onAnswered, stepId }: M
               <Pressable
                 style={getOptionStyle(option.id)}
                 onPress={() => handleSelectOption(option.id)}
-                disabled={isSolved || hasSubmitted}
+                disabled={isSolved || hasSubmitted || hasPersistedWrongAttempt || isSubmitting}
               >
                 <View
                   style={[
@@ -197,9 +242,7 @@ function MultipleChoiceView({ puzzle, isSolved, onSolve, onAnswered, stepId }: M
                     selectedOptionId === option.id && styles.optionIndicatorSelected,
                   ]}
                 >
-                  {selectedOptionId === option.id && (
-                    <MaterialCommunityIcons name="check" size={14} color={Colors[theme].background} />
-                  )}
+                  {getOptionIndicator(option.id)}
                 </View>
                 <Text style={styles.optionText}>{option.text}</Text>
               </Pressable>
@@ -207,6 +250,10 @@ function MultipleChoiceView({ puzzle, isSolved, onSolve, onAnswered, stepId }: M
           );
         })}
       </View>
+
+      {hasPersistedWrongAttempt && !isSolved && (
+        <Text style={styles.exhaustedHint}>You have already answered this question.</Text>
+      )}
     </View>
   );
 }
@@ -221,7 +268,13 @@ interface PictureCompareViewProps {
   stepId?: string;
 }
 
-function PictureCompareView({ puzzle, isSolved, onSolve, onAnswered, stepId }: PictureCompareViewProps) {
+function PictureCompareView({
+  puzzle,
+  isSolved,
+  onSolve,
+  onAnswered,
+  stepId,
+}: PictureCompareViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
@@ -268,7 +321,9 @@ function PictureCompareView({ puzzle, isSolved, onSolve, onAnswered, stepId }: P
           recordWrongAnswer();
           onAnswered?.();
         } else {
-          setFeedback(`Not close enough (${similarityPercent}%). ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`);
+          setFeedback(
+            `Not close enough (${similarityPercent}%). ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`
+          );
         }
       }
     } catch (error) {
@@ -345,7 +400,10 @@ function PictureCompareView({ puzzle, isSolved, onSolve, onAnswered, stepId }: P
       )}
 
       <Pressable
-        style={[styles.captureButton, (isSolved || isSubmitting || isExhausted) && styles.captureButtonDisabled]}
+        style={[
+          styles.captureButton,
+          (isSolved || isSubmitting || isExhausted) && styles.captureButtonDisabled,
+        ]}
         onPress={handleCaptureAndCheck}
         disabled={isSolved || isSubmitting || isExhausted}
       >
@@ -356,7 +414,9 @@ function PictureCompareView({ puzzle, isSolved, onSolve, onAnswered, stepId }: P
         )}
       </Pressable>
 
-      {feedback ? <Text style={[styles.feedbackText, isExhausted && styles.exhaustedText]}>{feedback}</Text> : null}
+      {feedback ? (
+        <Text style={[styles.feedbackText, isExhausted && styles.exhaustedText]}>{feedback}</Text>
+      ) : null}
       {isExhausted && !isSolved && (
         <Text style={styles.exhaustedHint}>Confirm your location and press Next to continue.</Text>
       )}
@@ -503,7 +563,9 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
           recordWrongAnswer();
           onAnswered?.();
         } else {
-          setFeedback(`Code is not correct. ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`);
+          setFeedback(
+            `Code is not correct. ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`
+          );
         }
       }
     } catch (error) {
@@ -572,7 +634,10 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
       />
 
       <Pressable
-        style={[styles.captureButton, (isSolved || isSubmitting || isExhausted) && styles.captureButtonDisabled]}
+        style={[
+          styles.captureButton,
+          (isSolved || isSubmitting || isExhausted) && styles.captureButtonDisabled,
+        ]}
         onPress={handleCheckCode}
         disabled={isSolved || isSubmitting || isExhausted}
       >
@@ -583,7 +648,9 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
         )}
       </Pressable>
 
-      {feedback ? <Text style={[styles.feedbackText, isExhausted && styles.exhaustedText]}>{feedback}</Text> : null}
+      {feedback ? (
+        <Text style={[styles.feedbackText, isExhausted && styles.exhaustedText]}>{feedback}</Text>
+      ) : null}
       {isExhausted && !isSolved && (
         <Text style={styles.exhaustedHint}>Confirm your location and press Next to continue.</Text>
       )}
@@ -651,7 +718,14 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
           stepId={step.id}
         />
       ) : step.puzzle.type === 'ar-code' ? (
-        <ArCodeView key={step.id} puzzle={step.puzzle} isSolved={isSolved} onSolve={onSolve} onAnswered={onAnswered} stepId={step.id} />
+        <ArCodeView
+          key={step.id}
+          puzzle={step.puzzle}
+          isSolved={isSolved}
+          onSolve={onSolve}
+          onAnswered={onAnswered}
+          stepId={step.id}
+        />
       ) : (
         <PictureCompareView
           key={step.id}
