@@ -326,6 +326,7 @@ export default function UserProfileScreen() {
           subtitle={user.country}
           avatarUrl={user.avatar_url || undefined}
           scrollY={scrollY}
+          disableCopilot={true}
         />
 
         {/* Stats card — overlaps the header via its built-in marginTop: -32 */}
@@ -352,6 +353,7 @@ export default function UserProfileScreen() {
                     params: { userId: user.id.toString() },
                   })
           }
+          disableCopilot={true}
         />
 
         {/* Follow / Unfollow / Login to Follow */}

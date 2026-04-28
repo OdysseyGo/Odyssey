@@ -14,6 +14,17 @@ const WalkthroughableView = walkthroughable(View);
 
 const HEADER_HEIGHT = 240;
 
+const OptionalCopilot = ({ disable, text, order, name, style, children }: any) => {
+  if (disable) {
+    return <View style={style}>{children}</View>;
+  }
+  return (
+    <CopilotStep text={text} order={order} name={name}>
+      <WalkthroughableView style={style}>{children}</WalkthroughableView>
+    </CopilotStep>
+  );
+};
+
 export default function ProfileHeaderComp({
   title,
   subtitle,
@@ -24,6 +35,7 @@ export default function ProfileHeaderComp({
   onTutorialsPress,
   tutorialsAccessibilityLabel,
   scrollY,
+  disableCopilot = false,
 }: ProfileHeaderProps) {
   const theme = useColorTheme();
   const styles = profileHeaderCompStyles(theme);
@@ -57,7 +69,6 @@ export default function ProfileHeaderComp({
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + Spacing.lg }]}>
-      {/* Subtle depth overlay at bottom of header */}
       <View style={styles.bottomGlow} />
 
       <TouchableOpacity
@@ -76,54 +87,61 @@ export default function ProfileHeaderComp({
         <Ionicons name="help-outline" size={Spacing.xl} color={color.primary} />
       </TouchableOpacity>
 
-      <CopilotStep text={t('tutorial.profile.step7text')} order={7} name="settingsStep">
-        <WalkthroughableView
-          style={[
-            styles.settingsButton,
-            {
-              top: insets.top + Spacing.md,
-              right: Spacing.lg,
-            },
-          ]}
+      <OptionalCopilot
+        disable={disableCopilot}
+        text={t('tutorial.profile.step7text')}
+        order={7}
+        name="settingsStep"
+        style={[
+          styles.settingsButton,
+          {
+            top: insets.top + Spacing.md,
+            right: Spacing.lg,
+          },
+        ]}
+      >
+        <TouchableOpacity
+          onPress={onSettingsPress}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={settingsAccessibilityLabel}
         >
-          <TouchableOpacity
-            onPress={onSettingsPress}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel={settingsAccessibilityLabel}
-          >
-            <Ionicons name="settings-outline" size={Spacing.lg} color={color.primary} />
-          </TouchableOpacity>
-        </WalkthroughableView>
-      </CopilotStep>
+          <Ionicons name="settings-outline" size={Spacing.lg} color={color.primary} />
+        </TouchableOpacity>
+      </OptionalCopilot>
 
-      {/* Avatar with parallax + scale animation */}
       <Animated.View
         style={{
           transform: [{ scale: avatarScale as any }, { translateY: avatarTranslateY as any }],
         }}
       >
-        <CopilotStep text={t('tutorial.profile.step2text')} order={2} name="avatarStep">
-          <WalkthroughableView>
-            <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.7}>
-              <View style={styles.avatarRing}>
-                <View style={styles.avatarCircle}>
-                  {avatarUrl ? (
-                    <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
-                  ) : (
-                    <Ionicons name="person" size={48} color={color.subText} />
-                  )}
-                </View>
+        {/* Replaced CopilotStep + WalkthroughableView with OptionalCopilot */}
+        <OptionalCopilot
+          disable={disableCopilot}
+          text={t('tutorial.profile.step2text')}
+          order={2}
+          name="avatarStep"
+        >
+          <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.7}>
+            <View style={styles.avatarRing}>
+              <View style={styles.avatarCircle}>
+                {avatarUrl ? (
+                  <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                ) : (
+                  <Ionicons name="person" size={48} color={color.subText} />
+                )}
               </View>
+            </View>
+            {/* If you want to hide the edit badge for friends, you can do that here too */}
+            {!disableCopilot && (
               <View style={styles.editBadge}>
                 <Ionicons name="camera" size={14} color={color.primary} />
               </View>
-            </TouchableOpacity>
-          </WalkthroughableView>
-        </CopilotStep>
+            )}
+          </TouchableOpacity>
+        </OptionalCopilot>
       </Animated.View>
 
-      {/* Username + location fade out on scroll */}
       <Animated.View style={{ opacity: textOpacity as any, alignItems: 'center' }}>
         <Text style={styles.username}>{title}</Text>
         {subtitle ? (
