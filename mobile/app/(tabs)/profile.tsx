@@ -26,8 +26,9 @@ import ProfileToursContainer from '@/components/ProfileComponents/ProfileToursCo
 import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
 import AvatarSelectionModal from '@/components/ProfileComponents/AvatarSelectionModal';
 import AuthButton from '@/components/LoginComponents/AuthButton';
+import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import { getMe, User } from '@/api/users';
-import { getMyBadges, getLevelInfo, Badge, LevelInfo } from '@/api/profile';
+import { getMyBadges, getLevelInfo, LevelInfo, UserBadge } from '@/api/profile';
 import { computeLevelInfo, getLevelTier } from '@/utils/levelConfig';
 import { removeAuthToken } from '@/api/auth';
 import { consumeProfileNeedsRefresh } from '@/lib/profileRefresh';
@@ -185,11 +186,7 @@ function GuestScreen({
     <View style={[guestStyles.root, { backgroundColor: theme.headerGradientTop }]}>
       {/* ── Hero ── */}
       <View style={[guestStyles.hero, { paddingTop: insets.top, height: GUEST_HERO_HEIGHT }]}>
-        <View
-          style={[guestStyles.iconRing, { backgroundColor: theme.profileGuestIconRingBackground }]}
-        >
-          <Ionicons name="compass" size={44} color={theme.white} />
-        </View>
+        <AuthLogo />
         <Text style={[guestStyles.appName, { color: theme.white }]}>ODYSSEY</Text>
         <Text style={[guestStyles.tagline, { color: theme.profileGuestTaglineText }]}>
           {t('auth.tagline')}
@@ -261,14 +258,6 @@ const guestStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingBottom: Spacing.xxl,
-  },
-  iconRing: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.md,
   },
   appName: {
     fontSize: 28,
@@ -354,7 +343,7 @@ export default function Profile() {
   const [curUser, setCurUser] = useState<User | null>(null);
   const [levelInfo, setLevelInfo] = useState<LevelInfo | null>(null);
   const [badgesCount, setBadgesCount] = useState(0);
-  const [badges, setBadges] = useState<Badge[]>([]);
+  const [badges, setBadges] = useState<UserBadge[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasToken, setHasToken] = useState<boolean | null>(null);
   const [fetchError, setFetchError] = useState(false);
@@ -513,13 +502,17 @@ export default function Profile() {
     following: curUser.following_count,
   };
 
-  const formattedBadges = badges.map((badge) => ({
-    id: badge.id.toString(),
-    name: badge.name,
-    icon: badge.icon,
-    description: badge.description,
+  const formattedBadges = badges.map((userBadge) => ({
+    id: userBadge.id.toString(),
+    name: userBadge.badge.name,
+    code: userBadge.badge.code,
+    description: userBadge.badge.description,
     unlocked: true,
-    earnedDate: badge.created_at,
+    city: userBadge.city,
+    countryCode: userBadge.country_code,
+    mistakeCount: userBadge.mistake_count,
+    earnedDate: userBadge.earned_at,
+    visualConfig: userBadge.visual_config,
   }));
 
   const handleFollowersPress = () => {

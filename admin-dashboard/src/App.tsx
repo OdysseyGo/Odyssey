@@ -11,6 +11,7 @@ import Reports from "@/pages/Reports";
 import Analytics from "@/pages/Analytics";
 import PictureCompareTuning from "@/pages/PictureCompareTuning";
 import ARModels from "@/pages/ARModels";
+import Badges from "@/pages/Badges";
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/ar-models" element={<ARModels />} />
             <Route path="/picture-compare-tuning" element={<PictureCompareTuning />} />
+            <Route path="/badges" element={<Badges />} />
           </Route>
         </Routes>
       </AuthProvider>
