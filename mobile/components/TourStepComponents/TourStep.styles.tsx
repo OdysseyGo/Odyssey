@@ -336,5 +336,16 @@ export default function getStyles(theme: ThemeName) {
       borderColor: color.primary,
       backgroundColor: color.primary,
     },
+    arActionIndicator: {
+      width: 38,
+      height: 38,
+      borderRadius: Spacing.md,
+      borderWidth: 1,
+      borderColor: color.primary,
+      marginRight: Spacing.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: color.primaryMuted,
+    },
   });
 }

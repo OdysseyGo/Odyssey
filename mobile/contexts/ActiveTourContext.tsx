@@ -20,6 +20,7 @@ interface ActiveTourState {
   highestStepIndex: number;
   solvedSteps: Set<string>;
   locationConfirmedSteps: Set<string>;
+  stepAnswers: Map<string, string>;
   earnedXP: number;
   skipCount: number;
   wrongAnswerCount: number;
@@ -35,6 +36,7 @@ interface ActiveTourContextType extends ActiveTourState {
   confirmLocation: (stepId: string) => void;
   recordSkip: () => void;
   recordWrongAnswer: () => void;
+  recordAnswer: (stepId: string, optionId: string) => void;
   resetProgress: () => void;
 }
 
@@ -46,6 +48,7 @@ const initialState: ActiveTourState = {
   highestStepIndex: 0,
   solvedSteps: new Set(),
   locationConfirmedSteps: new Set(),
+  stepAnswers: new Map(),
   earnedXP: 0,
   skipCount: 0,
   wrongAnswerCount: 0,
@@ -175,6 +178,7 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
       highestStepIndex: 0,
       solvedSteps: new Set(),
       locationConfirmedSteps: new Set(),
+      stepAnswers: new Map(),
       earnedXP: 0,
       skipCount: 0,
       wrongAnswerCount: 0,
@@ -225,12 +229,21 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const recordAnswer = useCallback((stepId: string, optionId: string) => {
+    setState((prev) => {
+      const next = new Map(prev.stepAnswers);
+      next.set(stepId, optionId);
+      return { ...prev, stepAnswers: next };
+    });
+  }, []);
+
   const resetProgress = useCallback(() => {
     setState((prev) => ({
       ...prev,
       currentStepIndex: 0,
       solvedSteps: new Set(),
       locationConfirmedSteps: new Set(),
+      stepAnswers: new Map(),
       earnedXP: 0,
       skipCount: 0,
       wrongAnswerCount: 0,
@@ -304,6 +317,7 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         confirmLocation,
         recordSkip,
         recordWrongAnswer,
+        recordAnswer,
         resetProgress,
       }}
     >

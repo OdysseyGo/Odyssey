@@ -8,8 +8,9 @@ import {
   ActivityIndicator,
   Modal,
   TextInput,
+  Animated,
 } from 'react-native';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
@@ -86,16 +87,38 @@ interface MultipleChoiceViewProps {
   isSolved: boolean;
   onSolve: () => void;
   onAnswered?: () => void;
+  stepId?: string;
 }
 
-function MultipleChoiceView({ puzzle, isSolved, onSolve, onAnswered }: MultipleChoiceViewProps) {
+function MultipleChoiceView({ puzzle, isSolved, onSolve, onAnswered, stepId }: MultipleChoiceViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const { t } = useTranslation();
-  const { recordWrongAnswer } = useActiveTour();
+  const { recordWrongAnswer, recordAnswer, stepAnswers } = useActiveTour();
 
-  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const persistedAnswer = stepId ? stepAnswers.get(stepId) ?? null : null;
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(persistedAnswer);
+  const [hasSubmitted, setHasSubmitted] = useState(persistedAnswer !== null);
+
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+  const bounceAnim = useRef(new Animated.Value(1)).current;
+
+  const runShake = () => {
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 10, duration: 55, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 55, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 8, duration: 55, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -8, duration: 55, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 55, useNativeDriver: true }),
+    ]).start();
+  };
+
+  const runBounce = () => {
+    Animated.sequence([
+      Animated.spring(bounceAnim, { toValue: 1.05, useNativeDriver: true, speed: 30 }),
+      Animated.spring(bounceAnim, { toValue: 1, useNativeDriver: true, speed: 20 }),
+    ]).start();
+  };
 
   const handleSelectOption = (optionId: string) => {
     if (isSolved || hasSubmitted) return;
@@ -108,12 +131,15 @@ function MultipleChoiceView({ puzzle, isSolved, onSolve, onAnswered }: MultipleC
           setSelectedOptionId(optionId);
           setHasSubmitted(true);
           onAnswered?.();
+          if (stepId) recordAnswer(stepId, optionId);
 
           const selectedOption = puzzle.options.find((opt) => opt.id === optionId);
           if (selectedOption?.isCorrect) {
             onSolve();
+            runBounce();
           } else {
             recordWrongAnswer();
+            runShake();
           }
         },
       },
@@ -149,26 +175,37 @@ function MultipleChoiceView({ puzzle, isSolved, onSolve, onAnswered }: MultipleC
       )}
 
       <View style={styles.optionsContainer}>
-        {puzzle.options.map((option) => (
-          <Pressable
-            key={option.id}
-            style={getOptionStyle(option.id)}
-            onPress={() => handleSelectOption(option.id)}
-            disabled={isSolved || hasSubmitted}
-          >
-            <View
-              style={[
-                styles.optionIndicator,
-                selectedOptionId === option.id && styles.optionIndicatorSelected,
-              ]}
-            >
-              {selectedOptionId === option.id && (
-                <MaterialCommunityIcons name="check" size={14} color={Colors[theme].background} />
-              )}
-            </View>
-            <Text style={styles.optionText}>{option.text}</Text>
-          </Pressable>
-        ))}
+        {puzzle.options.map((option) => {
+          const isWrongSelected = hasSubmitted && selectedOptionId === option.id && !option.isCorrect;
+          const isCorrectRevealed = (hasSubmitted || isSolved) && option.isCorrect;
+          const animStyle = isWrongSelected
+            ? { transform: [{ translateX: shakeAnim }] }
+            : isCorrectRevealed
+              ? { transform: [{ scale: bounceAnim }] }
+              : undefined;
+
+          return (
+            <Animated.View key={option.id} style={animStyle}>
+              <Pressable
+                style={getOptionStyle(option.id)}
+                onPress={() => handleSelectOption(option.id)}
+                disabled={isSolved || hasSubmitted}
+              >
+                <View
+                  style={[
+                    styles.optionIndicator,
+                    selectedOptionId === option.id && styles.optionIndicatorSelected,
+                  ]}
+                >
+                  {selectedOptionId === option.id && (
+                    <MaterialCommunityIcons name="check" size={14} color={Colors[theme].background} />
+                  )}
+                </View>
+                <Text style={styles.optionText}>{option.text}</Text>
+              </Pressable>
+            </Animated.View>
+          );
+        })}
       </View>
     </View>
   );
@@ -437,30 +474,35 @@ function ArCodeView({ puzzle, isSolved, onSolve }: ArCodeViewProps) {
   return (
     <View style={styles.puzzleBody}>
       <View style={styles.questionCard}>
-        <Text style={styles.questionLabel}>AR challenge</Text>
+        <View style={styles.storyHeroHeader}>
+          <MaterialCommunityIcons name="cube-scan" size={22} color={Colors[theme].primary} />
+          <Text style={styles.storyHeroHeaderText}>AR Challenge</Text>
+        </View>
         <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
-        <Text style={styles.questionHint}>
-          Open the model, find the hidden secret code, then enter it below.
-        </Text>
       </View>
 
-      <Pressable
-        style={[
-          styles.viewPuzzleButton,
-          (!puzzle.sceneAssetUrl || isPreparingAr) && styles.captureButtonDisabled,
-        ]}
-        onPress={handleOpenPuzzleView}
-        disabled={!puzzle.sceneAssetUrl || isPreparingAr}
-      >
-        {isPreparingAr ? (
-          <ActivityIndicator color={Colors[theme].white} />
-        ) : (
-          <>
-            <MaterialCommunityIcons name="eye-outline" size={18} color={Colors[theme].white} />
-            <Text style={styles.viewPuzzleButtonText}>View Puzzle</Text>
-          </>
-        )}
-      </Pressable>
+      <View style={styles.optionsContainer}>
+        <Pressable
+          style={[
+            styles.optionButton,
+            (!puzzle.sceneAssetUrl || isPreparingAr) && styles.captureButtonDisabled,
+          ]}
+          onPress={handleOpenPuzzleView}
+          disabled={!puzzle.sceneAssetUrl || isPreparingAr}
+        >
+          <View style={styles.arActionIndicator}>
+            {isPreparingAr ? (
+              <ActivityIndicator size="small" color={Colors[theme].primary} />
+            ) : (
+              <MaterialCommunityIcons name="cube-scan" size={20} color={Colors[theme].primary} />
+            )}
+          </View>
+          <Text style={styles.optionText}>Open AR View</Text>
+          <MaterialCommunityIcons name="chevron-right" size={18} color={Colors[theme].subText} />
+        </Pressable>
+      </View>
+
+      <Text style={styles.sectionLabel}>Enter the secret code</Text>
 
       <TextInput
         value={codeInput}
@@ -546,6 +588,7 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
           isSolved={isSolved}
           onSolve={onSolve}
           onAnswered={onAnswered}
+          stepId={step.id}
         />
       ) : step.puzzle.type === 'ar-code' ? (
         <ArCodeView key={step.id} puzzle={step.puzzle} isSolved={isSolved} onSolve={onSolve} />

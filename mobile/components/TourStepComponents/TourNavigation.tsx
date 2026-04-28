@@ -1,5 +1,5 @@
-import { View, Text, Pressable, Modal, Alert, Platform } from 'react-native';
-import { useMemo, useState, useCallback, useEffect } from 'react';
+import { View, Text, Pressable, Modal, Alert, Platform, Animated } from 'react-native';
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,7 @@ import {
 import TourStepComponent from './TourStep';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
+import HexBadge from '@/components/ProfileComponents/HexBadge';
 import { openExternalMapsDirections, type ExternalMapsProvider } from '@/utils/externalMaps';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 
@@ -112,6 +113,57 @@ function NavigationArrows({
   );
 }
 
+const TIER_BADGE_CODE: Record<string, string | null> = {
+  gold: 'CITY_GOLD',
+  silver: 'CITY_SILVER',
+  bronze: 'CITY_BRONZE',
+  loss: null,
+};
+
+const HEX_W = 100;
+const HEX_H = 104;
+
+const NO_TEXT_CONFIG = {
+  text: { y: 2 },
+  text_plate: { y: 2 },
+};
+
+const LOSS_VISUAL_CONFIG = {
+  text: { y: 2 },
+  text_plate: { y: 2 },
+  palette: {
+    neutral: {
+      outer_fill: '#f1f5f9',
+      inner_fill: '#f8fafc',
+      border: '#e2e8f0',
+      border_color: '#e2e8f0',
+      inner_border_color: '#e2e8f0',
+      text: '#94a3b8',
+    },
+  },
+};
+
+function TierMiniHex({ tier, scale }: { tier: string; scale: number }) {
+  const scaledW = HEX_W * scale;
+  const scaledH = HEX_H * scale;
+  // Centre the layout box of the unscaled badge inside the clip container,
+  // so the transform-from-centre lands the scaled visual exactly within bounds.
+  const left = scaledW / 2 - HEX_W / 2;
+  const top = scaledH / 2 - HEX_H / 2;
+
+  return (
+    <View style={{ width: scaledW, height: scaledH, overflow: 'hidden' }}>
+      <View style={{ position: 'absolute', left, top, transform: [{ scale }] }}>
+        <HexBadge
+          code={TIER_BADGE_CODE[tier] ?? null}
+          fallbackLabel=""
+          visualConfig={tier === 'loss' ? LOSS_VISUAL_CONFIG : NO_TEXT_CONFIG}
+        />
+      </View>
+    </View>
+  );
+}
+
 export default function TourNavigation({
   tour,
   currentStepIndex,
@@ -129,7 +181,7 @@ export default function TourNavigation({
   const colors = Colors[theme];
   const [isDirectionsModalVisible, setIsDirectionsModalVisible] = useState(false);
   const [hasAnsweredCurrentStep, setHasAnsweredCurrentStep] = useState(false);
-  const { skipCount, wrongAnswerCount } = useActiveTour();
+  const { skipCount, wrongAnswerCount, stepAnswers } = useActiveTour();
 
   useEffect(() => {
     setHasAnsweredCurrentStep(false);
@@ -145,7 +197,7 @@ export default function TourNavigation({
   const canGoBack = canNavigateBackward(currentStepIndex);
   const { t } = useTranslation();
 
-  const hasAnsweredWrong = hasAnsweredCurrentStep && !isSolved;
+  const hasAnsweredWrong = (hasAnsweredCurrentStep || stepAnswers.has(currentStep.id)) && !isSolved;
 
   const isForwardLocked =
     (currentStep.type === 'puzzle' && !isSolved && !hasAnsweredWrong) ||
@@ -162,15 +214,66 @@ export default function TourNavigation({
           solvedSteps,
           locationConfirmedSteps
         );
+  const TIER_COLORS = {
+    gold: '#F59E0B',
+    silver: '#94A3B8',
+    bronze: '#CD7F32',
+    loss: colors.error,
+  } as const;
+
+  type Tier = keyof typeof TIER_COLORS;
+
+  const getTier = (count: number): Tier => {
+    if (count === 0) return 'gold';
+    if (count === 1) return 'silver';
+    if (count === 2) return 'bronze';
+    return 'loss';
+  };
+
+  const TIER_LABELS: Record<Tier, string> = {
+    gold: t('map.activeTour.badgeStatusGold'),
+    silver: t('map.activeTour.badgeStatusSilver'),
+    bronze: t('map.activeTour.badgeStatusBronze'),
+    loss: t('map.activeTour.badgeStatusLoss'),
+  };
+
   const penaltyCount = skipCount + wrongAnswerCount;
-  const skipBadgeColor =
-    penaltyCount === 0 ? '#80ED99' : penaltyCount === 1 ? colors.star : colors.error;
-  const badgeStatusLabel =
-    penaltyCount === 0
-      ? t('map.activeTour.badgeStatusGood')
-      : penaltyCount === 1
-        ? t('map.activeTour.badgeStatusRisk')
-        : t('map.activeTour.badgeStatusReduced');
+  const currentTier = getTier(penaltyCount);
+  const skipBadgeColor = TIER_COLORS[currentTier];
+  const badgeStatusLabel = TIER_LABELS[currentTier];
+
+  const prevTierRef = useRef<Tier>(currentTier);
+  const [tierPopup, setTierPopup] = useState<{ from: Tier; to: Tier } | null>(null);
+  const popupTranslateY = useRef(new Animated.Value(-80)).current;
+  const popupOpacity = useRef(new Animated.Value(0)).current;
+  const crossOpacity = useRef(new Animated.Value(0)).current;
+  const crossScale = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    if (prevTierRef.current === currentTier) return;
+    const from = prevTierRef.current;
+    prevTierRef.current = currentTier;
+    setTierPopup({ from, to: currentTier });
+    popupTranslateY.setValue(-80);
+    popupOpacity.setValue(0);
+    crossOpacity.setValue(0);
+    crossScale.setValue(0.3);
+    Animated.sequence([
+      Animated.parallel([
+        Animated.spring(popupTranslateY, { toValue: 0, useNativeDriver: true, speed: 18, bounciness: 6 }),
+        Animated.timing(popupOpacity, { toValue: 1, duration: 180, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.spring(crossScale, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 10 }),
+        Animated.timing(crossOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+      ]),
+      Animated.delay(1800),
+      Animated.parallel([
+        Animated.timing(popupTranslateY, { toValue: -80, duration: 260, useNativeDriver: true }),
+        Animated.timing(popupOpacity, { toValue: 0, duration: 260, useNativeDriver: true }),
+      ]),
+    ]).start(() => setTierPopup(null));
+  }, [currentTier]);
 
   const handleSolve = () => {
     onStepSolved(currentStep.id);
@@ -229,11 +332,46 @@ export default function TourNavigation({
 
   return (
     <View style={styles.container}>
+      {tierPopup && (
+        <Animated.View
+          style={[
+            styles.tierPopup,
+            { transform: [{ translateY: popupTranslateY }], opacity: popupOpacity },
+          ]}
+        >
+          <View style={styles.tierPopupBadgeCol}>
+            <View>
+              <TierMiniHex tier={tierPopup.from} scale={0.72} />
+              <Animated.View
+                style={[
+                  styles.crossOverlay,
+                  { opacity: crossOpacity, transform: [{ scale: crossScale }] },
+                ]}
+              >
+                <MaterialCommunityIcons name="close-circle" size={34} color="rgba(220, 38, 38, 0.88)" />
+              </Animated.View>
+            </View>
+            <Text style={[styles.tierPopupLabel, { color: TIER_COLORS[tierPopup.from] }]}>
+              {TIER_LABELS[tierPopup.from]}
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="arrow-right" size={20} color={colors.subText} />
+          <View style={styles.tierPopupBadgeCol}>
+            <TierMiniHex tier={tierPopup.to} scale={0.72} />
+            <Text style={[styles.tierPopupLabel, { color: TIER_COLORS[tierPopup.to] }]}>
+              {TIER_LABELS[tierPopup.to]}
+            </Text>
+          </View>
+        </Animated.View>
+      )}
       <View style={styles.headerRow}>
         <View style={styles.actionGroup}>
-          <View style={styles.badgeStatusCard}>
-            <View style={[styles.badgeStatusDot, { backgroundColor: skipBadgeColor }]} />
-            <Text style={styles.badgeStatusText}>{badgeStatusLabel}</Text>
+          <View style={[styles.badgeStatusCard, { borderColor: skipBadgeColor }]}>
+            <TierMiniHex tier={currentTier} scale={0.40} />
+            <View style={styles.badgeStatusTextGroup}>
+              <Text style={styles.badgeStatusEyebrow}>{t('map.activeTour.badgeCurrentLabel')}</Text>
+              <Text style={[styles.badgeStatusText, { color: skipBadgeColor }]}>{badgeStatusLabel}</Text>
+            </View>
           </View>
           <Pressable
             style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
