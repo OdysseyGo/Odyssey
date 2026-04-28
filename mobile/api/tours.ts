@@ -187,8 +187,30 @@ export type TourFilters = {
 
 // API Functions
 
-function isLocalFileUri(value: unknown): value is string {
-  return typeof value === 'string' && value.startsWith('file://');
+function isRemoteHttpUrl(value: unknown): boolean {
+  return typeof value === 'string' && /^https?:\/\//i.test(value);
+}
+
+function isUploadableAssetUri(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  if (!value.trim()) return false;
+  if (isRemoteHttpUrl(value) || value.startsWith('data:')) return false;
+
+  // RN/Expo may return different local schemes by platform/source.
+  return (
+    value.startsWith('file://') ||
+    value.startsWith('content://') ||
+    value.startsWith('ph://') ||
+    value.startsWith('assets-library://') ||
+    value.startsWith('/')
+  );
+}
+
+function getUniqueCoverImageName(uri: string): string {
+  const cleanUri = uri.split('?')[0].split('#')[0];
+  const match = cleanUri.match(/\.([a-zA-Z0-9]+)$/);
+  const ext = (match?.[1] || 'jpg').toLowerCase();
+  return `cover_image_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
 }
 
 function appendTourField(formData: FormData, key: string, value: unknown) {
@@ -206,8 +228,8 @@ function appendTourField(formData: FormData, key: string, value: unknown) {
 
 function toTourPayload(tourData: Partial<Tour>): Partial<Tour> | FormData {
   const { cover_image, ...rest } = tourData;
-  if (!isLocalFileUri(cover_image)) {
-    if (typeof cover_image === 'string' && /^https?:\/\//i.test(cover_image)) {
+  if (!isUploadableAssetUri(cover_image)) {
+    if (isRemoteHttpUrl(cover_image)) {
       return rest;
     }
     return tourData;
@@ -217,7 +239,7 @@ function toTourPayload(tourData: Partial<Tour>): Partial<Tour> | FormData {
   Object.entries(rest).forEach(([key, value]) => appendTourField(formData, key, value));
   formData.append('cover_image', {
     uri: cover_image,
-    name: 'cover_image.jpg',
+    name: getUniqueCoverImageName(cover_image),
     type: 'image/jpeg',
   } as any);
   return formData;
