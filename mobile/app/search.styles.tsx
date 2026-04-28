@@ -66,6 +66,50 @@ export const searchScreenStyles = (theme: ThemeName) => {
       fontSize: 14,
       color: color.subText,
     },
+    userCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: color.foreground,
+      borderRadius: Spacing.borderRadius,
+      marginHorizontal: Spacing.md,
+      marginBottom: Spacing.md,
+      padding: Spacing.md,
+    },
+    userAvatar: {
+      width: 54,
+      height: 54,
+      borderRadius: 27,
+      backgroundColor: color.foregroundSecondary,
+      marginRight: Spacing.md,
+    },
+    userAvatarFallback: {
+      width: 54,
+      height: 54,
+      borderRadius: 27,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: color.primaryMuted,
+      marginRight: Spacing.md,
+    },
+    userInfo: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    userName: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: color.primary,
+      marginBottom: 4,
+    },
+    userFullName: {
+      fontSize: 13,
+      color: color.subText,
+      marginBottom: 4,
+    },
+    userMeta: {
+      fontSize: 12,
+      color: color.subText,
+    },
   });
 };
 

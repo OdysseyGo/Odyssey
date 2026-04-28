@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.users.models.Follow import Follow
+from apps.users.models.SearchHistory import SearchHistory
 from apps.users.models.User import User
 
 
@@ -52,6 +53,25 @@ class FollowSerializer(serializers.ModelSerializer):
         if Follow.objects.filter(follower=follower, following=following).exists():
             raise serializers.ValidationError("Already following this user.")
         return attrs
+
+
+class SearchHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SearchHistory
+        fields = ["id", "search_type", "query", "searched_at"]
+        read_only_fields = ["id", "searched_at"]
+
+    def validate_search_type(self, value):
+        valid_types = {choice[0] for choice in SearchHistory.SEARCH_TYPE_CHOICES}
+        if value not in valid_types:
+            raise serializers.ValidationError("Invalid search type.")
+        return value
+
+    def validate_query(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("Query is required.")
+        return value
 
 
 class FollowingFeedSerializer(serializers.Serializer):
