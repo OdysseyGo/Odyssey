@@ -30,8 +30,9 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState(resolveSupportedLanguage(i18n.language));
-  const [languagePreference, setLanguagePreferenceState] =
-    useState<LanguagePreferenceCode>(SYSTEM_LANGUAGE_PREFERENCE);
+  const [languagePreference, setLanguagePreferenceState] = useState<LanguagePreferenceCode>(
+    SYSTEM_LANGUAGE_PREFERENCE
+  );
 
   useEffect(() => {
     SecureStore.getItemAsync(LANGUAGE_KEY).then((saved) => {

@@ -49,9 +49,7 @@ export function resolveAppLanguage(savedLanguage?: string | null): SupportedLang
     : getDeviceLanguage();
 }
 
-export function resolveLanguagePreference(
-  savedLanguage?: string | null
-): LanguagePreferenceCode {
+export function resolveLanguagePreference(savedLanguage?: string | null): LanguagePreferenceCode {
   const normalizedSavedLanguage = normalizeLanguageCode(savedLanguage);
   return normalizedSavedLanguage === SYSTEM_LANGUAGE_PREFERENCE ||
     isSupportedLanguageCode(normalizedSavedLanguage)

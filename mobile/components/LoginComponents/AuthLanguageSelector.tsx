@@ -24,8 +24,7 @@ export default function AuthLanguageSelector({ style }: AuthLanguageSelectorProp
   const currentLanguage =
     AUTH_LANGUAGE_OPTIONS.find(
       (supportedLanguage) => supportedLanguage.code === languagePreference
-    ) ??
-    AUTH_LANGUAGE_OPTIONS[0];
+    ) ?? AUTH_LANGUAGE_OPTIONS[0];
 
   return (
     <>
