@@ -151,7 +151,12 @@ class TourProgressViewSet(
         next_step = self._get_next_step(progress)
         should_award_rewards = progress.tour.creator_id != user.id
 
-        if should_award_rewards and award_xp and current_step and hasattr(current_step, "puzzle"):
+        if (
+            should_award_rewards
+            and award_xp
+            and current_step
+            and hasattr(current_step, "puzzle")
+        ):
             progress.total_xp += current_step.puzzle.xp_reward
 
         with transaction.atomic():
