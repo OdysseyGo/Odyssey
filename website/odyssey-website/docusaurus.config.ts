@@ -61,47 +61,27 @@ const config: Config = {
 
   themeConfig: {
     colorMode: {
-      defaultMode: 'dark', 
-      disableSwitch: true, 
-      respectPrefersColorScheme: false, 
+      defaultMode: 'light',
+      disableSwitch: true,
+      respectPrefersColorScheme: false,
     },
     navbar: {
       title: 'Odyssey',
       logo: {
         alt: 'Odyssey App Logo',
-        src: 'img/icon.jpeg', // This uses the same icon from your static folder
+        src: 'img/icon.jpeg',
       },
       items: [
-        // LEFT SIDE NAVIGATION
+        { href: '/#about',       label: 'About',       position: 'left' },
+        { href: '/#features',    label: 'Features',    position: 'left' },
+        { href: '/#screenshots', label: 'Screenshots', position: 'left' },
+        { href: '/#reports',     label: 'Reports',     position: 'left' },
+        { href: '/#team',        label: 'Team',        position: 'left' },
         {
-          to: '/about', 
-          label: 'About Us', 
-          position: 'left',
-        },
-        {
-          to: '/team', 
-          label: 'Team', 
-          position: 'left',
-        },
-        {
-          type: 'docSidebar',
-          sidebarId: 'tutorialSidebar', 
-          position: 'left',
-          label: 'Documentation',
-        },
-
-        {
-          href: '/media',
-          label: 'Media',
-          position: 'left',
-        },
-        
-        // RIGHT SIDE NAVIGATION
-        {
-          href: '#', // Placeholder for  App Store link
+          href: '#',
           label: 'Download App',
           position: 'right',
-          className: 'button button--primary', 
+          className: 'button button--primary',
         },
       ],
     },
