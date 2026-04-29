@@ -422,46 +422,46 @@ export default function ProfileHeaderComp({
           pointerEvents="none"
         />
 
-      {onSettingsPress ? (
-        <TouchableOpacity
-          onPress={onTutorialsPress}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel={tutorialsAccessibilityLabel}
+        {onSettingsPress ? (
+          <TouchableOpacity
+            onPress={onTutorialsPress}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={tutorialsAccessibilityLabel}
+            style={[
+              styles.settingsButton,
+              {
+                top: insets.top + Spacing.md,
+                left: Spacing.lg,
+              },
+            ]}
+          >
+            <Ionicons name="help-outline" size={Spacing.xl} color={color.primary} />
+          </TouchableOpacity>
+        ) : null}
+
+        <OptionalCopilot
+          disable={disableCopilot}
+          text={t('tutorial.profile.step7text')}
+          order={7}
+          name="settingsStep"
           style={[
             styles.settingsButton,
             {
               top: insets.top + Spacing.md,
-              left: Spacing.lg,
+              right: Spacing.lg,
             },
           ]}
         >
-          <Ionicons name="help-outline" size={Spacing.xl} color={color.primary} />
-        </TouchableOpacity>
-      ) : null}
-
-      <OptionalCopilot
-        disable={disableCopilot}
-        text={t('tutorial.profile.step7text')}
-        order={7}
-        name="settingsStep"
-        style={[
-          styles.settingsButton,
-          {
-            top: insets.top + Spacing.md,
-            right: Spacing.lg,
-          },
-        ]}
-      >
-        <TouchableOpacity
-          onPress={onSettingsPress}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel={settingsAccessibilityLabel}
-        >
-          <Ionicons name="settings-outline" size={Spacing.lg} color={color.primary} />
-        </TouchableOpacity>
-      </OptionalCopilot>
+          <TouchableOpacity
+            onPress={onSettingsPress}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={settingsAccessibilityLabel}
+          >
+            <Ionicons name="settings-outline" size={Spacing.lg} color={color.primary} />
+          </TouchableOpacity>
+        </OptionalCopilot>
 
         <Animated.View
           style={{
