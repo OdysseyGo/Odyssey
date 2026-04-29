@@ -24,7 +24,7 @@ import {
 import { generateAITour } from '@/api/aiTours';
 import { CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
-import RewardedAdButton from '@/components/Ads/RewardedAdButton';
+import { useRewardedAd } from '@/components/Ads/useRewardedAd';
 
 export default function AITourCreation() {
   const theme = useColorTheme();
@@ -33,7 +33,7 @@ export default function AITourCreation() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<AITourFormData>(createEmptyFormData());
-  const [hasAdSlot, setHasAdSlot] = useState(false);
+  const rewardedAiSlot = useRewardedAd('rewarded_ai_slot');
 
   const tourModeOptions = useMemo(
     () => [
@@ -65,6 +65,13 @@ export default function AITourCreation() {
       return;
     }
 
+    let useAdSlot = false;
+    if (rewardedAiSlot.available && rewardedAiSlot.status === 'loaded') {
+      const earned = await rewardedAiSlot.show();
+      if (!earned) return;
+      useAdSlot = true;
+    }
+
     setIsLoading(true);
 
     try {
@@ -77,9 +84,8 @@ export default function AITourCreation() {
         duration: formData.duration,
         language: formData.language,
         additional_details: formData.additionalDetails.trim() || undefined,
-        use_ad_slot: hasAdSlot || undefined,
+        use_ad_slot: useAdSlot || undefined,
       });
-      setHasAdSlot(false);
 
       Alert.alert(t('aiTour.successTitle'), response.message, [
         {
@@ -214,18 +220,6 @@ export default function AITourCreation() {
             />
           </FormInputGroup>
         </ScrollView>
-
-        {!hasAdSlot && (
-          <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
-            <RewardedAdButton
-              placement="rewarded_ai_slot"
-              label={t('aiTour.watchAdForSlot', {
-                defaultValue: 'Watch ad for a free generation',
-              })}
-              onEarned={() => setHasAdSlot(true)}
-            />
-          </View>
-        )}
 
         <GenerateButton onPress={handleGenerate} disabled={!isFormValid} isLoading={isLoading} />
       </KeyboardAvoidingView>

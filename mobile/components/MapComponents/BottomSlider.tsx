@@ -141,7 +141,7 @@ export default function BottomSlider({
     try {
       const response = await skipStep(progressId, { useAdSkip });
 
-      recordSkip();
+      if (!useAdSkip) recordSkip();
 
       if (response.is_tour_complete) {
         await onTourComplete?.();
@@ -203,13 +203,13 @@ export default function BottomSlider({
             const earned = await rewardedSkip.show();
             if (earned) {
               skipUsingAdRef.current = true;
-              await handleSkip();
+              await handleConfirmSkip();
             }
           },
         },
       ]
     );
-  }, [rewardedSkip, handleSkip, t]);
+  }, [rewardedSkip, handleSkip, handleConfirmSkip, t]);
 
   const handleNavigatePrev = useCallback(() => {
     if (currentStepIndex > 0) {

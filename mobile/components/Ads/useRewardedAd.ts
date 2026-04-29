@@ -10,6 +10,7 @@ export function useRewardedAd(placementKey: string) {
   const adRef = useRef<RewardedAd | null>(null);
   const [status, setStatus] = useState<Status>('idle');
   const rewardedRef = useRef(false);
+  const closeResolverRef = useRef<((earned: boolean) => void) | null>(null);
 
   const placement = getPlacement(placementKey);
 
@@ -32,9 +33,16 @@ export function useRewardedAd(placementKey: string) {
       setStatus('rewarded');
     });
     const closedSub = ad.addAdEventListener(AdEventType.CLOSED, () => {
-      setStatus(rewardedRef.current ? 'closed' : 'closed');
+      const earned = rewardedRef.current;
+      setStatus('closed');
+      closeResolverRef.current?.(earned);
+      closeResolverRef.current = null;
     });
-    const errorSub = ad.addAdEventListener(AdEventType.ERROR, () => setStatus('error'));
+    const errorSub = ad.addAdEventListener(AdEventType.ERROR, () => {
+      setStatus('error');
+      closeResolverRef.current?.(false);
+      closeResolverRef.current = null;
+    });
 
     ad.load();
 
@@ -55,16 +63,21 @@ export function useRewardedAd(placementKey: string) {
     if (!adRef.current || status !== 'loaded') return false;
     try {
       setStatus('showing');
+      const earnedPromise = new Promise<boolean>((resolve) => {
+        closeResolverRef.current = resolve;
+      });
       await adRef.current.show();
-      // Reward outcome is reported via the EARNED_REWARD listener;
-      // SSV will hit the backend asynchronously.
-      return rewardedRef.current;
+      const earned = await earnedPromise;
+      // Reload for next use
+      load();
+      return earned;
     } catch (err) {
       console.warn('Rewarded show failed', err);
       setStatus('error');
+      closeResolverRef.current = null;
       return false;
     }
-  }, [status]);
+  }, [status, load]);
 
   return { status, show, reload: load, available: !!placement && isReady };
 }
