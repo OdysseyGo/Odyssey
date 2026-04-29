@@ -11,6 +11,13 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { useTranslation } from 'react-i18next';
 
+const PUZZLE_TYPE_LABEL_KEYS: Record<PuzzleType, string> = {
+  TRIVIA: 'creation.puzzle.types.trivia',
+  AR: 'creation.puzzle.types.ar',
+  GYROSCOPE: 'creation.puzzle.types.gyroscope',
+  PICTURE_COMPARE: 'creation.puzzle.types.pictureCompare',
+};
+
 interface PuzzleEditorProps {
   puzzle?: Puzzle;
   onChange: (puzzle: Puzzle) => void;
@@ -136,7 +143,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
                   { color: currentPuzzle.puzzle_type === type.value ? color.white : color.text },
                 ]}
               >
-                {type.label}
+                {t(PUZZLE_TYPE_LABEL_KEYS[type.value])}
               </Text>
             </TouchableOpacity>
           ))}
@@ -153,14 +160,10 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
         <ImageUploadSection
           image={currentPuzzle.referenceImage}
           onImageChange={(value) => handleChange('referenceImage', value)}
-          label="Pick your target image"
+          label={t('creation.puzzle.pictureTargetImage')}
           required
           useReferenceImageUI
-          infoMessage={[
-            'Pick something that is not temporary.',
-            'Appropriate.',
-            "Has good lighting and doesn't depend much on the time of day.",
-          ].join('\n')}
+          infoMessage={t('creation.story.referenceRequirementsMessage')}
         />
       ) : isArChallenge ? (
         <ARPuzzleConfigurator

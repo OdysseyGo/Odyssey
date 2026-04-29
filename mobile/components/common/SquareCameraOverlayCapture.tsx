@@ -13,6 +13,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -34,15 +35,16 @@ export default function SquareCameraOverlayCapture({
   visible,
   onClose,
   onCapture,
-  title = 'Align target in the square',
-  subtitle = 'Only the center square region will be used.',
-  captureLabel = 'Capture',
+  title,
+  subtitle,
+  captureLabel,
 }: SquareCameraOverlayCaptureProps) {
   const theme = useColorTheme();
   const color = Colors[theme];
   const styles = useMemo(() => getStyles(theme), [theme]);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const [permission, requestPermission] = useCameraPermissions();
   const [isCapturing, setIsCapturing] = useState(false);
@@ -100,7 +102,7 @@ export default function SquareCameraOverlayCapture({
       await onCapture(manipulated.uri);
       onClose();
     } catch {
-      Alert.alert('Capture failed', 'Could not process this photo. Please try again.');
+      Alert.alert(t('camera.captureFailedTitle'), t('camera.captureFailedMessage'));
     } finally {
       setIsCapturing(false);
     }
@@ -116,12 +118,10 @@ export default function SquareCameraOverlayCapture({
         ) : (
           <View style={styles.permissionContainer}>
             <MaterialCommunityIcons name="camera-off" size={52} color={color.white} />
-            <Text style={styles.permissionTitle}>Camera permission needed</Text>
-            <Text style={styles.permissionText}>
-              Allow camera access to capture inside the guided square.
-            </Text>
+            <Text style={styles.permissionTitle}>{t('camera.permissionTitle')}</Text>
+            <Text style={styles.permissionText}>{t('camera.permissionMessage')}</Text>
             <Pressable style={styles.permissionButton} onPress={requestPermission}>
-              <Text style={styles.permissionButtonText}>Grant Permission</Text>
+              <Text style={styles.permissionButtonText}>{t('camera.grantPermission')}</Text>
             </Pressable>
           </View>
         )}
@@ -156,8 +156,8 @@ export default function SquareCameraOverlayCapture({
             <MaterialCommunityIcons name="close" size={26} color={color.white} />
           </Pressable>
           <View style={styles.titleWrap}>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.subtitle}>{subtitle}</Text>
+            <Text style={styles.title}>{title ?? t('camera.defaultTitle')}</Text>
+            <Text style={styles.subtitle}>{subtitle ?? t('camera.defaultSubtitle')}</Text>
           </View>
           <View style={styles.iconPlaceholder} />
         </View>
@@ -174,7 +174,7 @@ export default function SquareCameraOverlayCapture({
             {isCapturing ? (
               <ActivityIndicator color={color.white} />
             ) : (
-              <Text style={styles.captureText}>{captureLabel}</Text>
+              <Text style={styles.captureText}>{captureLabel ?? t('camera.capture')}</Text>
             )}
           </Pressable>
         </View>

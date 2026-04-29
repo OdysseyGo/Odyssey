@@ -39,6 +39,7 @@ interface StoryStepViewProps {
 function StoryStepView({ step }: StoryStepViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   return (
     <ScrollView
@@ -53,7 +54,7 @@ function StoryStepView({ step }: StoryStepViewProps) {
             size={22}
             color={Colors[theme].primary}
           />
-          <Text style={styles.storyHeroHeaderText}>Story</Text>
+          <Text style={styles.storyHeroHeaderText}>{t('tourStep.story')}</Text>
         </View>
       </View>
 
@@ -67,7 +68,7 @@ function StoryStepView({ step }: StoryStepViewProps) {
 
       {step.images && step.images.length > 0 && (
         <View style={styles.storyImagesContainer}>
-          <Text style={styles.sectionLabel}>Scenes from this stop</Text>
+          <Text style={styles.sectionLabel}>{t('tourStep.scenesFromStop')}</Text>
           {step.images.map((imageUri, index) => (
             <Image
               key={index}
@@ -144,10 +145,7 @@ function MultipleChoiceView({
           if (!selectedOption) return;
 
           if (!progressId) {
-            Alert.alert(
-              'Progress missing',
-              'Could not verify puzzle without active tour progress.'
-            );
+            Alert.alert(t('tourStep.progressMissingTitle'), t('tourStep.progressMissingMessage'));
             return;
           }
 
@@ -210,7 +208,7 @@ function MultipleChoiceView({
   return (
     <View style={styles.puzzleBody}>
       <View style={styles.questionCard}>
-        <Text style={styles.questionLabel}>Question</Text>
+        <Text style={styles.questionLabel}>{t('tourStep.question')}</Text>
         <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
       </View>
 
@@ -252,7 +250,7 @@ function MultipleChoiceView({
       </View>
 
       {hasPersistedWrongAttempt && !isSolved && (
-        <Text style={styles.exhaustedHint}>You have already answered this question.</Text>
+        <Text style={styles.exhaustedHint}>{t('tourStep.alreadyAnswered')}</Text>
       )}
     </View>
   );
@@ -277,6 +275,7 @@ function PictureCompareView({
 }: PictureCompareViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
   const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
 
   const [previewUri, setPreviewUri] = useState<string | null>(null);
@@ -298,37 +297,40 @@ function PictureCompareView({
 
   const handleCapturedImage = async (photoUri: string) => {
     if (!progressId) {
-      Alert.alert('Progress missing', 'Could not verify puzzle without active tour progress.');
+      Alert.alert(t('tourStep.progressMissingTitle'), t('tourStep.progressMissingMessage'));
       return;
     }
 
     setPreviewUri(photoUri);
     setIsSubmitting(true);
-    setFeedback('Checking similarity...');
+    setFeedback(t('tourStep.picture.checkingSimilarity'));
 
     try {
       const response = await submitPictureCompare(progressId, photoUri);
       const similarityPercent = Math.round((response.similarity_score || 0) * 100);
 
       if (response.accepted) {
-        setFeedback(`Matched (${similarityPercent}%).`);
+        setFeedback(t('tourStep.picture.matched', { similarity: similarityPercent }));
         onSolve();
       } else {
         if (stepId) recordAttempt(stepId);
         const newCount = attemptCount + 1;
         if (newCount >= MAX_ATTEMPTS) {
-          setFeedback(`Not close enough (${similarityPercent}%). No attempts remaining.`);
+          setFeedback(t('tourStep.picture.notCloseNoAttempts', { similarity: similarityPercent }));
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
-            `Not close enough (${similarityPercent}%). ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`
+            t('tourStep.picture.notCloseAttemptsRemaining', {
+              similarity: similarityPercent,
+              count: MAX_ATTEMPTS - newCount,
+            })
           );
         }
       }
     } catch (error) {
       console.error('submit picture compare failed', error);
-      setFeedback('Could not verify image right now. Please try again.');
+      setFeedback(t('tourStep.picture.verifyError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -337,17 +339,17 @@ function PictureCompareView({
   return (
     <View style={styles.puzzleBody}>
       <View style={styles.questionCard}>
-        <Text style={styles.questionLabel}>Photo challenge</Text>
+        <Text style={styles.questionLabel}>{t('tourStep.picture.photoChallenge')}</Text>
         <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
       </View>
 
-      <Text style={styles.sectionLabel}>Look around and try to find this!</Text>
+      <Text style={styles.sectionLabel}>{t('tourStep.picture.findThis')}</Text>
       {referenceImageUri ? (
         <Pressable
           style={styles.referenceImageButton}
           onPress={() => setFullscreenImageUri(referenceImageUri)}
           accessibilityRole="button"
-          accessibilityLabel="Open reference image full screen"
+          accessibilityLabel={t('tourStep.picture.openReferenceAccessibilityLabel')}
         >
           <Image
             source={{ uri: referenceImageUri }}
@@ -355,23 +357,27 @@ function PictureCompareView({
             resizeMode="cover"
           />
           <View style={styles.referenceImageOverlay}>
-            <Text style={styles.referenceImageOverlayText}>Tap to view full image</Text>
+            <Text style={styles.referenceImageOverlayText}>
+              {t('tourStep.picture.tapToViewFullImage')}
+            </Text>
           </View>
         </Pressable>
       ) : (
         <View style={styles.referenceImageMissing}>
-          <Text style={styles.referenceImageMissingText}>Reference image is not available.</Text>
+          <Text style={styles.referenceImageMissingText}>
+            {t('tourStep.picture.referenceMissing')}
+          </Text>
         </View>
       )}
 
       {previewUri && (
         <>
-          <Text style={styles.sectionLabel}>Your latest attempt</Text>
+          <Text style={styles.sectionLabel}>{t('tourStep.picture.latestAttempt')}</Text>
           <Pressable
             style={styles.referenceImageButton}
             onPress={() => setFullscreenImageUri(previewUri)}
             accessibilityRole="button"
-            accessibilityLabel="Open latest attempt full screen"
+            accessibilityLabel={t('tourStep.picture.openLatestAttemptAccessibilityLabel')}
           >
             <Image
               source={{ uri: previewUri }}
@@ -379,7 +385,9 @@ function PictureCompareView({
               resizeMode="cover"
             />
             <View style={styles.referenceImageOverlay}>
-              <Text style={styles.referenceImageOverlayText}>Tap to view full image</Text>
+              <Text style={styles.referenceImageOverlayText}>
+                {t('tourStep.picture.tapToViewFullImage')}
+              </Text>
             </View>
           </Pressable>
         </>
@@ -387,7 +395,7 @@ function PictureCompareView({
 
       {!isSolved && (
         <View style={styles.attemptsRow}>
-          <Text style={styles.attemptsLabel}>Attempts</Text>
+          <Text style={styles.attemptsLabel}>{t('tourStep.attempts')}</Text>
           {Array.from({ length: MAX_ATTEMPTS }, (_, i) => (
             <MaterialCommunityIcons
               key={i}
@@ -410,7 +418,9 @@ function PictureCompareView({
         {isSubmitting ? (
           <ActivityIndicator color={Colors[theme].white} />
         ) : (
-          <Text style={styles.captureButtonText}>{isSolved ? 'Solved' : 'Capture and Check'}</Text>
+          <Text style={styles.captureButtonText}>
+            {isSolved ? t('tourStep.solved') : t('tourStep.picture.captureAndCheck')}
+          </Text>
         )}
       </Pressable>
 
@@ -418,16 +428,16 @@ function PictureCompareView({
         <Text style={[styles.feedbackText, isExhausted && styles.exhaustedText]}>{feedback}</Text>
       ) : null}
       {isExhausted && !isSolved && (
-        <Text style={styles.exhaustedHint}>Confirm your location and press Next to continue.</Text>
+        <Text style={styles.exhaustedHint}>{t('tourStep.confirmLocationToContinue')}</Text>
       )}
 
       <SquareCameraOverlayCapture
         visible={isCameraVisible}
         onClose={() => setIsCameraVisible(false)}
         onCapture={handleCapturedImage}
-        title="Align your view with the target"
-        subtitle="Only the center square is analyzed for matching."
-        captureLabel="Check Match"
+        title={t('tourStep.picture.captureTitle')}
+        subtitle={t('tourStep.picture.captureSubtitle')}
+        captureLabel={t('tourStep.picture.checkMatch')}
       />
 
       <Modal
@@ -464,6 +474,7 @@ interface ArCodeViewProps {
 function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
   const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
 
   const [codeInput, setCodeInput] = useState('');
@@ -479,8 +490,8 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
       const nextLocationPerm = await Location.requestForegroundPermissionsAsync();
       if (nextLocationPerm.status !== 'granted') {
         Alert.alert(
-          'Location permission needed',
-          'Location permission is required to continue with AR puzzle mode.'
+          t('tourStep.ar.locationPermissionTitle'),
+          t('tourStep.ar.locationPermissionMessage')
         );
         return false;
       }
@@ -490,10 +501,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
     if (cameraPerm.status !== 'granted') {
       const nextCameraPerm = await Camera.requestCameraPermissionsAsync();
       if (nextCameraPerm.status !== 'granted') {
-        Alert.alert(
-          'Camera permission needed',
-          'Camera permission is required to open the AR puzzle view.'
-        );
+        Alert.alert(t('camera.permissionTitle'), t('tourStep.ar.cameraPermissionMessage'));
         return false;
       }
     }
@@ -526,7 +534,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
       });
     } catch (error) {
       console.error('Failed to prepare AR permissions', error);
-      Alert.alert('AR unavailable', 'Could not prepare the AR puzzle view right now.');
+      Alert.alert(t('tourStep.ar.unavailableTitle'), t('tourStep.ar.prepareError'));
     } finally {
       setIsPreparingAr(false);
     }
@@ -538,39 +546,39 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
     }
 
     if (!progressId) {
-      Alert.alert('Progress missing', 'Could not verify puzzle without active tour progress.');
+      Alert.alert(t('tourStep.progressMissingTitle'), t('tourStep.progressMissingMessage'));
       return;
     }
 
     const trimmedCode = codeInput.trim();
     if (!trimmedCode) {
-      setFeedback('Enter the secret code first.');
+      setFeedback(t('tourStep.ar.enterCodeFirst'));
       return;
     }
 
     setIsSubmitting(true);
-    setFeedback('Checking code...');
+    setFeedback(t('tourStep.ar.checkingCode'));
     try {
       const response = await submitArCode(progressId, trimmedCode);
       if (response.accepted) {
-        setFeedback('Code verified.');
+        setFeedback(t('tourStep.ar.codeVerified'));
         onSolve();
       } else {
         if (stepId) recordAttempt(stepId);
         const newCount = attemptCount + 1;
         if (newCount >= MAX_ATTEMPTS) {
-          setFeedback('Code is not correct. No attempts remaining.');
+          setFeedback(t('tourStep.ar.incorrectNoAttempts'));
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
-            `Code is not correct. ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`
+            t('tourStep.ar.incorrectAttemptsRemaining', { count: MAX_ATTEMPTS - newCount })
           );
         }
       }
     } catch (error) {
       console.error('submit ar code failed', error);
-      setFeedback('Could not verify code right now. Please try again.');
+      setFeedback(t('tourStep.ar.verifyError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -581,7 +589,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
       <View style={styles.questionCard}>
         <View style={styles.storyHeroHeader}>
           <MaterialCommunityIcons name="cube-scan" size={22} color={Colors[theme].primary} />
-          <Text style={styles.storyHeroHeaderText}>AR Challenge</Text>
+          <Text style={styles.storyHeroHeaderText}>{t('tourStep.ar.challenge')}</Text>
         </View>
         <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
       </View>
@@ -602,16 +610,16 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
               <MaterialCommunityIcons name="cube-scan" size={20} color={Colors[theme].primary} />
             )}
           </View>
-          <Text style={styles.optionText}>Open AR View</Text>
+          <Text style={styles.optionText}>{t('tourStep.ar.openArView')}</Text>
           <MaterialCommunityIcons name="chevron-right" size={18} color={Colors[theme].subText} />
         </Pressable>
       </View>
 
-      <Text style={styles.sectionLabel}>Enter the secret code</Text>
+      <Text style={styles.sectionLabel}>{t('tourStep.ar.enterSecretCode')}</Text>
 
       {!isSolved && (
         <View style={styles.attemptsRow}>
-          <Text style={styles.attemptsLabel}>Attempts</Text>
+          <Text style={styles.attemptsLabel}>{t('tourStep.attempts')}</Text>
           {Array.from({ length: MAX_ATTEMPTS }, (_, i) => (
             <MaterialCommunityIcons
               key={i}
@@ -627,7 +635,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
         value={codeInput}
         onChangeText={setCodeInput}
         style={styles.secretCodeInput}
-        placeholder="Enter secret code"
+        placeholder={t('tourStep.ar.enterSecretCodePlaceholder')}
         autoCapitalize="none"
         autoCorrect={false}
         editable={!isSolved && !isSubmitting && !isExhausted}
@@ -644,7 +652,9 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
         {isSubmitting ? (
           <ActivityIndicator color={Colors[theme].white} />
         ) : (
-          <Text style={styles.captureButtonText}>{isSolved ? 'Solved' : 'Check Code'}</Text>
+          <Text style={styles.captureButtonText}>
+            {isSolved ? t('tourStep.solved') : t('tourStep.ar.checkCode')}
+          </Text>
         )}
       </Pressable>
 
@@ -652,7 +662,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
         <Text style={[styles.feedbackText, isExhausted && styles.exhaustedText]}>{feedback}</Text>
       ) : null}
       {isExhausted && !isSolved && (
-        <Text style={styles.exhaustedHint}>Confirm your location and press Next to continue.</Text>
+        <Text style={styles.exhaustedHint}>{t('tourStep.confirmLocationToContinue')}</Text>
       )}
     </View>
   );
@@ -668,6 +678,7 @@ interface PuzzleStepViewProps {
 function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   return (
     <ScrollView
@@ -678,7 +689,7 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
       <View style={styles.stepTypeRow}>
         <View style={styles.puzzleHeader}>
           <MaterialCommunityIcons name="puzzle" size={22} color={Colors[theme].primary} />
-          <Text style={styles.puzzleHeaderText}>Puzzle</Text>
+          <Text style={styles.puzzleHeaderText}>{t('tourStep.puzzle')}</Text>
         </View>
         {isSolved && (
           <View style={styles.solvedPill}>
@@ -687,7 +698,7 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
               size={14}
               color={Colors[theme].background}
             />
-            <Text style={styles.solvedText}>Solved</Text>
+            <Text style={styles.solvedText}>{t('tourStep.solved')}</Text>
           </View>
         )}
       </View>
@@ -700,7 +711,7 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
               size={13}
               color={Colors[theme].primary}
             />
-            <Text style={styles.storyMiniHeaderText}>Story</Text>
+            <Text style={styles.storyMiniHeaderText}>{t('tourStep.story')}</Text>
           </View>
           <View style={styles.contentCard}>
             <Text style={styles.puzzleDescription}>{step.description}</Text>

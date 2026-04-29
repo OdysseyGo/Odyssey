@@ -1,10 +1,14 @@
 {
   "common": {
-    "retry": "Reintentar",
     "cancel": "Cancelar",
+    "ok": "Aceptar",
+    "error": "Error",
+    "syncError": "No se pudo sincronizar el progreso con el servidor.",
+    "retry": "Reintentar",
     "submit": "Enviar",
     "submitting": "Enviando...",
-    "ok": "Aceptar"
+    "close": "Cerrar",
+    "save": "Guardar"
   },
   "auth": {
     "welcomeTitle": "¡Bienvenido, aventurero!",
@@ -139,7 +143,25 @@
     "signInSubtitle": "Únete a miles de exploradores en Odyssey.",
     "feature1": "Crea y únete a tours guiados",
     "feature2": "Gana insignias y XP",
-    "feature3": "Conecta con otros viajeros"
+    "feature3": "Conecta con otros viajeros",
+    "completedTours": "Tours completados",
+    "emptyCompletedTour": "No se encontraron tours",
+    "errorTitle": "Algo salió mal",
+    "errorMessage": "No pudimos cargar tus tours. Inténtalo de nuevo.",
+    "editReview": "Editar reseña",
+    "reviewTour": "Reseñar tour",
+    "leaveReview": "Dejar una reseña",
+    "reviewRatingLabel": "Calificación (1-5)",
+    "reviewRatingPlaceholder": "5",
+    "reviewCommentLabel": "Comentario",
+    "reviewCommentPlaceholder": "Escribe hasta 200 caracteres",
+    "reviewRatingInvalid": "La calificación debe estar entre 1 y 5.",
+    "reviewSuccessTitle": "Reseña enviada",
+    "reviewSuccessMessage": "¡Gracias por tus comentarios!",
+    "reviewErrorTitle": "No se pudo enviar la reseña",
+    "reviewErrorMessage": "Inténtalo de nuevo más tarde.",
+    "logoutConfirmTitle": "Cerrar sesión",
+    "logoutConfirmMessage": "¿Seguro que quieres cerrar sesión?"
   },
   "tour": {
     "featured": "Destacado",
@@ -157,6 +179,37 @@
       "oceania": "Oceanía",
       "antarctica": "Antártida",
       "other": "Otro"
+    },
+    "all": "Todos",
+    "loadError": "No se pudieron cargar los tours",
+    "errorTitle": "Algo salió mal",
+    "emptyTitle": "Aún no hay tours aquí",
+    "emptySubtitle": "¡Sé la primera persona en crear un tour en esta región!",
+    "headerEyebrow": "¿Listo para explorar?",
+    "headerTitle": "Descubrir tours",
+    "filters": {
+      "title": "Filtrar tours",
+      "subtitle": "Refina por categoría, duración y estilo de tour.",
+      "category": "Categoría",
+      "anyCategory": "Cualquier categoría",
+      "continent": "Continente",
+      "anyContinent": "Cualquier continente",
+      "duration": "Duración",
+      "durationAny": "Cualquier duración",
+      "durationShort": "Menos de 1 hora",
+      "durationMedium": "1 a 2 horas",
+      "durationLong": "2+ horas",
+      "difficulty": "Dificultad",
+      "anyDifficulty": "Cualquier dificultad",
+      "tourType": "Tipo de tour",
+      "anyTourType": "Cualquier tipo",
+      "clearAll": "Borrar filtros",
+      "resultsTitle": "Tours coincidentes",
+      "emptyTitle": "Ningún tour coincide con estos filtros",
+      "emptySubtitle": "Prueba ampliar la categoría o la duración.",
+      "reset": "Restablecer",
+      "apply": "Aplicar filtros",
+      "showResults": "Mostrar {{count}} tours"
     }
   },
   "search": {
@@ -218,13 +271,15 @@
     "readMore": "Leer más",
     "readLess": "Leer menos",
     "lockedStopTitle": "Parada oculta",
-    "lockedStopMessage": "Inicia el tour y resuelve el puzle para revelar esta parada."
+    "lockedStopMessage": "Inicia el tour y resuelve el puzle para revelar esta parada.",
+    "errorTitle": "Algo salió mal"
   },
   "tabs": {
     "settings": "Ajustes",
     "map": "Mapa",
     "tours": "Tours",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "tutorials": "Tutoriales"
   },
   "settings": {
     "language": "Idioma",
@@ -246,6 +301,10 @@
       "privacy": {
         "label": "Privacidad",
         "description": "Controla tus ajustes de privacidad"
+      },
+      "logout": {
+        "label": "Cerrar sesión",
+        "description": "Salir de tu cuenta"
       }
     },
     "appearance": {
@@ -290,6 +349,10 @@
         "label": "Ayuda y Soporte",
         "description": "Obtén ayuda con la aplicación"
       }
+    },
+    "editProfile": {
+      "loadError": "No se pudieron cargar los detalles de tu perfil.",
+      "saveError": "No se pudo actualizar el perfil."
     }
   },
   "tourId": {
@@ -306,7 +369,9 @@
     "tourInProgressMessage": "¡Ya tienes un tour activo! Por favor, termínalo o sal de él antes de empezar uno nuevo.",
     "locationRequiredTitle": "Permiso de ubicación necesario",
     "locationRequiredMessage": "Para iniciar este tour, Odyssey necesita acceso a tu ubicación. Permite el permiso de ubicación en la configuración de tu dispositivo e inténtalo de nuevo.",
-    "locationUnavailableMessage": "No pudimos leer tu ubicación actual. Activa los servicios de ubicación e inténtalo de nuevo."
+    "locationUnavailableMessage": "No pudimos leer tu ubicación actual. Activa los servicios de ubicación e inténtalo de nuevo.",
+    "errorTitle": "Error",
+    "errorMessage": "No se pudo iniciar el tour. Inténtalo de nuevo."
   },
   "creation": {
     "loginRequired": "Inicio de sesión requerido",
@@ -444,7 +509,20 @@
       "previous": "Anterior",
       "next": "Siguiente",
       "editLocation": "Editar Ubicación",
-      "save": "Guardar"
+      "save": "Guardar",
+      "chooseImageSource": "Elige fuente de imagen",
+      "camera": "Cámara",
+      "photoLibrary": "Biblioteca de fotos",
+      "libraryPermissionTitle": "Permiso requerido",
+      "libraryPermissionMessage": "Permite el acceso a la biblioteca de fotos para seleccionar una imagen.",
+      "referenceRequirementsTitle": "Requisitos de imagen de referencia",
+      "referenceRequirementsMessage": "Elige algo que no sea temporal.\nApropiado.\nCon buena iluminación y que no dependa mucho de la hora del día.",
+      "referenceRequirementsAccessibilityLabel": "Mostrar requisitos de imagen de referencia",
+      "openTargetImageAccessibilityLabel": "Abrir imagen objetivo en pantalla completa",
+      "tapToViewFullImage": "Toca para ver la imagen completa",
+      "captureReferenceTitle": "Coloca el objetivo en el cuadrado",
+      "captureReferenceSubtitle": "Solo se guardará el área cuadrada resaltada.",
+      "captureReference": "Capturar referencia"
     },
     "puzzle": {
       "type": "Tipo de Puzzle *",
@@ -461,7 +539,14 @@
       "addOption": "Añadir Opción",
       "hintLabel": "Pista (Opcional)",
       "hintPlaceholder": "Ej. Mira la placa sobre la puerta.",
-      "hintText": "Una pista útil si el usuario se atasca."
+      "hintText": "Una pista útil si el usuario se atasca.",
+      "types": {
+        "trivia": "Trivia",
+        "ar": "Desafío AR",
+        "gyroscope": "Giroscopio",
+        "pictureCompare": "Comparación de imagen"
+      },
+      "pictureTargetImage": "Elige tu imagen objetivo"
     },
     "editLocation": {
       "header": "Editar Ubicación",
@@ -472,6 +557,37 @@
       "storyLabel": "Historia *",
       "storyPlaceholder": "Cuenta la historia de esta ubicación...",
       "storyHint": "Escribe la narrativa que los visitantes leerán o escucharán en esta ubicación"
+    },
+    "incompletePuzzleTitle": "Completa los puzles obligatorios",
+    "incompletePuzzleMessage": "Los tours con puzles necesitan un puzle válido en cada ubicación antes de enviarse.",
+    "arPuzzle": {
+      "title": "Configuración de puzle AR",
+      "configured": "Configurado: {{modelName}} ({{anchorLabel}})",
+      "noModels": "No hay modelos AR disponibles ahora mismo.",
+      "loadModelsError": "No se pudieron cargar los modelos AR. Inténtalo de nuevo.",
+      "noAnchors": "Este modelo AR aún no tiene puntos de anclaje.",
+      "viroUnavailable": "AR no está disponible en este entorno.",
+      "anchorCount_one": "{{count}} anclaje",
+      "anchorCount_other": "{{count}} anclajes",
+      "enterSecretCode": "Introduce el código secreto",
+      "secretCodePlaceholder": "4-12 letras o números",
+      "secretCodeError": "Usa 4-12 letras o números.",
+      "reviewModel": "Modelo: {{modelName}}",
+      "reviewCode": "Código: {{secretCode}}",
+      "reviewPosition": "Posición: {{anchorLabel}}",
+      "changeAnchor": "Cambiar anclaje",
+      "previewInAr": "Vista previa en AR",
+      "arUnavailable": "AR no disponible",
+      "confirm": "Confirmar",
+      "anchorSelectionTitle": "Selección de anclaje",
+      "anchorSelectionSubtitle": "Cambia entre anclajes en AR y elige dónde debe ocultarse el código.",
+      "modelScale": "Escala del modelo",
+      "noAnchorSelected": "No hay anclaje seleccionado",
+      "scaleValue": "Escala: {{scale}}m",
+      "confirmAnchor": "Confirmar anclaje",
+      "arUnavailableRuntime": "AR no está disponible en este entorno.",
+      "selectModelFirst": "Selecciona primero un modelo AR.",
+      "anchorCount": "{{count}} anclajes"
     }
   },
   "aiTour": {
@@ -521,13 +637,57 @@
     "finish": "Finalizar",
     "answerConfirmTitle": "¿Confirmar esta respuesta?",
     "answerConfirmMessage": "¿Seguro? Las respuestas incorrectas pueden reducir el progreso de tu insignia.",
-    "answerConfirmAction": "Responder"
-  },
-  "common": {
-    "cancel": "Cancelar",
-    "ok": "OK",
-    "error": "Error",
-    "syncError": "No se pudo sincronizar el progreso con el servidor."
+    "answerConfirmAction": "Responder",
+    "story": "Historia",
+    "scenesFromStop": "Escenas de esta parada",
+    "puzzle": "Puzle",
+    "solved": "Resuelto",
+    "question": "Pregunta",
+    "attempts": "Intentos",
+    "progressMissingTitle": "Falta progreso",
+    "progressMissingMessage": "No se pudo verificar el puzle sin progreso de tour activo.",
+    "alreadyAnswered": "Ya respondiste esta pregunta.",
+    "confirmLocationToContinue": "Confirma tu ubicación y pulsa Siguiente para continuar.",
+    "picture": {
+      "checkingSimilarity": "Comprobando similitud...",
+      "matched": "Coincidencia ({{similarity}}%).",
+      "notCloseNoAttempts": "No está lo bastante cerca ({{similarity}}%). No quedan intentos.",
+      "notCloseAttemptsRemaining_one": "No está lo bastante cerca ({{similarity}}%). Queda {{count}} intento.",
+      "notCloseAttemptsRemaining_other": "No está lo bastante cerca ({{similarity}}%). Quedan {{count}} intentos.",
+      "verifyError": "No se pudo verificar la imagen ahora mismo. Inténtalo de nuevo.",
+      "photoChallenge": "Desafío fotográfico",
+      "findThis": "¡Mira alrededor e intenta encontrar esto!",
+      "openReferenceAccessibilityLabel": "Abrir imagen de referencia en pantalla completa",
+      "tapToViewFullImage": "Toca para ver la imagen completa",
+      "referenceMissing": "La imagen de referencia no está disponible.",
+      "latestAttempt": "Tu último intento",
+      "openLatestAttemptAccessibilityLabel": "Abrir último intento en pantalla completa",
+      "captureAndCheck": "Capturar y comprobar",
+      "captureTitle": "Alinea tu vista con el objetivo",
+      "captureSubtitle": "Solo se analiza el cuadrado central para la coincidencia.",
+      "checkMatch": "Comprobar coincidencia",
+      "notCloseAttemptsRemaining": "No está lo bastante cerca ({{similarity}}%). Quedan {{count}} intentos."
+    },
+    "ar": {
+      "locationPermissionTitle": "Permiso de ubicación necesario",
+      "locationPermissionMessage": "Se requiere permiso de ubicación para continuar con el modo de puzle AR.",
+      "cameraPermissionMessage": "Se requiere permiso de cámara para abrir la vista del puzle AR.",
+      "unavailableTitle": "AR no disponible",
+      "prepareError": "No se pudo preparar la vista del puzle AR ahora mismo.",
+      "enterCodeFirst": "Introduce primero el código secreto.",
+      "checkingCode": "Comprobando código...",
+      "codeVerified": "Código verificado.",
+      "incorrectNoAttempts": "El código no es correcto. No quedan intentos.",
+      "incorrectAttemptsRemaining_one": "El código no es correcto. Queda {{count}} intento.",
+      "incorrectAttemptsRemaining_other": "El código no es correcto. Quedan {{count}} intentos.",
+      "verifyError": "No se pudo verificar el código ahora mismo. Inténtalo de nuevo.",
+      "challenge": "Desafío AR",
+      "openArView": "Abrir vista AR",
+      "enterSecretCode": "Introduce el código secreto",
+      "enterSecretCodePlaceholder": "Introduce el código secreto",
+      "checkCode": "Comprobar código",
+      "incorrectAttemptsRemaining": "El código no es correcto. Quedan {{count}} intentos."
+    }
   },
   "map": {
     "noActiveTour": {
@@ -545,7 +705,8 @@
       "stepsRemaining_one": "¡Aún te queda {{count}} paso por explorar!",
       "stepsRemaining_other": "¡Aún te quedan {{count}} pasos por explorar!",
       "continueTour": "Continuar Tour",
-      "exitTour": "Salir del Tour"
+      "exitTour": "Salir del Tour",
+      "stepsRemaining": "¡Aún te quedan {{count}} pasos por explorar!"
     },
     "tourComplete": {
       "title": "¡Tour Completado!",
@@ -575,6 +736,26 @@
       "googleMaps": "Google Maps",
       "yandexMaps": "Yandex Maps",
       "directionsUnavailableMessage": "No se pudieron abrir las indicaciones ahora mismo. Inténtalo de nuevo."
+    },
+    "nearby": {
+      "title_one": "{{count}} tour cercano",
+      "title_other": "{{count}} tours cercanos",
+      "areaTitle_one": "{{count}} tour en esta área",
+      "areaTitle_other": "{{count}} tours en esta área",
+      "searching": "Buscando cerca...",
+      "radius": "Dentro de 500 m de tu toque",
+      "areaSubtitle": "Tours que empiezan en el área visible del mapa",
+      "emptyTitle": "No hay tours aquí",
+      "emptySubtitle": "Prueba tocar otro lugar o explora una zona más concurrida.",
+      "duration_one": "{{count}} min",
+      "duration_other": "{{count}} min",
+      "areaTitle": "{{count}} tours en esta área",
+      "duration": "{{count}} min"
+    },
+    "searchMode": {
+      "searchHere": "Buscar aquí",
+      "stopDragging": "Deja de arrastrar para buscar",
+      "zoomIn": "Acerca el mapa para buscar"
     }
   },
   "friends": {
@@ -614,5 +795,29 @@
       "step3text": "¡Puedes ver los mejores tours destacados aquí!",
       "step4text": "¡Para crear tours generados por IA, presiona aquí!"
     }
+  },
+  "camera": {
+    "defaultTitle": "Alinea el objetivo en el cuadrado",
+    "defaultSubtitle": "Solo se usará la región cuadrada central.",
+    "capture": "Capturar",
+    "captureFailedTitle": "Captura fallida",
+    "captureFailedMessage": "No se pudo procesar esta foto. Inténtalo de nuevo.",
+    "permissionTitle": "Permiso de cámara necesario",
+    "permissionMessage": "Permite el acceso a la cámara para capturar dentro del cuadrado guiado.",
+    "grantPermission": "Conceder permiso"
+  },
+  "arPreview": {
+    "title": "Vista previa AR",
+    "defaultCode": "Código",
+    "viroUnavailable": "La vista previa AR no está disponible en este entorno.",
+    "missingAsset": "Falta el recurso del modelo AR.",
+    "previewUnavailable": "La vista previa AR no está disponible en este entorno."
+  },
+  "arPuzzleView": {
+    "title": "Ver puzle",
+    "defaultCode": "Código",
+    "viroUnavailable": "La vista AR no está disponible en este entorno.",
+    "missingAsset": "Falta el recurso del modelo AR.",
+    "viewUnavailable": "La vista AR no está disponible en este entorno."
   }
 }

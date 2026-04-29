@@ -3,10 +3,11 @@ import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-na
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
 
 import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
-import { getViroModule, isViroAvailable, VIRO_UNAVAILABLE_MESSAGE } from '@/utils/viro';
+import { getViroModule, isViroAvailable } from '@/utils/viro';
 
 const MODEL_POSITION: [number, number, number] = [0, 0, -1.2];
 const MODEL_SCALE: [number, number, number] = [0.25, 0.25, 0.25];
@@ -48,6 +49,7 @@ function PreviewScene(props: any) {
   const appProps = props.sceneNavigator.viroAppProps;
   const sceneAssetUrl = appProps?.sceneAssetUrl as string;
   const secretCode = appProps?.secretCode as string;
+  const defaultSecretCode = appProps?.defaultSecretCode as string;
   const anchorPosition = (appProps?.anchorPosition as [number, number, number]) ?? [0, 0.3, -1.2];
   const modelScaleMeters = clamp(
     Number(appProps?.modelScaleMeters ?? DEFAULT_MODEL_SCALE_METERS),
@@ -67,7 +69,7 @@ function PreviewScene(props: any) {
         type="GLB"
       />
       <ViroText
-        text={secretCode || 'Code'}
+        text={secretCode || defaultSecretCode}
         width={1}
         height={1}
         style={styles.viroText}
@@ -75,7 +77,7 @@ function PreviewScene(props: any) {
         scale={[0.12, 0.12, 0.12]}
       />
       <ViroText
-        text={secretCode || 'Code'}
+        text={secretCode || defaultSecretCode}
         width={1}
         height={1}
         style={styles.viroText}
@@ -91,6 +93,7 @@ export default function ARPreviewScreen() {
   const theme = useColorTheme();
   const color = Colors[theme];
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const viro = getViroModule();
   const params = useLocalSearchParams<{
     sceneAssetUrl?: string;
@@ -118,12 +121,14 @@ export default function ARPreviewScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: color.foreground }]}>
         <View style={styles.errorState}>
-          <Text style={[styles.errorText, { color: color.text }]}>{VIRO_UNAVAILABLE_MESSAGE}</Text>
+          <Text style={[styles.errorText, { color: color.text }]}>
+            {t('arPreview.viroUnavailable')}
+          </Text>
           <TouchableOpacity
             style={[styles.closeButton, { backgroundColor: color.primary }]}
             onPress={() => router.back()}
           >
-            <Text style={styles.closeButtonText}>Back</Text>
+            <Text style={styles.closeButtonText}>{t('tourStep.back')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -136,12 +141,14 @@ export default function ARPreviewScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: color.foreground }]}>
         <View style={styles.errorState}>
-          <Text style={[styles.errorText, { color: color.text }]}>Missing AR model asset.</Text>
+          <Text style={[styles.errorText, { color: color.text }]}>
+            {t('arPreview.missingAsset')}
+          </Text>
           <TouchableOpacity
             style={[styles.closeButton, { backgroundColor: color.primary }]}
             onPress={() => router.back()}
           >
-            <Text style={styles.closeButtonText}>Back</Text>
+            <Text style={styles.closeButtonText}>{t('tourStep.back')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -153,13 +160,13 @@ export default function ARPreviewScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: color.foreground }]}>
         <View style={styles.errorState}>
           <Text style={[styles.errorText, { color: color.text }]}>
-            AR preview is unavailable in this runtime.
+            {t('arPreview.previewUnavailable')}
           </Text>
           <TouchableOpacity
             style={[styles.closeButton, { backgroundColor: color.primary }]}
             onPress={() => router.back()}
           >
-            <Text style={styles.closeButtonText}>Back</Text>
+            <Text style={styles.closeButtonText}>{t('tourStep.back')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -172,13 +179,19 @@ export default function ARPreviewScreen() {
         <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={20} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.topBarTitle}>AR Preview</Text>
+        <Text style={styles.topBarTitle}>{t('arPreview.title')}</Text>
         <View style={styles.topBarSpacer} />
       </View>
       <ViroARSceneNavigator
         autofocus
         initialScene={{ scene: PreviewScene as any }}
-        viroAppProps={{ sceneAssetUrl, secretCode, anchorPosition, modelScaleMeters }}
+        viroAppProps={{
+          sceneAssetUrl,
+          secretCode,
+          anchorPosition,
+          modelScaleMeters,
+          defaultSecretCode: t('arPreview.defaultCode'),
+        }}
         style={styles.navigator}
       />
     </SafeAreaView>

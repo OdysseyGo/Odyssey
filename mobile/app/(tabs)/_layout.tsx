@@ -58,6 +58,8 @@ export default function TabLayout() {
           name="tourDisplay"
           options={{
             title: t('tabs.tours'),
+            headerTitle: t('tabs.tours'),
+            tabBarLabel: t('tabs.tours'),
             tabBarIcon: ({ color }) => <TabBarIcon name="compass" color={color} />,
             headerShown: false,
           }}
@@ -66,6 +68,8 @@ export default function TabLayout() {
           name="map"
           options={{
             title: t('tabs.map'),
+            headerTitle: t('tabs.map'),
+            tabBarLabel: t('tabs.map'),
             headerShown: false,
             tabBarIcon: ({ color }) => <TabBarIcon name="map" color={color} />,
           }}
@@ -74,6 +78,8 @@ export default function TabLayout() {
           name="profile"
           options={{
             title: t('tabs.profile'),
+            headerTitle: t('tabs.profile'),
+            tabBarLabel: t('tabs.profile'),
             tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
             headerShown: false,
           }}

@@ -14,12 +14,13 @@ import {
 import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { ARModel, ARModelAnchor, getArModels } from '@/api/tours';
 import { ARPuzzleConfig } from '../TourCreation.types';
-import { getViroModule, isViroAvailable, VIRO_UNAVAILABLE_MESSAGE } from '@/utils/viro';
+import { getViroModule, isViroAvailable } from '@/utils/viro';
 
 type WizardStep = 'catalog' | 'code' | 'review';
 
@@ -170,6 +171,7 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
   const color = Colors[theme];
   const stylesForTheme = React.useMemo(() => createStyles(color), [color]);
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const viroAvailable = isViroAvailable();
   const viro = React.useMemo(() => getViroModule(), []);
 
@@ -234,15 +236,15 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
       const items = await getArModels();
       setModels(items);
       if (!items.length) {
-        setError('No AR models are available right now.');
+        setError(t('creation.arPuzzle.noModels'));
       }
     } catch (loadError) {
       console.error('Failed to load AR models', loadError);
-      setError('Failed to load AR models. Please try again.');
+      setError(t('creation.arPuzzle.loadModelsError'));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   React.useEffect(() => {
     loadModels();
@@ -254,7 +256,7 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
 
   const handlePickModel = (model: ARModel) => {
     if (!model.anchors.length) {
-      setError('This AR model does not have any anchor points yet.');
+      setError(t('creation.arPuzzle.noAnchors'));
       return;
     }
 
@@ -269,7 +271,7 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
       return;
     }
     if (!viroAvailable) {
-      setError(VIRO_UNAVAILABLE_MESSAGE);
+      setError(t('creation.arPuzzle.viroUnavailable'));
       return;
     }
     setIsScalePanelOpen(false);
@@ -316,7 +318,7 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
   const openArPreview = (anchor?: ARModelAnchor | null) => {
     if (!selectedModel || !anchor) return;
     if (!viroAvailable) {
-      setError(VIRO_UNAVAILABLE_MESSAGE);
+      setError(t('creation.arPuzzle.viroUnavailable'));
       return;
     }
 
@@ -363,12 +365,15 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
 
   return (
     <View style={stylesForTheme.container}>
-      <Text style={stylesForTheme.title}>AR Puzzle Setup</Text>
+      <Text style={stylesForTheme.title}>{t('creation.arPuzzle.title')}</Text>
 
       {value && step === 'catalog' ? (
         <View style={stylesForTheme.configChip}>
           <Text style={stylesForTheme.configChipText}>
-            Configured: {value.modelName} ({value.anchorLabel})
+            {t('creation.arPuzzle.configured', {
+              modelName: value.modelName,
+              anchorLabel: value.anchorLabel,
+            })}
           </Text>
         </View>
       ) : null}
@@ -383,7 +388,7 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
         <View style={stylesForTheme.centerState}>
           <Text style={stylesForTheme.errorText}>{error}</Text>
           <TouchableOpacity style={stylesForTheme.primaryButton} onPress={loadModels}>
-            <Text style={stylesForTheme.primaryButtonText}>Retry</Text>
+            <Text style={stylesForTheme.primaryButtonText}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
       ) : null}
@@ -421,12 +426,12 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
             <View style={stylesForTheme.selectedModelMeta}>
               <Text style={stylesForTheme.selectedModelName}>{selectedModel.name}</Text>
               <Text style={stylesForTheme.selectedModelDetail}>
-                {selectedModel.anchors.length} anchor{selectedModel.anchors.length === 1 ? '' : 's'}
+                {t('creation.arPuzzle.anchorCount', { count: selectedModel.anchors.length })}
               </Text>
             </View>
           </View>
 
-          <Text style={stylesForTheme.label}>Enter Secret Code</Text>
+          <Text style={stylesForTheme.label}>{t('creation.arPuzzle.enterSecretCode')}</Text>
           <TextInput
             value={secretCode}
             onChangeText={setSecretCode}
@@ -434,11 +439,11 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
             autoCapitalize="none"
             autoCorrect={false}
             maxLength={12}
-            placeholder="4-12 letters or numbers"
+            placeholder={t('creation.arPuzzle.secretCodePlaceholder')}
             placeholderTextColor={color.placeholder}
           />
           {!isSecretCodeValid && secretCode.length > 0 ? (
-            <Text style={stylesForTheme.errorText}>Use 4-12 letters or numbers.</Text>
+            <Text style={stylesForTheme.errorText}>{t('creation.arPuzzle.secretCodeError')}</Text>
           ) : null}
 
           <View style={stylesForTheme.buttonRow}>
@@ -446,7 +451,7 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
               style={stylesForTheme.secondaryButton}
               onPress={() => setStep('catalog')}
             >
-              <Text style={stylesForTheme.secondaryButtonText}>Back</Text>
+              <Text style={stylesForTheme.secondaryButtonText}>{t('tourStep.back')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
@@ -456,7 +461,7 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
               onPress={openAnchorSelection}
               disabled={!isSecretCodeValid}
             >
-              <Text style={stylesForTheme.primaryButtonText}>Next</Text>
+              <Text style={stylesForTheme.primaryButtonText}>{t('tourStep.next')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -465,9 +470,15 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
       {!isLoading && !error && step === 'review' && selectedModel && selectedAnchor ? (
         <View style={stylesForTheme.stepContainer}>
           <View style={stylesForTheme.reviewCard}>
-            <Text style={stylesForTheme.reviewLine}>Model: {selectedModel.name}</Text>
-            <Text style={stylesForTheme.reviewLine}>Code: {secretCode}</Text>
-            <Text style={stylesForTheme.reviewLine}>Position: {selectedAnchor.label}</Text>
+            <Text style={stylesForTheme.reviewLine}>
+              {t('creation.arPuzzle.reviewModel', { modelName: selectedModel.name })}
+            </Text>
+            <Text style={stylesForTheme.reviewLine}>
+              {t('creation.arPuzzle.reviewCode', { secretCode })}
+            </Text>
+            <Text style={stylesForTheme.reviewLine}>
+              {t('creation.arPuzzle.reviewPosition', { anchorLabel: selectedAnchor.label })}
+            </Text>
           </View>
 
           <View style={stylesForTheme.reviewActions}>
@@ -478,7 +489,9 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
                 setIsAnchorSelectorOpen(true);
               }}
             >
-              <Text style={stylesForTheme.secondaryButtonText}>Change anchor</Text>
+              <Text style={stylesForTheme.secondaryButtonText}>
+                {t('creation.arPuzzle.changeAnchor')}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={stylesForTheme.eyePreviewButton}
@@ -487,7 +500,9 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
             >
               <Ionicons name="eye-outline" size={20} color={color.white} />
               <Text style={stylesForTheme.eyePreviewText}>
-                {viroAvailable ? 'Preview in AR' : 'AR unavailable'}
+                {viroAvailable
+                  ? t('creation.arPuzzle.previewInAr')
+                  : t('creation.arPuzzle.arUnavailable')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -497,10 +512,10 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
               style={stylesForTheme.secondaryButton}
               onPress={() => setStep('code')}
             >
-              <Text style={stylesForTheme.secondaryButtonText}>Back</Text>
+              <Text style={stylesForTheme.secondaryButtonText}>{t('tourStep.back')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={stylesForTheme.primaryButton} onPress={saveConfig}>
-              <Text style={stylesForTheme.primaryButtonText}>Confirm</Text>
+              <Text style={stylesForTheme.primaryButtonText}>{t('creation.arPuzzle.confirm')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -519,9 +534,11 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
               <Ionicons name="arrow-back" size={20} color={color.white} />
             </TouchableOpacity>
             <View style={stylesForTheme.headerTextWrap}>
-              <Text style={stylesForTheme.fullscreenTitle}>Anchor Selection</Text>
+              <Text style={stylesForTheme.fullscreenTitle}>
+                {t('creation.arPuzzle.anchorSelectionTitle')}
+              </Text>
               <Text style={stylesForTheme.fullscreenSubtitle}>
-                Cycle through anchors in AR and choose where the code should be hidden.
+                {t('creation.arPuzzle.anchorSelectionSubtitle')}
               </Text>
             </View>
             <View style={stylesForTheme.headerSpacer} />
@@ -544,7 +561,9 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
                   />
                 ) : (
                   <View style={stylesForTheme.centerState}>
-                    <Text style={stylesForTheme.errorText}>{VIRO_UNAVAILABLE_MESSAGE}</Text>
+                    <Text style={stylesForTheme.errorText}>
+                      {t('creation.arPuzzle.viroUnavailable')}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -560,7 +579,9 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
 
               {isScalePanelOpen ? (
                 <View style={[stylesForTheme.scalePanel, { top: insets.top + 108 }]}>
-                  <Text style={stylesForTheme.scalePanelTitle}>Model Scale</Text>
+                  <Text style={stylesForTheme.scalePanelTitle}>
+                    {t('creation.arPuzzle.modelScale')}
+                  </Text>
                   <Text style={stylesForTheme.scalePanelValue}>
                     {modelScaleMeters.toFixed(2)} m
                   </Text>
@@ -598,7 +619,9 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
               <View style={stylesForTheme.selectorBottomBar}>
                 <View style={stylesForTheme.selectorSummary}>
                   <Text style={stylesForTheme.selectorSummaryTitle}>
-                    {selectedAnchor ? selectedAnchor.label : 'No anchor selected'}
+                    {selectedAnchor
+                      ? selectedAnchor.label
+                      : t('creation.arPuzzle.noAnchorSelected')}
                   </Text>
                   <Text style={stylesForTheme.selectorSummaryText}>
                     {selectedModel.anchors.length > 0 && selectedAnchorIndex >= 0
@@ -606,7 +629,9 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
                       : `0 / ${selectedModel.anchors.length}`}
                   </Text>
                   <Text style={stylesForTheme.selectorSummaryText}>
-                    Scale: {modelScaleMeters.toFixed(2)}m
+                    {t('creation.arPuzzle.scaleValue', {
+                      scale: modelScaleMeters.toFixed(2),
+                    })}
                   </Text>
                 </View>
 
@@ -627,7 +652,9 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
                     style={stylesForTheme.selectorConfirmButton}
                     onPress={confirmAnchorSelection}
                   >
-                    <Text style={stylesForTheme.selectorConfirmText}>Confirm Anchor</Text>
+                    <Text style={stylesForTheme.selectorConfirmText}>
+                      {t('creation.arPuzzle.confirmAnchor')}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -635,7 +662,9 @@ export default function ARPuzzleConfigurator({ value, onChange }: Props) {
           ) : (
             <View style={stylesForTheme.centerState}>
               <Text style={stylesForTheme.errorText}>
-                {selectedModel ? 'AR is unavailable in this runtime.' : 'Select an AR model first.'}
+                {selectedModel
+                  ? t('creation.arPuzzle.arUnavailableRuntime')
+                  : t('creation.arPuzzle.selectModelFirst')}
               </Text>
             </View>
           )}

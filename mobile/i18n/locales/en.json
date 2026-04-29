@@ -1,10 +1,14 @@
 {
   "common": {
-    "retry": "Try Again",
     "cancel": "Cancel",
+    "ok": "OK",
+    "error": "Error",
+    "syncError": "Could not sync progress with server.",
+    "retry": "Try Again",
     "submit": "Submit",
     "submitting": "Submitting...",
-    "ok": "OK"
+    "close": "Close",
+    "save": "Save"
   },
   "auth": {
     "welcomeTitle": "Welcome, adventurer!",
@@ -155,7 +159,9 @@
     "signInSubtitle": "Join thousands of explorers on Odyssey.",
     "feature1": "Create and join guided tours",
     "feature2": "Earn badges and XP",
-    "feature3": "Connect with other travelers"
+    "feature3": "Connect with other travelers",
+    "logoutConfirmTitle": "Log out",
+    "logoutConfirmMessage": "Are you sure you want to log out?"
   },
   "tour": {
     "featured": "Featured",
@@ -173,6 +179,37 @@
       "oceania": "Oceania",
       "antarctica": "Antarctica",
       "other": "Other"
+    },
+    "all": "All",
+    "loadError": "Failed to load tours",
+    "errorTitle": "Something went wrong",
+    "emptyTitle": "No tours here yet",
+    "emptySubtitle": "Be the first to create a tour in this region!",
+    "headerEyebrow": "Ready to explore?",
+    "headerTitle": "Discover Tours",
+    "filters": {
+      "title": "Filter tours",
+      "subtitle": "Refine by category, length, and tour style.",
+      "category": "Category",
+      "anyCategory": "Any category",
+      "continent": "Continent",
+      "anyContinent": "Any continent",
+      "duration": "Length",
+      "durationAny": "Any length",
+      "durationShort": "Under 1 hour",
+      "durationMedium": "1 to 2 hours",
+      "durationLong": "2+ hours",
+      "difficulty": "Difficulty",
+      "anyDifficulty": "Any difficulty",
+      "tourType": "Tour type",
+      "anyTourType": "Any type",
+      "clearAll": "Clear filters",
+      "resultsTitle": "Matching tours",
+      "emptyTitle": "No tours match these filters",
+      "emptySubtitle": "Try broadening your category or length selection.",
+      "reset": "Reset",
+      "apply": "Apply filters",
+      "showResults": "Show {{count}} tours"
     }
   },
   "search": {
@@ -234,13 +271,15 @@
     "readMore": "Read more",
     "readLess": "Read less",
     "lockedStopTitle": "Hidden stop",
-    "lockedStopMessage": "Start the tour and solve the puzzle to reveal this stop."
+    "lockedStopMessage": "Start the tour and solve the puzzle to reveal this stop.",
+    "errorTitle": "Something went wrong"
   },
   "tabs": {
     "settings": "Settings",
     "map": "Map",
     "tours": "Tours",
-    "profile": "Profile"
+    "profile": "Profile",
+    "tutorials": "Tutorials"
   },
   "settings": {
     "language": "Language",
@@ -310,6 +349,10 @@
         "label": "Help & Support",
         "description": "Get help with the app"
       }
+    },
+    "editProfile": {
+      "loadError": "Could not load your profile details.",
+      "saveError": "Could not update profile."
     }
   },
   "tourId": {
@@ -326,7 +369,9 @@
     "tourInProgressMessage": "You already have an active tour! Please finish or quit it before starting a new one.",
     "locationRequiredTitle": "Location permission needed",
     "locationRequiredMessage": "To start this tour, Odyssey needs access to your location. Please allow location permission in your device settings, then try again.",
-    "locationUnavailableMessage": "We couldn't read your current location. Please turn on location services and try again."
+    "locationUnavailableMessage": "We couldn't read your current location. Please turn on location services and try again.",
+    "errorTitle": "Error",
+    "errorMessage": "Could not start the tour. Please try again."
   },
   "creation": {
     "loginRequired": "Login Required",
@@ -466,7 +511,20 @@
       "previous": "Previous",
       "next": "Next",
       "editLocation": "Edit Location",
-      "save": "Save"
+      "save": "Save",
+      "chooseImageSource": "Choose image source",
+      "camera": "Camera",
+      "photoLibrary": "Photo Library",
+      "libraryPermissionTitle": "Permission required",
+      "libraryPermissionMessage": "Please allow photo library access to select an image.",
+      "referenceRequirementsTitle": "Reference image requirements",
+      "referenceRequirementsMessage": "Pick something that is not temporary.\nAppropriate.\nHas good lighting and doesn't depend much on the time of day.",
+      "referenceRequirementsAccessibilityLabel": "Show reference image requirements",
+      "openTargetImageAccessibilityLabel": "Open target image full screen",
+      "tapToViewFullImage": "Tap to view full image",
+      "captureReferenceTitle": "Place target in square",
+      "captureReferenceSubtitle": "Only the highlighted square area is saved.",
+      "captureReference": "Capture Reference"
     },
     "puzzle": {
       "type": "Puzzle Type *",
@@ -483,7 +541,14 @@
       "addOption": "Add Option",
       "hintLabel": "Hint (Optional)",
       "hintPlaceholder": "e.g., Look at the plaque above the door.",
-      "hintText": "A helpful clue if the user gets stuck."
+      "hintText": "A helpful clue if the user gets stuck.",
+      "types": {
+        "trivia": "Trivia",
+        "ar": "AR Challenge",
+        "gyroscope": "Gyroscope",
+        "pictureCompare": "Picture Compare"
+      },
+      "pictureTargetImage": "Pick your target image"
     },
     "editLocation": {
       "header": "Edit Location",
@@ -494,6 +559,35 @@
       "storyLabel": "Story *",
       "storyPlaceholder": "Tell the story of this location...",
       "storyHint": "Write the narrative that visitors will read or hear at this location"
+    },
+    "arPuzzle": {
+      "title": "AR Puzzle Setup",
+      "configured": "Configured: {{modelName}} ({{anchorLabel}})",
+      "noModels": "No AR models are available right now.",
+      "loadModelsError": "Failed to load AR models. Please try again.",
+      "noAnchors": "This AR model does not have any anchor points yet.",
+      "viroUnavailable": "AR is unavailable in this runtime.",
+      "anchorCount_one": "{{count}} anchor",
+      "anchorCount_other": "{{count}} anchors",
+      "enterSecretCode": "Enter Secret Code",
+      "secretCodePlaceholder": "4-12 letters or numbers",
+      "secretCodeError": "Use 4-12 letters or numbers.",
+      "reviewModel": "Model: {{modelName}}",
+      "reviewCode": "Code: {{secretCode}}",
+      "reviewPosition": "Position: {{anchorLabel}}",
+      "changeAnchor": "Change anchor",
+      "previewInAr": "Preview in AR",
+      "arUnavailable": "AR unavailable",
+      "confirm": "Confirm",
+      "anchorSelectionTitle": "Anchor Selection",
+      "anchorSelectionSubtitle": "Cycle through anchors in AR and choose where the code should be hidden.",
+      "modelScale": "Model Scale",
+      "noAnchorSelected": "No anchor selected",
+      "scaleValue": "Scale: {{scale}}m",
+      "confirmAnchor": "Confirm Anchor",
+      "arUnavailableRuntime": "AR is unavailable in this runtime.",
+      "selectModelFirst": "Select an AR model first.",
+      "anchorCount": "{{count}} anchors"
     }
   },
   "aiTour": {
@@ -543,13 +637,57 @@
     "finish": "Finish",
     "answerConfirmTitle": "Lock this answer?",
     "answerConfirmMessage": "Are you sure? Wrong answers can reduce your badge progress.",
-    "answerConfirmAction": "Answer"
-  },
-  "common": {
-    "cancel": "Cancel",
-    "ok": "OK",
-    "error": "Error",
-    "syncError": "Could not sync progress with server."
+    "answerConfirmAction": "Answer",
+    "story": "Story",
+    "scenesFromStop": "Scenes from this stop",
+    "puzzle": "Puzzle",
+    "solved": "Solved",
+    "question": "Question",
+    "attempts": "Attempts",
+    "progressMissingTitle": "Progress missing",
+    "progressMissingMessage": "Could not verify puzzle without active tour progress.",
+    "alreadyAnswered": "You have already answered this question.",
+    "confirmLocationToContinue": "Confirm your location and press Next to continue.",
+    "picture": {
+      "checkingSimilarity": "Checking similarity...",
+      "matched": "Matched ({{similarity}}%).",
+      "notCloseNoAttempts": "Not close enough ({{similarity}}%). No attempts remaining.",
+      "notCloseAttemptsRemaining_one": "Not close enough ({{similarity}}%). {{count}} attempt remaining.",
+      "notCloseAttemptsRemaining_other": "Not close enough ({{similarity}}%). {{count}} attempts remaining.",
+      "verifyError": "Could not verify image right now. Please try again.",
+      "photoChallenge": "Photo challenge",
+      "findThis": "Look around and try to find this!",
+      "openReferenceAccessibilityLabel": "Open reference image full screen",
+      "tapToViewFullImage": "Tap to view full image",
+      "referenceMissing": "Reference image is not available.",
+      "latestAttempt": "Your latest attempt",
+      "openLatestAttemptAccessibilityLabel": "Open latest attempt full screen",
+      "captureAndCheck": "Capture and Check",
+      "captureTitle": "Align your view with the target",
+      "captureSubtitle": "Only the center square is analyzed for matching.",
+      "checkMatch": "Check Match",
+      "notCloseAttemptsRemaining": "Not close enough ({{similarity}}%). {{count}} attempts remaining."
+    },
+    "ar": {
+      "locationPermissionTitle": "Location permission needed",
+      "locationPermissionMessage": "Location permission is required to continue with AR puzzle mode.",
+      "cameraPermissionMessage": "Camera permission is required to open the AR puzzle view.",
+      "unavailableTitle": "AR unavailable",
+      "prepareError": "Could not prepare the AR puzzle view right now.",
+      "enterCodeFirst": "Enter the secret code first.",
+      "checkingCode": "Checking code...",
+      "codeVerified": "Code verified.",
+      "incorrectNoAttempts": "Code is not correct. No attempts remaining.",
+      "incorrectAttemptsRemaining_one": "Code is not correct. {{count}} attempt remaining.",
+      "incorrectAttemptsRemaining_other": "Code is not correct. {{count}} attempts remaining.",
+      "verifyError": "Could not verify code right now. Please try again.",
+      "challenge": "AR Challenge",
+      "openArView": "Open AR View",
+      "enterSecretCode": "Enter the secret code",
+      "enterSecretCodePlaceholder": "Enter secret code",
+      "checkCode": "Check Code",
+      "incorrectAttemptsRemaining": "Code is not correct. {{count}} attempts remaining."
+    }
   },
   "map": {
     "noActiveTour": {
@@ -567,7 +705,8 @@
       "stepsRemaining_one": "You still have {{count}} step to explore!",
       "stepsRemaining_other": "You still have {{count}} steps to explore!",
       "continueTour": "Continue Tour",
-      "exitTour": "Exit Tour"
+      "exitTour": "Exit Tour",
+      "stepsRemaining": "You still have {{count}} steps to explore!"
     },
     "tourComplete": {
       "title": "Tour Complete!",
@@ -609,7 +748,9 @@
       "emptyTitle": "No tours here",
       "emptySubtitle": "Try tapping a different spot or explore a busier area.",
       "duration_one": "{{count}} min",
-      "duration_other": "{{count}} min"
+      "duration_other": "{{count}} min",
+      "areaTitle": "{{count}} tours in this area",
+      "duration": "{{count}} min"
     },
     "searchMode": {
       "searchHere": "Search here",
@@ -654,5 +795,29 @@
       "step3text": "You can see the top featured tours here!",
       "step4text": "To create tours, press here. You can generate Personal or AI-generated tours!"
     }
+  },
+  "camera": {
+    "defaultTitle": "Align target in the square",
+    "defaultSubtitle": "Only the center square region will be used.",
+    "capture": "Capture",
+    "captureFailedTitle": "Capture failed",
+    "captureFailedMessage": "Could not process this photo. Please try again.",
+    "permissionTitle": "Camera permission needed",
+    "permissionMessage": "Allow camera access to capture inside the guided square.",
+    "grantPermission": "Grant Permission"
+  },
+  "arPreview": {
+    "title": "AR Preview",
+    "defaultCode": "Code",
+    "viroUnavailable": "AR preview is unavailable in this runtime.",
+    "missingAsset": "Missing AR model asset.",
+    "previewUnavailable": "AR preview is unavailable in this runtime."
+  },
+  "arPuzzleView": {
+    "title": "View Puzzle",
+    "defaultCode": "Code",
+    "viroUnavailable": "AR view is unavailable in this runtime.",
+    "missingAsset": "Missing AR model asset.",
+    "viewUnavailable": "AR view is unavailable in this runtime."
   }
 }
