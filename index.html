@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odyssey app</title>
+    <style>
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212; 
+            color: #e0e0e0; 
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .hero {
+            text-align: center;
+            padding-bottom: 60px;
+            border-bottom: 1px solid #333;
+        }
+
+        .app-icon {
+            width: 150px;
+            height: 150px;
+            border-radius: 20px; 
+            margin-bottom: 20px;
+            object-fit: cover;
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.2); 
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            background: -webkit-linear-gradient(#fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .intro-text {
+            font-size: 1.1rem;
+            color: #b0b0b0;
+            text-align: left; 
+            background: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        .highlight {
+            color: #4da3ff;
+            font-weight: bold;
+        }
+
+        /* --- LOGBOOKS --- */
+        .logbooks-section {
+            padding-top: 40px;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #4da3ff;
+        }
+
+        .card h3 { margin-top: 0; color: #fff; }
+        .card p { font-size: 0.9em; color: #888; }
+
+        .btn {
+            display: inline-block;
+            margin-top: 15px;
+            text-decoration: none;
+            background-color: #333;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover { background-color: #4da3ff; color: #000; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="hero">
+            <img src="icon.jpeg" alt="App Icon" class="app-icon">
+            <h1>Odyssey</h1>
+            <h1>Are you lost or seeking adventure?</h1>
+            
+            <div class="intro-text">
+                <p>
+                    Our app is for your needs. We are generating a story for each country which makes it so unique. 
+                    The boring city tours are our main source, but we make them become a <span class="highlight">thriller</span>.
+                </p>
+                <p>
+                    As you are wandering around a city of unknowns, you will find clues, find puzzles, and find your way out. 
+                    These clues will guide you to the soul of the city with its real stories. 
+                    AI is used to create once-in-a-lifetime stories, which will make your tour an unforgettable experience.
+                </p>
+                <p>
+                    Moreover, our goal is to create a community that will create and share tours. 
+                    This community will be a source for generating new knowledge and new experiences. 
+                    We are developing a new form of exploration and guidance. Creating a new form of excitement and fun for everyone.
+                </p>
+            </div>
+        </div>
+
+    <h1>Project Logbooks</h1>
+
+    <div class="logbook-grid">
+
+        <div class="card">
+            <h3>Cem Tarkan Tekcan</h3>
+            <a href="https://docs.google.com/document/d/e/2PACX-1vRmTFPUNB5G4rQAH3C_pDiPgRTgZtddu_ubVj7JhcHj55Qmx8XzMnbYA1Y0iFvo-45qNjcpT9nCKZxx/pub" target="_blank" class="btn">Read Log</a>
+        </div>
+
+        <div class="card">
+            <h3>Sami Bora Akoğuz</h3>
+            <a href="https://docs.google.com/document/d/e/2PACX-1vTwHvdTFj3oMyYfgUO1TO9nJVimbXRoBYzjzwEdQfmGHvGmM0OwxZUv8gnsGC7TbkgX5ZEkwYSgzK_q/pub" target="_blank" class="btn">Read Log</a>
+        </div>
+
+        <div class="card">
+            <h3>Mehmet Rodi Aydoğdu</h3>
+            <a href="https://docs.google.com/document/d/e/2PACX-1vR19606XWW8aQ5tx8dDKzFS95B7G3KZPc7KWGUgKdR68qPwz_b9oKvoq2UGS8XCPO9JJgESI2lUf_oK/pub" target="_blank" class="btn">Read Log</a>
+        </div>
+         <div class="card">
+            <h3>Ege Ertem</h3>
+            <a href="#" target="_blank" class="btn">Read Log</a>
+        </div>
+         <div class="card">
+            <h3>Can Kütükoğlu</h3>
+            <a href="https://docs.google.com/document/d/e/2PACX-1vRRA9O22zoyJovYB8LB-Y9MExky8WKPLa7zCrPZ9_5zoCG79ARSHEJ62-hR-bN0K8UD1-qenpo32Rf5/pub" target="_blank" class="btn">Read Log</a>
+        </div>
+
+    </div>
+    <h1>Final Presentation</h1>
+
+    <iframe 
+        src="documents/cs491_demo_presentatio.pdf"
+        width="100%" 
+        height="600px"
+        style="border: 1px solid #333; border-radius: 8px; margin-top: 20px;">
+    </iframe>
+
+
+</body>
+</html>
