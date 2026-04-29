@@ -51,3 +51,10 @@ export const consumeGrant = (grantId: number, context: Record<string, unknown> =
     url: `/api/ads/rewards/${grantId}/consume/`,
     data: { context },
   });
+
+export const devGrantReward = (placementKey: string) =>
+  apiRequest<{ ok: boolean; grant_id: number; created: boolean }>({
+    method: 'post',
+    url: '/api/ads/rewards/dev-grant/',
+    data: { placement_key: placementKey },
+  });

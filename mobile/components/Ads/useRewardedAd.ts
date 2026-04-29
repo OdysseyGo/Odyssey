@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { RewardedAd, RewardedAdEventType, AdEventType } from 'react-native-google-mobile-ads';
 import { useAds } from '@/contexts/AdsContext';
 import { resolveAdUnitId } from './adUnitIds';
+import { devGrantReward } from '@/api/ads';
 
 type Status = 'idle' | 'loading' | 'loaded' | 'showing' | 'rewarded' | 'closed' | 'error';
 
@@ -68,6 +69,15 @@ export function useRewardedAd(placementKey: string) {
       });
       await adRef.current.show();
       const earned = await earnedPromise;
+      // In dev, AdMob's SSV ping cannot reach a LAN backend, so the grant
+      // row never lands. Mint it directly via the DEBUG-only endpoint.
+      if (earned && __DEV__ && placement) {
+        try {
+          await devGrantReward(placement.key);
+        } catch (err) {
+          console.warn('devGrantReward failed', err);
+        }
+      }
       // Reload for next use
       load();
       return earned;
@@ -77,7 +87,7 @@ export function useRewardedAd(placementKey: string) {
       closeResolverRef.current = null;
       return false;
     }
-  }, [status, load]);
+  }, [status, load, placement]);
 
   return { status, show, reload: load, available: !!placement && isReady };
 }

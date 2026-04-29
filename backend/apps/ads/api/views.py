@@ -1,5 +1,7 @@
 import logging
+import uuid
 
+from django.conf import settings
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -171,6 +173,59 @@ def _parse_custom_data(custom_data: str):
         return None, None
     user_id, _, placement_key = custom_data.partition(":")
     return user_id.strip() or None, placement_key.strip() or None
+
+
+class DevRewardGrantView(APIView):
+    """DEBUG-only fallback for AdMob SSV.
+
+    AdMob's SSV ping originates from Google's public servers and cannot reach
+    a developer's LAN backend, so the grant row is never created and feature
+    endpoints reject `use_ad_*` payloads. This endpoint lets an authenticated
+    client mint the grant directly when EARNED_REWARD fires in dev. Refuses
+    to run when DEBUG is False.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if not settings.DEBUG:
+            return Response(
+                {"detail": "Not available."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        placement_key = request.data.get("placement_key")
+        if not placement_key:
+            return Response(
+                {"detail": "placement_key is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        placement = AdPlacement.objects.filter(
+            key=placement_key, enabled=True
+        ).first()
+        if placement is None:
+            return Response(
+                {"detail": "Unknown placement."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            grant_row, created = reward_service.grant(
+                user=request.user,
+                placement=placement,
+                admob_transaction_id=f"dev-{uuid.uuid4()}",
+                reward_amount=placement.reward_amount,
+            )
+        except reward_service.RewardServiceError as e:
+            return Response(
+                {"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(
+            {"ok": True, "grant_id": grant_row.id, "created": created},
+            status=status.HTTP_200_OK,
+        )
 
 
 class ConsumeGrantView(APIView):
