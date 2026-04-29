@@ -201,9 +201,7 @@ class DevRewardGrantView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        placement = AdPlacement.objects.filter(
-            key=placement_key, enabled=True
-        ).first()
+        placement = AdPlacement.objects.filter(key=placement_key, enabled=True).first()
         if placement is None:
             return Response(
                 {"detail": "Unknown placement."},
@@ -218,9 +216,7 @@ class DevRewardGrantView(APIView):
                 reward_amount=placement.reward_amount,
             )
         except reward_service.RewardServiceError as e:
-            return Response(
-                {"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(
             {"ok": True, "grant_id": grant_row.id, "created": created},

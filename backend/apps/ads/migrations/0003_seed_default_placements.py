@@ -1,6 +1,5 @@
 from django.db import migrations
 
-
 DEFAULT_PLACEMENTS = [
     {
         "key": "profile_banner",
