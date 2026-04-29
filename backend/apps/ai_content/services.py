@@ -569,7 +569,7 @@ class GeminiService:
         """
         mode_instructions = {
             "STORY": "Focus on rich narrative storytelling. Each step should have detailed historical or thematic descriptions that immerse the user in the story. No puzzles needed.",
-            "PUZZLE": "Focus on interactive challenges. Each step MUST have a puzzle (trivia question, riddle, or observation task). Keep descriptions brief.",
+            "PUZZLE": "Focus on interactive challenges. Each step MUST have a puzzle (trivia question or AR). Keep descriptions brief. Some trivia questions should be formatted as a riddle, others should be normal trivia questions. Make the options challenging.",
             "HYBRID": "Balance storytelling with puzzles. Each step should have both a narrative description AND a puzzle challenge.",
         }
 
@@ -619,7 +619,7 @@ class GeminiService:
                 return ""
 
         places_list = "\n".join(
-            f"  {i}. \"{p['name']}\" — GPS: ({p['latitude']}, {p['longitude']})"
+            f'  {i}. "{p["name"]}" — GPS: ({p["latitude"]}, {p["longitude"]})'
             + (f" — {p['address']}" if p.get("address") else "")
             + _area_label(p)
             for i, p in enumerate(candidate_places, start=1)
@@ -655,7 +655,7 @@ OUTPUT FORMAT (strict JSON):
             "title": "Exact location name from the list above",
             "description": "Narrative/story content for this location",
             "latitude": 48.8584,
-            "longitude": 2.2945{', ' + puzzle_field if puzzle_field else ''}
+            "longitude": 2.2945{", " + puzzle_field if puzzle_field else ""}
         }}
     ]
 }}
@@ -704,8 +704,7 @@ Generate the tour now:"""
                 pass
 
         raise ValueError(
-            "Failed to parse AI response as JSON. "
-            "The model did not return valid JSON."
+            "Failed to parse AI response as JSON. The model did not return valid JSON."
         )
 
     # ------------------------------------------------------------------
@@ -728,7 +727,7 @@ Generate the tour now:"""
         lines = []
         for m in ar_models:
             anchor_descriptors = ", ".join(
-                f'"{a.get("id")}"' + (f' ({a.get("label")})' if a.get("label") else "")
+                f'"{a.get("id")}"' + (f" ({a.get('label')})" if a.get("label") else "")
                 for a in m.anchors
                 if isinstance(a, dict) and a.get("id")
             )
