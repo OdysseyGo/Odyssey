@@ -68,7 +68,7 @@ function RootLayoutNavigator() {
     <TutorialProvider>
       <LanguageProvider>
         <AdsProvider>
-        <ActiveTourProvider>
+          <ActiveTourProvider>
             <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
               <Stack
                 screenOptions={{
@@ -98,7 +98,7 @@ function RootLayoutNavigator() {
             </ThemeProvider>
           </ActiveTourProvider>
         </AdsProvider>
-    </LanguageProvider>
+      </LanguageProvider>
     </TutorialProvider>
   );
 }

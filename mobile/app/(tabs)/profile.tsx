@@ -604,7 +604,6 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
         <OptionalCopilot text={t('tutorial.profile.step6text')} order={6} name="tourCreatorStep">
           <ProfileToursContainer />
         </OptionalCopilot>
-
       </Animated.ScrollView>
 
       {/* ─── Modals ────────────────────────────────── */}
