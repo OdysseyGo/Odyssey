@@ -8,7 +8,7 @@ export type User = {
   last_name: string;
   email: string;
   xp: number;
-  follow_count: number;
+  following_count: number;
   follower_count: number;
   token: number;
   level: number;
@@ -16,6 +16,7 @@ export type User = {
   user_type: number;
   tour_count: number;
   rating: number;
+  avatar_url: string;
 };
 
 export type AddFriendUserDisplayDTO = {
@@ -23,6 +24,7 @@ export type AddFriendUserDisplayDTO = {
   username: string;
   first_name: string;
   last_name: string;
+  avatar_url?: string;
 };
 
 export type AddFriendUserDisplayDTOListResponse = {
@@ -55,6 +57,15 @@ export type UsersListResponse = {
   results: User[];
 };
 
+export type SearchHistoryType = 'tours' | 'users';
+
+export type SearchHistoryItem = {
+  id: number;
+  search_type: SearchHistoryType;
+  query: string;
+  searched_at: string;
+};
+
 export type UserCredentials = {
   username: string;
   password: string;
@@ -65,16 +76,36 @@ export type LoginResponse = {
   refresh: string;
 };
 
-// Mapping functions
-export const mapUserToAddFriendDTO = (user: User): AddFriendUserDisplayDTO => ({
-  id: user.id,
-  username: user.username,
-  first_name: user.first_name,
-  last_name: user.last_name,
-});
-
 export type FollowPayload = {
-  follow: number; //id of the target
+  following: number; //id of the target
+};
+
+export type FeedTour = {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  duration_minutes: number;
+  city?: string;
+  country?: string;
+  country_code?: string;
+  cover_image?: string;
+  created_at: string;
+};
+
+export type FeedItem = {
+  id: number; // id of tourProgress, its a better key value then combining userid + tour.
+  user: User;
+  tour: FeedTour;
+  completed_at: string;
+};
+
+export type FollowingFeedResponse = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: FeedItem[];
 };
 
 // API functions
@@ -82,28 +113,43 @@ export type FollowPayload = {
 /**
  * GET /api/users/ - List all users with pagination
  * @param page - Page number (optional)
+ * @param search - Search by username or name (optional)
  */
-export const getUsers = (page?: number) =>
+export const getUsers = (page?: number, search?: string, signal?: AbortSignal) =>
   apiRequest<UsersListResponse>({
     url: '/api/users/',
-    params: page ? { page } : undefined,
+    params: {
+      ...(page ? { page } : {}),
+      ...(search ? { search } : {}),
+    },
+    signal,
   });
 
-/**
- * GET /api/users/ - List all users for add friend feature (mapped to DTO)
- * @param page - Page number (optional)
- */
-export const getAddFriendUsers = async (
-  page?: number
-): Promise<AddFriendUserDisplayDTOListResponse> => {
-  const response = await getUsers(page); // TODO: We should implement filtering api and integrate it - Can Kütükoğlu
-  return {
-    count: response.count,
-    next: response.next,
-    previous: response.previous,
-    results: response.results.map(mapUserToAddFriendDTO),
-  };
-};
+export const searchUsers = (query: string, signal?: AbortSignal) => getUsers(1, query, signal);
+
+export const getSearchHistory = (searchType?: SearchHistoryType) =>
+  apiRequest<SearchHistoryItem[]>({
+    method: 'get',
+    url: '/api/users/search-history/',
+    params: searchType ? { search_type: searchType } : undefined,
+  });
+
+export const saveSearchHistory = (searchType: SearchHistoryType, query: string) =>
+  apiRequest<SearchHistoryItem, { search_type: SearchHistoryType; query: string }>({
+    method: 'post',
+    url: '/api/users/search-history/',
+    data: { search_type: searchType, query },
+  });
+
+export const clearSearchHistory = (searchType?: SearchHistoryType, query?: string) =>
+  apiRequest<void>({
+    method: 'delete',
+    url: '/api/users/search-history/',
+    params: {
+      ...(searchType ? { search_type: searchType } : {}),
+      ...(query ? { query } : {}),
+    },
+  });
 
 /**
  * POST /api/users/ - Create a new user
@@ -195,16 +241,69 @@ export const followUser = (payload: FollowPayload) =>
 export const unfollowUser = (payload: FollowPayload) =>
   apiRequest<void>({
     method: 'delete',
-    url: `/api/follows/${payload.follow}/`,
+    url: `/api/follows/${payload.following}/`,
   });
 
 /**
- * Gets the ussers filtered by username
+ * Gets the users filtered by username for add friend list (includes filter, excludes itself and already following)
  * @param filter - checks if username contains the filter (same with sql LIKE %patern%)
  * @returns array of users
  */
-export const getFilteredUsers = (filter: string) =>
-  apiRequest<void>({
+export const getFilteredUsersAddFriend = (filter: string) =>
+  apiRequest<AddFriendUserDisplayDTO[]>({
     method: 'get',
-    url: `api/users/get-filtered-users/?filter=${filter}`,
+    url: `api/users/get-filtered-users-add-friend/?filter=${filter}`,
+  });
+
+/**
+ * PATCH /api/users/me/avatar/ - Update avatar URL
+ */
+export const updateAvatar = (avatarUrl: string) =>
+  apiRequest<{ avatar_url: string }>({
+    method: 'patch',
+    url: '/api/users/me/avatar/',
+    data: { avatar_url: avatarUrl },
+  });
+
+/**
+ * DELETE /api/users/{followerId}/remove-follower/ - Remove a follower from the current user's followers
+ */
+export const removeFollower = (followerId: number) =>
+  apiRequest<void>({
+    method: 'delete',
+    url: `/api/users/${followerId}/remove-follower/`,
+  });
+
+/**
+ * GET /api/users/{id}/published-tours/ - Get published tours created by the given user
+ */
+export const getUserPublishedTours = (id: string) =>
+  apiRequest<import('./tours').Tour[]>({
+    url: `/api/users/${id}/published-tours/`,
+  });
+
+/**
+ * GET /api/users/{id}/followers/ - Get users who follow the given user
+ */
+export const getUserFollowers = (id: string) =>
+  apiRequest<User[]>({
+    url: `/api/users/${id}/followers/`,
+  });
+
+/**
+ * GET /api/users/{id}/followings/ - Get users that the given user follows
+ */
+export const getUserFollowings = (id: string) =>
+  apiRequest<User[]>({
+    url: `/api/users/${id}/followings/`,
+  });
+
+/**
+ * GET /api/users/following-feed/?page={page}
+ * Get user's following feed, a paginated list of tours completed by people they follow.
+ */
+export const getFollowingFeed = (page: number = 1) =>
+  apiRequest<FollowingFeedResponse>({
+    url: `/api/users/following-feed/`,
+    params: { page },
   });

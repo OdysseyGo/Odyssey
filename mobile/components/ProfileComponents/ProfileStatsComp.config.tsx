@@ -4,6 +4,13 @@ export type Props = {
   badges?: number;
   followers?: number;
   following?: number;
+
+  // pressable stats for profile
+  onToursPress?: () => void;
+  onBadgesPress?: () => void;
+  onFollowersPress?: () => void;
+  onFollowingPress?: () => void;
+  disableCopilot?: boolean;
 };
 
 export const exampleProfileStats: Props = {

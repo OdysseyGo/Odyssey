@@ -1,6 +1,6 @@
 import { markerColors } from '@/constants/Colors';
 
-export type PuzzleType = 'multiple-choice' | 'trivia';
+export type PuzzleType = 'multiple-choice' | 'picture-compare' | 'ar-code';
 
 export interface MultipleChoiceOption {
   id: string;
@@ -15,15 +15,26 @@ export interface MultipleChoicePuzzle {
   imageUri?: string;
 }
 
-export interface TriviaPuzzle {
-  type: 'trivia';
+export interface PictureComparePuzzle {
+  type: 'picture-compare';
   question: string;
-  correctAnswer: string;
-  caseSensitive?: boolean;
-  imageUri?: string;
+  referenceImageUri?: string;
 }
 
-export type Puzzle = MultipleChoicePuzzle | TriviaPuzzle;
+export interface ArCodePuzzle {
+  type: 'ar-code';
+  question: string;
+  sceneAssetUrl?: string;
+  secretCode?: string;
+  anchorPosition?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  modelScaleMeters?: number;
+}
+
+export type Puzzle = MultipleChoicePuzzle | PictureComparePuzzle | ArCodePuzzle;
 
 export type TourStepType = 'story' | 'puzzle';
 
@@ -46,6 +57,7 @@ export interface StoryStep extends BaseStep {
 export interface PuzzleStep extends BaseStep {
   type: 'puzzle';
   puzzle: Puzzle;
+  description?: string;
 }
 
 export type TourStep = StoryStep | PuzzleStep;
@@ -62,6 +74,7 @@ export interface TourStepProps {
   step: TourStep;
   isSolved: boolean;
   onSolve: () => void;
+  onAnswered?: () => void;
 }
 
 export const exampleTour: Tour = {
@@ -101,21 +114,6 @@ export const exampleTour: Tour = {
           { id: 'c', text: '1453 AD', isCorrect: false },
           { id: 'd', text: '1935 AD', isCorrect: false },
         ],
-      },
-    },
-    {
-      id: 'step-3',
-      type: 'puzzle',
-      title: 'Blue Mosque Trivia',
-      coordinate: {
-        latitude: 41.0054,
-        longitude: 28.9768,
-      },
-      puzzle: {
-        type: 'trivia',
-        question: 'How many minarets does the Blue Mosque have?',
-        correctAnswer: '6',
-        imageUri: 'https://picsum.photos/400/306',
       },
     },
     {

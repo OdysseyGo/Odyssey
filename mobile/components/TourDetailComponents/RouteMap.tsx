@@ -1,5 +1,5 @@
-import { View, Text } from 'react-native';
-import { useMemo } from 'react';
+import { View, Text, Pressable } from 'react-native';
+import { useMemo, useState } from 'react';
 import MapView, { Marker, Polyline, Callout } from 'react-native-maps';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -10,6 +10,7 @@ export default function RouteMap({ stops }: RouteMapProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => routeMapStyles(theme), [theme]);
   const colors = Colors[theme];
+  const [interactive, setInteractive] = useState(false);
 
   const region = useMemo(() => calculateRegion(stops), [stops]);
   const routeCoordinates = useMemo(() => getRouteCoordinates(stops), [stops]);
@@ -26,18 +27,20 @@ export default function RouteMap({ stops }: RouteMapProps) {
       <MapView
         style={styles.map}
         initialRegion={region}
-        scrollEnabled={true}
-        zoomEnabled={true}
+        scrollEnabled={interactive}
+        zoomEnabled={interactive}
         pitchEnabled={false}
         rotateEnabled={false}
       >
         {/* Route path */}
-        <Polyline
-          coordinates={routeCoordinates}
-          strokeWidth={4}
-          strokeColor={colors.primary}
-          lineDashPattern={[0]}
-        />
+        {routeCoordinates.length >= 2 && (
+          <Polyline
+            coordinates={routeCoordinates}
+            strokeWidth={4}
+            strokeColor={colors.primary}
+            lineDashPattern={[0]}
+          />
+        )}
 
         {/* Stop markers */}
         {sortedStops.map((stop, index) => (
@@ -66,6 +69,16 @@ export default function RouteMap({ stops }: RouteMapProps) {
           </Marker>
         ))}
       </MapView>
+
+      {!interactive ? (
+        <Pressable style={styles.overlay} onPress={() => setInteractive(true)}>
+          <Text style={styles.overlayHint}>Tap to interact with map</Text>
+        </Pressable>
+      ) : (
+        <Pressable style={styles.doneButton} onPress={() => setInteractive(false)}>
+          <Text style={styles.doneButtonText}>Done</Text>
+        </Pressable>
+      )}
     </View>
   );
 }

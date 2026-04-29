@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { storyEditorStyles } from './StoryEditor.styles';
-import { TourLocation } from '../TourCreation.types';
+import { TourLocation, TOUR_TEXT_FIELD_MAX_LENGTH } from '../TourCreation.types';
 import StoryEditorHeader from './StoryEditorHeader';
 import LocationBadge from './LocationBadge';
 import StoryInputField from './StoryInputField';
@@ -9,6 +9,7 @@ import ImageUploadSection from './ImageUploadSection';
 import WritingTips from './WritingTips';
 import StoryEditorFooter from './StoryEditorFooter';
 import { useColorTheme } from '@/utils/useColorTheme';
+import { useTranslation } from 'react-i18next';
 
 type StoryEditorProps = {
   location: TourLocation;
@@ -33,6 +34,7 @@ export default function StoryEditor({
 }: StoryEditorProps) {
   const theme = useColorTheme();
   const styles = storyEditorStyles(theme);
+  const { t } = useTranslation();
 
   const [title, setTitle] = useState(location.title);
   const [address, setAddress] = useState(location.address || '');
@@ -66,33 +68,40 @@ export default function StoryEditor({
       >
         <StoryEditorHeader onClose={onCancel} onSave={handleSave} isValid={isValid} />
 
-        <ScrollView style={styles.scrollContent}>
+        <ScrollView
+          style={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
           <LocationBadge currentStop={location.order} totalStops={totalLocations} />
 
           <StoryInputField
-            label="Location Title *"
+            label={t('creation.storyEditor.locationTitle')}
             value={title}
             onChangeText={setTitle}
-            placeholder="e.g., The Grand Bazaar Entrance"
+            placeholder={t('creation.storyEditor.locationTitlePlaceholder')}
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <StoryInputField
-            label="Address (Optional)"
+            label={t('creation.storyEditor.address')}
             value={address}
             onChangeText={setAddress}
-            placeholder="e.g., 123 Main Street, Istanbul"
+            placeholder={t('creation.storyEditor.addressPlaceholder')}
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <ImageUploadSection image={image} onImageChange={setImage} />
 
           <StoryInputField
-            label="Story *"
+            label={t('creation.storyEditor.story')}
             value={story}
             onChangeText={setStory}
-            placeholder="Tell the story of this location..."
-            hint="Write the narrative that visitors will read or hear at this location"
+            placeholder={t('creation.storyEditor.storyPlaceholder')}
+            hint={t('creation.storyEditor.storyHint')}
             multiline
             showCharacterCount
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <WritingTips />

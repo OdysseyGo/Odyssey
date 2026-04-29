@@ -1,11 +1,17 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_H_PADDING = Spacing.lg;
+const CARD_WIDTH = SCREEN_WIDTH - CARD_H_PADDING * 2;
+
+export { CARD_WIDTH, CARD_H_PADDING };
 
 export const featuredTourCarouselStyles = (theme: ThemeName) => {
   const color = Colors[theme];
+  const isDark = theme === 'dark'; // used for card shadow
+
   return StyleSheet.create({
     container: {
       width: '100%',
@@ -13,7 +19,7 @@ export const featuredTourCarouselStyles = (theme: ThemeName) => {
     },
     carouselWrapper: {
       width: '100%',
-      height: 400,
+      height: 310,
     },
     scrollView: {
       width: '100%',
@@ -22,14 +28,26 @@ export const featuredTourCarouselStyles = (theme: ThemeName) => {
       alignItems: 'center',
       justifyContent: 'center',
       width: SCREEN_WIDTH,
-      paddingHorizontal: Spacing.md,
+      paddingHorizontal: CARD_H_PADDING,
     },
     card: {
       width: '100%',
       height: '100%',
-      borderRadius: Spacing.borderRadius,
+      borderRadius: 24,
       overflow: 'hidden',
       backgroundColor: color.foreground,
+      ...Platform.select({
+        ios: {
+          shadowColor: isDark ? '#000' : color.primary,
+          shadowOffset: { width: 0, height: 14 },
+          shadowOpacity: isDark ? 0.5 : 0.2,
+          shadowRadius: 28,
+        },
+        android: { elevation: 14 },
+      }),
+    },
+    cardPressed: {
+      transform: [{ scale: 0.98 }],
     },
     imageWrapper: {
       position: 'relative',
@@ -40,99 +58,157 @@ export const featuredTourCarouselStyles = (theme: ThemeName) => {
       width: '100%',
       height: '100%',
     },
-    gradient: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: '60%',
-      justifyContent: 'flex-end',
-      padding: Spacing.lg,
+    imagePlaceholder: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: color.foreground,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
+    // Subtle vignette on the whole image
+    imageOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.15)',
+    },
+
+    // Featured badge — compact & vibrant
     featuredBadge: {
       position: 'absolute',
-      top: Spacing.md,
-      left: Spacing.md,
+      top: Spacing.md + 2,
+      left: Spacing.md + 2,
       backgroundColor: color.primary,
       paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.xs,
-      borderRadius: Spacing.sm,
+      paddingVertical: 6,
+      borderRadius: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      ...Platform.select({
+        ios: {
+          shadowColor: color.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.5,
+          shadowRadius: 8,
+        },
+        android: { elevation: 6 },
+      }),
     },
     featuredBadgeText: {
       color: color.white,
-      fontSize: 12,
-      fontWeight: '700',
+      fontSize: 11,
+      fontWeight: '800',
       textTransform: 'uppercase',
-      letterSpacing: 0.5,
+      letterSpacing: 0.8,
     },
+
+    // Rating — glassmorphic
     ratingBadge: {
       position: 'absolute',
-      top: Spacing.md,
-      right: Spacing.md,
+      top: Spacing.md + 2,
+      right: Spacing.md + 2,
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: color.backgroundBlack,
-      paddingHorizontal: Spacing.sm,
-      paddingVertical: Spacing.xs,
-      borderRadius: Spacing.sm,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      paddingHorizontal: Spacing.sm + 2,
+      paddingVertical: 6,
+      borderRadius: 12,
+      borderWidth: 0.5,
+      borderColor: 'rgba(255,255,255,0.12)',
+      gap: 4,
     },
     star: {
       color: color.star,
+      fontSize: 13,
     },
     ratingText: {
       color: color.white,
-      fontSize: 13,
-      fontWeight: '600',
-      marginLeft: 4,
+      fontSize: 14,
+      fontWeight: '800',
+      letterSpacing: 0.3,
     },
-    infoContainer: {
+
+    // Bottom info — true gradient from transparent to overlay
+    infoGradient: {
       position: 'absolute',
       bottom: 0,
       left: 0,
       right: 0,
-      padding: Spacing.lg,
-      backgroundColor: color.backgroundBlack,
+      paddingTop: 80,
+      justifyContent: 'flex-end',
+    },
+    infoContent: {
+      paddingHorizontal: Spacing.xl,
+      paddingBottom: Spacing.lg + 2,
     },
     title: {
-      color: color.primary,
-      fontSize: 20,
-      fontWeight: '700',
-      marginBottom: Spacing.xs,
+      color: color.white,
+      fontSize: 23,
+      fontWeight: '800',
+      marginBottom: 6,
+      letterSpacing: -0.5,
+      textShadowColor: 'rgba(0,0,0,0.4)',
+      textShadowOffset: { width: 0, height: 2 },
+      textShadowRadius: 4,
+    },
+    authorRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: Spacing.sm + 2,
     },
     author: {
       color: color.white,
-      fontSize: 14,
-      marginBottom: Spacing.sm,
+      fontSize: 13,
+      fontWeight: '500',
+      opacity: 0.85,
     },
     metaRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: Spacing.sm,
     },
+    metaItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'rgba(255,255,255,0.14)',
+      paddingHorizontal: Spacing.sm + 2,
+      paddingVertical: 5,
+      borderRadius: 10,
+      gap: 4,
+    },
     metaText: {
       color: color.white,
-      fontSize: 13,
+      fontSize: 11,
+      fontWeight: '600',
     },
+
+    // Pagination — refined dots
     pagination: {
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
       marginTop: Spacing.md,
-      gap: Spacing.sm,
+      gap: 6,
     },
     dot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: color.subText,
-      opacity: 0.4,
+      width: 7,
+      height: 7,
+      borderRadius: 3.5,
+      backgroundColor: color.foregroundSecondary,
     },
     dotActive: {
-      width: 24,
-      height: 8,
-      borderRadius: 4,
+      width: 26,
+      height: 7,
+      borderRadius: 3.5,
       backgroundColor: color.primary,
-      opacity: 1,
+      ...Platform.select({
+        ios: {
+          shadowColor: color.primary,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.4,
+          shadowRadius: 4,
+        },
+        android: { elevation: 3 },
+      }),
     },
   });
 };

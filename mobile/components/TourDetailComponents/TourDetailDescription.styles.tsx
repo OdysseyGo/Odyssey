@@ -18,19 +18,32 @@ export const tourDetailDescriptionStyles = (theme: ThemeName) => {
     description: {
       color: color.subText,
       fontSize: 14,
-      lineHeight: 22,
+      lineHeight: 23,
+    },
+    readMoreButton: {
+      marginTop: Spacing.sm,
+    },
+    readMoreText: {
+      color: color.primary,
+      fontSize: 14,
+      fontWeight: '600',
     },
     tagsContainer: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: Spacing.sm,
-      marginTop: Spacing.md,
+      marginTop: Spacing.lg,
     },
     tag: {
-      backgroundColor: color.primary + '20',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      backgroundColor: color.primary + '14',
       paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.xs,
-      borderRadius: Spacing.xl,
+      paddingVertical: Spacing.sm,
+      borderRadius: Spacing.borderRadiusFull,
+      borderWidth: 1,
+      borderColor: color.primary + '25',
     },
     tagText: {
       color: color.primary,

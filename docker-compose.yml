@@ -3,19 +3,15 @@ services:
     image: postgres:16
     container_name: odyssey_db
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    env_file: .env
     ports:
       - "5432:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 10
     volumes:
-      - ./backend/schema.sql:/docker-entrypoint-initdb.d/schema.sql
       - pg_data:/var/lib/postgresql/data
     networks:
       - odyssey_net
@@ -25,15 +21,14 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: odyssey_backend
-    command: >
-      sh -c "python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
-    env_file:
-      - .env
+    env_file: .env
     environment:
-      DJANGO_SETTINGS_MODULE: config.settings.base
-      DB_HOST: db
-      DB_PORT: 5432
+      - DJANGO_SETTINGS_MODULE=config.settings.base
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-5432}
+      - INITIAL_SEED=${INITIAL_SEED:-False}
+      - ENV_MODE=${ENV_MODE:-development}
+      - SECURE_SSL_REDIRECT=False
     ports:
       - "8000:8000"
     depends_on:
@@ -41,19 +36,11 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
-    develop:
-      watch:
-        - action: sync+restart
-          path: ./backend
-          target: /app
-          ignore:
-            - __pycache__
-            - "*.pyc"
     networks:
       - odyssey_net
+
 networks:
   odyssey_net:
-
 
 volumes:
   pg_data:

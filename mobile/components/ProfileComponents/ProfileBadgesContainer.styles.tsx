@@ -1,77 +1,126 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
 export const profileBadgesContainerStyles = (theme: ThemeName) => {
   const color = Colors[theme];
+  const isLight = theme === 'light';
+
   return StyleSheet.create({
     container: {
-      backgroundColor: color.foreground,
-      borderRadius: Spacing.borderRadius,
-      paddingVertical: Spacing.lg,
-      paddingHorizontal: Spacing.lg,
-      marginTop: Spacing.lg,
-      marginHorizontal: Spacing.lg,
-      width: '90%',
-      maxWidth: 500,
-      alignSelf: 'center',
-
-      shadowColor: color.textShadowColor,
-      shadowOpacity: 0.1,
-      shadowRadius: Spacing.lg,
-      shadowOffset: { width: 0, height: Spacing.sm },
-      elevation: 4,
+      marginTop: Spacing.xl,
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: Spacing.lg,
+      paddingHorizontal: Spacing.xl,
+      marginBottom: Spacing.md,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm + 2,
+    },
+    accentBar: {
+      width: 3.5,
+      height: 20,
+      borderRadius: 2,
+      backgroundColor: color.secondary,
     },
     title: {
-      fontSize: 20,
+      fontSize: 19,
       fontWeight: '700',
       color: color.text,
+      letterSpacing: -0.3,
     },
-    badgeCount: {
-      fontSize: 14,
-      color: 'white',
-      backgroundColor: color.primary,
-      paddingVertical: Spacing.xs,
-      paddingHorizontal: Spacing.md,
-      borderRadius: Spacing.borderRadius,
-      fontWeight: '600',
-      overflow: 'hidden',
+    countBadge: {
+      paddingHorizontal: Spacing.sm + 2,
+      paddingVertical: 4,
+      borderRadius: Spacing.borderRadiusFull,
+      backgroundColor: color.primaryMuted,
     },
-    badgesGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
+    countText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: color.primary,
+    },
+
+    // Scroll
+    scrollContent: {
+      paddingHorizontal: Spacing.xl,
       gap: Spacing.md,
     },
-    badgeItem: {
-      flex: 1,
-      minWidth: '30%',
+
+    // Badge item
+    badgeCard: {
+      width: 118,
       alignItems: 'center',
+      paddingVertical: Spacing.sm,
+      paddingHorizontal: Spacing.sm,
+      backgroundColor: color.cardSurface,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: isLight ? color.borderLight : color.foregroundSecondary,
+      ...(isLight
+        ? Platform.select({
+            ios: {
+              shadowColor: 'rgba(45,50,68,0.10)',
+              shadowOpacity: 1,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 3 },
+            },
+            android: { elevation: 2 },
+          })
+        : {}),
     },
-    viewAllButton: {
-      marginTop: Spacing.lg,
-      paddingVertical: Spacing.md,
-      paddingHorizontal: Spacing.lg,
-      backgroundColor: color.primary,
-      borderRadius: Spacing.borderRadius,
-      alignItems: 'center',
+    badgeCardUnlocked: {
+      borderWidth: 1,
+      borderColor: isLight ? color.primary : color.primary,
+      backgroundColor: isLight ? `${color.primary}06` : color.cardSurface,
     },
-    viewAllButtonText: {
-      fontSize: 16,
+    badgeName: {
+      fontSize: 11,
       fontWeight: '600',
-      color: 'white',
+      color: color.text,
+      textAlign: 'center',
+      lineHeight: 15,
+      marginTop: 6,
     },
+    badgeMetaText: {
+      marginTop: 2,
+      fontSize: 9,
+      fontWeight: '500',
+      color: color.subText,
+      textAlign: 'center',
+    },
+
+    // View all
+    viewAllCard: {
+      width: 100,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.sm,
+      backgroundColor: isLight ? color.primaryMuted : color.cardSurface,
+      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: isLight ? `${color.primary}20` : color.foregroundSecondary,
+      borderStyle: 'dashed',
+    },
+    viewAllText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: color.primary,
+      marginTop: Spacing.sm,
+    },
+
     emptyStateText: {
       fontSize: 14,
       color: color.subText,
       textAlign: 'center',
-      paddingVertical: Spacing.lg,
+      paddingVertical: Spacing.xl,
+      paddingHorizontal: Spacing.xl,
     },
   });
 };

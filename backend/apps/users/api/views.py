@@ -1,20 +1,35 @@
 from django.contrib.auth import authenticate  # login direkt
-from django.db.models import F, QuerySet  # F dbden çıkarmadan yazıyon
-from rest_framework import viewsets
+from django.db.models import Avg, F, QuerySet  # F dbden çıkarmadan yazıyon
+from django.utils import timezone
+from drf_spectacular.utils import extend_schema
+from rest_framework import filters
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken  # login token
 
-from apps.users.models import Admin, Follow, User
+from apps.gamification.models import TourProgress
+from apps.tours.api.serializers import TourSerializer
+from apps.tours.models import Tour
+from apps.users.models import Follow, SearchHistory, User
 
-from .serializers import AdminSerializer, FollowSerializer, UserSerializer
+from .serializers import (
+    FollowingFeedSerializer,
+    FollowSerializer,
+    LoginResponseSerializer,
+    LoginSerializer,
+    SearchHistorySerializer,
+    UserSerializer,
+)
 
 
 class UserViewSet(ModelViewSet):
     queryset: QuerySet[User] = User.objects.all().order_by("id")
     serializer_class = UserSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["username", "first_name", "last_name"]
 
     @action(detail=False, methods=["get"], url_path="get-by-username")
     def get_by_username(self, request):
@@ -35,6 +50,7 @@ class UserViewSet(ModelViewSet):
             }
         )
 
+    @extend_schema(request=LoginSerializer, responses={200: LoginResponseSerializer})
     @action(detail=False, methods=["post"], url_path="login")
     def login(self, request):
         username = request.data.get("username")
@@ -70,30 +86,115 @@ class UserViewSet(ModelViewSet):
         except Exception:
             return Response({"detail": "Invalid refresh token"}, status=400)
 
-    @action(detail=False, methods=["get"], url_path="me")
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="me",
+        permission_classes=[IsAuthenticated],
+    )
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["patch"], url_path="me/avatar")
+    def update_avatar(self, request):
+        user = request.user
+        avatar_url = request.data.get("avatar_url", "")
+        user.avatar_url = avatar_url
+        user.save(update_fields=["avatar_url"])
+        return Response({"avatar_url": user.avatar_url})
 
     @action(detail=True, methods=["get"], url_path="followers")
     def followers(self, request, pk=None):
         user = self.get_object()
         followers_qs = User.objects.filter(
-            followees__followee=user,
+            followings__following=user,
         ).distinct()
 
         serializer = self.get_serializer(followers_qs, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["get"], url_path="followees")
-    def followees(self, request, pk=None):
+    @action(detail=True, methods=["get"], url_path="followings")
+    def followings(self, request, pk=None):
         user = self.get_object()
-        followees_qs = User.objects.filter(
+        followings_qs = User.objects.filter(
             followers__follower=user,
         ).distinct()
 
-        serializer = self.get_serializer(followees_qs, many=True)
+        serializer = self.get_serializer(followings_qs, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["get"], url_path="following-feed")
+    def following_feed(self, request):
+        current_user = request.user
+
+        following_ids = Follow.objects.filter(follower=current_user).values_list(
+            "following_id", flat=True
+        )
+
+        completed_progress = (
+            TourProgress.objects.filter(
+                user_id__in=following_ids, status=TourProgress.COMPLETED
+            )
+            .select_related("user", "tour")
+            .order_by("-completed_at")
+        )
+
+        page = self.paginate_queryset(completed_progress)
+
+        if page is not None:
+            serializer = FollowingFeedSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = FollowingFeedSerializer(completed_progress, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=["get", "post", "delete"],
+        url_path="search-history",
+        permission_classes=[IsAuthenticated],
+    )
+    def search_history(self, request):
+        if request.method == "GET":
+            search_type = request.query_params.get("search_type")
+            queryset = SearchHistory.objects.filter(user=request.user)
+            if search_type:
+                queryset = queryset.filter(search_type=search_type)
+            serializer = SearchHistorySerializer(queryset[:8], many=True)
+            return Response(serializer.data)
+
+        if request.method == "DELETE":
+            search_type = request.query_params.get("search_type")
+            query = request.query_params.get("query")
+            queryset = SearchHistory.objects.filter(user=request.user)
+            if search_type:
+                queryset = queryset.filter(search_type=search_type)
+            if query:
+                queryset = queryset.filter(query=query)
+            queryset.delete()
+            return Response(status=204)
+
+        serializer = SearchHistorySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        search_history, created = SearchHistory.objects.update_or_create(
+            user=request.user,
+            search_type=serializer.validated_data["search_type"],
+            query=serializer.validated_data["query"],
+            defaults={"searched_at": timezone.now()},
+        )
+        stale_ids = list(
+            SearchHistory.objects.filter(
+                user=request.user,
+                search_type=serializer.validated_data["search_type"],
+            )
+            .order_by("-searched_at")
+            .values_list("id", flat=True)[8:]
+        )
+        if stale_ids:
+            SearchHistory.objects.filter(id__in=stale_ids).delete()
+        response_serializer = SearchHistorySerializer(search_history)
+        return Response(response_serializer.data, status=201 if created else 200)
 
     @action(
         detail=False, methods=["post"], url_path="reset-password"
@@ -122,50 +223,90 @@ class UserViewSet(ModelViewSet):
         return Response({"detail": "Password updated successfully"}, status=200)
 
     @action(
-        detail=False, methods=["get"], url_path="get-filtered-users"
-    )  # filter by username
-    def get_filtered_users(self, request):
+        detail=True, methods=["get"], url_path="published-tours", permission_classes=[]
+    )
+    def published_tours(self, request, pk=None):
+        """Return published tours created by a specific user."""
+        tours = (
+            Tour.objects.filter(creator_id=pk, status=Tour.PUBLISHED)
+            .annotate(average_rating=Avg("reviews__rating"))
+            .order_by("-created_at")
+        )
+        serializer = TourSerializer(tours, many=True, context={"request": request})
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["delete"], url_path="remove-follower")
+    def remove_follower(self, request, pk=None):
+        """Remove a specific user from the current user's followers."""
+        follower_user = self.get_object()  # user to be removed as a follower
+        try:
+            follow = Follow.objects.get(follower=follower_user, following=request.user)
+        except Follow.DoesNotExist:
+            return Response({"error": "Follow relationship not found"}, status=404)
+
+        User.objects.filter(id=follow.following_id).update(
+            follower_count=F("follower_count") - 1
+        )
+        User.objects.filter(id=follow.follower_id).update(
+            following_count=F("following_count") - 1
+        )
+        follow.delete()
+        return Response(status=204)
+
+    @action(
+        detail=False, methods=["get"], url_path="get-filtered-users-add-friend"
+    )  # filter by username to add friend (excludes itself and already following)
+    def get_filtered_users_add_friend(self, request):
         filter = request.query_params.get("filter")
         if not filter:
             return Response({"error": "filter is required"}, status=400)
 
-        users = User.objects.filter(username__icontains=filter)
+        current_user = request.user
+
+        following_ids = Follow.objects.filter(follower=current_user).values_list(
+            "following_id", flat=True
+        )
+
+        print(following_ids)
+
+        users = (
+            User.objects.filter(username__icontains=filter)
+            .exclude(id=current_user.id)
+            .exclude(id__in=following_ids)
+        )
+
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data)
 
 
 class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = FollowSerializer
+    permission_classes = [IsAuthenticated]
 
-    lookup_field = "followee_id"
+    lookup_field = "following"
 
     def get_queryset(self):
         return Follow.objects.filter(follower=self.request.user).select_related(
-            "followee"
+            "following"
         )
 
     def perform_create(self, serializer):
         follow = serializer.save(follower=self.request.user)
         # increment counters
-        User.objects.filter(id=follow.followee_id).update(
+        User.objects.filter(id=follow.following_id).update(
             follower_count=F("follower_count") + 1
         )
         User.objects.filter(id=follow.follower_id).update(
-            follow_count=F("follow_count") + 1
+            following_count=F("following_count") + 1
         )
 
     def perform_destroy(self, instance):
         # decrement counters safely on unfollow
-        User.objects.filter(id=instance.followee_id).update(
+        User.objects.filter(id=instance.following_id).update(
             follower_count=F("follower_count") - 1
         )
         User.objects.filter(id=instance.follower_id).update(
-            follow_count=F("follow_count") - 1
+            following_count=F("following_count") - 1
         )
 
         instance.delete()
-
-
-class AdminViewSet(viewsets.ModelViewSet):
-    queryset = Admin.objects.all().order_by("admin_id")
-    serializer_class = AdminSerializer

@@ -1,0 +1,132 @@
+import { StyleSheet, Dimensions } from 'react-native';
+import Colors, { ThemeName } from '@/constants/Colors';
+import { Spacing } from '@/constants/Spacing';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+export default function getStyles(theme: ThemeName) {
+  const color = Colors[theme];
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: color.backgroundBlack,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContainer: {
+      width: SCREEN_WIDTH - 48,
+      backgroundColor: color.foreground,
+      borderRadius: Spacing.borderRadius * 1.5,
+      padding: Spacing.xl,
+      alignItems: 'center',
+      shadowColor: color.text,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 10,
+    },
+    confettiContainer: {
+      position: 'absolute',
+      top: -20,
+    },
+    trophyContainer: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: color.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: Spacing.lg,
+      shadowColor: color.primary,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.5,
+      shadowRadius: 20,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '800',
+      color: color.text,
+      marginBottom: Spacing.sm,
+      textAlign: 'center',
+    },
+    subtitle: {
+      fontSize: 16,
+      color: color.subText,
+      marginBottom: Spacing.xl,
+      textAlign: 'center',
+    },
+    statsContainer: {
+      width: '100%',
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginBottom: Spacing.xl,
+      paddingHorizontal: Spacing.md,
+    },
+    statItem: {
+      alignItems: 'center',
+    },
+    statValue: {
+      fontSize: 28,
+      fontWeight: '800',
+      color: color.primary,
+      marginBottom: Spacing.xs,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: color.subText,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    xpEarnedContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: color.primary,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      borderRadius: Spacing.borderRadius,
+      marginBottom: Spacing.xl,
+      gap: Spacing.sm,
+    },
+    xpEarnedText: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: color.background,
+    },
+    buttonsContainer: {
+      width: '100%',
+      gap: Spacing.md,
+    },
+    primaryButton: {
+      width: '100%',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: color.primary,
+      paddingVertical: Spacing.md,
+      borderRadius: Spacing.borderRadius,
+      gap: Spacing.sm,
+    },
+    primaryButtonText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: color.white,
+    },
+    secondaryButton: {
+      width: '100%',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'transparent',
+      paddingVertical: Spacing.md,
+      borderRadius: Spacing.borderRadius,
+      borderWidth: 2,
+      borderColor: color.primary,
+      gap: Spacing.sm,
+    },
+    secondaryButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: color.primary,
+    },
+  });
+}

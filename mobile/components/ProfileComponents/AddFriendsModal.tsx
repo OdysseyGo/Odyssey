@@ -1,5 +1,7 @@
 import React, { useRef } from 'react';
 import { Modal, Animated, View } from 'react-native';
+import { router } from 'expo-router';
+import { BlurView } from 'expo-blur';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { addFriendsModalStyles } from './AddFriendsModal.styles';
 import { AddFriendsModalProps } from './AddFriendsModal.config';
@@ -7,6 +9,7 @@ import AddFriendsModalHeader from './AddFriendsModalHeader';
 import AddFriendsSearchBar from './AddFriendsSearchBar';
 import AddFriendsModalProTip from './AddFriendsModalProTip';
 import AddFriendsModalActions from './AddFriendsModalActions';
+import AddFriendsModalList from './AddFriendsModalList';
 
 export default function AddFriendsModal({
   visible,
@@ -19,6 +22,13 @@ export default function AddFriendsModal({
   const theme = useColorTheme();
   const styles = addFriendsModalStyles(theme);
   const modalScaleAnim = useRef(new Animated.Value(0)).current;
+
+  const handleUserPress = (userId: number) => {
+    onClose();
+    setTimeout(() => {
+      router.push({ pathname: '/profile/[userId]', params: { userId: userId.toString() } });
+    }, 300);
+  };
 
   React.useEffect(() => {
     if (visible) {
@@ -35,6 +45,11 @@ export default function AddFriendsModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
+        <BlurView
+          intensity={60}
+          tint={theme === 'dark' ? 'dark' : 'light'}
+          style={styles.blurBackdrop}
+        />
         <Animated.View
           style={[
             styles.container,
@@ -58,6 +73,7 @@ export default function AddFriendsModal({
               searchFocused={searchFocused}
               onSearchFocus={onSearchFocus}
             />
+            <AddFriendsModalList searchTextVal={searchText} onUserPress={handleUserPress} />
             <AddFriendsModalProTip />
             <AddFriendsModalActions onCancel={onClose} />
           </View>

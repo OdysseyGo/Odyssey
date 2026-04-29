@@ -5,11 +5,13 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { addFriendsModalProTipStyles } from './AddFriendsModalProTip.styles';
 import { AddFriendsModalProTipProps } from './AddFriendsModalProTip.config';
+import { useTranslation } from 'react-i18next';
 
 export default function AddFriendsModalProTip({}: AddFriendsModalProTipProps) {
   const theme = useColorTheme();
   const styles = addFriendsModalProTipStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
@@ -18,10 +20,8 @@ export default function AddFriendsModalProTip({}: AddFriendsModalProTipProps) {
           <FontAwesome name="lightbulb-o" size={16} color={color.primary} />
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.title}>Pro Tip</Text>
-          <Text style={styles.description}>
-            Start typing to find friends by their username or full name
-          </Text>
+          <Text style={styles.title}>{t('friends.proTipTitle')}</Text>
+          <Text style={styles.description}>{t('friends.proTipDescription')}</Text>
         </View>
       </View>
     </View>

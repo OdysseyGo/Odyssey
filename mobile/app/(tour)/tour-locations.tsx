@@ -6,7 +6,8 @@ import Colors from '@/constants/Colors';
 import { useTourCreation } from '@/contexts/TourCreationContext';
 import { TourLocation } from '@/components/TourCreation/TourCreation.types';
 import LocationPicker from '@/components/TourCreation/LocationPicker';
-import { StepIndicator, CreationFooter } from '@/components/TourCreation/common';
+import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
+import { useTranslation } from 'react-i18next';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
 
@@ -14,6 +15,7 @@ export default function TourLocationsScreen() {
   const theme = useColorTheme();
   const color = Colors[theme];
   const { tourData, updateTourData, setSelectedLocation } = useTourCreation();
+  const { t } = useTranslation();
 
   const canProceed = tourData.locations.length >= 2;
 
@@ -38,16 +40,18 @@ export default function TourLocationsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: color.foreground }]}>
+      <CreationHeader title={t('creation.location.title')} />
       <StepIndicator steps={STEPS} currentStepIndex={1} />
       <View style={styles.content}>
         <LocationPicker
           locations={tourData.locations}
           onLocationsChange={handleLocationsChange}
           onLocationSelect={handleLocationSelect}
+          countryCode={tourData.countryCode}
         />
       </View>
       <CreationFooter
-        buttonText={`Continue (${tourData.locations.length} locations)`}
+        buttonText={t('creation.continueWithCount', { count: tourData.locations.length })}
         onPress={handleNext}
         disabled={!canProceed}
       />

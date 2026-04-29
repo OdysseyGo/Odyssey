@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import { router, useNavigation } from 'expo-router';
+import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { useTourCreation } from '@/contexts/TourCreationContext';
@@ -9,25 +9,36 @@ import StoryInputField from '@/components/TourCreation/StoryEditor/StoryInputFie
 import ImageUploadSection from '@/components/TourCreation/StoryEditor/ImageUploadSection';
 import WritingTips from '@/components/TourCreation/StoryEditor/WritingTips';
 import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditorFooter';
+import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
+import { CreationHeader } from '@/components/TourCreation/common';
+import {
+  Puzzle,
+  TOUR_TEXT_FIELD_MAX_LENGTH,
+  doesLocationMeetTourRequirements,
+} from '@/components/TourCreation';
+import { useTranslation } from 'react-i18next';
 
 export default function EditLocationScreen() {
   const theme = useColorTheme();
   const color = Colors[theme];
-  const navigation = useNavigation();
   const { tourData, selectedLocation, setSelectedLocation, updateLocation } = useTourCreation();
+  const { t } = useTranslation();
 
   const [title, setTitle] = useState('');
   const [address, setAddress] = useState('');
   const [story, setStory] = useState('');
   const [image, setImage] = useState<string | undefined>(undefined);
+  const [puzzle, setPuzzle] = useState<Puzzle | undefined>(undefined);
 
-  // Initialize form with selected location data
+  const isPuzzleMode = tourData.tourType === 'PUZZLE' || tourData.tourType === 'HYBRID';
+
   useEffect(() => {
     if (selectedLocation) {
       setTitle(selectedLocation.title);
       setAddress(selectedLocation.address || '');
       setStory(selectedLocation.story);
       setImage(selectedLocation.image);
+      setPuzzle(selectedLocation.puzzle);
     }
   }, [selectedLocation]);
 
@@ -39,23 +50,34 @@ export default function EditLocationScreen() {
         address,
         story,
         image,
+        puzzle: isPuzzleMode ? puzzle : undefined,
       });
       setSelectedLocation(null);
       router.back();
     }
-  }, [selectedLocation, title, address, story, image, updateLocation, setSelectedLocation]);
+  }, [
+    selectedLocation,
+    title,
+    address,
+    story,
+    image,
+    puzzle,
+    updateLocation,
+    setSelectedLocation,
+    isPuzzleMode,
+  ]);
 
   const handleNavigateLocation = useCallback(
     (direction: 'prev' | 'next') => {
       if (!selectedLocation) return;
 
-      // Save current location first
       updateLocation({
         ...selectedLocation,
         title,
         address,
         story,
         image,
+        puzzle: isPuzzleMode ? puzzle : undefined,
       });
 
       const currentIndex = tourData.locations.findIndex((loc) => loc.id === selectedLocation.id);
@@ -72,19 +94,43 @@ export default function EditLocationScreen() {
       address,
       story,
       image,
+      puzzle,
       updateLocation,
       setSelectedLocation,
+      isPuzzleMode,
     ]
   );
 
-  // Update header title
-  useEffect(() => {
-    navigation.setOptions({
-      headerTitle: 'Edit Location',
-    });
-  }, [navigation]);
+  const isPuzzleValid = (currentPuzzle?: Puzzle) => {
+    if (!currentPuzzle?.question) {
+      return false;
+    }
 
-  const isValid = title.trim().length > 0 && story.trim().length > 0;
+    if (currentPuzzle.puzzle_type === 'PICTURE_COMPARE') {
+      return !!currentPuzzle.referenceImage;
+    }
+
+    if (currentPuzzle.puzzle_type === 'AR') {
+      return !!currentPuzzle.arConfig;
+    }
+
+    if (currentPuzzle.puzzle_type === 'GYROSCOPE') {
+      return true;
+    }
+
+    const options = currentPuzzle.options;
+    if (!currentPuzzle.correctAnswer || !options || options.length < 2) {
+      return false;
+    }
+
+    return options.every((opt) => opt.trim().length > 0);
+  };
+
+  const shouldValidatePuzzle = tourData.tourType === 'PUZZLE' || !!puzzle;
+  const isValid =
+    title.trim().length > 0 &&
+    story.trim().length > 0 &&
+    (!shouldValidatePuzzle || isPuzzleValid(puzzle));
 
   const currentIndex = selectedLocation
     ? tourData.locations.findIndex((loc) => loc.id === selectedLocation.id)
@@ -98,41 +144,58 @@ export default function EditLocationScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: color.foreground }]}>
+      <CreationHeader title={t('creation.editLocation.header')} />
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContainer}>
+        <ScrollView
+          style={styles.scrollContent}
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
           <LocationBadge
             currentStop={selectedLocation.order}
             totalStops={tourData.locations.length}
           />
 
           <StoryInputField
-            label="Location Title *"
+            label={t('creation.editLocation.titleLabel')}
             value={title}
             onChangeText={setTitle}
-            placeholder="e.g., The Grand Bazaar Entrance"
+            placeholder={t('creation.editLocation.titlePlaceholder')}
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <StoryInputField
-            label="Address (Optional)"
+            label={t('creation.editLocation.addressLabel')}
             value={address}
             onChangeText={setAddress}
-            placeholder="e.g., 123 Main Street, Istanbul"
+            placeholder={t('creation.editLocation.addressPlaceholder')}
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <ImageUploadSection image={image} onImageChange={setImage} />
 
           <StoryInputField
-            label="Story *"
+            label={t('creation.editLocation.storyLabel')}
             value={story}
             onChangeText={setStory}
-            placeholder="Tell the story of this location..."
-            hint="Write the narrative that visitors will read or hear at this location"
+            placeholder={t('creation.editLocation.storyPlaceholder')}
+            hint={t('creation.editLocation.storyHint')}
             multiline
             showCharacterCount
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
+
+          {isPuzzleMode && (
+            <PuzzleEditor
+              puzzle={puzzle}
+              onChange={setPuzzle}
+              isRequired={tourData.tourType === 'PUZZLE'}
+            />
+          )}
 
           <WritingTips />
         </ScrollView>

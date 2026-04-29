@@ -1,38 +1,46 @@
-const primaryLight = '#50AA82';
-const primaryDark = '#ff6a00ff';
+// Odyssey Palette — Explorer's Sky + Warm Amber
+// Rich sky-blue primary, golden-amber secondary, clean neutrals.
+// Evokes open skies, ocean, adventure maps, and golden-hour travel.
 
-const secondaryLight = '#648e5b';
-const secondaryDark = '#452d2dff';
+const primaryLight = '#0284C7'; // Rich sky blue — clear expedition skies
+const primaryDark = '#38BDF8'; // Bright sky blue for dark backgrounds
 
-const black = '#000000';
-const white = '#ffffff';
+const secondaryLight = '#D97706'; // Warm amber — sunsets, culture, warmth
+const secondaryDark = '#FBBF24'; // Golden amber for dark mode
 
-const foregroundSecondaryLight = '#e0e0e0';
-const foregroundSecondaryDark = '#222222';
+const black = '#1E293B'; // Deep slate — grounded, map-ink feel
+const white = '#F8FAFC'; // Clean near-white — crisp like a fresh page
 
-const grayLight = '#f6f6f6';
-const grayDark = '#121212';
+const foregroundSecondaryLight = '#E2E8F0'; // Soft blue-gray card surface
+const foregroundSecondaryDark = '#1E2D3D'; // Deep ocean-night card surface
 
-const blackPale = 'rgba(0, 0, 0, 0.6)';
+const grayLight = '#F1F5F9'; // Light slate — open, airy
+const grayDark = '#0F172A'; // Night sky navy — deep and immersive
 
-const textGrayLight = '#2c2c2cff';
-const textGrayDark = '#d3d3d3ff';
+const blackPale = 'rgba(30, 41, 59, 0.65)';
+const overlayDark = 'rgba(0, 0, 0, 0.55)';
+const overlayLightColor = 'rgba(248, 250, 252, 0.5)';
 
-const pressLight = '#c7c7c7ff';
-const pressDark = '#343333ff';
+const textGrayLight = '#64748B'; // Slate gray — readable, calm
+const textGrayDark = '#94A3B8'; // Soft cool gray
 
-const errorRed = '#F44336';
+const pressLight = '#E0F2FE'; // Subtle sky-blue tint on press
+const pressDark = '#1E293B'; // Pressed state dark
 
-const gray666 = '#666666';
-const gray888 = '#888888';
-const gray999 = '#999999';
-const gray333 = '#333333';
+const errorRed = '#DC2626'; // Clear red — easy to spot on maps/ui
 
-const yellow = '#FFD700';
+const gray666 = '#64748B';
+const gray888 = '#94A3B8';
+const gray999 = '#CBD5E1';
+const gray333 = '#334155';
 
-const easy = '#4CAF50';
-const medium = '#FF9800';
-const hard = '#F44336';
+const yellow = '#F59E0B'; // Amber gold — star ratings, highlights
+
+const easy = '#16A34A'; // Forest green — easy trails
+const medium = '#D97706'; // Amber — moderate challenge
+const hard = '#DC2626'; // Clear red — difficult
+
+const correctOptionBackground = '#16A34A';
 
 const Colors = {
   light: {
@@ -46,12 +54,12 @@ const Colors = {
     press: pressLight,
     primary: primaryLight,
     secondary: secondaryLight,
-    tabIconDefault: '#f60101ff',
+    tabIconDefault: '#94A3B8',
     tabIconSelected: primaryLight,
     textBackground: white,
-    placeholderTextColor: '#a9a9a9',
+    placeholderTextColor: gray888,
     border: black,
-    borderLight: '#0000001a',
+    borderLight: 'rgba(30, 41, 59, 0.1)',
     error: errorRed,
     icon: gray666,
     iconDisabled: gray999,
@@ -62,38 +70,83 @@ const Colors = {
     easy: easy,
     medium: medium,
     hard: hard,
+    correctOptionBackground: correctOptionBackground,
+    overlay: overlayDark,
+    overlayLight: overlayLightColor,
+    cardSurface: '#FFFFFF',
+    primaryMuted: 'rgba(2, 132, 199, 0.07)',
+    headerGradientTop: '#0369A1',
+    headerGradientBottom: '#0284C7',
+    profileHeaderButtonBackground: 'rgba(255,255,255,0.9)',
+    profileHeaderButtonBorder: 'rgba(255,255,255,0.85)',
+    profileHeaderShadow: '#000',
+    profileHeaderAvatarRingBorder: 'rgba(255,255,255,0.9)',
+    profileHeaderAvatarShadow: 'rgba(0,0,0,0.35)',
+    profileHeaderAvatarBackground: 'rgba(255,255,255,0.92)',
+    profileHeaderTextShadow: 'rgba(0,0,0,0.12)',
+    profileHeaderLocationChipBackground: 'rgba(255,255,255,0.18)',
+    profileHeaderLocationChipBorder: 'rgba(255,255,255,0.12)',
+    profileHeaderLocationText: 'rgba(255,255,255,0.9)',
+    profileHeaderLocationIcon: 'rgba(255,255,255,0.85)',
+    profileSkeletonShimmerStrong: 'rgba(255,255,255,0.2)',
+    profileSkeletonShimmerSoft: 'rgba(255,255,255,0.15)',
+    profileGuestIconRingBackground: 'rgba(255,255,255,0.18)',
+    profileGuestTaglineText: 'rgba(255,255,255,0.7)',
   },
   dark: {
     white: white,
-    text: white,
+    text: '#E2E8F0',
     subText: textGrayDark,
-    background: black,
+    background: '#0C1A2E',
     backgroundBlack: blackPale,
     foreground: grayDark,
     foregroundSecondary: foregroundSecondaryDark,
     press: pressDark,
     primary: primaryDark,
     secondary: secondaryDark,
-    textBackground: white,
-    placeholderTextColor: '#6e6e6eff',
-    tabIconDefault: '#f70000ff',
+    textBackground: foregroundSecondaryDark,
+    placeholderTextColor: gray666,
+    tabIconDefault: gray666,
     tabIconSelected: primaryDark,
-    borderLight: '#ffffff1a',
-    border: white,
+    borderLight: 'rgba(226, 232, 240, 0.1)',
+    border: '#E2E8F0',
     error: errorRed,
     icon: gray666,
     iconDisabled: gray999,
     iconActive: gray333,
     placeholder: gray888,
-    textShadowColor: 'rgba(255, 255, 255, 0.4)',
+    textShadowColor: 'rgba(255, 255, 255, 0.3)',
     star: yellow,
     easy: easy,
     medium: medium,
     hard: hard,
+    correctOptionBackground: correctOptionBackground,
+    overlay: overlayDark,
+    overlayLight: overlayLightColor,
+    cardSurface: grayDark,
+    primaryMuted: 'rgba(56, 189, 248, 0.12)',
+    headerGradientTop: '#0C1A2E',
+    headerGradientBottom: '#1E2D3D',
+    profileHeaderButtonBackground: foregroundSecondaryDark,
+    profileHeaderButtonBorder: '#E2E8F0',
+    profileHeaderShadow: '#000',
+    profileHeaderAvatarRingBorder: white,
+    profileHeaderAvatarShadow: 'rgba(0,0,0,0.35)',
+    profileHeaderAvatarBackground: grayDark,
+    profileHeaderTextShadow: 'rgba(0,0,0,0.12)',
+    profileHeaderLocationChipBackground: 'rgba(255,255,255,0.18)',
+    profileHeaderLocationChipBorder: 'rgba(255,255,255,0.12)',
+    profileHeaderLocationText: 'rgba(255,255,255,0.9)',
+    profileHeaderLocationIcon: 'rgba(255,255,255,0.85)',
+    profileSkeletonShimmerStrong: 'rgba(255,255,255,0.2)',
+    profileSkeletonShimmerSoft: 'rgba(255,255,255,0.15)',
+    profileGuestIconRingBackground: 'rgba(255,255,255,0.18)',
+    profileGuestTaglineText: 'rgba(255,255,255,0.7)',
   },
 };
 
-export const markerColors = ['#FF6B6B', '#4ECDC4', '#FFB347', '#95E1D3', '#F38181', '#AA96DA'];
+// Adventure marker palette — sky blue, amber, forest, coral, teal, red
+export const markerColors = ['#0284C7', '#D97706', '#16A34A', '#38BDF8', '#FBBF24', '#DC2626'];
 
 export default Colors;
 export type ThemeName = keyof typeof Colors;

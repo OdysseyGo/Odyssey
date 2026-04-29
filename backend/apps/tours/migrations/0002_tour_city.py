@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tours', '0001_initial'),
+        ("tours", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tour',
-            name='city',
-            field=models.CharField(blank=True, help_text='City where the tour is located', max_length=100),
+            model_name="tour",
+            name="city",
+            field=models.CharField(
+                blank=True, help_text="City where the tour is located", max_length=100
+            ),
         ),
     ]

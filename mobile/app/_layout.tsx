@@ -1,4 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -7,6 +8,11 @@ import React, { useEffect } from 'react';
 import 'react-native-reanimated';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
+import { ActiveTourProvider } from '@/contexts/ActiveTourContext';
+import { TutorialProvider } from '@/contexts/TutorialContext';
+import { LanguageProvider } from '@/contexts/LanguageContext';
+import { ThemeProvider as AppThemeProvider } from '@/contexts/ThemeContext';
+import '@/i18n/i18n';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -25,6 +31,7 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
+    ...Ionicons.font,
   });
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
@@ -45,35 +52,50 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  return (
+    <AppThemeProvider>
+      <RootLayoutNavigator />
+    </AppThemeProvider>
+  );
+}
+
+function RootLayoutNavigator() {
   const colorTheme = useColorTheme();
   const themeKey = colorTheme;
 
   return (
-    <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack
-        screenOptions={{
-          headerTitle: '',
-          headerShadowVisible: false,
-          headerStyle: {
-            backgroundColor: Colors[themeKey].primary,
-          },
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="login" />
-        <Stack.Screen name="register" />
-        <Stack.Screen name="forgot-password" />
-        <Stack.Screen name="(tour)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="tour/[id]"
-          options={{
-            title: 'Tour',
-            headerStyle: { backgroundColor: Colors[themeKey].primary },
-            headerTransparent: true,
-          }}
-        />
-      </Stack>
-    </ThemeProvider>
+    <TutorialProvider>
+      <LanguageProvider>
+        <ActiveTourProvider>
+          <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
+            <Stack
+              screenOptions={{
+                headerTitle: '',
+                headerShadowVisible: false,
+                headerStyle: {
+                  backgroundColor: Colors[themeKey].primary,
+                },
+              }}
+            >
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="login" options={{ headerShown: false }} />
+              <Stack.Screen name="register" options={{ headerShown: false }} />
+              <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+              <Stack.Screen name="(tour)" options={{ headerShown: false }} />
+              <Stack.Screen name="tour/[id]" options={{ headerShown: false }} />
+              <Stack.Screen name="profile" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="search"
+                options={{
+                  headerShown: false,
+                  presentation: 'modal',
+                }}
+              />
+            </Stack>
+          </ThemeProvider>
+        </ActiveTourProvider>
+      </LanguageProvider>
+    </TutorialProvider>
   );
 }

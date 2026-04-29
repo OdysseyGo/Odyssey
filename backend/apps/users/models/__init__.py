@@ -1,5 +1,5 @@
-from .Admin import Admin
 from .Follow import Follow
+from .SearchHistory import SearchHistory
 from .User import User
 
-__all__ = ["User", "Follow", "Admin"]
+__all__ = ["User", "Follow", "SearchHistory"]

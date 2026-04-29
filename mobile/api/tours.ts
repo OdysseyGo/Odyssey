@@ -6,13 +6,101 @@ export type TourType = 'STORY' | 'PUZZLE' | 'HYBRID';
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type TourStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
-export type Puzzle = {
+export type TriviaPuzzleDetail = {
+  options: string[];
+  correct_answer: string;
+};
+
+export type PictureComparePuzzleDetail = {
+  reference_image: string;
+  similarity_threshold: number;
+};
+
+export type ArPuzzleDetail = {
+  scene_asset_url?: string;
+  metadata?: Record<string, any>;
+};
+
+export type ARModelAnchor = {
+  id: string;
+  label: string;
+  description?: string;
+  position: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  rotation?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  scale?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+};
+
+export type ARModel = {
   id: number;
-  puzzle_type: 'TRIVIA' | 'AR' | 'GYROSCOPE';
+  slug: string;
+  name: string;
+  preview_image_url: string;
+  scene_asset_url: string;
+  anchors: ARModelAnchor[];
+};
+
+export type GyroscopePuzzleDetail = {
+  target_pitch: number;
+  target_roll: number;
+  target_yaw: number;
+  tolerance_degrees: number;
+};
+
+export type Puzzle = {
+  id?: number;
+  puzzle_type: 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE';
   question: string;
-  options?: any;
   hint: string;
   xp_reward: number;
+  // Normalized detail payloads from backend
+  trivia?: TriviaPuzzleDetail;
+  picture_compare?: PictureComparePuzzleDetail;
+  ar?: ArPuzzleDetail;
+  gyroscope?: GyroscopePuzzleDetail;
+  // Backward-compatible fallbacks
+  options?: string[];
+  correct_answer?: string;
+  reference_image?: string;
+};
+
+export type PuzzleBaseUpsertPayload = {
+  question: string;
+  hint?: string;
+  xp_reward?: number;
+};
+
+export type TriviaPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  options: string[];
+  correct_answer: string;
+};
+
+export type PictureComparePuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  referenceImageUri: string;
+  similarity_threshold?: number;
+};
+
+export type ArPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  scene_asset_url?: string;
+  metadata?: Record<string, any>;
+};
+
+export type GyroscopePuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  target_pitch?: number;
+  target_roll?: number;
+  target_yaw?: number;
+  tolerance_degrees?: number;
 };
 
 export type TourStep = {
@@ -45,8 +133,19 @@ export type Tour = {
   difficulty: Difficulty;
   duration_minutes: number;
   total_distance?: number;
+  walking_distance?: number;
+  elevation_gain?: number;
+  max_leg_distance?: number;
+  requires_transport?: boolean;
+  is_circular?: boolean;
+  accessibility_rating?: number;
+  metrics_calculated?: boolean;
   is_premium: boolean;
   city: string;
+  country?: string;
+  country_code?: string;
+  city_latitude?: number;
+  city_longitude?: number;
   status: TourStatus;
   created_at: string;
   updated_at: string;
@@ -64,11 +163,16 @@ export type ToursResponse = {
 
 export type TourFilters = {
   search?: string;
+  category?: string;
+  continent?: string;
   city?: string;
+  country?: string;
+  country_code?: string;
   difficulty?: Difficulty;
   tour_type?: TourType;
   is_premium?: boolean;
   status?: TourStatus;
+  creator?: number;
   min_distance?: number;
   max_distance?: number;
   min_duration?: number;
@@ -92,11 +196,16 @@ export async function getTours(
 
   if (filters) {
     if (filters.search) params.search = filters.search;
+    if (filters.category) params.category = filters.category;
+    if (filters.continent) params.continent = filters.continent;
     if (filters.city) params.city = filters.city;
+    if (filters.country) params.country = filters.country;
+    if (filters.country_code) params.country_code = filters.country_code;
     if (filters.difficulty) params.difficulty = filters.difficulty;
     if (filters.tour_type) params.tour_type = filters.tour_type;
     if (filters.is_premium !== undefined) params.is_premium = filters.is_premium;
     if (filters.status) params.status = filters.status;
+    if (filters.creator) params.creator = filters.creator;
     if (filters.min_distance) params.min_distance = filters.min_distance;
     if (filters.max_distance) params.max_distance = filters.max_distance;
     if (filters.min_duration) params.min_duration = filters.min_duration;
@@ -158,7 +267,7 @@ export async function getToursByCategory(
   filters?: TourFilters,
   signal?: AbortSignal
 ): Promise<ToursResponse> {
-  return getTours({ ...filters, search: category }, signal);
+  return getTours({ ...filters, category }, signal);
 }
 
 /**
@@ -238,13 +347,13 @@ export async function getTourSteps(tourId: number, signal?: AbortSignal): Promis
 }
 
 /**
- * Fetch reviews for a specific tour
+ * Fetch reviews for a specific tour (requires authentication)
  */
 export async function getTourReviews(tourId: number, signal?: AbortSignal): Promise<Review[]> {
   return apiRequest<Review[]>({
     method: 'GET',
     url: `/api/tours/${tourId}/reviews/`,
-    auth: false,
+    auth: true,
     signal,
   });
 }
@@ -261,6 +370,230 @@ export async function addTourReview(
     method: 'POST',
     url: `/api/tours/${tourId}/reviews/`,
     data: reviewData,
+    auth: true,
+    signal,
+  });
+}
+
+export async function updateTourReview(
+  tourId: number,
+  reviewId: number,
+  reviewData: { rating: number; comment: string },
+  signal?: AbortSignal
+): Promise<Review> {
+  return apiRequest<Review, typeof reviewData>({
+    method: 'PATCH',
+    url: `/api/tours/${tourId}/reviews/${reviewId}/`,
+    data: reviewData,
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Fetch the current user's tours (requires authentication)
+ * @param status - Optional filter by tour status (DRAFT, PUBLISHED, ARCHIVED)
+ */
+export async function getMyTours(
+  status?: TourStatus,
+  signal?: AbortSignal
+): Promise<ToursResponse> {
+  const params: Record<string, any> = {};
+  if (status) params.status = status;
+
+  return apiRequest<ToursResponse>({
+    method: 'GET',
+    url: '/api/tours/my-tours/',
+    params,
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Fetch the current user's completed tours (requires authentication)
+ * @param status - Optional filter by tour status (PUBLISHED or ARCHIVED)
+ */
+export async function getMyCompletedTours(
+  status?: TourStatus,
+  signal?: AbortSignal
+): Promise<ToursResponse> {
+  const params: Record<string, any> = {};
+  if (status) params.status = status;
+
+  return apiRequest<ToursResponse>({
+    method: 'GET',
+    url: '/api/tours/my-completed-tours/',
+    params,
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Fetch published tours whose first step falls inside the map bounding box
+ */
+export async function getToursInBounds(
+  north: number,
+  south: number,
+  east: number,
+  west: number,
+  signal?: AbortSignal
+): Promise<Tour[]> {
+  return apiRequest<Tour[]>({
+    method: 'GET',
+    url: '/api/tours/in-bounds/',
+    params: { north, south, east, west },
+    auth: false,
+    signal,
+  });
+}
+
+/**
+ * Add a step to a tour (requires authentication)
+ */
+export async function createTourStep(
+  tourId: number,
+  stepData: Partial<TourStep>,
+  signal?: AbortSignal
+): Promise<TourStep> {
+  let data: Partial<TourStep> | FormData = stepData;
+
+  if (stepData.image && stepData.image.startsWith('file://')) {
+    const formData = new FormData();
+    Object.keys(stepData).forEach((key) => {
+      const k = key as keyof TourStep;
+      if (stepData[k] !== undefined && stepData[k] !== null) {
+        if (k === 'image') {
+          formData.append('image', {
+            uri: stepData.image,
+            name: 'step_image.jpg',
+            type: 'image/jpeg',
+          } as any);
+        } else {
+          formData.append(k, String(stepData[k]));
+        }
+      }
+    });
+    data = formData;
+  } else if (!stepData.image) {
+    // If image is empty string or undefined/null, ensure we don't send it to avoid backend validation error (400)
+    // because Django ImageField doesn't like empty strings.
+    const { image, ...rest } = stepData;
+    data = rest;
+  }
+
+  return apiRequest<TourStep, typeof data>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/`,
+    data,
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Set or update the reference image for a picture-compare puzzle on a step.
+ */
+export async function setStepPictureReference(
+  tourId: number,
+  stepId: number,
+  referenceImageUri: string,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  const formData = new FormData();
+  formData.append('reference_image', {
+    uri: referenceImageUri,
+    name: 'reference_image.jpg',
+    type: 'image/jpeg',
+  } as any);
+
+  return apiRequest<Puzzle, FormData>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-picture-reference/`,
+    data: formData,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepTriviaPuzzle(
+  tourId: number,
+  stepId: number,
+  payload: TriviaPuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, TriviaPuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-trivia-puzzle/`,
+    data: payload,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepPictureComparePuzzle(
+  tourId: number,
+  stepId: number,
+  payload: PictureComparePuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  const formData = new FormData();
+  formData.append('question', payload.question);
+  formData.append('hint', payload.hint || '');
+  formData.append('xp_reward', String(payload.xp_reward ?? 10));
+  if (payload.similarity_threshold !== undefined) {
+    formData.append('similarity_threshold', String(payload.similarity_threshold));
+  }
+  formData.append('reference_image', {
+    uri: payload.referenceImageUri,
+    name: 'reference_image.jpg',
+    type: 'image/jpeg',
+  } as any);
+
+  return apiRequest<Puzzle, FormData>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-picture-compare-puzzle/`,
+    data: formData,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepArPuzzle(
+  tourId: number,
+  stepId: number,
+  payload: ArPuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, ArPuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-ar-puzzle/`,
+    data: payload,
+    auth: true,
+    signal,
+  });
+}
+
+export async function getArModels(signal?: AbortSignal): Promise<ARModel[]> {
+  return apiRequest<ARModel[]>({
+    method: 'GET',
+    url: '/api/tours/ar-models/',
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepGyroscopePuzzle(
+  tourId: number,
+  stepId: number,
+  payload: GyroscopePuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, GyroscopePuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-gyroscope-puzzle/`,
+    data: payload,
     auth: true,
     signal,
   });

@@ -1,23 +1,48 @@
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, View, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { createTourButtonStyles } from './CreateTourButton.styles';
 import Colors from '@/constants/Colors';
+import { isLoggedIn } from '@/api/auth';
+import { useTranslation } from 'react-i18next';
+import { Spacing } from '@/constants/Spacing';
+import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
 
 export default function CreateTourButton() {
   const theme = useColorTheme();
   const styles = createTourButtonStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
-  const handlePress = () => {
+  const handlePress = async () => {
+    const loggedIn = await isLoggedIn();
+    if (!loggedIn) {
+      Alert.alert(t('creation.loginRequired'), t('creation.loginRequiredMessage'), [
+        { text: t('creation.cancel'), style: 'cancel' },
+        { text: t('creation.loginButton'), onPress: () => router.push('/login') },
+      ]);
+      return;
+    }
     router.push('/create-tour');
   };
 
   return (
-    <TouchableOpacity style={styles.floatingButton} onPress={handlePress} activeOpacity={0.8}>
-      <Ionicons name="add" size={32} color={color.secondary} />
-    </TouchableOpacity>
+    <View
+      style={{
+        position: 'absolute',
+        bottom: Math.max(insets.bottom, Spacing.sm) + ODYSSEY_TAB_BAR_FLOATING_HEIGHT + 16,
+        right: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <TouchableOpacity style={styles.floatingButton} onPress={handlePress} activeOpacity={0.8}>
+        <Ionicons name="add" size={30} color={color.white} />
+      </TouchableOpacity>
+    </View>
   );
 }

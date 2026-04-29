@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import MapView, { Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 
@@ -20,12 +20,16 @@ export default function TourMap({
   initialRegion = defaultRegion,
   currentStepIndex,
   tour,
+  onRegionChange,
+  onRegionChangeComplete,
+  onUserLocationReady,
+  nearbyMarkers,
 }: TourMapProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const mapRef = useRef<MapView>(null);
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
 
+  // Get user location on mount (but don't animate if there's an active tour)
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -34,22 +38,23 @@ export default function TourMap({
       }
 
       let currentLocation = await Location.getCurrentPositionAsync({});
-      setLocation(currentLocation);
 
-      if (mapRef.current) {
-        mapRef.current.animateToRegion(
-          {
-            latitude: currentLocation.coords.latitude,
-            longitude: currentLocation.coords.longitude,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
-          },
-          1000
-        );
+      const userRegion = {
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      };
+
+      onUserLocationReady?.(userRegion);
+
+      if (mapRef.current && !tour) {
+        mapRef.current.animateToRegion(userRegion, 1000);
       }
     })();
-  }, []);
+  }, [onUserLocationReady, tour]);
 
+  // Animate to current step when it changes (for active tours)
   useEffect(() => {
     if (mapRef.current && tour && currentStepIndex !== undefined) {
       const currentStep = tour.steps[currentStepIndex];
@@ -58,10 +63,10 @@ export default function TourMap({
           {
             latitude: currentStep.coordinate.latitude,
             longitude: currentStep.coordinate.longitude,
-            latitudeDelta: 0.02,
-            longitudeDelta: 0.02,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
           },
-          1000
+          500
         );
       }
     }
@@ -75,6 +80,8 @@ export default function TourMap({
       showsUserLocation={true}
       showsMyLocationButton={true}
       followsUserLocation={false}
+      onRegionChange={onRegionChange}
+      onRegionChangeComplete={onRegionChangeComplete}
     >
       {markers.map((marker) => (
         <MapMarker
@@ -85,9 +92,24 @@ export default function TourMap({
           iconType={marker.iconType}
           circleSize={marker.circleSize}
           circleColor={marker.circleColor}
+          opacity={marker.opacity}
         />
       ))}
-      <Polyline coordinates={route} strokeWidth={4} />
+
+      {nearbyMarkers?.map((marker) => (
+        <MapMarker
+          key={marker.id}
+          id={marker.id}
+          coordinate={marker.coordinate}
+          title={marker.title}
+          iconType={marker.iconType}
+          circleSize={marker.circleSize}
+          circleColor={marker.circleColor}
+          opacity={marker.opacity}
+        />
+      ))}
+
+      {route.length >= 2 && <Polyline coordinates={route} strokeWidth={4} />}
     </MapView>
   );
 }

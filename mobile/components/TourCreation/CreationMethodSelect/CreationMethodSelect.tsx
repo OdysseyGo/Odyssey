@@ -4,7 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { creationMethodStyles } from './CreationMethodSelect.styles';
+import { CreationHeader } from '@/components/TourCreation/common';
 import Colors from '@/constants/Colors';
+import { useTranslation } from 'react-i18next';
 
 type OptionCardProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -19,6 +21,7 @@ function OptionCard({ icon, title, description, onPress, disabled, comingSoon }:
   const theme = useColorTheme();
   const styles = creationMethodStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   return (
     <TouchableOpacity
@@ -29,7 +32,7 @@ function OptionCard({ icon, title, description, onPress, disabled, comingSoon }:
     >
       {comingSoon && (
         <View style={styles.comingSoonBadge}>
-          <Text style={styles.comingSoonText}>COMING SOON</Text>
+          <Text style={styles.comingSoonText}>{t('creation.method.comingSoon')}</Text>
         </View>
       )}
       <View style={styles.optionIconContainer}>
@@ -45,14 +48,14 @@ export default function CreationMethodSelect() {
   const theme = useColorTheme();
   const styles = creationMethodStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   const handlePersonalCreate = () => {
     router.push('/tour-details');
   };
 
   const handleAICreate = () => {
-    // AI creation - to be implemented later
-    // router.push('/create-tour/ai');
+    router.push('/ai-tour-creation');
   };
 
   const handleSkip = () => {
@@ -61,30 +64,29 @@ export default function CreationMethodSelect() {
 
   return (
     <View style={styles.container}>
+      <CreationHeader title={t('creation.method.title')} />
       <View style={styles.content}>
-        <Text style={styles.title}>Create Your Tour</Text>
-        <Text style={styles.subtitle}>Choose how you want to create your tour experience</Text>
+        <Text style={styles.title}>{t('creation.method.title')}</Text>
+        <Text style={styles.subtitle}>{t('creation.method.subtitle')}</Text>
 
         <View style={styles.optionsContainer}>
           <OptionCard
             icon="create-outline"
-            title="Personal Creation"
-            description="Manually select locations, add stories, and customize every detail of your tour"
+            title={t('creation.method.personal')}
+            description={t('creation.method.personalDescription')}
             onPress={handlePersonalCreate}
           />
 
           <OptionCard
             icon="sparkles"
-            title="AI-Powered Creation"
-            description="Let AI help you generate tour content, stories, and suggestions based on your preferences"
+            title={t('creation.method.ai')}
+            description={t('creation.method.aiDescription')}
             onPress={handleAICreate}
-            disabled
-            comingSoon
           />
         </View>
 
         <TouchableOpacity style={styles.skipButton} onPress={handleSkip} activeOpacity={0.8}>
-          <Text style={styles.skipText}>Nevermind, I'll find a tour</Text>
+          <Text style={styles.skipText}>{t('creation.method.skip')}</Text>
         </TouchableOpacity>
       </View>
     </View>

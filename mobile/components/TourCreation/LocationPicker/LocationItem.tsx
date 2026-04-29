@@ -5,6 +5,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { locationItemStyles } from './LocationItem.styles';
 import { TourLocation } from '../TourCreation.types';
+import { useTranslation } from 'react-i18next';
 
 type LocationItemProps = {
   location: TourLocation;
@@ -30,6 +31,7 @@ export default function LocationItem({
   const theme = useColorTheme();
   const styles = locationItemStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   return (
     <TouchableOpacity
@@ -40,8 +42,12 @@ export default function LocationItem({
         <Text style={styles.locationOrderText}>{location.order}</Text>
       </View>
       <View style={styles.locationInfo}>
-        <Text style={[styles.locationTitle, !location.title && styles.locationTitlePlaceholder]}>
-          {location.title || 'Tap to add details'}
+        <Text
+          style={[styles.locationTitle, !location.title && styles.locationTitlePlaceholder]}
+          numberOfLines={2}
+          ellipsizeMode="tail"
+        >
+          {location.title || t('creation.location.tapToAddDetails')}
         </Text>
         <Text style={styles.locationCoords}>
           {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
@@ -62,7 +68,7 @@ export default function LocationItem({
         <TouchableOpacity
           style={styles.locationActionButton}
           onPress={onReorderDown}
-          disabled={isLast}
+          //disabled={isLast}
         >
           <Ionicons
             name="chevron-down"

@@ -1,31 +1,36 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
-
-const { width: screenWidth } = Dimensions.get('window');
 
 export const createTourButtonStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   return StyleSheet.create({
     floatingButton: {
-      position: 'absolute',
-      bottom: Spacing.xl,
-      right: Spacing.xl,
-      width: 60,
-      height: 60,
-      borderRadius: 30,
+      width: 58,
+      height: 58,
+      borderRadius: 29,
       backgroundColor: color.primary,
       justifyContent: 'center',
       alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 4,
-      elevation: 8,
+      ...Platform.select({
+        ios: {
+          shadowColor: color.primary,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.45,
+          shadowRadius: 14,
+        },
+        android: {
+          elevation: 10,
+        },
+      }),
     },
-    buttonPressed: {
-      opacity: 0.8,
-      transform: [{ scale: 0.95 }],
+    glowRing: {
+      position: 'absolute',
+      width: Spacing.xl,
+      height: Spacing.xl,
+      borderRadius: Spacing.xl / 2,
+      borderWidth: 2,
+      borderColor: `${color.primary}30`,
     },
   });
 };

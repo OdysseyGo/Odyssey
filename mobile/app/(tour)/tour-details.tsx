@@ -5,7 +5,8 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { useTourCreation } from '@/contexts/TourCreationContext';
 import { TourDetailsStep } from '@/components/TourCreation/steps';
-import { StepIndicator, CreationFooter } from '@/components/TourCreation/common';
+import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
+import { useTranslation } from 'react-i18next';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
 
@@ -13,6 +14,7 @@ export default function TourDetailsScreen() {
   const theme = useColorTheme();
   const color = Colors[theme];
   const { tourData, updateTourData } = useTourCreation();
+  const { t } = useTranslation();
 
   const canProceed =
     tourData.title.trim().length > 0 &&
@@ -25,9 +27,14 @@ export default function TourDetailsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: color.foreground }]}>
+      <CreationHeader title={t('creation.details.title')} />
       <StepIndicator steps={STEPS} currentStepIndex={0} />
       <TourDetailsStep tourData={tourData} onUpdate={updateTourData} />
-      <CreationFooter buttonText="Continue" onPress={handleNext} disabled={!canProceed} />
+      <CreationFooter
+        buttonText={t('creation.continue')}
+        onPress={handleNext}
+        disabled={!canProceed}
+      />
     </View>
   );
 }
