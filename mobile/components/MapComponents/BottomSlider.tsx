@@ -139,7 +139,24 @@ export default function BottomSlider({
     setIsSkipConfirmVisible(false);
 
     try {
-      const response = await skipStep(progressId, { useAdSkip });
+      let response;
+      let attempt = 0;
+      const maxAttempts = useAdSkip ? 6 : 1;
+      while (true) {
+        try {
+          response = await skipStep(progressId, { useAdSkip });
+          break;
+        } catch (err: any) {
+          attempt += 1;
+          const isVerificationRace =
+            useAdSkip &&
+            err?.statusCode === 400 &&
+            typeof err?.message === 'string' &&
+            err.message.includes('No unconsumed HINT');
+          if (!isVerificationRace || attempt >= maxAttempts) throw err;
+          await new Promise((r) => setTimeout(r, 700));
+        }
+      }
 
       if (!useAdSkip) recordSkip();
 

@@ -75,7 +75,7 @@ export default function AITourCreation() {
     setIsLoading(true);
 
     try {
-      const response = await generateAITour({
+      const buildPayload = () => ({
         city: formData.state.trim(),
         country: formData.country.trim(),
         country_code: formData.countryCode.trim(),
@@ -86,6 +86,25 @@ export default function AITourCreation() {
         additional_details: formData.additionalDetails.trim() || undefined,
         use_ad_slot: useAdSlot || undefined,
       });
+
+      let response;
+      let attempt = 0;
+      const maxAttempts = useAdSlot ? 6 : 1;
+      while (true) {
+        try {
+          response = await generateAITour(buildPayload());
+          break;
+        } catch (err: any) {
+          attempt += 1;
+          const isVerificationRace =
+            useAdSlot &&
+            err?.statusCode === 400 &&
+            typeof err?.message === 'string' &&
+            err.message.includes('No unconsumed AI_SLOT');
+          if (!isVerificationRace || attempt >= maxAttempts) throw err;
+          await new Promise((r) => setTimeout(r, 700));
+        }
+      }
 
       Alert.alert(t('aiTour.successTitle'), response.message, [
         {
