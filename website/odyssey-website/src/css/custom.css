@@ -789,6 +789,8 @@
 }
 
 /* ─── Responsive ─────────────────────────────────────────────── */
+
+/* Tablet (≤ 900px) */
 @media (max-width: 900px) {
   .lp-hero-inner, .lp-mission-inner, .lp-mascot-inner { grid-template-columns: 1fr; gap: 48px; }
   .lp-about-grid { grid-template-columns: 1fr; gap: 40px; }
@@ -799,10 +801,73 @@
   .lp-features-grid { grid-template-columns: 1fr 1fr; }
   .lp-team-grid { grid-template-columns: repeat(3, 1fr); }
   .lp-tech-grid { grid-template-columns: repeat(2, 1fr); }
+  .lp-report-embed-header { flex-wrap: wrap; gap: 12px; }
+  .lp-report-btn { margin-left: 0; }
 }
+
+/* Mobile (≤ 600px) */
 @media (max-width: 600px) {
-  .lp-section { padding: 64px 0; }
-  .lp-features-grid { grid-template-columns: 1fr; }
-  .lp-team-grid { grid-template-columns: repeat(2, 1fr); }
-  .lp-footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+  .lp-container { padding: 0 16px; }
+
+  /* Sections */
+  .lp-section { padding: 56px 0; }
+  .lp-mission { padding: 56px 0; }
+  .lp-section-header { margin-bottom: 36px; }
+  .lp-section-sub { font-size: 16px; }
+
+  /* Hero */
+  .lp-hero { padding: 56px 0 48px; }
+  .lp-hero-eyebrow { font-size: 11px; }
+  .lp-hero-sub { font-size: 16px; margin-bottom: 28px; }
+  .lp-hero-actions { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .lp-btn-primary, .lp-btn-ghost { width: 100%; justify-content: center; }
+  .lp-hero-stats { gap: 16px; flex-wrap: wrap; }
+  .lp-stat-val { font-size: 22px; }
+
+  /* Mascot band */
+  .lp-mascot-band { padding: 56px 0; }
+  .lp-mascot-text h2 { font-size: 24px; }
+  .lp-mascot-text p { font-size: 15px; }
+  .lp-mascot-img { height: 200px; }
+
+  /* About */
+  .lp-about-illustration { padding: 24px; }
+
+  /* Features */
+  .lp-features-grid { grid-template-columns: 1fr; gap: 16px; }
+  .lp-feature-card { padding: 24px 20px; }
+
+  /* Screenshots */
+  .lp-screenshot-phone { width: 180px; }
+  .lp-screen-mock { height: 340px; }
+
+  /* Reports */
+  .lp-report-embed-header { padding: 16px; }
+  .lp-report-iframe { height: 420px; }
+  .lp-report-title { font-size: 14px; }
+
+  /* Team */
+  .lp-team-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .lp-team-card { padding: 24px 14px 20px; }
+  .lp-team-avatar { width: 64px; height: 64px; font-size: 20px; }
+  .lp-group-photo { height: 260px; }
+
+  /* Mission */
+  .lp-mission-inner { gap: 36px; }
+  .lp-mission-inner h2 { font-size: 26px; }
+  .lp-mission-inner p { font-size: 15px; }
+
+  /* Tech */
+  .lp-tech-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .lp-tech-card { padding: 18px 14px; }
+
+  /* Footer */
+  .lp-footer-inner { flex-direction: column; gap: 12px; text-align: center; }
+}
+
+/* Small phones (≤ 400px) */
+@media (max-width: 400px) {
+  .lp-team-grid { grid-template-columns: 1fr; }
+  .lp-tech-grid { grid-template-columns: 1fr; }
+  .lp-hero-stats { justify-content: space-between; }
 }
