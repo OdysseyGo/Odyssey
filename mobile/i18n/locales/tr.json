@@ -17,6 +17,7 @@
     "password": "Şifre",
     "firstName": "Ad",
     "lastName": "Soyad",
+    "name": "Ad Soyad",
     "email": "E-posta",
     "confirmPassword": "Şifre Tekrar",
     "newPassword": "Yeni Şifre",
@@ -49,6 +50,12 @@
     "continue": "Devam Et",
     "back": "Geri",
     "resetTagline": "Şifreni sıfırla",
+    "successTitle": "Başarılı",
+    "confirmRegistrationTitle": "Bu hesap oluşturulsun mu?",
+    "confirmRegistrationSubtitle": "Odyssey hesabını oluşturmadan önce bilgileri kontrol et.",
+    "confirmRegistrationMessage": "\"{{username}}\" kullanıcı adı, {{firstName}} {{lastName}} için {{email}} e-postasıyla oluşturulacak. Emin misiniz?",
+    "accountCreatedTitle": "Hesap oluşturuldu",
+    "accountCreatedSubtitle": "\"{{username}}\" hazır. Keşfe başlamak için giriş yap.",
     "errors": {
       "usernameRequired": "Kullanıcı adı gereklidir",
       "passwordRequired": "Şifre gereklidir",
@@ -316,7 +323,10 @@
     "min": "dk",
     "stops": "durak",
     "tourInProgressTitle": "Turun devam etmekte",
-    "tourInProgressMessage": "Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et."
+    "tourInProgressMessage": "Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et.",
+    "locationRequiredTitle": "Konum izni gerekli",
+    "locationRequiredMessage": "Bu tura başlamak için Odyssey'nin konumuna erişmesi gerekiyor. Lütfen cihaz ayarlarından konum iznini açıp tekrar dene.",
+    "locationUnavailableMessage": "Mevcut konumunu alamadık. Lütfen konum servislerini açıp tekrar dene."
   },
   "creation": {
     "loginRequired": "Giriş Gerekli",

@@ -17,6 +17,7 @@
     "password": "Password",
     "firstName": "First Name",
     "lastName": "Last Name",
+    "name": "Name",
     "email": "Email",
     "confirmPassword": "Confirm Password",
     "newPassword": "New Password",
@@ -49,6 +50,12 @@
     "continue": "Continue",
     "back": "Back",
     "resetTagline": "Reset your password",
+    "successTitle": "Success",
+    "confirmRegistrationTitle": "Create this account?",
+    "confirmRegistrationSubtitle": "Review the details before we create your Odyssey account.",
+    "confirmRegistrationMessage": "Username \"{{username}}\" will be created with email {{email}} for {{firstName}} {{lastName}}. Are you sure?",
+    "accountCreatedTitle": "Account created",
+    "accountCreatedSubtitle": "\"{{username}}\" is ready. Log in to start exploring.",
     "errors": {
       "usernameRequired": "Username is required",
       "passwordRequired": "Password is required",
@@ -316,7 +323,10 @@
     "min": "min",
     "stops": "stops",
     "tourInProgressTitle": "Tour in Progress",
-    "tourInProgressMessage": "You already have an active tour! Please finish or quit it before starting a new one."
+    "tourInProgressMessage": "You already have an active tour! Please finish or quit it before starting a new one.",
+    "locationRequiredTitle": "Location permission needed",
+    "locationRequiredMessage": "To start this tour, Odyssey needs access to your location. Please allow location permission in your device settings, then try again.",
+    "locationUnavailableMessage": "We couldn't read your current location. Please turn on location services and try again."
   },
   "creation": {
     "loginRequired": "Login Required",

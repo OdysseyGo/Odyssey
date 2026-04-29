@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Animated,
   TouchableOpacity,
   KeyboardAvoidingView,
+  Keyboard,
   ScrollView,
   Platform,
   Dimensions,
@@ -14,6 +15,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
@@ -44,6 +46,7 @@ export default function ForgotPasswordScreen() {
   const [newPass, setNewPass] = useState('');
   const [confirmNewPass, setConfirmNewPass] = useState('');
   const [modalError, setModalError] = useState('');
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Entrance animations
   const heroY = useRef(new Animated.Value(-24)).current;
@@ -64,6 +67,21 @@ export default function ForgotPasswordScreen() {
       }),
     ]).start();
   }, []);
+
+  const resetScrollPosition = useCallback(() => {
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+    });
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      resetScrollPosition();
+      const keyboardHideSubscription = Keyboard.addListener('keyboardDidHide', resetScrollPosition);
+
+      return () => keyboardHideSubscription.remove();
+    }, [resetScrollPosition])
+  );
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -120,20 +138,25 @@ export default function ForgotPasswordScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={styles.scrollContent}
         style={{ backgroundColor: theme.headerGradientTop }}
+        automaticallyAdjustContentInsets={false}
+        automaticallyAdjustKeyboardInsets={false}
+        contentInsetAdjustmentBehavior="never"
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         showsVerticalScrollIndicator={false}
         bounces={false}
+        overScrollMode="never"
       >
         {/* ── Hero ─────────────────────────────────────── */}
         <Animated.View
           style={[
             styles.hero,
             {
-              height: HERO_HEIGHT,
-              paddingTop: insets.top,
+              height: HERO_HEIGHT + insets.top,
+              paddingTop: insets.top + Spacing.lg,
               backgroundColor: theme.headerGradientTop,
             },
             { opacity: heroOpacity, transform: [{ translateY: heroY }] },
@@ -145,7 +168,7 @@ export default function ForgotPasswordScreen() {
           />
           <AuthLanguageSelector style={{ top: insets.top + 12 }} />
           <View style={styles.logoArea}>
-            <AuthLogo />
+            <AuthLogo variant="compact" />
             <Text style={styles.appName}>ODYSSEY</Text>
             <Text style={styles.tagline}>{t('auth.resetTagline')}</Text>
           </View>
