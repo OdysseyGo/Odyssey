@@ -221,6 +221,8 @@ export default function BottomSlider({
             if (earned) {
               skipUsingAdRef.current = true;
               await handleConfirmSkip();
+            } else {
+              handleSkip();
             }
           },
         },
