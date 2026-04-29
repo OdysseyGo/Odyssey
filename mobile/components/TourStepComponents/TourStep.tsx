@@ -738,7 +738,9 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
         />
       )}
 
-      {!isSolved && step.puzzle.hint ? <RewardedHintReveal hint={step.puzzle.hint} /> : null}
+      {!isSolved && step.puzzle.hint ? (
+        <RewardedHintReveal hint={step.puzzle.hint} stepId={step.id} />
+      ) : null}
     </ScrollView>
   );
 }

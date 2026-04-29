@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -7,15 +7,20 @@ import { useAds } from '@/contexts/AdsContext';
 
 type Props = {
   hint: string;
+  stepId: string;
 };
 
 const PLACEMENT_KEY = 'rewarded_hint_reveal';
 
-export default function RewardedHintReveal({ hint }: Props) {
+export default function RewardedHintReveal({ hint, stepId }: Props) {
   const { t } = useTranslation();
   const { isReady } = useAds();
   const { status, show, available } = useRewardedAd(PLACEMENT_KEY);
   const [revealed, setRevealed] = useState(false);
+
+  useEffect(() => {
+    setRevealed(false);
+  }, [stepId]);
 
   if (!hint) return null;
   if (revealed) {
