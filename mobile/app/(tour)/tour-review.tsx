@@ -76,8 +76,6 @@ export default function TourReviewScreen() {
               is_premium: false,
             });
 
-            console.log('Tour created:', tour.id);
-
             // 2. Create steps and configure step puzzles using type-specific endpoints.
             for (const [index, loc] of tourData.locations.entries()) {
               const createdStep = await createTourStep(tour.id, {

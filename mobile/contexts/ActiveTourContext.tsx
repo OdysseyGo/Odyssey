@@ -10,7 +10,6 @@ import {
 
 import { ApiError } from '@/api/APIClient';
 import { getInProgressTour } from '@/api/tourProgress';
-import { getTour } from '@/api/tours';
 
 interface ActiveTourState {
   tour: Tour | null;
@@ -275,13 +274,9 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
 
     try {
       const activeProgress = await getInProgressTour();
-      //console.log(activeProgress);
       if (!activeProgress || !activeProgress.id) {
         return;
       }
-      // console.log(activeProgress.tour);
-
-      // const apiTour = await getTour(activeProgress.tour);
 
       const resumedTour = activeProgress.tour as unknown as ApiTour;
       const resumedCurrentStep = activeProgress.current_step as unknown as
@@ -291,7 +286,7 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
             order?: number;
           }
         | null;
-      const internalTour = mapApiTourToInternalTour(resumedTour); //çalışıyo çünkü tur objesini getiriyo
+      const internalTour = mapApiTourToInternalTour(resumedTour);
 
       let currentStepIdx = 0;
       if (resumedCurrentStep) {
