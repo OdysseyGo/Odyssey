@@ -170,6 +170,14 @@ function mapApiPuzzleToInternal(apiPuzzle: ApiTour['steps'][0]['puzzle']): Puzzl
     };
   }
 
+  if (apiPuzzle.puzzle_type === 'COMPASS' && apiPuzzle.compass) {
+    return {
+      type: 'compass-bearing',
+      question: apiPuzzle.question,
+      targetHeadingDegrees: ((apiPuzzle.compass.target_heading_degrees % 360) + 360) % 360,
+    };
+  }
+
   return null;
 }
 

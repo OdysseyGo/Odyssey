@@ -9,6 +9,7 @@ export type AITourGenerationRequest = {
   duration: number;
   language: string;
   additional_details?: string;
+  include_ar?: boolean;
 };
 
 export type AITourGenerationResponse = {

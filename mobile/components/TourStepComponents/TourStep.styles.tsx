@@ -4,6 +4,8 @@ import { Spacing } from '@/constants/Spacing';
 
 export default function getStyles(theme: ThemeName) {
   const color = Colors[theme];
+  const isDark = theme === 'dark';
+
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -285,6 +287,170 @@ export default function getStyles(theme: ThemeName) {
       color: color.subText,
       fontSize: 13,
       lineHeight: 18,
+    },
+    gemPuzzleFrame: {
+      marginTop: Spacing.sm,
+      marginBottom: Spacing.md,
+      minHeight: 560,
+      borderRadius: Spacing.borderRadius * 2,
+      backgroundColor: isDark ? '#050509' : '#F8FAFC',
+      borderWidth: 1,
+      borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(2, 132, 199, 0.16)',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.lg,
+      overflow: 'hidden',
+    },
+    gemHeader: {
+      alignItems: 'center',
+      gap: Spacing.xs,
+      marginBottom: Spacing.md,
+    },
+    gemTitle: {
+      color: isDark ? '#FFFFFF' : color.text,
+      fontSize: 24,
+      fontWeight: '800',
+      textAlign: 'center',
+    },
+    gemSubtitle: {
+      color: isDark ? 'rgba(255,255,255,0.7)' : color.subText,
+      fontSize: 13,
+      lineHeight: 18,
+      textAlign: 'center',
+      maxWidth: 280,
+    },
+    gemGuideCard: {
+      width: '100%',
+      borderRadius: Spacing.md,
+      borderWidth: 1,
+      borderColor: color.primary,
+      backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : color.cardSurface,
+      padding: Spacing.md,
+      gap: Spacing.md,
+      marginBottom: Spacing.md,
+    },
+    gemCueRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    gemCueIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: Spacing.borderRadiusFull,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: color.primaryMuted,
+      borderWidth: 1,
+      borderColor: color.primary,
+    },
+    gemCueIconAligned: {
+      backgroundColor: color.primary,
+      borderColor: color.primary,
+    },
+    gemCueCopy: {
+      flex: 1,
+      minWidth: 0,
+    },
+    gemCueLabel: {
+      color: isDark ? 'rgba(255,255,255,0.56)' : color.subText,
+      fontSize: 11,
+      fontWeight: '800',
+      textTransform: 'uppercase',
+    },
+    gemCueText: {
+      color: isDark ? '#FFFFFF' : color.text,
+      fontSize: 18,
+      fontWeight: '800',
+      lineHeight: 24,
+    },
+    gemAccuracyText: {
+      color: color.primary,
+      fontSize: 12,
+      fontWeight: '800',
+      textAlign: 'right',
+      maxWidth: 86,
+    },
+    gemReadoutRow: {
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      borderTopWidth: 1,
+      borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : color.borderLight,
+      paddingTop: Spacing.sm,
+    },
+    gemReadoutItem: {
+      flex: 1,
+      gap: 2,
+    },
+    gemReadoutDivider: {
+      width: 1,
+      marginHorizontal: Spacing.md,
+      backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : color.borderLight,
+    },
+    gemReadoutLabel: {
+      color: isDark ? 'rgba(255,255,255,0.5)' : color.subText,
+      fontSize: 11,
+      fontWeight: '800',
+      textTransform: 'uppercase',
+    },
+    gemReadoutValue: {
+      color: isDark ? '#FFFFFF' : color.text,
+      fontSize: 14,
+      fontWeight: '800',
+      lineHeight: 19,
+    },
+    gemStage: {
+      width: 280,
+      height: 280,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    gemStatus: {
+      color: isDark ? '#FFFFFF' : color.text,
+      fontSize: 20,
+      fontWeight: '700',
+      textAlign: 'center',
+      marginTop: Spacing.sm,
+    },
+    gemInstruction: {
+      color: isDark ? 'rgba(255,255,255,0.68)' : color.subText,
+      fontSize: 14,
+      lineHeight: 20,
+      textAlign: 'center',
+      marginTop: Spacing.xs,
+      maxWidth: 300,
+    },
+    gemHoldCard: {
+      width: '100%',
+      marginTop: Spacing.md,
+      gap: Spacing.xs,
+    },
+    gemHoldHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    gemHoldLabel: {
+      color: isDark ? 'rgba(255,255,255,0.56)' : color.subText,
+      fontSize: 11,
+      fontWeight: '800',
+      textTransform: 'uppercase',
+    },
+    gemHoldValue: {
+      color: color.primary,
+      fontSize: 12,
+      fontWeight: '800',
+    },
+    gemHoldTrack: {
+      height: 8,
+      borderRadius: Spacing.borderRadiusFull,
+      overflow: 'hidden',
+      backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : color.foregroundSecondary,
+    },
+    gemHoldFill: {
+      height: '100%',
+      borderRadius: Spacing.borderRadiusFull,
+      backgroundColor: color.primary,
     },
     exhaustedText: {
       color: color.error,
