@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from apps.gamification.models import UserBadge
+from apps.gamification.models import Badge, UserBadge
 from apps.gamification.services import BadgeService
 from apps.tours.models import Puzzle, PuzzleAttempt, Tour, TourStep
 
@@ -207,3 +207,50 @@ class BadgeAwardingTests(TestCase):
         )
         self.assertEqual(badge.badge.code, BadgeService.CITY_BRONZE_CODE)
         self.assertEqual(badge.mistake_count, 2)
+
+    def test_duplicate_city_badges_keep_highest_tier(self):
+        progress = self._create_completed_progress(
+            city="Athens",
+            country_code="GR",
+            skip_count=4,
+            failed_attempts=0,
+        )
+        BadgeService.ensure_default_badges()
+        gold_badge = Badge.objects.get(code=BadgeService.CITY_GOLD_CODE)
+        bronze_badge = Badge.objects.get(code=BadgeService.CITY_BRONZE_CODE)
+
+        UserBadge.objects.create(
+            user=self.user,
+            badge=gold_badge,
+            city="Athens",
+            country_code="GR",
+            mistake_count=0,
+            source_tour=progress.tour,
+        )
+        UserBadge.objects.create(
+            user=self.user,
+            badge=bronze_badge,
+            city="Athens",
+            country_code="GR",
+            mistake_count=2,
+            source_tour=progress.tour,
+        )
+
+        BadgeService.check_badges(self.user, completed_progress=progress)
+
+        self.assertEqual(
+            UserBadge.objects.filter(
+                user=self.user,
+                city="Athens",
+                country_code="GR",
+            ).count(),
+            1,
+        )
+        self.assertTrue(
+            UserBadge.objects.filter(
+                user=self.user,
+                city="Athens",
+                country_code="GR",
+                badge__code=BadgeService.CITY_GOLD_CODE,
+            ).exists()
+        )

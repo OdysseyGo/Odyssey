@@ -86,7 +86,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Which one is correct?",
                 "hint": "Pick A",
-                "xp_reward": 15,
                 "options": ["A", "B", "C"],
                 "correct_answer": "A",
             },
@@ -110,7 +109,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Which one is correct?",
                 "hint": "Pick A",
-                "xp_reward": 10,
                 "options": ["A", "B"],
                 "correct_answer": "A",
             },
@@ -122,7 +120,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Match this image",
                 "hint": "Use camera",
-                "xp_reward": 30,
                 "similarity_threshold": 0.82,
                 "reference_image": self._image_file(),
             },
@@ -151,7 +148,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Find the hidden object",
                 "hint": "Look up",
-                "xp_reward": 20,
                 "metadata": {
                     "model_id": self.ar_model.id,
                     "anchor_id": "head",
@@ -186,7 +182,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Find the hidden object",
                 "hint": "Look up",
-                "xp_reward": 20,
                 "metadata": {
                     "model_id": self.ar_model.id,
                     "anchor_id": "head",
@@ -204,7 +199,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Find the hidden object",
                 "hint": "Look up",
-                "xp_reward": 20,
                 "metadata": {
                     "model_id": self.ar_model.id,
                     "anchor_id": "head",
@@ -240,7 +234,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Face the marker",
                 "hint": "Turn slowly",
-                "xp_reward": 18,
                 "target_pitch": 1.5,
                 "target_roll": 2.5,
                 "target_yaw": 90.0,
@@ -264,7 +257,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Face north-west target",
                 "hint": "Rotate slowly",
-                "xp_reward": 20,
                 "target_heading_degrees": 238,
             },
             format="json",
@@ -284,7 +276,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Face north-west target",
                 "hint": "Rotate slowly",
-                "xp_reward": 20,
                 "target_heading_degrees": 360,
             },
             format="json",
@@ -297,7 +288,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Face north-west target",
                 "hint": "Rotate slowly",
-                "xp_reward": 20,
                 "target_heading_degrees": 238,
             },
             format="json",
@@ -308,7 +298,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Which one is correct?",
                 "hint": "Pick A",
-                "xp_reward": 15,
                 "options": ["A", "B", "C"],
                 "correct_answer": "A",
             },

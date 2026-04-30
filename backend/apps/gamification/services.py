@@ -105,8 +105,7 @@ class BadgeService:
             return []
 
         city_badges = list(
-            UserBadge.objects.select_related("badge")
-            .filter(
+            UserBadge.objects.select_related("badge").filter(
                 user=user,
                 city=city,
                 country_code=country_code,
@@ -116,12 +115,21 @@ class BadgeService:
                     BadgeService.CITY_GOLD_CODE,
                 ),
             )
-            .order_by("id")
         )
 
-        best_existing = city_badges[0] if city_badges else None
-        for duplicate in city_badges[1:]:
-            duplicate.delete()
+        best_existing = None
+        best_existing_rank = -1
+        for city_badge in city_badges:
+            city_badge_rank = BadgeService.CITY_TIER_RANK.get(
+                city_badge.badge.code or "", 0
+            )
+            if city_badge_rank > best_existing_rank:
+                best_existing = city_badge
+                best_existing_rank = city_badge_rank
+
+        for duplicate in city_badges:
+            if best_existing is not None and duplicate.id != best_existing.id:
+                duplicate.delete()
 
         if best_existing is None:
             UserBadge.objects.create(

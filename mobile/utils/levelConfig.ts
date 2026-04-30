@@ -52,8 +52,8 @@ export function computeLevelInfo(xp: number): ComputedLevelInfo {
 }
 
 export function getNextLevelTitle(level: number): string | null {
-  if (level >= LEVEL_TITLES.length) return LEVEL_TITLES[LEVEL_TITLES.length - 1];
-  return LEVEL_TITLES[level] ?? LEVEL_TITLES[LEVEL_TITLES.length - 1];
+  if (level >= LEVEL_TITLES.length) return null;
+  return LEVEL_TITLES[level] ?? null;
 }
 
 export function isLegendaryLevel(level: number): boolean {
