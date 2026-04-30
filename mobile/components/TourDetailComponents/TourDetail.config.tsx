@@ -28,6 +28,11 @@ export interface TourDetail {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   stops: TourStop[];
   tags: string[];
+  elevationGain?: number;
+  requiresTransport?: boolean;
+  isCircular?: boolean;
+  accessibilityRating?: number;
+  metricsCalculated?: boolean;
 }
 
 export const MOCK_TOUR: TourDetail = {

@@ -12,7 +12,7 @@ import {
   Pressable,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TourScrollerComp from '@/components/TourComponents/TourScrollerComp';
 import FeaturedTourCarousel from '@/components/TourComponents/FeaturedTourCarousel';
@@ -254,7 +254,7 @@ function SkeletonLoading({ theme }: { theme: (typeof Colors)['light'] }) {
 // Main component
 // ─────────────────────────────────────────────────────────
 
-export default function TourDisplay() {
+function TourDisplayContent() {
   const colorScheme = useColorTheme();
   const theme = Colors[colorScheme];
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -582,6 +582,7 @@ export default function TourDisplay() {
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       {/* ─── Main scroll — fills the full screen ─────────── */}
+
       <ScrollView
         ref={scrollViewRef}
         style={{ flex: 1 }}
@@ -595,11 +596,13 @@ export default function TourDisplay() {
         }}
       >
         {/* ─── Hero Carousel ─────────────────────────────── */}
+
         {featuredTours.length > 0 && showFeatured && (
           <FeaturedTourCarousel tours={featuredTours} autoPlayInterval={5000} />
         )}
 
         {/* ─── Popular Tours ─────────────────────────────── */}
+
         {showPopular && popularTours.length > 0 && (
           <TourScrollerComp
             title={t('tour.popular')}
@@ -690,6 +693,7 @@ export default function TourDisplay() {
               {t('tour.headerTitle', { defaultValue: 'Discover Tours' })}
             </Text>
           </View>
+
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
@@ -703,6 +707,7 @@ export default function TourDisplay() {
                 </View>
               )}
             </TouchableOpacity>
+
             <TouchableOpacity
               style={[styles.headerIconBtn, { backgroundColor: theme.foregroundSecondary }]}
               activeOpacity={0.7}
@@ -1434,3 +1439,5 @@ const createStyles = (theme: (typeof Colors)['light']) =>
       maxWidth: 240,
     },
   });
+
+export default TourDisplayContent;

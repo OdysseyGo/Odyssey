@@ -47,6 +47,7 @@ export default function TourLocationsScreen() {
           locations={tourData.locations}
           onLocationsChange={handleLocationsChange}
           onLocationSelect={handleLocationSelect}
+          countryCode={tourData.countryCode}
         />
       </View>
       <CreationFooter

@@ -135,6 +135,13 @@ export type Tour = {
   difficulty: Difficulty;
   duration_minutes: number;
   total_distance?: number;
+  walking_distance?: number;
+  elevation_gain?: number;
+  max_leg_distance?: number;
+  requires_transport?: boolean;
+  is_circular?: boolean;
+  accessibility_rating?: number;
+  metrics_calculated?: boolean;
   is_premium: boolean;
   city: string;
   country?: string;

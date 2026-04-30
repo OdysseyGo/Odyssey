@@ -31,7 +31,9 @@ export default function ProfileBadges({ badges = [], size = 'medium' }: ProfileB
               badge.unlocked ? styles.badgeContainerUnlocked : styles.badgeContainerLocked,
             ]}
           >
-            <Text style={[styles.badge, badge.unlocked && styles.unlockedBadge]}>{badge.icon}</Text>
+            <Text style={[styles.badge, badge.unlocked && styles.unlockedBadge]}>
+              {badge.code || '🏅'}
+            </Text>
             {!badge.unlocked && (
               <View style={styles.lockedOverlay}>
                 <Text style={styles.lockIcon}>🔒</Text>

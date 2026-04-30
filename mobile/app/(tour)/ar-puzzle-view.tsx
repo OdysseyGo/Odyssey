@@ -3,7 +3,7 @@ import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-na
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { getViroModule, VIRO_UNAVAILABLE_MESSAGE } from '@/utils/viro';
+import { getViroModule, isViroAvailable, VIRO_UNAVAILABLE_MESSAGE } from '@/utils/viro';
 
 const MODEL_POSITION: [number, number, number] = [0, 0, -1.2];
 const MODEL_SCALE: [number, number, number] = [0.25, 0.25, 0.25];
@@ -129,6 +129,19 @@ export default function ARPuzzleViewScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorState}>
           <Text style={styles.errorText}>Missing AR model asset.</Text>
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <Text style={styles.closeButtonText}>Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!isViroAvailable()) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorState}>
+          <Text style={styles.errorText}>AR view is unavailable in this runtime.</Text>
           <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
             <Text style={styles.closeButtonText}>Back</Text>
           </TouchableOpacity>

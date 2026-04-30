@@ -161,6 +161,7 @@ class TestGenerateTour(TestCase):
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
         mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
 
         creator = self._make_creator()
         service = GeminiService()
@@ -195,6 +196,7 @@ class TestGenerateTour(TestCase):
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
         mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
 
         creator = self._make_creator()
         service = GeminiService()
@@ -294,6 +296,7 @@ class TestGenerateTour(TestCase):
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
         mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
 
         creator = self._make_creator()
         service = GeminiService()
@@ -414,6 +417,7 @@ class TestGenerateTour(TestCase):
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
         mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
 
         creator = self._make_creator()
         service = GeminiService()
@@ -443,6 +447,7 @@ class TestGenerateTour(TestCase):
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
         mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
 
         creator = self._make_creator()
         service = GeminiService()
@@ -563,3 +568,79 @@ class TestFuzzyMatchPlace(TestCase):
         candidates = _candidate_places()
         result = GeminiService._fuzzy_match_place("", candidates)
         assert result is None
+
+
+class TestClusterCandidates(TestCase):
+    def test_below_min_size_returns_unchanged(self):
+        candidates = _candidate_places()[:3]
+        result = GeminiService._cluster_candidates(candidates, keep=10)
+        assert result == candidates
+
+    def test_drops_geographic_outliers(self):
+        candidates = _candidate_places() + [
+            {
+                "name": "Far Away Outlier",
+                "place_id": "outlier",
+                "latitude": 41.20,
+                "longitude": 29.20,
+                "address": "",
+                "types": [],
+            }
+        ]
+        result = GeminiService._cluster_candidates(candidates, keep=10)
+        names = {p["name"] for p in result}
+        assert "Far Away Outlier" not in names
+        assert "Hagia Sophia" in names
+
+    def test_keeps_all_when_geographically_tight(self):
+        candidates = _candidate_places()
+        result = GeminiService._cluster_candidates(candidates, keep=12)
+        assert len(result) == len(candidates)
+
+
+class TestHaversineFallbackMetrics(TestCase):
+    def _step(self, order, lat, lng):
+        s = MagicMock()
+        s.order = order
+        s.latitude = lat
+        s.longitude = lng
+        return s
+
+    def _service(self):
+        with patch("apps.ai_content.services.genai"):
+            return GeminiService()
+
+    def test_returns_failure_for_single_step(self):
+        result = self._service()._haversine_fallback_metrics(
+            [self._step(1, 41.0086, 28.9802)]
+        )
+        assert result == {"success": False}
+
+    def test_two_steps_produces_positive_distance(self):
+        steps = [
+            self._step(1, 41.0086, 28.9802),
+            self._step(2, 41.0055, 28.9769),
+        ]
+        result = self._service()._haversine_fallback_metrics(steps)
+        assert result["success"] is True
+        assert result["estimated"] is True
+        assert 400 < result["total_distance"] < 800
+        assert result["duration_minutes"] > 0
+        assert result["elevation_gain"] == 0.0
+
+    def test_circular_detection(self):
+        steps = [
+            self._step(1, 41.0086, 28.9802),
+            self._step(2, 41.0090, 28.9810),
+            self._step(3, 41.0086, 28.9802),
+        ]
+        result = self._service()._haversine_fallback_metrics(steps)
+        assert result["is_circular"] is True
+
+    def test_long_leg_flags_transport(self):
+        steps = [
+            self._step(1, 41.0086, 28.9802),
+            self._step(2, 41.0500, 29.0500),
+        ]
+        result = self._service()._haversine_fallback_metrics(steps)
+        assert result["requires_transport"] is True

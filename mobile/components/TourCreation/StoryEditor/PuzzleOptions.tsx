@@ -5,6 +5,7 @@ import { puzzleOptionsStyles } from './PuzzleOptions.styles';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { useTranslation } from 'react-i18next';
+import { TOUR_TEXT_FIELD_MAX_LENGTH } from '../TourCreation.types';
 
 interface PuzzleOptionsProps {
   options: string[];
@@ -59,6 +60,7 @@ export default function PuzzleOptions({
               onChangeText={(text) => onOptionChange(text, index)}
               placeholder={t('creation.puzzle.optionPlaceholder', { number: index + 1 })}
               placeholderTextColor={color.placeholder}
+              maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
             />
           </View>
 

@@ -66,11 +66,11 @@ export default function TourReviewScreen() {
               category: tourData.category || 'General',
               difficulty: tourData.difficulty,
               duration_minutes: tourData.estimatedDuration,
-              city: tourData.city || 'Unknown City',
+              city: tourData.state || 'Unknown State',
               country: tourData.country || '',
               country_code: tourData.countryCode || '',
-              city_latitude: tourData.cityLatitude,
-              city_longitude: tourData.cityLongitude,
+              city_latitude: tourData.stateLatitude,
+              city_longitude: tourData.stateLongitude,
               status: 'DRAFT',
               is_premium: false,
             });
@@ -154,11 +154,11 @@ export default function TourReviewScreen() {
 
             // 3. Publish after all steps are created so backend city/step validation runs once.
             await updateTour(tour.id, {
-              city: tourData.city || 'Unknown City',
+              city: tourData.state || 'Unknown State',
               country: tourData.country || '',
               country_code: tourData.countryCode || '',
-              city_latitude: tourData.cityLatitude,
-              city_longitude: tourData.cityLongitude,
+              city_latitude: tourData.stateLatitude,
+              city_longitude: tourData.stateLongitude,
               status: 'PUBLISHED',
             });
 
