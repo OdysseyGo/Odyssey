@@ -197,9 +197,9 @@ class TourProgressViewSet(
                 progress.save()
 
                 locked_user = user_model.objects.select_for_update().get(pk=user.pk)
-                completed_km = Decimal(str(progress.tour.walking_distance or 0.0)) / Decimal(
-                    "1000"
-                )
+                completed_km = Decimal(
+                    str(progress.tour.walking_distance or 0.0)
+                ) / Decimal("1000")
                 locked_user.total_walked_km += completed_km
                 reward_eligible = progress.tour.creator_id != locked_user.id
                 should_apply_reward = not progress.xp_awarded and reward_eligible
