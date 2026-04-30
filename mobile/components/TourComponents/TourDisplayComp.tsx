@@ -8,6 +8,7 @@ import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { useMemo, useRef } from 'react';
 import { router } from 'expo-router';
+import TourImagePlaceholder from '@/components/common/TourImagePlaceholder';
 
 export default function TourDisplayComp({
   id,
@@ -58,10 +59,11 @@ export default function TourDisplayComp({
         style={styles.card}
       >
         {/* Full-bleed image */}
-        <Image
-          source={{ uri: image || `https://picsum.photos/seed/${id}/400/600` }}
-          style={styles.image}
-        />
+        {image ? (
+          <Image source={{ uri: image }} style={styles.image} />
+        ) : (
+          <TourImagePlaceholder style={styles.imagePlaceholder} label="No tour image" />
+        )}
 
         {/* Bottom gradient for text readability */}
         <LinearGradient

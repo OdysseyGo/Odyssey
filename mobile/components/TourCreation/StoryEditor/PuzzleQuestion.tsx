@@ -4,6 +4,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import StoryInputField from './StoryInputField';
 import { puzzleQuestionStyles } from './PuzzleQuestion.styles';
 import { useTranslation } from 'react-i18next';
+import { TOUR_TEXT_FIELD_MAX_LENGTH } from '../TourCreation.types';
 
 interface PuzzleQuestionProps {
   question: string;
@@ -30,6 +31,7 @@ export default function PuzzleQuestion({
         placeholder={t('creation.puzzle.questionPlaceholder')}
         hint={t('creation.puzzle.questionHint')}
         multiline
+        maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
       />
     </View>
   );

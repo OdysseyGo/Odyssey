@@ -19,6 +19,7 @@ export default function TourDetailsScreen() {
   const canProceed =
     tourData.title.trim().length > 0 &&
     tourData.description.trim().length > 0 &&
+    !!tourData.coverImage &&
     tourData.category.length > 0;
 
   const handleNext = () => {

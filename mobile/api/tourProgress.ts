@@ -12,6 +12,8 @@ export type TourProgress = {
   completed_at: string | null;
   total_xp: number;
   skip_count: number;
+  wrong_attempt_count: number;
+  step_attempt_counts: Record<string, number>;
 };
 
 export type CreateTourProgressRequest = {
@@ -33,6 +35,11 @@ export type PictureCompareResponse = StepActionResponse & {
 
 export type ArCodeResponse = StepActionResponse & {
   accepted: boolean;
+};
+
+export type TriviaAnswerResponse = StepActionResponse & {
+  accepted: boolean;
+  attempt_count?: number;
 };
 
 export type DeleteTourProgressRequest = {
@@ -158,6 +165,23 @@ export async function submitArCode(
     method: 'POST',
     url: `/api/tour-progress/${id}/submit-ar-code/`,
     data: { code },
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Submit a multiple-choice trivia answer for backend attempt tracking.
+ */
+export async function submitTriviaAnswer(
+  id: number,
+  answer: string,
+  signal?: AbortSignal
+): Promise<TriviaAnswerResponse> {
+  return apiRequest<TriviaAnswerResponse, { answer: string }>({
+    method: 'POST',
+    url: `/api/tour-progress/${id}/submit-trivia-answer/`,
+    data: { answer },
     auth: true,
     signal,
   });

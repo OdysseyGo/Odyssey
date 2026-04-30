@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { Tour as ApiTour } from '@/api/tours';
+import { getTourImageUri, Tour as ApiTour } from '@/api/tours';
 import {
   Tour,
   TourStep,
@@ -20,7 +20,11 @@ interface ActiveTourState {
   highestStepIndex: number;
   solvedSteps: Set<string>;
   locationConfirmedSteps: Set<string>;
+  stepAnswers: Map<string, string>;
+  stepAttempts: Map<string, number>;
   earnedXP: number;
+  skipCount: number;
+  wrongAnswerCount: number;
 }
 
 interface ActiveTourContextType extends ActiveTourState {
@@ -31,6 +35,10 @@ interface ActiveTourContextType extends ActiveTourState {
   setHighestStepIndex: (index: number) => void;
   solveStep: (stepId: string, xpReward?: number) => void;
   confirmLocation: (stepId: string) => void;
+  recordSkip: () => void;
+  recordWrongAnswer: () => void;
+  recordAnswer: (stepId: string, optionId: string) => void;
+  recordAttempt: (stepId: string) => void;
   resetProgress: () => void;
 }
 
@@ -42,7 +50,11 @@ const initialState: ActiveTourState = {
   highestStepIndex: 0,
   solvedSteps: new Set(),
   locationConfirmedSteps: new Set(),
+  stepAnswers: new Map(),
+  stepAttempts: new Map(),
   earnedXP: 0,
+  skipCount: 0,
+  wrongAnswerCount: 0,
 };
 
 const ActiveTourContext = createContext<ActiveTourContextType | undefined>(undefined);
@@ -87,8 +99,7 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
     id: apiTour.id.toString(),
     title: apiTour.title,
     description: apiTour.description,
-    coverImageUri:
-      apiTour.steps?.[0]?.image || `https://picsum.photos/800/400?random=${apiTour.id}`,
+    coverImageUri: getTourImageUri(apiTour),
     steps,
   };
 }
@@ -169,7 +180,11 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
       highestStepIndex: 0,
       solvedSteps: new Set(),
       locationConfirmedSteps: new Set(),
+      stepAnswers: new Map(),
+      stepAttempts: new Map(),
       earnedXP: 0,
+      skipCount: 0,
+      wrongAnswerCount: 0,
     });
   }, []);
 
@@ -203,13 +218,47 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const recordSkip = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      skipCount: prev.skipCount + 1,
+    }));
+  }, []);
+
+  const recordWrongAnswer = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      wrongAnswerCount: prev.wrongAnswerCount + 1,
+    }));
+  }, []);
+
+  const recordAnswer = useCallback((stepId: string, optionId: string) => {
+    setState((prev) => {
+      const next = new Map(prev.stepAnswers);
+      next.set(stepId, optionId);
+      return { ...prev, stepAnswers: next };
+    });
+  }, []);
+
+  const recordAttempt = useCallback((stepId: string) => {
+    setState((prev) => {
+      const next = new Map(prev.stepAttempts);
+      next.set(stepId, (next.get(stepId) ?? 0) + 1);
+      return { ...prev, stepAttempts: next };
+    });
+  }, []);
+
   const resetProgress = useCallback(() => {
     setState((prev) => ({
       ...prev,
       currentStepIndex: 0,
       solvedSteps: new Set(),
       locationConfirmedSteps: new Set(),
+      stepAnswers: new Map(),
+      stepAttempts: new Map(),
       earnedXP: 0,
+      skipCount: 0,
+      wrongAnswerCount: 0,
     }));
   }, []);
 
@@ -222,18 +271,33 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
       if (!activeProgress || !activeProgress.id) {
         return;
       }
-
       // console.log(activeProgress.tour);
 
       // const apiTour = await getTour(activeProgress.tour);
 
-      const internalTour = mapApiTourToInternalTour(activeProgress.tour); //çalışıyo çünkü tur objesini getiriyo
+      const resumedTour = activeProgress.tour as unknown as ApiTour;
+      const resumedCurrentStep = activeProgress.current_step as unknown as
+        | number
+        | {
+            id?: number | string;
+            order?: number;
+          }
+        | null;
+      const internalTour = mapApiTourToInternalTour(resumedTour); //çalışıyo çünkü tur objesini getiriyo
 
       let currentStepIdx = 0;
-      if (activeProgress.current_step) {
-        const targetStepId = String(activeProgress.current_step);
+      if (resumedCurrentStep) {
+        const currentStep = typeof resumedCurrentStep === 'object' ? resumedCurrentStep : null;
+        const targetStepId = currentStep ? String(currentStep.id) : String(resumedCurrentStep);
 
         currentStepIdx = internalTour.steps.findIndex((s) => s.id === targetStepId);
+
+        if (currentStepIdx === -1 && currentStep && typeof currentStep.order === 'number') {
+          const orderedStep = resumedTour.steps.find((step) => step.order === currentStep.order);
+          if (orderedStep) {
+            currentStepIdx = internalTour.steps.findIndex((s) => s.id === String(orderedStep.id));
+          }
+        }
 
         if (currentStepIdx === -1) {
           console.warn('Warning: Step ID not found in tour!');
@@ -256,7 +320,13 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         highestStepIndex: currentStepIdx,
         solvedSteps: restoredSolvedSteps,
         locationConfirmedSteps: restoredLocationConfirmedSteps,
+        stepAnswers: new Map(),
+        stepAttempts: new Map(
+          Object.entries(activeProgress.step_attempt_counts ?? {}).map(([k, v]) => [k, v])
+        ),
         earnedXP: activeProgress.total_xp,
+        skipCount: activeProgress.skip_count,
+        wrongAnswerCount: activeProgress.wrong_attempt_count,
       });
     } catch (error: any) {
       if (error instanceof ApiError && error.statusCode === 401) {
@@ -279,6 +349,10 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         setHighestStepIndex,
         solveStep,
         confirmLocation,
+        recordSkip,
+        recordWrongAnswer,
+        recordAnswer,
+        recordAttempt,
         resetProgress,
       }}
     >

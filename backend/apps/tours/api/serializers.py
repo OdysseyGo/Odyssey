@@ -330,6 +330,13 @@ class TourSerializer(serializers.ModelSerializer):
             "difficulty",
             "duration_minutes",
             "total_distance",
+            "walking_distance",
+            "elevation_gain",
+            "max_leg_distance",
+            "requires_transport",
+            "is_circular",
+            "accessibility_rating",
+            "metrics_calculated",
             "is_premium",
             "city",
             "country",
@@ -337,6 +344,7 @@ class TourSerializer(serializers.ModelSerializer):
             "city_latitude",
             "city_longitude",
             "cover_image",
+            "cover_image_attribution",
             "status",
             "created_at",
             "updated_at",
@@ -344,12 +352,29 @@ class TourSerializer(serializers.ModelSerializer):
             "reviews",
             "average_rating",
         ]
-        read_only_fields = ["creator", "created_at", "updated_at", "average_rating"]
+        read_only_fields = [
+            "creator",
+            "created_at",
+            "updated_at",
+            "average_rating",
+            "cover_image_attribution",
+            "total_distance",
+            "walking_distance",
+            "elevation_gain",
+            "max_leg_distance",
+            "requires_transport",
+            "is_circular",
+            "accessibility_rating",
+            "metrics_calculated",
+        ]
 
     def validate(self, attrs):
         instance = self.instance
         current_status = getattr(instance, "status", Tour.DRAFT)
         status_value = attrs.get("status", current_status)
+        current_cover_image = getattr(instance, "cover_image", None)
+        cover_image = attrs.get("cover_image", current_cover_image)
+        has_cover = bool(cover_image)
         city = attrs.get("city", getattr(instance, "city", ""))
         city_latitude = attrs.get("city_latitude")
         city_longitude = attrs.get("city_longitude")
@@ -366,6 +391,10 @@ class TourSerializer(serializers.ModelSerializer):
         )
 
         if status_value == Tour.PUBLISHED and (is_publishing or is_location_update):
+            if not has_cover:
+                raise serializers.ValidationError(
+                    {"cover_image": "Cover image is required before publishing a tour."}
+                )
             if not city:
                 raise serializers.ValidationError(
                     {"city": "City is required before publishing a tour."}
@@ -397,6 +426,11 @@ class TourSerializer(serializers.ModelSerializer):
                         )
                     }
                 )
+
+        if instance is None and not has_cover:
+            raise serializers.ValidationError(
+                {"cover_image": "Cover image is required when creating a tour."}
+            )
 
         return attrs
 

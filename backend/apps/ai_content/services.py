@@ -1,10 +1,15 @@
 import json
 import logging
+import math
 import os
 import re
+import uuid
+from urllib.error import URLError
+from urllib.request import urlopen
 from typing import Optional
 
 import google.generativeai as genai
+from django.core.files.base import ContentFile
 from django.db import transaction
 
 from apps.tours.models import Puzzle, Tour, TourStep, TriviaPuzzleDetail
@@ -30,6 +35,8 @@ class GeminiService:
 
     # Estimated time a user spends at each stop (reading, exploring, solving puzzles)
     MINUTES_PER_STEP = 5
+    PLACE_PHOTO_TIMEOUT_SECONDS = 10
+    PLACE_PHOTO_MAX_BYTES = 10 * 1024 * 1024
 
     def __init__(self):
         api_key = os.getenv("GEMINI_API_KEY")
@@ -73,6 +80,9 @@ class GeminiService:
         num_steps = max(3, duration // 15)
         location_query = self._format_location(city, country)
         candidate_places = self._discover_places(location_query, theme, num_steps)
+        candidate_places = self._cluster_candidates(
+            candidate_places, keep=max(num_steps * 3, 12)
+        )
 
         if not candidate_places:
             raise ValueError(
@@ -138,10 +148,11 @@ class GeminiService:
 
         # ---- Step 4: Validate and enrich with verified coordinates ----
         self._validate_tour_data(tour_data, mode)
+        maps_facade = GoogleMapsFacade()
 
         # Build a lookup of verified places by name (case-insensitive)
         places_lookup = {p["name"].strip().lower(): p for p in candidate_places}
-
+        selected_places_by_step: list[Optional[dict]] = []
         # Replace AI coordinates with verified Google Maps coordinates
         for step_data in tour_data["steps"]:
             step_name = step_data["title"].strip().lower()
@@ -166,7 +177,6 @@ class GeminiService:
                         "Falling back to geocoding.",
                         step_data["title"],
                     )
-                    maps_facade = GoogleMapsFacade()
                     verified_lat, verified_lng = maps_facade.geocode_location(
                         name=step_data["title"],
                         city=location_query,
@@ -175,6 +185,38 @@ class GeminiService:
                     )
                     step_data["latitude"] = verified_lat
                     step_data["longitude"] = verified_lng
+            selected_places_by_step.append(matched_place)
+
+        cover_image_attribution = ""
+        cover_image_bytes: Optional[bytes] = None
+        cover_image_ext = ".jpg"
+        if selected_places_by_step:
+            first_place = selected_places_by_step[0]
+            first_place_id = (
+                str(first_place.get("place_id"))
+                if isinstance(first_place, dict) and first_place.get("place_id")
+                else ""
+            )
+            if first_place_id:
+                photo_data = maps_facade.get_place_photo(first_place_id)
+                if isinstance(photo_data, dict):
+                    photo_url = photo_data.get("url", "") or ""
+                    cover_image_attribution = photo_data.get("attribution", "") or ""
+                    downloaded = self._download_place_photo(photo_url)
+                    if downloaded:
+                        cover_image_bytes, cover_image_ext = downloaded
+                else:
+                    logger.warning(
+                        "No Google Places photo found for AI tour cover (place_id=%s)",
+                        first_place_id,
+                    )
+            else:
+                logger.warning(
+                    "No place_id found for first AI tour step; skipping cover image."
+                )
+
+        # ---- Step 4b: Reorder stops geometrically to eliminate zigzag ----
+        tour_data["steps"] = self._nearest_neighbor_order(tour_data["steps"])
 
         # ---- Step 5: Persist to database ----
         with transaction.atomic():
@@ -189,8 +231,17 @@ class GeminiService:
                 city=city,
                 country=country,
                 country_code=country_code,
+                cover_image_attribution=cover_image_attribution,
                 status=Tour.ARCHIVED,
             )
+            if cover_image_bytes:
+                filename = f"ai_tour_cover_{uuid.uuid4().hex}{cover_image_ext}"
+                tour.cover_image.save(
+                    filename,
+                    ContentFile(cover_image_bytes),
+                    save=False,
+                )
+                tour.save(update_fields=["cover_image"])
 
             for idx, step_data in enumerate(tour_data["steps"], start=1):
                 step = TourStep.objects.create(
@@ -271,6 +322,81 @@ class GeminiService:
             city=city, theme=theme, max_results=max_candidates
         )
 
+    OUTLIER_MULTIPLIER = 2.5
+    MIN_CANDIDATES_AFTER_TRIM = 4
+
+    @staticmethod
+    def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+        radius_km = 6371.0
+        lat1_rad, lat2_rad = math.radians(lat1), math.radians(lat2)
+        dlat = lat2_rad - lat1_rad
+        dlng = math.radians(lng2 - lng1)
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlng / 2) ** 2
+        )
+        return radius_km * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    @staticmethod
+    def _nearest_neighbor_order(steps: list[dict]) -> list[dict]:
+        """Reorder a list of steps so consecutive stops are geographically close.
+
+        Keeps the AI's first step as the entry point (preserving narrative
+        intro) and then greedily picks the nearest unvisited stop. Cheap,
+        deterministic, and good enough to eliminate visual zigzag for
+        small N (typical tours have 4-12 stops).
+        """
+        if len(steps) < 3:
+            return steps
+
+        remaining = list(steps[1:])
+        ordered = [steps[0]]
+        current = steps[0]
+        while remaining:
+            nearest_idx = min(
+                range(len(remaining)),
+                key=lambda i: GeminiService._haversine_km(
+                    float(current["latitude"]),
+                    float(current["longitude"]),
+                    float(remaining[i]["latitude"]),
+                    float(remaining[i]["longitude"]),
+                ),
+            )
+            current = remaining.pop(nearest_idx)
+            ordered.append(current)
+        return ordered
+
+    @staticmethod
+    def _cluster_candidates(candidates: list[dict], keep: int) -> list[dict]:
+        if len(candidates) < 4:
+            return candidates
+
+        avg_lat = sum(float(p["latitude"]) for p in candidates) / len(candidates)
+        avg_lng = sum(float(p["longitude"]) for p in candidates) / len(candidates)
+
+        with_dist = [
+            (
+                p,
+                GeminiService._haversine_km(
+                    float(p["latitude"]), float(p["longitude"]), avg_lat, avg_lng
+                ),
+            )
+            for p in candidates
+        ]
+        median_dist = sorted(d for _, d in with_dist)[len(with_dist) // 2]
+        threshold = max(median_dist * GeminiService.OUTLIER_MULTIPLIER, 1.5)
+
+        trimmed = [p for p, d in with_dist if d <= threshold]
+        if len(trimmed) < GeminiService.MIN_CANDIDATES_AFTER_TRIM:
+            with_dist.sort(key=lambda x: x[1])
+            return [
+                p
+                for p, _ in with_dist[
+                    : max(keep, GeminiService.MIN_CANDIDATES_AFTER_TRIM)
+                ]
+            ]
+        return trimmed
+
     # ------------------------------------------------------------------
     # Fuzzy Matching
     # ------------------------------------------------------------------
@@ -340,32 +466,113 @@ class GeminiService:
     # Metrics
     # ------------------------------------------------------------------
 
+    STREET_CIRCUITY_FACTOR = 1.3
+    WALKING_PACE_M_PER_MIN = 80.0
+    CIRCULAR_THRESHOLD_M = 200.0
+    LONG_LEG_TRANSPORT_THRESHOLD_M = 2000.0
+
+    def _haversine_fallback_metrics(self, steps_list: list) -> dict:
+        if len(steps_list) < 2:
+            return {"success": False}
+
+        sorted_steps = sorted(steps_list, key=lambda s: s.order)
+        total_distance = 0.0
+        max_leg = 0.0
+
+        for a, b in zip(sorted_steps, sorted_steps[1:]):
+            straight_m = (
+                self._haversine_km(
+                    float(a.latitude),
+                    float(a.longitude),
+                    float(b.latitude),
+                    float(b.longitude),
+                )
+                * 1000
+            )
+            leg_m = straight_m * self.STREET_CIRCUITY_FACTOR
+            total_distance += leg_m
+            max_leg = max(max_leg, leg_m)
+
+        end_dist_m = (
+            self._haversine_km(
+                float(sorted_steps[0].latitude),
+                float(sorted_steps[0].longitude),
+                float(sorted_steps[-1].latitude),
+                float(sorted_steps[-1].longitude),
+            )
+            * 1000
+        )
+
+        return {
+            "total_distance": total_distance,
+            "walking_distance": total_distance,
+            "duration_minutes": int(total_distance / self.WALKING_PACE_M_PER_MIN),
+            "elevation_gain": 0.0,
+            "max_leg_distance": max_leg,
+            "requires_transport": max_leg > self.LONG_LEG_TRANSPORT_THRESHOLD_M,
+            "is_circular": end_dist_m < self.CIRCULAR_THRESHOLD_M,
+            "success": True,
+            "estimated": True,
+        }
+
     def _calculate_metrics(self, tour: Tour) -> None:
-        """Calculate real-world route metrics and update the tour in-place."""
         try:
             maps_facade = GoogleMapsFacade()
             steps_list = list(tour.steps.all())
             metrics = maps_facade.calculate_route_metrics(steps_list)
 
-            if metrics.get("success"):
-                tour.total_distance = metrics.get("total_distance", 0.0)
-                tour.walking_distance = metrics.get("walking_distance", 0.0)
-                tour.elevation_gain = metrics.get("elevation_gain", 0.0)
-                tour.max_leg_distance = metrics.get("max_leg_distance", 0.0)
-                tour.requires_transport = metrics.get("requires_transport", False)
-                tour.is_circular = metrics.get("is_circular", False)
+            if not metrics.get("success"):
+                logger.info(
+                    "Directions API failed for tour %s; using haversine fallback.",
+                    tour.pk,
+                )
+                metrics = self._haversine_fallback_metrics(steps_list)
 
-                walking_minutes = metrics.get("duration_minutes", 0)
-                exploration_minutes = len(steps_list) * self.MINUTES_PER_STEP
-                total_duration = walking_minutes + exploration_minutes
-                if total_duration > 0:
-                    tour.duration_minutes = total_duration
+            if not metrics.get("success"):
+                return
 
-                tour.metrics_calculated = True
-                tour.accessibility_rating = maps_facade.estimate_accessibility(metrics)
-                tour.save()
+            tour.total_distance = metrics.get("total_distance", 0.0)
+            tour.walking_distance = metrics.get("walking_distance", 0.0)
+            tour.elevation_gain = metrics.get("elevation_gain", 0.0)
+            tour.max_leg_distance = metrics.get("max_leg_distance", 0.0)
+            tour.requires_transport = metrics.get("requires_transport", False)
+            tour.is_circular = metrics.get("is_circular", False)
+
+            walking_minutes = metrics.get("duration_minutes", 0)
+            exploration_minutes = len(steps_list) * self.MINUTES_PER_STEP
+            total_duration = walking_minutes + exploration_minutes
+            if total_duration > 0:
+                tour.duration_minutes = total_duration
+
+            tour.metrics_calculated = True
+            tour.accessibility_rating = maps_facade.estimate_accessibility(metrics)
+            tour.save()
         except Exception as e:
             logger.warning("Failed to calculate route metrics: %s", e)
+
+    @classmethod
+    def _content_type_to_extension(cls, content_type: str) -> str:
+        ctype = (content_type or "").split(";")[0].strip().lower()
+        if ctype == "image/png":
+            return ".png"
+        if ctype == "image/webp":
+            return ".webp"
+        return ".jpg"
+
+    @classmethod
+    def _download_place_photo(cls, photo_url: str) -> Optional[tuple[bytes, str]]:
+        if not photo_url:
+            return None
+        try:
+            with urlopen(photo_url, timeout=cls.PLACE_PHOTO_TIMEOUT_SECONDS) as response:
+                content_type = response.headers.get("Content-Type", "")
+                content = response.read(cls.PLACE_PHOTO_MAX_BYTES + 1)
+            if not content or len(content) > cls.PLACE_PHOTO_MAX_BYTES:
+                return None
+            return (content, cls._content_type_to_extension(content_type))
+        except (URLError, TimeoutError, ValueError) as e:
+            logger.warning("Failed to download Google Places photo: %s", e)
+            return None
 
     # ------------------------------------------------------------------
     # Prompt (RAG — Augmented Generation Step)
@@ -415,10 +622,32 @@ class GeminiService:
             else ""
         )
 
-        # Format verified places as a numbered list for the prompt
+        if len(candidate_places) >= 2:
+            c_lat = sum(float(p["latitude"]) for p in candidate_places) / len(
+                candidate_places
+            )
+            c_lng = sum(float(p["longitude"]) for p in candidate_places) / len(
+                candidate_places
+            )
+
+            def _area_label(p: dict) -> str:
+                d_m = (
+                    self._haversine_km(
+                        float(p["latitude"]), float(p["longitude"]), c_lat, c_lng
+                    )
+                    * 1000
+                )
+                return f" [~{d_m:.0f}m from area centre]"
+
+        else:
+
+            def _area_label(p: dict) -> str:
+                return ""
+
         places_list = "\n".join(
             f"  {i}. \"{p['name']}\" — GPS: ({p['latitude']}, {p['longitude']})"
             + (f" — {p['address']}" if p.get("address") else "")
+            + _area_label(p)
             for i, p in enumerate(candidate_places, start=1)
         )
 
@@ -437,7 +666,7 @@ CRITICAL RULES:
 1. You MUST select exactly {num_steps} locations from the VERIFIED LOCATIONS list above.
 2. Do NOT invent, fabricate, or hallucinate any new locations.
 3. Use the EXACT name and GPS coordinates provided in the list above.
-4. Arrange the selected locations in a logical walking order to minimize backtracking.
+4. ROUTE COHERENCE: Arrange the selected stops as a smooth itinerary with no big jumps. Consecutive stops should be close to each other (ideally under ~1.5 km / 20 min walk apart) and the path should flow in one general direction or loop — NOT zigzag back and forth between far-apart areas. If a location is far from the others, either skip it or visit it at the start/end so it doesn't break the flow. Use the "[~Xm from area centre]" labels and the GPS coordinates to plan the order.
 5. Write engaging, theme-connected narrative content for each selected location.
 
 OUTPUT FORMAT (strict JSON):

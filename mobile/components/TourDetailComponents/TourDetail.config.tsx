@@ -20,6 +20,7 @@ export interface TourDetail {
   authorId: number;
   authorAvatar: string;
   coverImage: string;
+  coverImageAttribution?: string;
   duration: string;
   distance: string;
   rating: number;
@@ -27,6 +28,11 @@ export interface TourDetail {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   stops: TourStop[];
   tags: string[];
+  elevationGain?: number;
+  requiresTransport?: boolean;
+  isCircular?: boolean;
+  accessibilityRating?: number;
+  metricsCalculated?: boolean;
 }
 
 export const MOCK_TOUR: TourDetail = {
@@ -36,8 +42,9 @@ export const MOCK_TOUR: TourDetail = {
     'Explore the rich history of Istanbul through its most iconic landmarks. This walking tour takes you through centuries of Byzantine and Ottoman heritage, from the majestic Hagia Sophia to the vibrant Grand Bazaar.',
   author: 'Odyssey Travel',
   authorId: 1,
-  authorAvatar: 'https://picsum.photos/100/100',
-  coverImage: 'https://picsum.photos/800/400',
+  authorAvatar: '',
+  coverImage: '',
+  coverImageAttribution: '',
   duration: '4 hours',
   distance: '5.2 km',
   rating: 4.7,

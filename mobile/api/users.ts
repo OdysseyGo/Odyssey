@@ -57,6 +57,15 @@ export type UsersListResponse = {
   results: User[];
 };
 
+export type SearchHistoryType = 'tours' | 'users';
+
+export type SearchHistoryItem = {
+  id: number;
+  search_type: SearchHistoryType;
+  query: string;
+  searched_at: string;
+};
+
 export type UserCredentials = {
   username: string;
   password: string;
@@ -82,6 +91,7 @@ export type FeedTour = {
   country?: string;
   country_code?: string;
   cover_image?: string;
+  cover_image_attribution?: string;
   created_at: string;
 };
 
@@ -104,11 +114,42 @@ export type FollowingFeedResponse = {
 /**
  * GET /api/users/ - List all users with pagination
  * @param page - Page number (optional)
+ * @param search - Search by username or name (optional)
  */
-export const getUsers = (page?: number) =>
+export const getUsers = (page?: number, search?: string, signal?: AbortSignal) =>
   apiRequest<UsersListResponse>({
     url: '/api/users/',
-    params: page ? { page } : undefined,
+    params: {
+      ...(page ? { page } : {}),
+      ...(search ? { search } : {}),
+    },
+    signal,
+  });
+
+export const searchUsers = (query: string, signal?: AbortSignal) => getUsers(1, query, signal);
+
+export const getSearchHistory = (searchType?: SearchHistoryType) =>
+  apiRequest<SearchHistoryItem[]>({
+    method: 'get',
+    url: '/api/users/search-history/',
+    params: searchType ? { search_type: searchType } : undefined,
+  });
+
+export const saveSearchHistory = (searchType: SearchHistoryType, query: string) =>
+  apiRequest<SearchHistoryItem, { search_type: SearchHistoryType; query: string }>({
+    method: 'post',
+    url: '/api/users/search-history/',
+    data: { search_type: searchType, query },
+  });
+
+export const clearSearchHistory = (searchType?: SearchHistoryType, query?: string) =>
+  apiRequest<void>({
+    method: 'delete',
+    url: '/api/users/search-history/',
+    params: {
+      ...(searchType ? { search_type: searchType } : {}),
+      ...(query ? { query } : {}),
+    },
   });
 
 /**

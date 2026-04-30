@@ -6,6 +6,7 @@ from apps.admin_dashboard.api.views import (
     AdminTourViewSet,
     AdminUserViewSet,
     AnalyticsViewSet,
+    BadgeVisualViewSet,
     PictureCompareConfigViewSet,
     PictureCompareTuningViewSet,
     ReportViewSet,
@@ -27,6 +28,11 @@ router.register(
     r"picture-compare-config",
     PictureCompareConfigViewSet,
     basename="admin-picture-compare-config",
+)
+router.register(
+    r"badge-visuals",
+    BadgeVisualViewSet,
+    basename="admin-badge-visuals",
 )
 
 urlpatterns = [

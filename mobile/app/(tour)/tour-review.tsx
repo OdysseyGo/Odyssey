@@ -35,9 +35,11 @@ export default function TourReviewScreen() {
   const { tourData, resetTourData } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { t } = useTranslation();
-  const isReadyToSubmit = tourData.locations.every((location) =>
-    doesLocationMeetTourRequirements(location, tourData.tourType)
-  );
+  const isReadyToSubmit =
+    !!tourData.coverImage &&
+    tourData.locations.every((location) =>
+      doesLocationMeetTourRequirements(location, tourData.tourType)
+    );
 
   const handleSubmitTour = async () => {
     if (!isReadyToSubmit) {
@@ -63,15 +65,16 @@ export default function TourReviewScreen() {
             const tour = await createTour({
               title: tourData.title || 'Untitled Tour',
               description: tourData.description || 'No description provided.',
+              cover_image: tourData.coverImage,
               tour_type: tourData.tourType,
               category: tourData.category || 'General',
               difficulty: tourData.difficulty,
               duration_minutes: tourData.estimatedDuration,
-              city: tourData.city || 'Unknown City',
+              city: tourData.state || 'Unknown State',
               country: tourData.country || '',
               country_code: tourData.countryCode || '',
-              city_latitude: tourData.cityLatitude,
-              city_longitude: tourData.cityLongitude,
+              city_latitude: tourData.stateLatitude,
+              city_longitude: tourData.stateLongitude,
               status: 'DRAFT',
               is_premium: false,
             });
@@ -153,12 +156,13 @@ export default function TourReviewScreen() {
               }
             }
 
-            await updateTour(createdTourId, {
-              city: tourData.city || 'Unknown City',
+            // 3. Publish after all steps are created so backend city/step validation runs once.
+            await updateTour(tour.id, {
+              city: tourData.state || 'Unknown State',
               country: tourData.country || '',
               country_code: tourData.countryCode || '',
-              city_latitude: tourData.cityLatitude,
-              city_longitude: tourData.cityLongitude,
+              city_latitude: tourData.stateLatitude,
+              city_longitude: tourData.stateLongitude,
               status: 'PUBLISHED',
             });
 

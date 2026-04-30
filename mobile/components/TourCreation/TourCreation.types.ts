@@ -1,5 +1,7 @@
 export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE';
 
+export const TOUR_TEXT_FIELD_MAX_LENGTH = 255;
+
 export type ARAnchorPosition = {
   x: number;
   y: number;
@@ -66,6 +68,7 @@ export interface TourLocation {
 export interface TourCreationData {
   title: string;
   description: string;
+  coverImage?: string;
   category: string;
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   tourType: 'STORY' | 'PUZZLE' | 'HYBRID';
@@ -73,9 +76,9 @@ export interface TourCreationData {
   locations: TourLocation[];
   country?: string;
   countryCode?: string;
-  city?: string;
-  cityLatitude?: number;
-  cityLongitude?: number;
+  state?: string;
+  stateLatitude?: number;
+  stateLongitude?: number;
 }
 
 export const TOUR_CATEGORIES = [
@@ -106,6 +109,7 @@ export const TOUR_TYPE_OPTIONS = [
 export const createEmptyTourData = (): TourCreationData => ({
   title: '',
   description: '',
+  coverImage: undefined,
   category: '',
   difficulty: 'MEDIUM',
   tourType: 'STORY',
@@ -113,9 +117,9 @@ export const createEmptyTourData = (): TourCreationData => ({
   locations: [],
   country: '',
   countryCode: '',
-  city: '',
-  cityLatitude: undefined,
-  cityLongitude: undefined,
+  state: '',
+  stateLatitude: undefined,
+  stateLongitude: undefined,
 });
 
 export const createNewLocation = (

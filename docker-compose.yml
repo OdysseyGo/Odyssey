@@ -26,7 +26,6 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings.base
       - DB_HOST=${DB_HOST:-db}
       - DB_PORT=${DB_PORT:-5432}
-      - INITIAL_SEED=${INITIAL_SEED:-False}
       - ENV_MODE=${ENV_MODE:-development}
       - SECURE_SSL_REDIRECT=False
     ports:

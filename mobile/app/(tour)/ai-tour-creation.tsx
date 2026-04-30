@@ -7,9 +7,12 @@ import {
   FormInputGroup,
   FormTextInput,
   FormTextArea,
+  FormChipSelect,
   FormOptionCard,
   FormDurationPicker,
   FormLocationSelect,
+  TOUR_CATEGORIES,
+  TOUR_TEXT_FIELD_MAX_LENGTH,
 } from '@/components/TourCreation';
 import {
   AICreationHeader,
@@ -50,12 +53,29 @@ export default function AITourCreation() {
     [t]
   );
 
+  const categoryKeyMap = useMemo(
+    () =>
+      Object.fromEntries(
+        TOUR_CATEGORIES.map((cat) => [t(`creation.categories.${cat.toLowerCase()}`), cat])
+      ),
+    [t]
+  );
+
+  const translatedCategories = useMemo(
+    () => TOUR_CATEGORIES.map((cat) => t(`creation.categories.${cat.toLowerCase()}`)),
+    [t]
+  ) as unknown as readonly string[];
+
+  const selectedTranslatedCategory = formData.theme
+    ? t(`creation.categories.${formData.theme.toLowerCase()}`)
+    : '';
+
   const updateFormData = (updates: Partial<AITourFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
   };
 
   const isFormValid =
-    formData.country.trim() !== '' && formData.city.trim() !== '' && formData.theme.trim() !== '';
+    formData.country.trim() !== '' && formData.state.trim() !== '' && formData.theme.trim() !== '';
 
   const handleGenerate = async () => {
     if (!isFormValid) {
@@ -67,7 +87,7 @@ export default function AITourCreation() {
 
     try {
       const response = await generateAITour({
-        city: formData.city.trim(),
+        city: formData.state.trim(),
         country: formData.country.trim(),
         country_code: formData.countryCode.trim(),
         theme: formData.theme.trim(),
@@ -124,33 +144,33 @@ export default function AITourCreation() {
                 updateFormData({
                   country: selectedCountry.value,
                   countryCode: selectedCountry.countryCode || '',
-                  city: '',
-                  cityLatitude: undefined,
-                  cityLongitude: undefined,
+                  state: '',
+                  stateLatitude: undefined,
+                  stateLongitude: undefined,
                 })
               }
             />
           </FormInputGroup>
 
-          <FormInputGroup label={t('aiTour.city')} required>
+          <FormInputGroup label={t('aiTour.state')} required>
             <FormLocationSelect
-              value={formData.city}
+              value={formData.state}
               disabled={!formData.country}
               placeholder={
                 formData.country
-                  ? t('creation.details.cityPlaceholder')
-                  : t('creation.details.cityDisabledPlaceholder', {
+                  ? t('creation.details.statePlaceholder')
+                  : t('creation.details.stateDisabledPlaceholder', {
                       defaultValue: 'Select a country first',
                     })
               }
-              types="(cities)"
+              types="(states)"
               countryCode={formData.countryCode}
               countryName={formData.country}
-              onSelect={(selectedCity) =>
+              onSelect={(selectedState) =>
                 updateFormData({
-                  city: selectedCity.value,
-                  cityLatitude: selectedCity.latitude,
-                  cityLongitude: selectedCity.longitude,
+                  state: selectedState.value,
+                  stateLatitude: selectedState.latitude,
+                  stateLongitude: selectedState.longitude,
                 })
               }
             />
@@ -161,6 +181,7 @@ export default function AITourCreation() {
               value={formData.theme}
               onChangeText={(text) => updateFormData({ theme: text })}
               placeholder={t('aiTour.themePlaceholder')}
+              maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
             />
             <ThemeSuggestions
               onSelect={(selectedTheme) => updateFormData({ theme: selectedTheme })}
@@ -207,6 +228,7 @@ export default function AITourCreation() {
               onChangeText={(text) => updateFormData({ additionalDetails: text })}
               placeholder={t('aiTour.additionalDetailsPlaceholder')}
               numberOfLines={4}
+              maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
             />
           </FormInputGroup>
         </ScrollView>

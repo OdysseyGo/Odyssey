@@ -17,6 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 
+import { CopilotProvider, CopilotStep, walkthroughable } from 'react-native-copilot';
+
 import ProfileHeaderComp from '@/components/ProfileComponents/ProfileHeaderComp';
 import ProfileStatsComp from '@/components/ProfileComponents/ProfileStatsComp';
 import ProfileAddFriendsButton from '@/components/ProfileComponents/ProfileAddFriendsButton';
@@ -25,15 +27,21 @@ import ProfileBadgesContainer from '@/components/ProfileComponents/ProfileBadges
 import ProfileToursContainer from '@/components/ProfileComponents/ProfileToursContainer';
 import AddFriendsModal from '@/components/ProfileComponents/AddFriendsModal';
 import AvatarSelectionModal from '@/components/ProfileComponents/AvatarSelectionModal';
+import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import { getMe, User } from '@/api/users';
-import { getMyBadges, Badge } from '@/api/profile';
+import { getMyBadges, UserBadge } from '@/api/profile';
 import { removeAuthToken } from '@/api/auth';
 import { consumeProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { ScrollView } from 'react-native';
+import { useAutoStartTour } from '@/hooks/useAutoStartHook';
+import TutorialsModal from '../profile/tutorials';
+import CustomTooltip from '@/components/TutorialComponents/CustomTooltip';
+import CustomStepNumber from '@/components/TutorialComponents/CustomStepNumber';
 import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -43,6 +51,19 @@ const GUEST_HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEI
 async function getAccessToken() {
   return await SecureStore.getItemAsync('userToken');
 }
+
+const WalkthroughableView = walkthroughable(View);
+
+const OptionalCopilot = ({ disable, text, order, name, style, children }: any) => {
+  if (disable) {
+    return <View style={style}>{children}</View>;
+  }
+  return (
+    <CopilotStep text={text} order={order} name={name}>
+      <WalkthroughableView style={style}>{children}</WalkthroughableView>
+    </CopilotStep>
+  );
+};
 
 // ─────────────────────────────────────────────────────────
 // Skeleton shimmer
@@ -184,8 +205,17 @@ function GuestScreen({
   return (
     <View style={[guestStyles.root, { backgroundColor: theme.headerGradientTop }]}>
       {/* ── Hero ── */}
-      <View style={[guestStyles.hero, { paddingTop: insets.top, height: GUEST_HERO_HEIGHT }]}>
-        <AuthLogo />
+      <View
+        style={[
+          guestStyles.hero,
+          {
+            paddingTop: insets.top + Spacing.lg,
+            height: GUEST_HERO_HEIGHT + insets.top,
+          },
+        ]}
+      >
+        <AuthLanguageSelector style={{ top: insets.top + 12 }} />
+        <AuthLogo variant="compact" />
         <Text style={[guestStyles.appName, { color: theme.white }]}>ODYSSEY</Text>
         <Text style={[guestStyles.tagline, { color: theme.profileGuestTaglineText }]}>
           {t('auth.tagline')}
@@ -338,10 +368,10 @@ const guestStyles = StyleSheet.create({
 // Main component
 // ─────────────────────────────────────────────────────────
 
-export default function Profile() {
+function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }) {
   const [curUser, setCurUser] = useState<User | null>(null);
   const [badgesCount, setBadgesCount] = useState(0);
-  const [badges, setBadges] = useState<Badge[]>([]);
+  const [badges, setBadges] = useState<UserBadge[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasToken, setHasToken] = useState<boolean | null>(null);
   const [fetchError, setFetchError] = useState(false);
@@ -349,6 +379,7 @@ export default function Profile() {
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showTutorials, setShowTutorials] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const lastRetryKeyRef = useRef(retryKey);
@@ -360,6 +391,9 @@ export default function Profile() {
   const theme = Colors[colorScheme];
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  useAutoStartTour('PROFILE_TUTORIAL', !loading && !!curUser, scrollViewRef);
 
   const stickyOpacity = scrollY.interpolate({
     inputRange: [HEADER_HEIGHT * 0.5, HEADER_HEIGHT * 0.7],
@@ -478,6 +512,8 @@ export default function Profile() {
     onAvatarPress: () => setShowAvatarModal(true),
     onSettingsPress: () => setShowSettings(true),
     settingsAccessibilityLabel: t('tabs.settings'),
+    onTutorialsPress: () => setShowTutorials(true),
+    tutorialsAccessibilityLabel: t('tabs.tutorials'), //TODO: add this to translations
   };
 
   const profileStats = {
@@ -488,13 +524,17 @@ export default function Profile() {
     following: curUser.following_count,
   };
 
-  const formattedBadges = badges.map((badge) => ({
-    id: badge.id.toString(),
-    name: badge.name,
-    icon: badge.icon,
-    description: badge.description,
+  const formattedBadges = badges.map((userBadge) => ({
+    id: userBadge.id.toString(),
+    name: userBadge.badge.name,
+    code: userBadge.badge.code,
+    description: userBadge.badge.description,
     unlocked: true,
-    earnedDate: badge.created_at,
+    city: userBadge.city,
+    countryCode: userBadge.country_code,
+    mistakeCount: userBadge.mistake_count,
+    earnedDate: userBadge.earned_at,
+    visualConfig: userBadge.visual_config,
   }));
 
   const handleFollowersPress = () => {
@@ -529,6 +569,7 @@ export default function Profile() {
       </Animated.View>
 
       <Animated.ScrollView
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingBottom:
@@ -539,27 +580,38 @@ export default function Profile() {
           useNativeDriver: false,
         })}
       >
-        {/* ─── Header ──────────────────────────────── */}
-        <ProfileHeaderComp {...profileHeader} scrollY={scrollY} />
+        <OptionalCopilot text={t('tutorial.profile.step1text')} order={1} name="profileIntro">
+          {/* ─── Header ──────────────────────────────── */}
+          <ProfileHeaderComp {...profileHeader} scrollY={scrollY} disableCopilot={disableCopilot} />
+        </OptionalCopilot>
 
         {/* ─── Stats (overlaps header) ─────────────── */}
         <ProfileStatsComp
           {...profileStats}
           onFollowersPress={handleFollowersPress}
           onFollowingPress={handleFollowingPress}
+          disableCopilot={disableCopilot}
         />
 
         {/* ─── Actions ─────────────────────────────── */}
-        <View style={styles.actionsRow}>
-          <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
-          <ProfileFollowingFeedButton />
-        </View>
+        <OptionalCopilot text={t('tutorial.profile.step4text')} order={4} name="friendsStep">
+          <View style={styles.actionsRow}>
+            <ProfileAddFriendsButton onPress={() => setShowAddFriendModal(true)} />
+            <ProfileFollowingFeedButton />
+          </View>
+        </OptionalCopilot>
 
         {/* ─── Badges ──────────────────────────────── */}
-        <ProfileBadgesContainer badges={formattedBadges} title={t('profile.badges')} />
+        <OptionalCopilot text={t('tutorial.profile.step5text')} order={5} name="badgeStep">
+          <WalkthroughableView>
+            <ProfileBadgesContainer badges={formattedBadges} title={t('profile.badges')} />
+          </WalkthroughableView>
+        </OptionalCopilot>
 
         {/* ─── My Tours ────────────────────────────── */}
-        <ProfileToursContainer />
+        <OptionalCopilot text={t('tutorial.profile.step6text')} order={6} name="tourCreatorStep">
+          <ProfileToursContainer />
+        </OptionalCopilot>
       </Animated.ScrollView>
 
       {/* ─── Modals ────────────────────────────────── */}
@@ -588,6 +640,10 @@ export default function Profile() {
         onRequestClose={() => setShowSettings(false)}
       >
         <SettingsScreen onClose={() => setShowSettings(false)} onLogout={handleLogout} />
+      </Modal>
+
+      <Modal visible={showTutorials} transparent animationType="fade">
+        <TutorialsModal onClose={() => setShowTutorials(false)} />
       </Modal>
     </View>
   );
@@ -621,6 +677,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: Spacing.lg + 2,
+    marginBottom: Spacing.sm,
     gap: Spacing.md,
   },
 });
@@ -660,3 +717,27 @@ const errorStyles = StyleSheet.create({
     lineHeight: 21,
   },
 });
+
+export default function Profile({ disableCopilot = false }: { disableCopilot?: boolean }) {
+  const colorTheme = useColorTheme();
+
+  return (
+    <CopilotProvider
+      margin={8}
+      animated={true}
+      overlay="svg"
+      tooltipComponent={CustomTooltip}
+      stepNumberComponent={CustomStepNumber}
+      animationDuration={600}
+      arrowColor={Colors[colorTheme].primary}
+      tooltipStyle={{
+        backgroundColor: 'transparent',
+        padding: 0,
+        borderRadius: 0,
+      }}
+      backdropColor="rgba(10, 20, 40, 0.9)"
+    >
+      <ProfileContent disableCopilot={disableCopilot} />
+    </CopilotProvider>
+  );
+}
