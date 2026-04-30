@@ -4,8 +4,8 @@ import math
 import os
 import random
 import re
-import uuid
 import string
+import uuid
 from typing import Optional
 from urllib.error import URLError
 from urllib.request import urlopen
