@@ -534,9 +534,9 @@ class TourXpRulesTests(APITestCase):
         self.player.refresh_from_db()
         self.assertEqual(self.player.xp, 0)
 
-    def test_first_level_up_at_500_from_tour_completion(self):
+    def test_first_level_up_at_100_from_tour_completion(self):
         tour, _ = self._create_tour_with_single_step(title="Level Up Tour")
-        self.player.xp = 475
+        self.player.xp = 75
         self.player.level = 1
         self.player.save(update_fields=["xp", "level"])
 
@@ -551,7 +551,7 @@ class TourXpRulesTests(APITestCase):
         self.assertEqual(complete_response.status_code, status.HTTP_200_OK)
 
         self.player.refresh_from_db()
-        self.assertEqual(self.player.xp, 500)
+        self.assertEqual(self.player.xp, 100)
         self.assertEqual(self.player.level, 2)
 
     def test_unique_user_tour_progress_prevents_duplicates(self):

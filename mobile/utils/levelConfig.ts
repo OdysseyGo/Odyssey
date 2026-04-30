@@ -11,7 +11,7 @@ export const LEVEL_TITLES = [
   'Legend',
 ];
 
-const INITIAL_REQUIRED_XP = 500;
+const INITIAL_REQUIRED_XP = 100;
 const LEVEL_GROWTH_MULTIPLIER = 1.25;
 
 export type ComputedLevelInfo = {
@@ -70,7 +70,7 @@ export type LevelTier = {
 };
 
 const LEVEL_TIERS: LevelTier[] = [
-  // Levels 1-2 — Stone (Novice)
+  // Level 1 — Stone (Novice)
   {
     gradient: ['#475569', '#64748B', '#94A3B8'],
     ringStart: '#CBD5E1',
@@ -79,15 +79,7 @@ const LEVEL_TIERS: LevelTier[] = [
     glowColor: 'rgba(148,163,184,0.4)',
     sparkleDensity: 0.2,
   },
-  {
-    gradient: ['#475569', '#64748B', '#94A3B8'],
-    ringStart: '#CBD5E1',
-    ringEnd: '#94A3B8',
-    badgeBg: '#334155',
-    glowColor: 'rgba(148,163,184,0.4)',
-    sparkleDensity: 0.2,
-  },
-  // Levels 3-4 — Emerald (Adventurer)
+  // Levels 2-3 — Emerald (Adventurer)
   {
     gradient: ['#065F46', '#16A34A', '#4ADE80'],
     ringStart: '#86EFAC',
@@ -96,15 +88,7 @@ const LEVEL_TIERS: LevelTier[] = [
     glowColor: 'rgba(74,222,128,0.5)',
     sparkleDensity: 0.4,
   },
-  {
-    gradient: ['#065F46', '#16A34A', '#4ADE80'],
-    ringStart: '#86EFAC',
-    ringEnd: '#22C55E',
-    badgeBg: '#047857',
-    glowColor: 'rgba(74,222,128,0.5)',
-    sparkleDensity: 0.4,
-  },
-  // Levels 5-6 — Sapphire (Wanderer)
+  // Levels 4-5 — Sapphire (Wanderer)
   {
     gradient: ['#0C4A6E', '#0284C7', '#38BDF8'],
     ringStart: '#7DD3FC',
@@ -113,15 +97,7 @@ const LEVEL_TIERS: LevelTier[] = [
     glowColor: 'rgba(56,189,248,0.55)',
     sparkleDensity: 0.55,
   },
-  {
-    gradient: ['#0C4A6E', '#0284C7', '#38BDF8'],
-    ringStart: '#7DD3FC',
-    ringEnd: '#0EA5E9',
-    badgeBg: '#075985',
-    glowColor: 'rgba(56,189,248,0.55)',
-    sparkleDensity: 0.55,
-  },
-  // Levels 7-8 — Amethyst (Trailblazer)
+  // Levels 6-7 — Amethyst (Trailblazer)
   {
     gradient: ['#4C1D95', '#7C3AED', '#C4B5FD'],
     ringStart: '#DDD6FE',
@@ -130,23 +106,7 @@ const LEVEL_TIERS: LevelTier[] = [
     glowColor: 'rgba(167,139,250,0.6)',
     sparkleDensity: 0.75,
   },
-  {
-    gradient: ['#4C1D95', '#7C3AED', '#C4B5FD'],
-    ringStart: '#DDD6FE',
-    ringEnd: '#A78BFA',
-    badgeBg: '#5B21B6',
-    glowColor: 'rgba(167,139,250,0.6)',
-    sparkleDensity: 0.75,
-  },
-  // Levels 9-10 — Sunfire (Legend)
-  {
-    gradient: ['#7C2D12', '#D97706', '#FCD34D'],
-    ringStart: '#FDE68A',
-    ringEnd: '#F59E0B',
-    badgeBg: '#92400E',
-    glowColor: 'rgba(252,211,77,0.7)',
-    sparkleDensity: 1,
-  },
+  // Levels 8+ — Sunfire (Legend)
   {
     gradient: ['#7C2D12', '#D97706', '#FCD34D'],
     ringStart: '#FDE68A',
@@ -158,6 +118,13 @@ const LEVEL_TIERS: LevelTier[] = [
 ];
 
 export function getLevelTier(level: number): LevelTier {
-  const idx = Math.max(0, Math.min(level - 1, LEVEL_TIERS.length - 1));
+  const safeLevel = Math.max(1, level);
+  if (safeLevel === 1) {
+    return LEVEL_TIERS[0];
+  }
+
+  // Background upgrades start at level 2, then every 2 levels.
+  // 2-3 -> tier 1, 4-5 -> tier 2, 6-7 -> tier 3, 8+ -> tier 4.
+  const idx = Math.min(Math.floor((safeLevel - 2) / 2) + 1, LEVEL_TIERS.length - 1);
   return LEVEL_TIERS[idx];
 }
