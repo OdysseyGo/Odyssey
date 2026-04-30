@@ -32,6 +32,15 @@ export const aiTourCreationStyles = (theme: ThemeName) => {
       color: color.subText,
       marginBottom: Spacing.md,
     },
+    arToggleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: Spacing.md,
+    },
+    arToggleLabels: {
+      flex: 1,
+    },
   });
 };
 

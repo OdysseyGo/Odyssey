@@ -40,6 +40,14 @@ class GenerateTourRequestSerializer(serializers.Serializer):
         allow_blank=True,
         help_text="Additional details for tour generation",
     )
+    include_ar = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text=(
+            "When true, the AI may add AR puzzles on steps it judges thematically "
+            "appropriate, drawn from the active ARModel catalog."
+        ),
+    )
 
 
 class GenerateTourResponseSerializer(serializers.Serializer):
