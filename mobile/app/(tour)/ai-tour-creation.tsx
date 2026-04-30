@@ -5,7 +5,6 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { aiTourCreationStyles } from './ai-tour-creation.styles';
 import {
   FormInputGroup,
-  FormTextInput,
   FormTextArea,
   FormChipSelect,
   FormOptionCard,
@@ -16,7 +15,6 @@ import {
 } from '@/components/TourCreation';
 import {
   AICreationHeader,
-  ThemeSuggestions,
   LanguageSelector,
   GenerateButton,
   LoadingOverlay,
@@ -177,14 +175,12 @@ export default function AITourCreation() {
           </FormInputGroup>
 
           <FormInputGroup label={t('aiTour.theme')} required>
-            <FormTextInput
-              value={formData.theme}
-              onChangeText={(text) => updateFormData({ theme: text })}
-              placeholder={t('aiTour.themePlaceholder')}
-              maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
-            />
-            <ThemeSuggestions
-              onSelect={(selectedTheme) => updateFormData({ theme: selectedTheme })}
+            <FormChipSelect
+              options={translatedCategories}
+              selectedValue={selectedTranslatedCategory}
+              onSelect={(translatedValue) =>
+                updateFormData({ theme: categoryKeyMap[translatedValue] ?? translatedValue })
+              }
             />
           </FormInputGroup>
 
