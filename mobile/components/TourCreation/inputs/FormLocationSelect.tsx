@@ -24,6 +24,7 @@ type FormLocationSelectProps = {
   countryCode?: string;
   countryName?: string;
   onSelect: (value: LocationSelectValue) => void;
+  onClearSelection?: () => void;
 };
 
 type PlaceSuggestion = {
@@ -46,6 +47,7 @@ export default function FormLocationSelect({
   countryCode,
   countryName,
   onSelect,
+  onClearSelection,
 }: FormLocationSelectProps) {
   const theme = useColorTheme();
   const color = Colors[theme];
@@ -118,11 +120,8 @@ export default function FormLocationSelect({
         }
 
         if (!cancelled) {
-          const normalizedQuery = trimmedQuery.toLowerCase();
-          const visibleSuggestions = mapped.filter(
-            (item) => item.value.toLowerCase() !== normalizedQuery
-          );
-          setSuggestions(visibleSuggestions.slice(0, 6));
+          // Keep exact matches visible so users can explicitly tap-select them.
+          setSuggestions(mapped.slice(0, 6));
         }
       } catch (error) {
         console.warn('[FormLocationSelect] Location search failed:', error);
@@ -183,10 +182,21 @@ export default function FormLocationSelect({
           onFocus={() => setIsFocused(true)}
           onBlur={() => {
             setTimeout(() => {
-              if (!isSelectingRef.current) setIsFocused(false);
+              if (!isSelectingRef.current) {
+                setIsFocused(false);
+                // Enforce dropdown-only selection: free-typed text is discarded.
+                if (query.trim() !== value.trim()) {
+                  setQuery(value.trim() ? value : '');
+                }
+              }
             }, 250);
           }}
           onChangeText={(text) => {
+            const trimmedText = text.trim();
+            const trimmedValue = value.trim();
+            if (trimmedValue && trimmedText !== trimmedValue) {
+              onClearSelection?.();
+            }
             setQuery(text);
             setSelectionError('');
             setIsFocused(true);

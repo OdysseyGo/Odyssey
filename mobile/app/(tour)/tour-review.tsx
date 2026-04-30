@@ -37,6 +37,12 @@ export default function TourReviewScreen() {
   const isReadyToSubmit = tourData.locations.every((location) =>
     doesLocationMeetTourRequirements(location, tourData.tourType)
   );
+  const hasValidSelectedLocation =
+    tourData.country.trim().length > 0 &&
+    tourData.countryCode.trim().length > 0 &&
+    tourData.city.trim().length > 0 &&
+    Number.isFinite(tourData.cityLatitude) &&
+    Number.isFinite(tourData.cityLongitude);
 
   const handleSubmitTour = async () => {
     if (!isReadyToSubmit) {
@@ -44,6 +50,15 @@ export default function TourReviewScreen() {
         t('creation.incompletePuzzleTitle', { defaultValue: 'Complete required puzzles' }),
         t('creation.incompletePuzzleMessage', {
           defaultValue: 'Puzzle tours need a valid puzzle at every location before submission.',
+        })
+      );
+      return;
+    }
+    if (!hasValidSelectedLocation) {
+      Alert.alert(
+        t('creation.incompleteLocationTitle', { defaultValue: 'Complete location details' }),
+        t('creation.incompleteLocationMessage', {
+          defaultValue: 'Please select country and city from the dropdown lists.',
         })
       );
       return;
@@ -63,9 +78,9 @@ export default function TourReviewScreen() {
               category: tourData.category || 'General',
               difficulty: tourData.difficulty,
               duration_minutes: tourData.estimatedDuration,
-              city: tourData.city || 'Unknown City',
-              country: tourData.country || '',
-              country_code: tourData.countryCode || '',
+              city: tourData.city,
+              country: tourData.country,
+              country_code: tourData.countryCode,
               city_latitude: tourData.cityLatitude,
               city_longitude: tourData.cityLongitude,
               status: 'DRAFT',
@@ -151,9 +166,9 @@ export default function TourReviewScreen() {
 
             // 3. Publish after all steps are created so backend city/step validation runs once.
             await updateTour(tour.id, {
-              city: tourData.city || 'Unknown City',
-              country: tourData.country || '',
-              country_code: tourData.countryCode || '',
+              city: tourData.city,
+              country: tourData.country,
+              country_code: tourData.countryCode,
               city_latitude: tourData.cityLatitude,
               city_longitude: tourData.cityLongitude,
               status: 'PUBLISHED',
@@ -189,7 +204,7 @@ export default function TourReviewScreen() {
       <CreationFooter
         buttonText={isSubmitting ? t('creation.submitting') : t('creation.submit')}
         onPress={handleSubmitTour}
-        disabled={isSubmitting || !isReadyToSubmit}
+        disabled={isSubmitting || !isReadyToSubmit || !hasValidSelectedLocation}
       />
     </View>
   );

@@ -19,7 +19,12 @@ export default function TourDetailsScreen() {
   const canProceed =
     tourData.title.trim().length > 0 &&
     tourData.description.trim().length > 0 &&
-    tourData.category.length > 0;
+    tourData.category.length > 0 &&
+    tourData.country.trim().length > 0 &&
+    tourData.countryCode.trim().length > 0 &&
+    tourData.city.trim().length > 0 &&
+    Number.isFinite(tourData.cityLatitude) &&
+    Number.isFinite(tourData.cityLongitude);
 
   const handleNext = () => {
     router.push('/tour-locations');
