@@ -58,7 +58,6 @@ interface TourStep {
   audio?: string | null;
   puzzle?: PuzzleData | null;
 }
-// ---------------------------------
 
 interface Review {
   id: number;
@@ -83,6 +82,8 @@ interface TourData {
   review_count: number;
   completion_count: number;
   step_count: number;
+  cover_image?: string | null;
+  cover_image_attribution?: string | null;
   steps: TourStep[];
   reviews: Review[];
 }
@@ -282,6 +283,22 @@ export default function TourDetail() {
           </Button>
         </div>
       </div>
+
+      {/* Tour Cover Image Section */}
+      {tour.cover_image && (
+        <div className="relative h-64 w-full overflow-hidden rounded-xl border border-border bg-muted">
+          <img
+            src={tour.cover_image}
+            alt={`${tour.title} cover`}
+            className="h-full w-full object-cover"
+          />
+          {tour.cover_image_attribution && (
+            <div className="absolute bottom-3 right-3 rounded-md bg-background/80 px-3 py-1.5 text-xs text-foreground backdrop-blur-md">
+              © {tour.cover_image_attribution}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <Card>

@@ -163,7 +163,7 @@ export default function TourReviewScreen() {
               country_code: tourData.countryCode || '',
               city_latitude: tourData.stateLatitude,
               city_longitude: tourData.stateLongitude,
-              status: 'PUBLISHED',
+              status: 'DRAFT', //draft dedim ki adminler onaylasın
             });
 
             Alert.alert(t('creation.successTitle'), t('creation.successMessage'), [
