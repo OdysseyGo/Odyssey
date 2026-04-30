@@ -4,9 +4,9 @@ import math
 import os
 import re
 import uuid
+from typing import Optional
 from urllib.error import URLError
 from urllib.request import urlopen
-from typing import Optional
 
 import google.generativeai as genai
 from django.core.files.base import ContentFile
