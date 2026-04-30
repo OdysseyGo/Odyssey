@@ -141,6 +141,8 @@ export type Tour = {
   accessibility_rating?: number;
   metrics_calculated?: boolean;
   is_premium: boolean;
+  is_ai_generated: boolean;
+  user_has_completed_once?: boolean;
   city: string;
   country?: string;
   country_code?: string;
@@ -232,7 +234,7 @@ export async function getTour(tourId: number, signal?: AbortSignal): Promise<Tou
   return apiRequest<Tour>({
     method: 'GET',
     url: `/api/tours/${tourId}/`,
-    auth: false, // Public endpoint
+    auth: true, // Sends a token when available, still works anonymously for public reads.
     signal,
   });
 }

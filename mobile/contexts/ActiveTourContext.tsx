@@ -63,7 +63,7 @@ const ActiveTourContext = createContext<ActiveTourContextType | undefined>(undef
  * Maps an API tour to the internal Tour format with puzzles
  */
 function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
-  const steps: TourStep[] = apiTour.steps.map((apiStep, index) => {
+  const steps: TourStep[] = apiTour.steps.map((apiStep) => {
     const baseStep = {
       id: apiStep.id.toString(),
       title: apiStep.title,
@@ -76,11 +76,16 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
     if (apiStep.puzzle) {
       const puzzle = mapApiPuzzleToInternal(apiStep.puzzle);
       if (puzzle) {
+        const description =
+          apiTour.tour_type === 'HYBRID' && apiStep.description
+            ? apiStep.description
+            : undefined;
+
         return {
           ...baseStep,
           type: 'puzzle' as const,
           puzzle,
-          description: apiStep.description,
+          description,
           requiresLocationConfirmation: true, // All puzzle steps require location confirmation
         } as PuzzleStep;
       }

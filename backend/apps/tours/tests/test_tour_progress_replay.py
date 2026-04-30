@@ -49,6 +49,7 @@ class TourProgressReplayTests(APITestCase):
             current_step=None,
             status=TourProgress.COMPLETED,
             completed_at=timezone.now(),
+            has_completed_once=True,
             total_xp=120,
             skip_count=3,
             wrong_attempt_count=2,
@@ -67,6 +68,7 @@ class TourProgressReplayTests(APITestCase):
         self.assertEqual(progress.status, TourProgress.IN_PROGRESS)
         self.assertEqual(progress.current_step_id, self.first_step.id)
         self.assertIsNone(progress.completed_at)
+        self.assertTrue(progress.has_completed_once)
         self.assertEqual(progress.total_xp, 0)
         self.assertEqual(progress.skip_count, 0)
         self.assertEqual(progress.wrong_attempt_count, 0)
@@ -128,3 +130,29 @@ class TourProgressReplayTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["active_tour_id"], other_tour.id)
         self.assertIn("progress_id", response.data)
+
+    def test_completing_tour_marks_has_completed_once(self):
+        progress = TourProgress.objects.create(
+            user=self.user,
+            tour=self.tour,
+            current_step=self.first_step,
+            status=TourProgress.IN_PROGRESS,
+        )
+
+        response = self.client.post(
+            f"/api/tour-progress/{progress.id}/complete-step/",
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["is_tour_complete"])
+
+        response = self.client.post(
+            f"/api/tour-progress/{progress.id}/complete-step/",
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["is_tour_complete"])
+
+        progress.refresh_from_db()
+        self.assertEqual(progress.status, TourProgress.COMPLETED)
+        self.assertTrue(progress.has_completed_once)

@@ -175,6 +175,7 @@ class TestGenerateTour(TestCase):
         )
 
         assert tour.title == "Historic Istanbul Walking Tour"
+        assert tour.is_ai_generated is True
         assert tour.steps.count() == 2
         assert Puzzle.objects.filter(step__tour=tour).count() == 2
 
@@ -394,6 +395,44 @@ class TestGenerateTour(TestCase):
         puzzles = Puzzle.objects.filter(step__tour=tour)
         assert puzzles.count() == 2
         assert all("name of this location" in p.question for p in puzzles)
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
+    def test_ai_puzzle_output_is_normalized_to_renderable_trivia(
+        self, mock_genai, mock_maps_cls
+    ):
+        """Unsupported AI puzzle shapes should still render as puzzle steps."""
+        tour_data = _valid_tour_json(include_puzzles=True)
+        tour_data["steps"][0]["puzzle"] = {
+            "type": "RIDDLE",
+            "question": "I have watched empires rise beneath one dome. Where are you?",
+            "answer": "Hagia Sophia",
+        }
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
+
+        creator = self._make_creator()
+        service = GeminiService()
+        tour = service.generate_tour(
+            city="Istanbul",
+            theme="History",
+            mode="PUZZLE",
+            duration=60,
+            language="en",
+            creator=creator,
+        )
+
+        puzzle = Puzzle.objects.get(step__tour=tour, step__title="Hagia Sophia")
+        assert puzzle.puzzle_type == Puzzle.TRIVIA
+        assert puzzle.trivia_detail.options
+        assert puzzle.trivia_detail.correct_answer == "Hagia Sophia"
 
     @patch("apps.ai_content.services.GoogleMapsFacade")
     @patch("apps.ai_content.services.genai")

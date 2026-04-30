@@ -78,6 +78,7 @@ class Tour(models.Model):
         help_text="ISO 3166-1 alpha-2 country code for the tour country",
     )
     cover_image = models.ImageField(upload_to="tour_covers/", blank=True, null=True)
+    is_ai_generated = models.BooleanField(default=False)
 
     # Advanced Metrics
     total_distance = models.FloatField(

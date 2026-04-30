@@ -161,6 +161,7 @@ class TourProgressViewSet(
             else:
                 progress.status = TourProgress.COMPLETED
                 progress.completed_at = timezone.now()
+                progress.has_completed_once = True
                 progress.current_step = None
                 progress.save()
 

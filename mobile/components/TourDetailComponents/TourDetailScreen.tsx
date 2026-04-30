@@ -101,7 +101,9 @@ export function useTourDetailScreen(tourId: string): TourDetailScreenResult {
         getCurrentUser(),
       ]);
       setTour(mapApiTourToDetail(tourData, t));
-      setShowAllStops(Boolean(currentUser && tourData.creator?.id === currentUser.id));
+      const isCreator = Boolean(currentUser && tourData.creator?.id === currentUser.id);
+      const completedOnce = Boolean(tourData.user_has_completed_once);
+      setShowAllStops(completedOnce || (isCreator && !tourData.is_ai_generated));
     } catch (err: any) {
       setError(err.message || 'Failed to load tour');
     } finally {

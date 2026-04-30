@@ -196,6 +196,7 @@ class GeminiService:
                 city=city,
                 country=country,
                 country_code=country_code,
+                is_ai_generated=True,
                 status=Tour.ARCHIVED,
             )
 
@@ -212,11 +213,12 @@ class GeminiService:
                 # Create puzzle if present (for PUZZLE and HYBRID modes)
                 puzzle_data = step_data.get("puzzle")
                 if puzzle_data:
+                    puzzle_data = self._normalize_ai_puzzle_data(step_data, puzzle_data)
                     puzzle = Puzzle.objects.create(
                         step=step,
-                        puzzle_type=puzzle_data.get("type", "TRIVIA"),
+                        puzzle_type=puzzle_data["type"],
                         question=puzzle_data["question"],
-                        options=puzzle_data.get("options"),
+                        options=puzzle_data["options"],
                         correct_answer=puzzle_data["answer"],
                         hint=puzzle_data.get("hint", ""),
                         xp_reward=puzzle_data.get("xp", 25),
@@ -256,6 +258,40 @@ class GeminiService:
         self._calculate_metrics(tour)
 
         return tour
+
+    @staticmethod
+    def _normalize_ai_puzzle_data(step_data: dict, puzzle_data: dict) -> dict:
+        """Coerce Gemini puzzle output into the app's supported trivia shape."""
+        title = step_data.get("title", "this location")
+        question = puzzle_data.get("question") or f"What is the name of {title}?"
+        answer = puzzle_data.get("answer") or puzzle_data.get("correct_answer") or title
+        options = puzzle_data.get("options")
+
+        if not isinstance(options, list):
+            options = []
+
+        options = [str(option).strip() for option in options if str(option).strip()]
+        answer = str(answer).strip() or title
+
+        if answer not in options:
+            options.insert(0, answer)
+
+        fallback_options = ["Unknown Place", "Central Park", "The Grand Palace"]
+        for option in fallback_options:
+            if len(options) >= 4:
+                break
+            if option != answer and option not in options:
+                options.append(option)
+
+        return {
+            **puzzle_data,
+            "type": Puzzle.TRIVIA,
+            "question": str(question).strip(),
+            "options": options[:4],
+            "answer": answer,
+            "hint": puzzle_data.get("hint", ""),
+            "xp": puzzle_data.get("xp", 25),
+        }
 
     # ------------------------------------------------------------------
     # Place Discovery (RAG — Retrieval Step)
