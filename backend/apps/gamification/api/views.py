@@ -16,7 +16,7 @@ from apps.gamification.models import (
 )
 from apps.gamification.picture_compare import compare_picture_similarity
 from apps.gamification.services import BadgeService
-from apps.tours.models import Puzzle, PuzzleAttempt, TourStep
+from apps.tours.models import Puzzle, PuzzleAttempt, Tour, TourStep
 
 from .serializers import BadgeSerializer, TourProgressSerializer, UserBadgeSerializer
 
@@ -223,6 +223,9 @@ class TourProgressViewSet(
         current_step = progress.current_step
         if current_step is None:
             return 0
+
+        if progress.tour.tour_type == Tour.STORY:
+            return TRIVIA_STEP_XP
 
         puzzle = getattr(current_step, "puzzle", None)
         failed_attempt_count = 0

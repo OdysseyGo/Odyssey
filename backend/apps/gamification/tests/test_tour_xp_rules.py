@@ -18,12 +18,12 @@ class TourXpRulesTests(APITestCase):
         )
         self.client.force_authenticate(user=self.player)
 
-    def _create_tour_with_single_step(self, *, title="XP Tour"):
+    def _create_tour_with_single_step(self, *, title="XP Tour", tour_type=Tour.PUZZLE):
         tour = Tour.objects.create(
             title=title,
             description="XP test tour",
             creator=self.creator,
-            tour_type=Tour.PUZZLE,
+            tour_type=tour_type,
             category="History",
             difficulty=Tour.EASY,
             duration_minutes=10,
@@ -39,6 +39,50 @@ class TourXpRulesTests(APITestCase):
             longitude="1.0",
         )
         return tour, step
+
+    def test_story_tour_each_completed_step_awards_25_xp(self):
+        tour, first_step = self._create_tour_with_single_step(
+            title="Story XP Tour",
+            tour_type=Tour.STORY,
+        )
+        TourStep.objects.create(
+            tour=tour,
+            order=1,
+            title="Step 2",
+            description="",
+            latitude="1.1",
+            longitude="1.1",
+        )
+
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        progress_id = create_response.data["id"]
+        self.assertEqual(create_response.data["current_step"]["id"], first_step.id)
+
+        first_complete_response = self.client.post(
+            f"/api/tour-progress/{progress_id}/complete-step/",
+            format="json",
+        )
+        self.assertEqual(first_complete_response.status_code, status.HTTP_200_OK)
+        self.assertFalse(first_complete_response.data["is_tour_complete"])
+
+        progress = TourProgress.objects.get(id=progress_id)
+        self.assertEqual(progress.total_xp, 25)
+
+        second_complete_response = self.client.post(
+            f"/api/tour-progress/{progress_id}/complete-step/",
+            format="json",
+        )
+        self.assertEqual(second_complete_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(second_complete_response.data["is_tour_complete"])
+        self.assertEqual(second_complete_response.data["awarded_xp"], 50)
+
+        progress.refresh_from_db()
+        self.player.refresh_from_db()
+        self.assertEqual(progress.total_xp, 50)
+        self.assertEqual(self.player.xp, 50)
 
     def test_skipped_step_gives_no_xp(self):
         tour, _ = self._create_tour_with_single_step(title="Skip Tour")
@@ -215,7 +259,7 @@ class TourXpRulesTests(APITestCase):
         self.assertEqual(progress.total_xp, 0)
         self.assertEqual(self.player.xp, 0)
 
-    def test_wrong_trivia_then_correct_gives_zero_step_xp(self):
+    def test_wrong_trivia_prevents_resubmission_and_gives_zero_step_xp(self):
         tour, step = self._create_tour_with_single_step(
             title="Wrong Trivia Attempt Tour"
         )
@@ -247,14 +291,16 @@ class TourXpRulesTests(APITestCase):
             {"answer": "Ankara"},
             format="json",
         )
-        self.assertEqual(correct_response.status_code, status.HTTP_200_OK)
-        self.assertTrue(correct_response.data["accepted"])
+        self.assertEqual(correct_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(correct_response.data["accepted"])
 
-        complete_response = self.client.post(
-            f"/api/tour-progress/{progress_id}/complete-step/",
+        skip_response = self.client.post(
+            f"/api/tour-progress/{progress_id}/skip-step/",
             format="json",
         )
-        self.assertEqual(complete_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(skip_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(skip_response.data["is_tour_complete"])
+        self.assertEqual(skip_response.data["awarded_xp"], 0)
 
         progress = TourProgress.objects.get(id=progress_id)
         self.player.refresh_from_db()
