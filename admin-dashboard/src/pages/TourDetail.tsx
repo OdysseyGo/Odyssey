@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, CheckCircle, XCircle, Archive, Trash2, 
   Image as ImageIcon, Music, Puzzle as PuzzleIcon, 
-  HelpCircle, Target, Box, Camera 
+  HelpCircle, Target, Box, Camera, Compass, MapPin
 } from "lucide-react";
 import { getTour, approveTour, rejectTour, archiveTour, deleteTour } from "@/api/endpoints";
 import { Card } from "@/components/ui/Card";
@@ -34,9 +34,13 @@ interface GyroscopeDetail {
   tolerance_degrees: number;
 }
 
+interface CompassDetail {
+  target_heading_degrees: number; 
+}
+
 interface PuzzleData {
   id: number;
-  puzzle_type: "TRIVIA" | "AR" | "GYROSCOPE" | "PICTURE_COMPARE";
+  puzzle_type: "TRIVIA" | "AR" | "GYROSCOPE" | "COMPASS" |  "PICTURE_COMPARE";
   question: string;
   hint: string;
   xp_reward: number;
@@ -44,6 +48,7 @@ interface PuzzleData {
   picture_compare_detail?: PictureCompareDetail | null;
   ar_detail?: ArDetail | null;
   gyroscope_detail?: GyroscopeDetail | null;
+  compass_detail?: CompassDetail | null;
   options?: any;
   correct_answer?: string;
   reference_image?: string | null;
@@ -54,6 +59,8 @@ interface TourStep {
   title: string;
   order: number;
   description: string;
+  latitude: string; 
+  longitude: string; 
   image?: string | null;
   audio?: string | null;
   puzzle?: PuzzleData | null;
@@ -233,6 +240,24 @@ export default function TourDetail() {
             )}
           </div>
         );
+      case "COMPASS":
+        const compass = puzzle.compass_detail;
+        return (
+          <div className="mt-2 space-y-2 text-sm">
+            <div className="flex items-center gap-1 font-medium text-muted-foreground">
+              <Compass className="w-4 h-4" /> Compass Details:
+            </div>
+            {compass ? (
+              <div className="flex flex-wrap gap-2">
+                <div className="p-2 rounded bg-muted/50 border border-border">
+                  Required heading: <b>{compass.target_heading_degrees}°</b>
+                </div>
+              </div>
+            ) : (
+              <p className="italic text-muted-foreground">Compass details missing.</p>
+            )}
+          </div>
+        );
 
       default:
         return null;
@@ -350,6 +375,17 @@ export default function TourDetail() {
                     ) : (
                       <p className="text-sm italic text-muted-foreground">No description provided.</p>
                     )}
+
+                    {/* Location Coordinates */}
+                    <div className="flex items-center gap-1.5 mt-2 text-xs font-medium text-muted-foreground">
+                      <MapPin className="w-3.5 h-3.5" />
+                      <a 
+                        href={`https://www.google.com/maps/search/?api=1&query=${step.latitude},${step.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-primary hover:underline transition-colors cursor-pointer"
+                      >  Lat: {step.latitude} &middot; Lng: {step.longitude}</a> 
+                    </div>
                     
                     {/* Audio Player */}
                     {step.audio && (
