@@ -8,13 +8,18 @@ import {
   ActivityIndicator,
   Modal,
   TextInput,
-  Animated,
+  AppState,
+  Animated as RNAnimated,
 } from 'react-native';
-import { useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
 import { Camera } from 'expo-camera';
+import { Accelerometer, Magnetometer } from 'expo-sensors';
+import * as Haptics from 'expo-haptics';
+import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Svg, { Circle, Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 
 import getStyles from './TourStep.styles';
@@ -25,12 +30,118 @@ import {
   MultipleChoicePuzzle,
   PictureComparePuzzle,
   ArCodePuzzle,
+  CompassBearingPuzzle,
 } from './TourStep.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { submitArCode, submitPictureCompare, submitTriviaAnswer } from '@/api/tourProgress';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import SquareCameraOverlayCapture from '@/components/common/SquareCameraOverlayCapture';
+import {
+  circularDeltaDegrees,
+  headingFromSensors,
+  normalizeHeading,
+  shortestAngleDelta,
+  smoothHeading,
+} from '@/utils/compass';
+
+const COMPASS_FEEDBACK_INTERVAL_DEGREES = 10;
+const COMPASS_FEEDBACK_BAND_SHIFT = 1;
+const COMPASS_SOLVE_TOLERANCE_DEGREES = 20;
+const COMPASS_SOLVE_HOLD_MS = 1200;
+const COMPASS_SOLVE_GRACE_MS = 120;
+const COMPASS_SENSOR_UPDATE_MS = 50;
+const COMPASS_PROXIMITY_RANGE_DEGREES = 50;
+const COMPASS_HEADING_SMOOTHING_ALPHA_SLOW = 0.16;
+const COMPASS_HEADING_SMOOTHING_ALPHA_MEDIUM = 0.3;
+const COMPASS_HEADING_SMOOTHING_ALPHA_FAST = 0.45;
+const COMPASS_HEADING_SMOOTHING_MEDIUM_DELTA_DEGREES = 5;
+const COMPASS_HEADING_SMOOTHING_FAST_DELTA_DEGREES = 12;
+const COMPASS_HEADING_DEADBAND_DEGREES = 0.35;
+const COMPASS_HAPTIC_COOLDOWN_MS_BY_BAND = [120, 170, 240, 340, 480, 700];
+const COMPASS_HEADING_OFFSET_DEGREES = 0;
+const GEM_PARTICLES = [
+  { x: 42, y: 98, r: 1.8 },
+  { x: 58, y: 176, r: 1.3 },
+  { x: 84, y: 48, r: 1.6 },
+  { x: 102, y: 218, r: 2.0 },
+  { x: 156, y: 44, r: 1.4 },
+  { x: 190, y: 58, r: 2.2 },
+  { x: 214, y: 132, r: 1.5 },
+  { x: 198, y: 204, r: 1.8 },
+  { x: 36, y: 138, r: 1.2 },
+  { x: 228, y: 178, r: 2.4 },
+  { x: 122, y: 18, r: 1.5 },
+  { x: 138, y: 244, r: 1.7 },
+] as const;
+
+const GEM_COLORS = {
+  background: '#050509',
+  background2: '#0B0B14',
+  lightBackground: '#F8FAFC',
+  lightBackground2: '#E0F2FE',
+  solvedGreen: '#30D158',
+} as const;
+
+function clamp01(value: number) {
+  return Math.max(0, Math.min(1, value));
+}
+
+function getGemStatusText({
+  solved,
+  alignmentProgress,
+  resonanceLevel,
+}: {
+  solved: boolean;
+  alignmentProgress: number;
+  resonanceLevel: number;
+}) {
+  if (solved) return 'Waypoint found';
+  if (alignmentProgress > 0.72) return 'Signal locked';
+  if (alignmentProgress > 0.18) return 'Hold steady';
+  if (resonanceLevel > 0.72) return 'Strong signal';
+  if (resonanceLevel > 0.38) return 'Signal found';
+  if (resonanceLevel > 0.12) return 'Faint signal';
+  return 'Turn slowly';
+}
+
+function getGemInstructionText({
+  solved,
+  alignmentProgress,
+  resonanceLevel,
+}: {
+  solved: boolean;
+  alignmentProgress: number;
+  resonanceLevel: number;
+}) {
+  if (solved) return 'The tour waypoint is locked in.';
+  if (alignmentProgress > 0.18) return 'Keep the phone still until the beacon fills.';
+  if (resonanceLevel > 0.12) return 'Move gently and follow the stronger signal.';
+  return 'Rotate the phone slowly to search for the waypoint.';
+}
+
+function getSignalStrengthText(resonanceLevel: number, solved: boolean) {
+  if (solved) return 'Locked';
+  if (resonanceLevel > 0.72) return 'Strong';
+  if (resonanceLevel > 0.38) return 'Good';
+  if (resonanceLevel > 0.12) return 'Weak';
+  return 'Searching';
+}
+
+function getBeaconActionText({
+  solved,
+  aligned,
+  hasHeading,
+}: {
+  solved: boolean;
+  aligned: boolean;
+  hasHeading: boolean;
+}) {
+  if (solved) return 'Waypoint locked';
+  if (aligned) return 'Hold steady';
+  if (!hasHeading) return 'Move gently';
+  return 'Scan slowly';
+}
 
 interface StoryStepViewProps {
   step: StoryStep;
@@ -112,23 +223,23 @@ function MultipleChoiceView({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const shakeAnim = useRef(new Animated.Value(0)).current;
-  const bounceAnim = useRef(new Animated.Value(1)).current;
+  const shakeAnim = useRef(new RNAnimated.Value(0)).current;
+  const bounceAnim = useRef(new RNAnimated.Value(1)).current;
 
   const runShake = () => {
-    Animated.sequence([
-      Animated.timing(shakeAnim, { toValue: 10, duration: 55, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -10, duration: 55, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 8, duration: 55, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -8, duration: 55, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 0, duration: 55, useNativeDriver: true }),
+    RNAnimated.sequence([
+      RNAnimated.timing(shakeAnim, { toValue: 10, duration: 55, useNativeDriver: true }),
+      RNAnimated.timing(shakeAnim, { toValue: -10, duration: 55, useNativeDriver: true }),
+      RNAnimated.timing(shakeAnim, { toValue: 8, duration: 55, useNativeDriver: true }),
+      RNAnimated.timing(shakeAnim, { toValue: -8, duration: 55, useNativeDriver: true }),
+      RNAnimated.timing(shakeAnim, { toValue: 0, duration: 55, useNativeDriver: true }),
     ]).start();
   };
 
   const runBounce = () => {
-    Animated.sequence([
-      Animated.spring(bounceAnim, { toValue: 1.05, useNativeDriver: true, speed: 30 }),
-      Animated.spring(bounceAnim, { toValue: 1, useNativeDriver: true, speed: 20 }),
+    RNAnimated.sequence([
+      RNAnimated.spring(bounceAnim, { toValue: 1.05, useNativeDriver: true, speed: 30 }),
+      RNAnimated.spring(bounceAnim, { toValue: 1, useNativeDriver: true, speed: 20 }),
     ]).start();
   };
 
@@ -230,7 +341,7 @@ function MultipleChoiceView({
               : undefined;
 
           return (
-            <Animated.View key={option.id} style={animStyle}>
+            <RNAnimated.View key={option.id} style={animStyle}>
               <Pressable
                 style={getOptionStyle(option.id)}
                 onPress={() => handleSelectOption(option.id)}
@@ -246,7 +357,7 @@ function MultipleChoiceView({
                 </View>
                 <Text style={styles.optionText}>{option.text}</Text>
               </Pressable>
-            </Animated.View>
+            </RNAnimated.View>
           );
         })}
       </View>
@@ -665,6 +776,379 @@ interface PuzzleStepViewProps {
   onAnswered?: () => void;
 }
 
+interface CompassViewProps {
+  puzzle: CompassBearingPuzzle;
+  isSolved: boolean;
+  onSolve: () => void;
+}
+
+function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
+  const theme = useColorTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+  const solvedRef = useRef(isSolved);
+  const nextPulseAtMsRef = useRef(0);
+  const holdStartedAtMsRef = useRef<number | null>(null);
+  const lastInWindowAtMsRef = useRef<number | null>(null);
+  const gravityRef = useRef<{ x: number; y: number; z: number } | null>(null);
+  const filteredHeadingRef = useRef<number | null>(null);
+  const [heading, setHeading] = useState<number | null>(null);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const [resonanceLevel, setResonanceLevel] = useState(0);
+  const proximityProgress = useSharedValue(0);
+  const holdProgressShared = useSharedValue(0);
+  const solvedShared = useSharedValue(isSolved ? 1 : 0);
+  const targetHeading = normalizeHeading(puzzle.targetHeadingDegrees);
+
+  const gemStageAnimatedStyle = useAnimatedStyle(() => {
+    const solvedScale = solvedShared.value > 0.5 ? 1.06 : 1 + holdProgressShared.value * 0.04;
+    return {
+      transform: [{ scale: withTiming(solvedScale, { duration: 220 }) }],
+    };
+  });
+
+  useEffect(() => {
+    solvedRef.current = isSolved;
+    solvedShared.value = withTiming(isSolved ? 1 : 0, { duration: 220 });
+  }, [isSolved, solvedShared]);
+
+  useEffect(() => {
+    holdProgressShared.value = withTiming(holdProgress, { duration: 200 });
+  }, [holdProgress, holdProgressShared]);
+
+  useEffect(() => {
+    Magnetometer.setUpdateInterval(COMPASS_SENSOR_UPDATE_MS);
+    Accelerometer.setUpdateInterval(COMPASS_SENSOR_UPDATE_MS);
+
+    const accelerometerSubscription = Accelerometer.addListener(({ x, y, z }) => {
+      gravityRef.current = { x, y, z };
+    });
+
+    const subscription = Magnetometer.addListener(({ x, y, z }) => {
+      const rawHeading = headingFromSensors(
+        { x, y, z },
+        gravityRef.current,
+        COMPASS_HEADING_OFFSET_DEGREES
+      );
+      const nextHeading =
+        filteredHeadingRef.current === null
+          ? rawHeading
+          : (() => {
+              const turnDelta = Math.abs(
+                shortestAngleDelta(filteredHeadingRef.current as number, rawHeading)
+              );
+              const alpha =
+                turnDelta > COMPASS_HEADING_SMOOTHING_FAST_DELTA_DEGREES
+                  ? COMPASS_HEADING_SMOOTHING_ALPHA_FAST
+                  : turnDelta > COMPASS_HEADING_SMOOTHING_MEDIUM_DELTA_DEGREES
+                    ? COMPASS_HEADING_SMOOTHING_ALPHA_MEDIUM
+                    : COMPASS_HEADING_SMOOTHING_ALPHA_SLOW;
+              return smoothHeading(
+                filteredHeadingRef.current as number,
+                rawHeading,
+                alpha,
+                COMPASS_HEADING_DEADBAND_DEGREES
+              );
+            })();
+      filteredHeadingRef.current = nextHeading;
+      setHeading(nextHeading);
+    });
+
+    const appStateSub = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') {
+        nextPulseAtMsRef.current = 0;
+      }
+    });
+
+    return () => {
+      subscription.remove();
+      accelerometerSubscription.remove();
+      appStateSub.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (heading === null || solvedRef.current) {
+      return;
+    }
+
+    const delta = circularDeltaDegrees(heading, targetHeading);
+    const proximityLinear = Math.max(0, 1 - delta / COMPASS_PROXIMITY_RANGE_DEGREES);
+    const proximity = Math.pow(proximityLinear, 1.6);
+    proximityProgress.value = proximity;
+    setResonanceLevel(proximity);
+
+    const now = Date.now();
+    if (delta <= COMPASS_SOLVE_TOLERANCE_DEGREES) {
+      if (holdStartedAtMsRef.current === null) {
+        holdStartedAtMsRef.current = now;
+      }
+      lastInWindowAtMsRef.current = now;
+
+      const heldFor = now - holdStartedAtMsRef.current;
+      const progress = Math.min(1, heldFor / COMPASS_SOLVE_HOLD_MS);
+      setHoldProgress(progress);
+
+      if (heldFor >= COMPASS_SOLVE_HOLD_MS) {
+        solvedRef.current = true;
+        setHoldProgress(1);
+        solvedShared.value = withTiming(1, { duration: 220 });
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        onSolve();
+      }
+    } else {
+      const leftWindowAt = lastInWindowAtMsRef.current;
+      const stillWithinGrace =
+        leftWindowAt !== null && now - leftWindowAt <= COMPASS_SOLVE_GRACE_MS;
+      if (!stillWithinGrace) {
+        holdStartedAtMsRef.current = null;
+        lastInWindowAtMsRef.current = null;
+        setHoldProgress(0);
+      }
+    }
+
+    if (solvedRef.current) {
+      solvedRef.current = true;
+      return;
+    }
+
+    const band = Math.max(
+      0,
+      Math.floor(delta / COMPASS_FEEDBACK_INTERVAL_DEGREES) - COMPASS_FEEDBACK_BAND_SHIFT
+    );
+    const clampedBand = Math.min(band, COMPASS_HAPTIC_COOLDOWN_MS_BY_BAND.length - 1);
+    if (now >= nextPulseAtMsRef.current) {
+      if (clampedBand <= 1) {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } else if (clampedBand <= 3) {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      } else {
+        void Haptics.selectionAsync();
+      }
+      nextPulseAtMsRef.current = now + COMPASS_HAPTIC_COOLDOWN_MS_BY_BAND[clampedBand];
+    }
+  }, [heading, onSolve, proximityProgress, solvedShared, targetHeading]);
+
+  const solved = isSolved || solvedRef.current;
+  const resonance = clamp01(resonanceLevel);
+  const progress = solved ? 1 : clamp01(holdProgress);
+  const absoluteDelta = heading === null ? null : circularDeltaDegrees(heading, targetHeading);
+  const isAligned =
+    solved || (absoluteDelta !== null && absoluteDelta <= COMPASS_SOLVE_TOLERANCE_DEGREES);
+  const signalStrengthText = getSignalStrengthText(resonance, solved);
+  const beaconActionText = getBeaconActionText({
+    solved,
+    aligned: isAligned,
+    hasHeading: heading !== null,
+  });
+  const guidanceText = isAligned ? 'Hold to lock' : 'Rotate slowly';
+  const holdPercent = Math.round(progress * 100);
+  const statusText = getGemStatusText({
+    solved,
+    alignmentProgress: progress,
+    resonanceLevel: resonance,
+  });
+  const instructionText = getGemInstructionText({
+    solved,
+    alignmentProgress: progress,
+    resonanceLevel: resonance,
+  });
+
+  const glowOpacity = solved ? 0.42 : 0.04 + resonance * 0.22 + progress * 0.16;
+  const glowRadius = solved ? 128 : 74 + resonance * 46 + progress * 24;
+  const ringOpacity = solved ? 0.5 : 0.04 + resonance * 0.28;
+  const particleOpacity = solved ? 0.95 : resonance * 0.75;
+  const beaconCoreRadius = 22 + progress * 17;
+  const markerFillOpacity = 0.1 + resonance * 0.16 + progress * 0.26;
+  const activeStrokeOpacity = 0.34 + resonance * 0.26 + progress * 0.18;
+  const beaconColor = Colors[theme].primary;
+  const beaconHighlightColor = Colors[theme].white;
+  const beaconBackgroundColor =
+    theme === 'dark' ? GEM_COLORS.background : GEM_COLORS.lightBackground;
+  const beaconBackgroundAccentColor =
+    theme === 'dark' ? GEM_COLORS.background2 : GEM_COLORS.lightBackground2;
+
+  return (
+    <View>
+      <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
+      <View style={styles.gemPuzzleFrame}>
+        <View style={styles.gemHeader}>
+          <Text style={styles.gemTitle}>Find the Waypoint</Text>
+          <Text style={styles.gemSubtitle}>Rotate your phone until the tour beacon locks on.</Text>
+        </View>
+
+        <View style={styles.gemGuideCard}>
+          <View style={styles.gemCueRow}>
+            <View style={[styles.gemCueIcon, isAligned && styles.gemCueIconAligned]}>
+              <MaterialCommunityIcons
+                name={isAligned ? 'check' : 'radar'}
+                size={24}
+                color={isAligned ? GEM_COLORS.background : beaconColor}
+              />
+            </View>
+            <View style={styles.gemCueCopy}>
+              <Text style={styles.gemCueLabel}>Beacon status</Text>
+              <Text style={styles.gemCueText}>{beaconActionText}</Text>
+            </View>
+            <Text style={styles.gemAccuracyText}>{signalStrengthText}</Text>
+          </View>
+
+          <View style={styles.gemReadoutRow}>
+            <View style={styles.gemReadoutItem}>
+              <Text style={styles.gemReadoutLabel}>Signal</Text>
+              <Text style={styles.gemReadoutValue}>{signalStrengthText}</Text>
+            </View>
+            <View style={styles.gemReadoutDivider} />
+            <View style={styles.gemReadoutItem}>
+              <Text style={styles.gemReadoutLabel}>Goal</Text>
+              <Text style={styles.gemReadoutValue}>{guidanceText}</Text>
+            </View>
+          </View>
+        </View>
+
+        <Reanimated.View style={[styles.gemStage, gemStageAnimatedStyle]}>
+          <Svg width={280} height={280} viewBox="0 0 260 260">
+            <Defs>
+              <LinearGradient id="gemFillGradient" x1="0" y1="232" x2="0" y2="28">
+                <Stop offset="0" stopColor={beaconColor} stopOpacity="0.72" />
+                <Stop offset="0.55" stopColor={beaconColor} stopOpacity="0.95" />
+                <Stop offset="1" stopColor={beaconHighlightColor} stopOpacity="0.9" />
+              </LinearGradient>
+              <LinearGradient id="solvedFillGradient" x1="0" y1="232" x2="0" y2="28">
+                <Stop offset="0" stopColor={GEM_COLORS.solvedGreen} stopOpacity="0.95" />
+                <Stop offset="0.55" stopColor={beaconColor} stopOpacity="0.95" />
+                <Stop offset="1" stopColor={beaconHighlightColor} stopOpacity="0.95" />
+              </LinearGradient>
+              <LinearGradient id="vignetteGradient" x1="0" y1="0" x2="1" y2="1">
+                <Stop offset="0" stopColor={beaconBackgroundAccentColor} stopOpacity="0.9" />
+                <Stop offset="1" stopColor={beaconBackgroundColor} stopOpacity="1" />
+              </LinearGradient>
+            </Defs>
+
+            <Rect x={0} y={0} width={260} height={260} fill="url(#vignetteGradient)" />
+
+            <Circle
+              cx={130}
+              cy={130}
+              r={glowRadius}
+              fill={solved ? GEM_COLORS.solvedGreen : beaconColor}
+              opacity={glowOpacity}
+            />
+            <Circle
+              cx={130}
+              cy={130}
+              r={glowRadius * 0.7}
+              fill={beaconColor}
+              opacity={glowOpacity * 0.45}
+            />
+
+            <Circle
+              cx={130}
+              cy={130}
+              r={82}
+              fill="none"
+              stroke={beaconColor}
+              strokeWidth={2.4}
+              opacity={ringOpacity}
+            />
+            <Circle
+              cx={130}
+              cy={130}
+              r={106}
+              fill="none"
+              stroke={beaconColor}
+              strokeWidth={2}
+              strokeDasharray="34 22"
+              opacity={ringOpacity * 0.7}
+            />
+            <Circle
+              cx={130}
+              cy={130}
+              r={128}
+              fill="none"
+              stroke={beaconColor}
+              strokeWidth={1.6}
+              strokeDasharray="48 30"
+              opacity={ringOpacity * 0.45}
+            />
+
+            {GEM_PARTICLES.map((particle, index) => (
+              <Circle
+                key={`particle-${index}`}
+                cx={particle.x}
+                cy={particle.y}
+                r={particle.r * (solved ? 1.35 : 0.75 + resonance * 0.65)}
+                fill={solved && index % 3 === 0 ? GEM_COLORS.solvedGreen : beaconColor}
+                opacity={particleOpacity}
+              />
+            ))}
+
+            <Path
+              d="M130 42 C94 42 66 70 66 106 C66 154 130 222 130 222 C130 222 194 154 194 106 C194 70 166 42 130 42 Z"
+              fill={solved ? 'url(#solvedFillGradient)' : 'url(#gemFillGradient)'}
+              opacity={markerFillOpacity}
+              stroke={`rgba(255,255,255,${activeStrokeOpacity.toFixed(3)})`}
+              strokeWidth={3}
+            />
+            <Circle
+              cx={130}
+              cy={106}
+              r={46}
+              fill={beaconBackgroundColor}
+              stroke={solved ? GEM_COLORS.solvedGreen : beaconColor}
+              strokeWidth={3}
+              opacity={0.95}
+            />
+            <Circle
+              cx={130}
+              cy={106}
+              r={beaconCoreRadius}
+              fill={solved ? GEM_COLORS.solvedGreen : beaconColor}
+              opacity={0.82}
+            />
+            <Path
+              d="M130 82 L142 106 L130 130 L118 106 Z"
+              fill={beaconHighlightColor}
+              opacity={0.68 + progress * 0.25}
+            />
+            <Circle
+              cx={130}
+              cy={106}
+              r={70 + progress * 8}
+              fill="none"
+              stroke={solved ? GEM_COLORS.solvedGreen : beaconColor}
+              strokeWidth={3}
+              opacity={ringOpacity}
+            />
+            {solved && (
+              <Circle
+                cx={130}
+                cy={106}
+                r={86}
+                fill="none"
+                stroke={GEM_COLORS.solvedGreen}
+                strokeWidth={5}
+                opacity={0.5}
+              />
+            )}
+          </Svg>
+        </Reanimated.View>
+
+        <Text style={styles.gemStatus}>{statusText}</Text>
+        <Text style={styles.gemInstruction}>{instructionText}</Text>
+        <View style={styles.gemHoldCard}>
+          <View style={styles.gemHoldHeader}>
+            <Text style={styles.gemHoldLabel}>Hold progress</Text>
+            <Text style={styles.gemHoldValue}>{holdPercent}%</Text>
+          </View>
+          <View style={styles.gemHoldTrack}>
+            <View style={[styles.gemHoldFill, { width: `${holdPercent}%` }]} />
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -726,6 +1210,8 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
           onAnswered={onAnswered}
           stepId={step.id}
         />
+      ) : step.puzzle.type === 'compass-bearing' ? (
+        <CompassView key={step.id} puzzle={step.puzzle} isSolved={isSolved} onSolve={onSolve} />
       ) : (
         <PictureCompareView
           key={step.id}

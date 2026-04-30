@@ -6,6 +6,7 @@ import {
   createTourStep,
   deleteTour,
   setStepArPuzzle,
+  setStepCompassPuzzle,
   setStepGyroscopePuzzle,
   setStepPictureComparePuzzle,
   setStepTriviaPuzzle,
@@ -152,7 +153,22 @@ export default function TourReviewScreen() {
               }
 
               if (loc.puzzle.puzzle_type === 'GYROSCOPE') {
-                await setStepGyroscopePuzzle(createdTourId, createdStep.id, basePayload);
+                await setStepGyroscopePuzzle(tour.id, createdStep.id, basePayload);
+                continue;
+              }
+
+              if (loc.puzzle.puzzle_type === 'COMPASS') {
+                if (
+                  typeof loc.puzzle.targetHeadingDegrees !== 'number' ||
+                  !Number.isInteger(loc.puzzle.targetHeadingDegrees)
+                ) {
+                  throw new Error('COMPASS puzzles require a valid integer target heading.');
+                }
+
+                await setStepCompassPuzzle(tour.id, createdStep.id, {
+                  ...basePayload,
+                  target_heading_degrees: ((loc.puzzle.targetHeadingDegrees % 360) + 360) % 360,
+                });
               }
             }
 
@@ -184,7 +200,7 @@ export default function TourReviewScreen() {
                 await deleteTour(createdTourId);
               } catch (deleteError) {
                 console.error(
-                  'Turu silerken de hata oluştu (Yetim tur kalmış olabilir):',
+                  'Error on deleting tour',
                   deleteError
                 );
               }
