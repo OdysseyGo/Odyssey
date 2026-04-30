@@ -9,6 +9,7 @@ from rest_framework.test import APITestCase
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
+    CompassPuzzleDetail,
     GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
     Puzzle,
@@ -256,3 +257,67 @@ class PuzzleTypeEndpointTests(APITestCase):
         detail = GyroscopePuzzleDetail.objects.get(puzzle=puzzle)
         self.assertEqual(detail.tolerance_degrees, 12.0)
         self.assertEqual(puzzle.xp_reward, 50)
+
+    def test_set_compass_puzzle_creates_compass_detail(self):
+        response = self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-compass-puzzle/",
+            {
+                "question": "Face north-west target",
+                "hint": "Rotate slowly",
+                "xp_reward": 20,
+                "target_heading_degrees": 238,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["puzzle_type"], Puzzle.COMPASS)
+        self.assertEqual(response.data["compass"]["target_heading_degrees"], 238)
+
+        puzzle = Puzzle.objects.get(step=self.step)
+        detail = CompassPuzzleDetail.objects.get(puzzle=puzzle)
+        self.assertEqual(detail.target_heading_degrees, 238)
+
+    def test_set_compass_puzzle_rejects_out_of_range_heading(self):
+        response = self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-compass-puzzle/",
+            {
+                "question": "Face north-west target",
+                "hint": "Rotate slowly",
+                "xp_reward": 20,
+                "target_heading_degrees": 360,
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_switching_from_compass_to_trivia_clears_compass_detail(self):
+        self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-compass-puzzle/",
+            {
+                "question": "Face north-west target",
+                "hint": "Rotate slowly",
+                "xp_reward": 20,
+                "target_heading_degrees": 238,
+            },
+            format="json",
+        )
+
+        response = self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-trivia-puzzle/",
+            {
+                "question": "Which one is correct?",
+                "hint": "Pick A",
+                "xp_reward": 15,
+                "options": ["A", "B", "C"],
+                "correct_answer": "A",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        puzzle = Puzzle.objects.get(step=self.step)
+        self.assertFalse(
+            CompassPuzzleDetail.objects.filter(puzzle=puzzle).exists(),
+            "Switching puzzle type should remove stale COMPASS detail rows.",
+        )

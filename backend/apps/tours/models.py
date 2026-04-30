@@ -200,12 +200,14 @@ class Puzzle(models.Model):
     PICTURE_COMPARE = "PICTURE_COMPARE"
     TRIVIA_XP_REWARD = 25
     NON_TRIVIA_XP_REWARD = 50
+    COMPASS = "COMPASS"
 
     PUZZLE_TYPE_CHOICES = [
         (TRIVIA, "Trivia"),
         (AR, "Augmented Reality"),
         (GYROSCOPE, "Gyroscope"),
         (PICTURE_COMPARE, "Picture Compare"),
+        (COMPASS, "Compass"),
     ]
 
     step = models.OneToOneField(
@@ -322,6 +324,38 @@ class GyroscopePuzzleDetail(models.Model):
 
     def __str__(self):
         return f"Gyroscope detail for puzzle {self.puzzle.pk}"
+
+
+class CompassPuzzleDetail(models.Model):
+    puzzle = models.OneToOneField(
+        Puzzle,
+        on_delete=models.CASCADE,
+        related_name="compass_detail",
+    )
+    target_heading_degrees = models.PositiveSmallIntegerField(default=0)
+
+    def clean(self):
+        if self.puzzle.puzzle_type != Puzzle.COMPASS:
+            raise ValidationError(
+                {
+                    "puzzle": (
+                        "CompassPuzzleDetail can only be attached to "
+                        "COMPASS puzzles."
+                    )
+                }
+            )
+
+        if not 0 <= self.target_heading_degrees <= 359:
+            raise ValidationError(
+                {
+                    "target_heading_degrees": (
+                        "target_heading_degrees must be between 0 and 359."
+                    )
+                }
+            )
+
+    def __str__(self):
+        return f"Compass detail for puzzle {self.puzzle.pk}"
 
 
 class Review(models.Model):

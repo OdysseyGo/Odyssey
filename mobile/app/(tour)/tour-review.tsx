@@ -5,6 +5,7 @@ import {
   createTour,
   createTourStep,
   setStepArPuzzle,
+  setStepCompassPuzzle,
   setStepGyroscopePuzzle,
   setStepPictureComparePuzzle,
   setStepTriviaPuzzle,
@@ -145,6 +146,21 @@ export default function TourReviewScreen() {
 
               if (loc.puzzle.puzzle_type === 'GYROSCOPE') {
                 await setStepGyroscopePuzzle(tour.id, createdStep.id, basePayload);
+                continue;
+              }
+
+              if (loc.puzzle.puzzle_type === 'COMPASS') {
+                if (
+                  typeof loc.puzzle.targetHeadingDegrees !== 'number' ||
+                  !Number.isInteger(loc.puzzle.targetHeadingDegrees)
+                ) {
+                  throw new Error('COMPASS puzzles require a valid integer target heading.');
+                }
+
+                await setStepCompassPuzzle(tour.id, createdStep.id, {
+                  ...basePayload,
+                  target_heading_degrees: ((loc.puzzle.targetHeadingDegrees % 360) + 360) % 360,
+                });
               }
             }
 
