@@ -353,16 +353,11 @@ class TourSerializer(serializers.ModelSerializer):
             "average_rating",
         ]
         read_only_fields = [
-            
             "creator",
-           
             "created_at",
-           
             "updated_at",
-           
             "average_rating",
             "cover_image_attribution",
-        ,
             "total_distance",
             "walking_distance",
             "elevation_gain",

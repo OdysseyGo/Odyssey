@@ -5,15 +5,18 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { aiTourCreationStyles } from './ai-tour-creation.styles';
 import {
   FormInputGroup,
+  FormTextInput,
   FormTextArea,
   FormChipSelect,
   FormOptionCard,
   FormDurationPicker,
   FormLocationSelect,
+  TOUR_CATEGORIES,
   TOUR_TEXT_FIELD_MAX_LENGTH,
 } from '@/components/TourCreation';
 import {
   AICreationHeader,
+  ThemeSuggestions,
   LanguageSelector,
   GenerateButton,
   LoadingOverlay,
