@@ -2,6 +2,7 @@
 import { useLocalSearchParams, router } from 'expo-router';
 import { Alert } from 'react-native';
 import { useState } from 'react';
+import * as Location from 'expo-location';
 import {
   TourDetailScreen,
   TourDetailScreenLoading,
@@ -24,30 +25,51 @@ export default function TourDetailPage() {
   const [starting, setStarting] = useState(false);
 
   const handleStartTour = async () => {
-    const loggedIn = await isLoggedIn();
-    if (!loggedIn) {
-      Alert.alert(t('tourId.loginRequired'), t('tourId.loginRequiredMessage'), [
-        { text: t('tourId.cancel'), style: 'cancel' },
-        { text: t('tourId.login'), onPress: () => router.push('/login') },
-      ]);
-      return;
-    }
+    if (starting) return;
 
-    // Then check if user has an active tour
-    const activeProgress = await getInProgressTour();
-
-    if (activeProgress && activeProgress.id) {
-      Alert.alert(
-        t('tourId.tourInProgressTitle', 'Tour in Progress'),
-        t(
-          'tourId.tourInProgressMessage',
-          'You already have an active tour! Please finish or quit it before starting a new one.'
-        )
-      );
-      return;
-    }
-
+    setStarting(true);
     try {
+      const loggedIn = await isLoggedIn();
+      if (!loggedIn) {
+        Alert.alert(t('tourId.loginRequired'), t('tourId.loginRequiredMessage'), [
+          { text: t('tourId.cancel'), style: 'cancel' },
+          { text: t('tourId.login'), onPress: () => router.push('/login') },
+        ]);
+        return;
+      }
+
+      // Then check if user has an active tour
+      const activeProgress = await getInProgressTour();
+
+      if (activeProgress && activeProgress.id) {
+        Alert.alert(
+          t('tourId.tourInProgressTitle', 'Tour in Progress'),
+          t(
+            'tourId.tourInProgressMessage',
+            'You already have an active tour! Please finish or quit it before starting a new one.'
+          )
+        );
+        return;
+      }
+
+      const permission = await Location.getForegroundPermissionsAsync();
+      const locationStatus =
+        permission.status === 'granted'
+          ? permission.status
+          : (await Location.requestForegroundPermissionsAsync()).status;
+
+      if (locationStatus !== 'granted') {
+        Alert.alert(t('tourId.locationRequiredTitle'), t('tourId.locationRequiredMessage'));
+        return;
+      }
+
+      try {
+        await Location.getCurrentPositionAsync({});
+      } catch {
+        Alert.alert(t('tourId.locationRequiredTitle'), t('tourId.locationUnavailableMessage'));
+        return;
+      }
+
       if (id) {
         const tourIdNum = parseInt(id, 10);
         const tourData = await getTour(tourIdNum);
@@ -73,6 +95,8 @@ export default function TourDetailPage() {
           t('tourId.errorMessage', 'Could not start the tour. Please try again.')
         );
       }
+    } finally {
+      setStarting(false);
     }
   };
 

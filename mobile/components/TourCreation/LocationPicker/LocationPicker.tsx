@@ -17,12 +17,14 @@ type LocationPickerProps = {
   locations: TourLocation[];
   onLocationsChange: (locations: TourLocation[]) => void;
   onLocationSelect: (location: TourLocation) => void;
+  countryCode?: string;
 };
 
 export default function LocationPicker({
   locations,
   onLocationsChange,
   onLocationSelect,
+  countryCode,
 }: LocationPickerProps) {
   const theme = useColorTheme();
   const styles = locationPickerStyles(theme);
@@ -126,7 +128,7 @@ export default function LocationPicker({
         onMarkerPress={handleLocationPress}
         initialRegion={DEFAULT_REGION}
       />
-      <LocationSearchBar onLocationAdd={handleLocationAdd} />
+      <LocationSearchBar onLocationAdd={handleLocationAdd} countryCode={countryCode} />
       <InstructionBanner topOffset={Spacing.md + SEARCH_BAR_HEIGHT + Spacing.sm} />
       <LocationsList
         locations={locations}

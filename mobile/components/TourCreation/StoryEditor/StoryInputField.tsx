@@ -13,6 +13,7 @@ type StoryInputFieldProps = {
   hint?: string;
   multiline?: boolean;
   showCharacterCount?: boolean;
+  maxLength?: number;
 };
 
 export default function StoryInputField({
@@ -23,6 +24,7 @@ export default function StoryInputField({
   hint,
   multiline = false,
   showCharacterCount = false,
+  maxLength,
 }: StoryInputFieldProps) {
   const theme = useColorTheme();
   const styles = storyInputFieldStyles(theme);
@@ -40,11 +42,14 @@ export default function StoryInputField({
         placeholder={placeholder}
         placeholderTextColor={color.placeholderTextColor}
         multiline={multiline}
+        maxLength={maxLength}
         textAlignVertical={multiline ? 'top' : 'center'}
       />
       {showCharacterCount && (
         <Text style={styles.characterCount}>
-          {t('creation.story.characters', { count: value.length })}
+          {maxLength
+            ? `${value.length}/${maxLength}`
+            : t('creation.story.characters', { count: value.length })}
         </Text>
       )}
     </View>

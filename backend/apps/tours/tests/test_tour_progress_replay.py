@@ -51,6 +51,7 @@ class TourProgressReplayTests(APITestCase):
             completed_at=timezone.now(),
             total_xp=120,
             skip_count=3,
+            wrong_attempt_count=2,
         )
 
         response = self.client.post(
@@ -68,6 +69,7 @@ class TourProgressReplayTests(APITestCase):
         self.assertIsNone(progress.completed_at)
         self.assertEqual(progress.total_xp, 0)
         self.assertEqual(progress.skip_count, 0)
+        self.assertEqual(progress.wrong_attempt_count, 0)
 
         self.assertEqual(
             TourProgress.objects.filter(user=self.user, tour=self.tour).count(),
