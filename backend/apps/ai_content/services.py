@@ -564,7 +564,9 @@ class GeminiService:
         if not photo_url:
             return None
         try:
-            with urlopen(photo_url, timeout=cls.PLACE_PHOTO_TIMEOUT_SECONDS) as response:
+            with urlopen(
+                photo_url, timeout=cls.PLACE_PHOTO_TIMEOUT_SECONDS
+            ) as response:
                 content_type = response.headers.get("Content-Type", "")
                 content = response.read(cls.PLACE_PHOTO_MAX_BYTES + 1)
             if not content or len(content) > cls.PLACE_PHOTO_MAX_BYTES:

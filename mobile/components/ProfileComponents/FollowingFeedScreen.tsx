@@ -64,10 +64,7 @@ const FeedCard = React.memo(function FeedCard({ item, styles, color, t }: FeedCa
         activeOpacity={1}
       >
         {item.tour.cover_image ? (
-          <Image
-            source={{ uri: item.tour.cover_image }}
-            style={styles.image}
-          />
+          <Image source={{ uri: item.tour.cover_image }} style={styles.image} />
         ) : (
           <View style={styles.imagePlaceholder}>
             <Ionicons name="map-outline" size={52} color={color.subText} />

@@ -156,9 +156,7 @@ export type Tour = {
   average_rating?: number;
 };
 
-export function getTourImageUri(
-  tour: Pick<Tour, 'id' | 'cover_image' | 'creator'>
-): string {
+export function getTourImageUri(tour: Pick<Tour, 'id' | 'cover_image' | 'creator'>): string {
   return tour.cover_image || '';
 }
 
