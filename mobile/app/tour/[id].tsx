@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { createTourProgress, getInProgressTour } from '@/api/tourProgress';
 
 export default function TourDetailPage() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, reveal } = useLocalSearchParams<{ id: string; reveal?: string }>();
   const { tour, showAllStops, loading, error, fetchTour } = useTourDetailScreen(id || '');
   const { startTour } = useActiveTour();
   const { t } = useTranslation();
@@ -113,7 +113,7 @@ export default function TourDetailPage() {
       tour={tour}
       onStartTour={handleStartTour}
       starting={starting}
-      showAllStops={showAllStops}
+      showAllStops={showAllStops || reveal === 'completed'}
     />
   );
 }

@@ -76,10 +76,7 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
     if (apiStep.puzzle) {
       const puzzle = mapApiPuzzleToInternal(apiStep.puzzle);
       if (puzzle) {
-        const description =
-          apiTour.tour_type === 'HYBRID' && apiStep.description
-            ? apiStep.description
-            : undefined;
+        const description = apiStep.description?.trim() ? apiStep.description : undefined;
 
         return {
           ...baseStep,
@@ -106,6 +103,7 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
     description: apiTour.description,
     coverImageUri:
       apiTour.steps?.[0]?.image || `https://picsum.photos/800/400?random=${apiTour.id}`,
+    hasCompletedOnce: Boolean(apiTour.user_has_completed_once),
     steps,
   };
 }

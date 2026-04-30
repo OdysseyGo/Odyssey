@@ -436,6 +436,55 @@ class TestGenerateTour(TestCase):
 
     @patch("apps.ai_content.services.GoogleMapsFacade")
     @patch("apps.ai_content.services.genai")
+    def test_ai_trivia_output_strips_inlined_multiple_choice_labels(
+        self, mock_genai, mock_maps_cls
+    ):
+        """Gemini sometimes embeds A)/B)/C) choices in the question text."""
+        tour_data = _valid_tour_json(include_puzzles=True)
+        tour_data["steps"][0]["puzzle"] = {
+            "type": "TRIVIA",
+            "question": (
+                "When was Hagia Sophia completed? "
+                "A) 537 AD B) 1453 AD C) 1935 AD D) 325 AD"
+            ),
+            "options": ["A) 537 AD", "B) 1453 AD", "C) 1935 AD", "D) 325 AD"],
+            "answer": "A) 537 AD",
+            "hint": "Commissioned by Justinian I.",
+            "xp": 20,
+        }
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
+
+        creator = self._make_creator()
+        service = GeminiService()
+        tour = service.generate_tour(
+            city="Istanbul",
+            theme="History",
+            mode="PUZZLE",
+            duration=60,
+            language="en",
+            creator=creator,
+        )
+
+        puzzle = Puzzle.objects.get(step__tour=tour, step__title="Hagia Sophia")
+        assert puzzle.question == "When was Hagia Sophia completed?"
+        assert puzzle.trivia_detail.options == [
+            "537 AD",
+            "1453 AD",
+            "1935 AD",
+            "325 AD",
+        ]
+        assert puzzle.trivia_detail.correct_answer == "537 AD"
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
     def test_no_fallback_in_story_mode(self, mock_genai, mock_maps_cls):
         """In STORY mode, missing puzzle data should NOT create puzzles."""
         tour_data = _valid_tour_json(include_puzzles=False)

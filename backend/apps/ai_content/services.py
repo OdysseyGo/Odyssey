@@ -21,6 +21,8 @@ from apps.tours.models import (
 from apps.tours.utils import GoogleMapsFacade
 
 AR_SECRET_CODE_REGEX = re.compile(r"^[A-Za-z0-9]{4,12}$")
+TRIVIA_OPTION_LABEL_REGEX = re.compile(r"\b[A-H][).:]\s+\S")
+TRIVIA_OPTION_PREFIX_REGEX = re.compile(r"^\s*[A-H][).:]\s*")
 AR_MIN_SCALE = 0.3
 AR_MAX_SCALE = 10.0
 AR_DEFAULT_SCALE = 1.0
@@ -311,8 +313,14 @@ class GeminiService:
         if not isinstance(options, list):
             options = []
 
-        options = [str(option).strip() for option in options if str(option).strip()]
-        answer = str(answer).strip() or title
+        options = [
+            GeminiService._clean_trivia_option(option)
+            for option in options
+            if str(option).strip()
+        ]
+        options = [option for option in options if option]
+        answer = GeminiService._clean_trivia_option(answer) or title
+        question = GeminiService._clean_trivia_question(question)
 
         if answer not in options:
             options.insert(0, answer)
@@ -327,12 +335,26 @@ class GeminiService:
         return {
             **puzzle_data,
             "type": Puzzle.TRIVIA,
-            "question": str(question).strip(),
+            "question": question,
             "options": options[:4],
             "answer": answer,
             "hint": puzzle_data.get("hint", ""),
             "xp": puzzle_data.get("xp", 25),
         }
+
+    @staticmethod
+    def _clean_trivia_question(question: object) -> str:
+        """Remove AI-inlined multiple-choice labels from a trivia question."""
+        text = str(question).strip()
+        matches = list(TRIVIA_OPTION_LABEL_REGEX.finditer(text))
+        if len(matches) >= 2:
+            text = text[: matches[0].start()].strip()
+        return text
+
+    @staticmethod
+    def _clean_trivia_option(option: object) -> str:
+        """Remove leading option labels such as A), B., or C: from answers."""
+        return TRIVIA_OPTION_PREFIX_REGEX.sub("", str(option)).strip()
 
     # ------------------------------------------------------------------
     # Place Discovery (RAG — Retrieval Step)
@@ -605,7 +627,7 @@ class GeminiService:
         """
         mode_instructions = {
             "STORY": "Focus on rich narrative storytelling. Each step should have detailed historical or thematic descriptions that immerse the user in the story. No puzzles needed.",
-            "PUZZLE": "Focus on interactive challenges. Each step MUST have a puzzle (trivia question or AR). Keep descriptions brief. Some trivia questions should be formatted as a riddle, others should be normal trivia questions. Make the options challenging.",
+            "PUZZLE": "Focus on interactive challenges, but every step still needs a short story/narrative description before the puzzle. Each step MUST have a puzzle (trivia question or AR). Some trivia questions should be formatted as a riddle, others should be normal trivia questions. Make the options challenging.",
             "HYBRID": "Balance storytelling with puzzles. Each step should have both a narrative description AND a puzzle challenge.",
         }
 
@@ -680,6 +702,8 @@ CRITICAL RULES:
 3. Use the EXACT name and GPS coordinates provided in the list above.
 4. ROUTE COHERENCE: Arrange the selected stops as a smooth itinerary with no big jumps. Consecutive stops should be close to each other (ideally under ~1.5 km / 20 min walk apart) and the path should flow in one general direction or loop — NOT zigzag back and forth between far-apart areas. If a location is far from the others, either skip it or visit it at the start/end so it doesn't break the flow. Use the "[~Xm from area centre]" labels and the GPS coordinates to plan the order.
 5. Write engaging, theme-connected narrative content for each selected location.
+6. For trivia puzzles, keep the question text separate from the choices. Do NOT put answer choices or labels like "A)", "B)", "C)", or "D)" inside the "question" field. Put choices only in the "options" array, without letter prefixes.
+7. For PUZZLE and HYBRID modes, every step must include both a non-empty "description" story and a "puzzle" challenge in the same step.
 
 OUTPUT FORMAT (strict JSON):
 {{

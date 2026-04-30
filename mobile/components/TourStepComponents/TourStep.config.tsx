@@ -77,6 +77,7 @@ export interface Tour {
   title: string;
   description: string;
   coverImageUri: string;
+  hasCompletedOnce?: boolean;
   steps: TourStep[];
 }
 
