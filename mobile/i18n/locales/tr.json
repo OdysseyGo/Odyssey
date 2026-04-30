@@ -534,6 +534,10 @@
       "puzzleDesc": "Her konumda etkileşimli meydan okumalar ve bilgi soruları",
       "hybrid": "Hibrit Mod",
       "hybridDesc": "Her ikisinin en iyisi - ilgi çekici hikayeler ve eğlenceli bulmacalar"
+    },
+    "includeAr": {
+      "title": "AR Bulmacalarını Dahil Et",
+      "subtitle": "Yapay zekanın uygun olan duraklara artırılmış gerçeklik bulmacaları eklemesine izin verin"
     }
   },
   "tourStep": {
