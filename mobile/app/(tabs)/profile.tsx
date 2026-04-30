@@ -531,7 +531,7 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
   };
 
   const profileStats = {
-    xp: curUser.xp,
+    km: Number(curUser.total_walked_km ?? 0),
     tours: curUser.tour_count,
     badges: badgesCount,
     followers: curUser.follower_count,

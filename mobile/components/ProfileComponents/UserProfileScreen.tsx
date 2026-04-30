@@ -355,7 +355,7 @@ export default function UserProfileScreen() {
 
         {/* Stats card — overlaps the header via its built-in marginTop: -32 */}
         <ProfileStatsComp
-          xp={user.xp}
+          km={Number(user.total_walked_km ?? 0)}
           tours={user.tour_count}
           followers={user.follower_count}
           following={user.following_count}

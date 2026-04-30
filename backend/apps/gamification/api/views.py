@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.db import models, transaction
 from django.utils import timezone
@@ -195,13 +197,17 @@ class TourProgressViewSet(
                 progress.save()
 
                 locked_user = user_model.objects.select_for_update().get(pk=user.pk)
+                completed_km = Decimal(str(progress.tour.walking_distance or 0.0)) / Decimal(
+                    "1000"
+                )
+                locked_user.total_walked_km += completed_km
                 reward_eligible = progress.tour.creator_id != locked_user.id
+                should_apply_reward = not progress.xp_awarded and reward_eligible
                 if not progress.xp_awarded:
                     if reward_eligible:
                         locked_user.xp += progress.total_xp
                         locked_user.level = LevelService.get_level(locked_user.xp)
                         locked_user.tour_count += 1
-                        locked_user.save(update_fields=["xp", "level", "tour_count"])
                     progress.xp_awarded = True
                     progress.save(update_fields=["xp_awarded"])
                     if reward_eligible:
@@ -209,6 +215,10 @@ class TourProgressViewSet(
                             locked_user, completed_progress=progress
                         )
                         awarded_xp = progress.total_xp
+                user_update_fields = ["total_walked_km"]
+                if should_apply_reward:
+                    user_update_fields.extend(["xp", "level", "tour_count"])
+                locked_user.save(update_fields=user_update_fields)
                 message = "Tour completed!"
 
         return {

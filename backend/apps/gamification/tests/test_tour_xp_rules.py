@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from rest_framework import status
@@ -18,7 +20,13 @@ class TourXpRulesTests(APITestCase):
         )
         self.client.force_authenticate(user=self.player)
 
-    def _create_tour_with_single_step(self, *, title="XP Tour", tour_type=Tour.PUZZLE):
+    def _create_tour_with_single_step(
+        self,
+        *,
+        title="XP Tour",
+        tour_type=Tour.PUZZLE,
+        walking_distance_m=0.0,
+    ):
         tour = Tour.objects.create(
             title=title,
             description="XP test tour",
@@ -29,6 +37,7 @@ class TourXpRulesTests(APITestCase):
             duration_minutes=10,
             city="Istanbul",
             country_code="TR",
+            walking_distance=walking_distance_m,
         )
         step = TourStep.objects.create(
             tour=tour,
@@ -83,6 +92,78 @@ class TourXpRulesTests(APITestCase):
         self.player.refresh_from_db()
         self.assertEqual(progress.total_xp, 50)
         self.assertEqual(self.player.xp, 50)
+
+    def test_completion_adds_tour_walking_distance_to_user_total_km(self):
+        tour, _ = self._create_tour_with_single_step(
+            title="KM Tour",
+            walking_distance_m=3250,
+        )
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
+        progress_id = create_response.data["id"]
+
+        complete_response = self.client.post(
+            f"/api/tour-progress/{progress_id}/complete-step/",
+            format="json",
+        )
+        self.assertEqual(complete_response.status_code, status.HTTP_200_OK)
+
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.total_walked_km, Decimal("3.250"))
+
+    def test_own_tour_completion_adds_km_even_without_xp(self):
+        self.creator = self.player
+        tour, _ = self._create_tour_with_single_step(
+            title="Own KM Tour",
+            walking_distance_m=1800,
+        )
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
+        progress_id = create_response.data["id"]
+
+        complete_response = self.client.post(
+            f"/api/tour-progress/{progress_id}/complete-step/",
+            format="json",
+        )
+        self.assertEqual(complete_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(complete_response.data["awarded_xp"], 0)
+
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.xp, 0)
+        self.assertEqual(self.player.total_walked_km, Decimal("1.800"))
+
+    def test_replay_completion_adds_km_again(self):
+        tour, _ = self._create_tour_with_single_step(
+            title="Replay KM Tour",
+            walking_distance_m=2000,
+        )
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
+        progress_id = create_response.data["id"]
+
+        first_complete = self.client.post(
+            f"/api/tour-progress/{progress_id}/complete-step/",
+            format="json",
+        )
+        self.assertEqual(first_complete.status_code, status.HTTP_200_OK)
+
+        replay_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
+        self.assertEqual(replay_response.status_code, status.HTTP_200_OK)
+        replay_progress_id = replay_response.data["id"]
+
+        second_complete = self.client.post(
+            f"/api/tour-progress/{replay_progress_id}/complete-step/",
+            format="json",
+        )
+        self.assertEqual(second_complete.status_code, status.HTTP_200_OK)
+
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.total_walked_km, Decimal("4.000"))
 
     def test_skipped_step_gives_no_xp(self):
         tour, _ = self._create_tour_with_single_step(title="Skip Tour")
