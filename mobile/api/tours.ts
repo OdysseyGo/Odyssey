@@ -58,9 +58,13 @@ export type GyroscopePuzzleDetail = {
   tolerance_degrees: number;
 };
 
+export type CompassPuzzleDetail = {
+  target_heading_degrees: number;
+};
+
 export type Puzzle = {
   id?: number;
-  puzzle_type: 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE';
+  puzzle_type: 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE' | 'COMPASS';
   question: string;
   hint: string;
   xp_reward: number;
@@ -69,6 +73,7 @@ export type Puzzle = {
   picture_compare?: PictureComparePuzzleDetail;
   ar?: ArPuzzleDetail;
   gyroscope?: GyroscopePuzzleDetail;
+  compass?: CompassPuzzleDetail;
   // Backward-compatible fallbacks
   options?: string[];
   correct_answer?: string;
@@ -101,6 +106,10 @@ export type GyroscopePuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
   target_roll?: number;
   target_yaw?: number;
   tolerance_degrees?: number;
+};
+
+export type CompassPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  target_heading_degrees: number;
 };
 
 export type TourStep = {
@@ -593,6 +602,21 @@ export async function setStepGyroscopePuzzle(
   return apiRequest<Puzzle, GyroscopePuzzleUpsertPayload>({
     method: 'POST',
     url: `/api/tours/${tourId}/steps/${stepId}/set-gyroscope-puzzle/`,
+    data: payload,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepCompassPuzzle(
+  tourId: number,
+  stepId: number,
+  payload: CompassPuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, CompassPuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-compass-puzzle/`,
     data: payload,
     auth: true,
     signal,
