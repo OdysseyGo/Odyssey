@@ -97,13 +97,6 @@ class BadgeService:
             + other_failed_attempts
             + ar_picture_badge_penalty
         )
-        badge_code = BadgeService._city_badge_code_from_mistakes(mistake_count)
-        if not badge_code:
-            return []
-        badge = Badge.objects.filter(code=badge_code).first()
-        if badge is None:
-            return []
-
         city_badges = list(
             UserBadge.objects.select_related("badge").filter(
                 user=user,
@@ -130,6 +123,13 @@ class BadgeService:
         for duplicate in city_badges:
             if best_existing is not None and duplicate.id != best_existing.id:
                 duplicate.delete()
+
+        badge_code = BadgeService._city_badge_code_from_mistakes(mistake_count)
+        if not badge_code:
+            return []
+        badge = Badge.objects.filter(code=badge_code).first()
+        if badge is None:
+            return []
 
         if best_existing is None:
             UserBadge.objects.create(
