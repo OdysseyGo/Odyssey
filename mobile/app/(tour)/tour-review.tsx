@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, Text, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import {
   createTour,
   createTourStep,
@@ -35,6 +36,7 @@ export default function TourReviewScreen() {
   const color = Colors[theme];
   const { tourData, resetTourData } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showUnderReviewNotice, setShowUnderReviewNotice] = React.useState(false);
   const { t } = useTranslation();
   const isReadyToSubmit =
     !!tourData.coverImage &&
@@ -196,15 +198,7 @@ export default function TourReviewScreen() {
               status: 'DRAFT',
             });
 
-            Alert.alert(t('creation.successTitle'), t('creation.successMessage'), [
-              {
-                text: t('creation.ok'),
-                onPress: () => {
-                  resetTourData();
-                  router.dismissAll();
-                },
-              },
-            ]);
+            setShowUnderReviewNotice(true);
           } catch (error) {
             console.error('Submit failed:', error);
 
@@ -231,6 +225,37 @@ export default function TourReviewScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: color.foreground }]}>
+      {showUnderReviewNotice ? (
+        <View style={styles.noticeContainer}>
+          <View style={[styles.noticeCard, { backgroundColor: color.background }]}>
+            <View style={[styles.noticeIconWrap, { backgroundColor: `${color.primary}1A` }]}>
+              <Ionicons name="hourglass-outline" size={36} color={color.primary} />
+            </View>
+            <Text style={[styles.noticeTitle, { color: color.text }]}>
+              {t('creation.underReviewTitle', { defaultValue: 'Your tour is under review' })}
+            </Text>
+            <Text style={[styles.noticeMessage, { color: color.subText }]}>
+              {t('creation.underReviewMessage', {
+                defaultValue:
+                  'Thanks for submitting your tour. Our team is reviewing it now and it will be published soon.',
+              })}
+            </Text>
+            <TouchableOpacity
+              style={[styles.noticeButton, { backgroundColor: color.primary }]}
+              onPress={() => {
+                setShowUnderReviewNotice(false);
+                resetTourData();
+                router.dismissAll();
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.noticeButtonText, { color: color.white }]}>
+                {t('creation.ok')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : null}
       <CreationHeader title={t('creation.review.title')} />
       <StepIndicator steps={STEPS} currentStepIndex={3} />
       <TourReviewStep tourData={tourData} />
@@ -246,5 +271,51 @@ export default function TourReviewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  noticeContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 20,
+    backgroundColor: 'rgba(0,0,0,0.36)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  noticeCard: {
+    width: '100%',
+    borderRadius: 20,
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  noticeIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  noticeTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  noticeMessage: {
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  noticeButton: {
+    minWidth: 140,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  noticeButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

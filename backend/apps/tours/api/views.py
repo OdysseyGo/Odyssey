@@ -105,7 +105,8 @@ class TourViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        env_mode = os.getenv("ENV_MODE", "development")
+        # Default to production-safe behavior when ENV_MODE is unset.
+        env_mode = os.getenv("ENV_MODE", "production")
         if env_mode != "development":
             status = Tour.DRAFT
         else:

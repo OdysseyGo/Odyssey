@@ -51,6 +51,7 @@ from apps.gamification.models import (
     TourProgress,
 )
 from apps.gamification.picture_compare import compare_picture_similarity
+from apps.gamification.services import BadgeService
 from apps.gamification.visuals import BadgeVisualService
 from apps.tours.models import ARModel, Review, Tour
 from apps.tours.utils import GoogleMapsFacade
@@ -398,6 +399,9 @@ class BadgeVisualViewSet(ViewSet):
         }
 
     def list(self, request):
+        # Ensure badge records exist so admin previews never render empty on
+        # fresh environments.
+        BadgeService.ensure_default_badges()
         payload = BadgeVisualService.read_payload()
         payload = {
             "template": payload.get("template") or BadgeVisualService.load_template(),
