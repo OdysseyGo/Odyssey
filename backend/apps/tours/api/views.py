@@ -5,6 +5,7 @@ from django.db.models import Avg, OuterRef, Subquery
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from apps.gamification.models import TourProgress
@@ -687,4 +688,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user, tour_id=self.kwargs["tour_pk"])
+        tour = Tour.objects.only("id", "creator_id").get(pk=self.kwargs["tour_pk"])
+        if tour.creator_id == self.request.user.id:
+            raise PermissionDenied("You cannot review your own tour.")
+
+        serializer.save(user=self.request.user, tour=tour)
+
+    def perform_update(self, serializer):
+        if serializer.instance.tour.creator_id == self.request.user.id:
+            raise PermissionDenied("You cannot review your own tour.")
+
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if instance.tour.creator_id == self.request.user.id:
+            raise PermissionDenied("You cannot review your own tour.")
+
+        instance.delete()

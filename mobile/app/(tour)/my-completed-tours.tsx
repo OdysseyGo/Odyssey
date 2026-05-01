@@ -252,6 +252,7 @@ export default function MyCompletedToursScreen() {
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => {
             const userReview = currentUser ? getUserReview(item) : null;
+            const canReviewTour = currentUser ? item.creator?.id !== currentUser.id : false;
             return (
               <View style={[styles.tourItem, { backgroundColor: theme.cardSurface }]}>
                 <ProfileTourCard
@@ -266,14 +267,22 @@ export default function MyCompletedToursScreen() {
                 />
                 {item.status === 'PUBLISHED' ? (
                   <TouchableOpacity
-                    style={[styles.reviewButton, { backgroundColor: theme.primary }]}
+                    style={[
+                      styles.reviewButton,
+                      { backgroundColor: canReviewTour ? theme.primary : theme.foregroundSecondary },
+                    ]}
                     activeOpacity={0.8}
+                    disabled={!canReviewTour}
                     onPress={() => openReviewModal(item)}
                   >
                     <Text style={styles.reviewButtonText}>
-                      {userReview
-                        ? t('profile.editReview', { defaultValue: 'Edit Review' })
-                        : t('profile.reviewTour', { defaultValue: 'Review Tour' })}
+                      {canReviewTour
+                        ? userReview
+                          ? t('profile.editReview', { defaultValue: 'Edit Review' })
+                          : t('profile.reviewTour', { defaultValue: 'Review Tour' })
+                        : t('profile.ownTourReviewDisabled', {
+                            defaultValue: "You can't review your own tour",
+                          })}
                     </Text>
                   </TouchableOpacity>
                 ) : null}

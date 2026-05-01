@@ -201,7 +201,12 @@ class TourProgressViewSet(
                 completed_km = Decimal(
                     str(progress.tour.walking_distance or 0.0)
                 ) / Decimal("1000")
-                locked_user.total_walked_km += completed_km
+                km_eligible = (
+                    progress.tour.creator_id != locked_user.id
+                    or progress.tour.is_ai_generated
+                )
+                if km_eligible:
+                    locked_user.total_walked_km += completed_km
                 reward_eligible = progress.tour.creator_id != locked_user.id
                 should_apply_reward = not progress.xp_awarded and reward_eligible
                 if not progress.xp_awarded:
@@ -216,10 +221,13 @@ class TourProgressViewSet(
                             locked_user, completed_progress=progress
                         )
                         awarded_xp = progress.total_xp
-                user_update_fields = ["total_walked_km"]
+                user_update_fields = []
+                if km_eligible:
+                    user_update_fields.append("total_walked_km")
                 if should_apply_reward:
                     user_update_fields.extend(["xp", "level", "tour_count"])
-                locked_user.save(update_fields=user_update_fields)
+                if user_update_fields:
+                    locked_user.save(update_fields=user_update_fields)
                 message = "Tour completed!"
 
         return {
