@@ -256,7 +256,9 @@ class TestGenerateTour(TestCase):
 
     @patch("apps.ai_content.services.GoogleMapsFacade")
     @patch("apps.ai_content.services.genai")
-    def test_country_is_canonicalized_from_country_code(self, mock_genai, mock_maps_cls):
+    def test_country_is_canonicalized_from_country_code(
+        self, mock_genai, mock_maps_cls
+    ):
         tour_data = _valid_tour_json(include_puzzles=False)
 
         mock_model = MagicMock()
@@ -281,7 +283,9 @@ class TestGenerateTour(TestCase):
             creator=creator,
         )
 
-        expected_country, expected_country_code = normalize_tour_country("Türkiye", "tr")
+        expected_country, expected_country_code = normalize_tour_country(
+            "Türkiye", "tr"
+        )
         assert tour.country == expected_country
         assert tour.country_code == expected_country_code
 

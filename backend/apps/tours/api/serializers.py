@@ -478,13 +478,17 @@ class TourSerializer(serializers.ModelSerializer):
         incoming_has_country_code = "country_code" in validated_data
 
         effective_country = validated_data.get("country", current_country)
-        effective_country_code = validated_data.get("country_code", current_country_code)
+        effective_country_code = validated_data.get(
+            "country_code", current_country_code
+        )
 
         # Normalize explicit incoming text fields even when no code is available.
         if incoming_has_country:
             validated_data["country"] = (validated_data.get("country") or "").strip()
         if incoming_has_country_code:
-            validated_data["country_code"] = (validated_data.get("country_code") or "").strip().upper()
+            validated_data["country_code"] = (
+                (validated_data.get("country_code") or "").strip().upper()
+            )
 
         if not effective_country_code:
             return

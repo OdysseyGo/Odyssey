@@ -21,7 +21,9 @@ CIRCULAR_THRESHOLD_M = 200.0
 LONG_LEG_TRANSPORT_THRESHOLD_M = 2000.0
 
 
-def normalize_tour_country(country: str | None, country_code: str | None) -> tuple[str, str]:
+def normalize_tour_country(
+    country: str | None, country_code: str | None
+) -> tuple[str, str]:
     """
     Normalize country fields for persistence.
 
@@ -40,7 +42,9 @@ def normalize_tour_country(country: str | None, country_code: str | None) -> tup
     if matched_country is None:
         return normalized_country, normalized_country_code
 
-    canonical_country = getattr(matched_country, "name", "").strip() or normalized_country
+    canonical_country = (
+        getattr(matched_country, "name", "").strip() or normalized_country
+    )
     return canonical_country, normalized_country_code
 
 
