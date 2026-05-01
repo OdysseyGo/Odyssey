@@ -164,6 +164,12 @@ export type ToursResponse = {
   results: Tour[];
 };
 
+export type MyToursFilters = {
+  status?: TourStatus;
+  generation_source?: TourGenerationSource;
+  is_ai_generated?: boolean;
+};
+
 export type TourFilters = {
   search?: string;
   category?: string;
@@ -469,14 +475,19 @@ export async function updateTourReview(
 
 /**
  * Fetch the current user's tours (requires authentication)
- * @param status - Optional filter by tour status (DRAFT, PUBLISHED, ARCHIVED)
+ * @param filtersOrStatus - Optional filters, or a legacy status value
  */
 export async function getMyTours(
-  status?: TourStatus,
+  filtersOrStatus?: TourStatus | MyToursFilters,
   signal?: AbortSignal
 ): Promise<ToursResponse> {
   const params: Record<string, any> = {};
-  if (status) params.status = status;
+  const filters =
+    typeof filtersOrStatus === 'string' ? { status: filtersOrStatus } : filtersOrStatus;
+
+  if (filters?.status) params.status = filters.status;
+  if (filters?.generation_source) params.generation_source = filters.generation_source;
+  if (filters?.is_ai_generated !== undefined) params.is_ai_generated = filters.is_ai_generated;
 
   return apiRequest<ToursResponse>({
     method: 'GET',

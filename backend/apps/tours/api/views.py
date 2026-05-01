@@ -189,6 +189,16 @@ class TourViewSet(viewsets.ModelViewSet):
         if status:
             queryset = queryset.filter(status=status)
 
+        generation_source = request.query_params.get("generation_source")
+        if generation_source:
+            queryset = queryset.filter(generation_source=generation_source)
+
+        is_ai_generated = request.query_params.get("is_ai_generated")
+        if is_ai_generated is not None:
+            queryset = queryset.filter(
+                is_ai_generated=str(is_ai_generated).lower() == "true"
+            )
+
         queryset = queryset.annotate(average_rating=Avg("reviews__rating")).order_by(
             "-updated_at"
         )
