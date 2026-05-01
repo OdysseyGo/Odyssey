@@ -71,7 +71,7 @@ interface CompassDetail {
 
 interface PuzzleData {
   id: number;
-  puzzle_type: "TRIVIA" | "AR" | "GYROSCOPE" | "COMPASS" | "PICTURE_COMPARE";
+  puzzle_type: "TRIVIA" | "OPEN_ENDED" | "AR" | "GYROSCOPE" | "COMPASS" | "PICTURE_COMPARE";
   question: string;
   hint: string;
   xp_reward: number;
@@ -416,6 +416,20 @@ export default function TourDetail() {
                   {opt} {opt === correct && "(Correct)"}
                 </div>
               ))}
+          </div>
+        );
+      }
+
+      case "OPEN_ENDED": {
+        return (
+          <div className="mt-2 space-y-2 text-sm">
+            <div className="flex items-center gap-1 font-medium text-muted-foreground">
+              <HelpCircle className="h-4 w-4" /> Open Ended Answer:
+            </div>
+            <div className="rounded border border-border bg-muted/50 p-2">
+              <span className="font-medium">Expected answer:</span>{" "}
+              {puzzle.correct_answer || "Not provided"}
+            </div>
           </div>
         );
       }

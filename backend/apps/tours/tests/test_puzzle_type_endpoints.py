@@ -141,6 +141,42 @@ class PuzzleTypeEndpointTests(APITestCase):
             "Switching puzzle type should remove stale TRIVIA detail rows.",
         )
 
+    def test_set_open_ended_puzzle_sets_text_answer_without_leaking_it(self):
+        self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-trivia-puzzle/",
+            {
+                "question": "Which one is correct?",
+                "hint": "Pick A",
+                "options": ["A", "B"],
+                "correct_answer": "A",
+            },
+            format="json",
+        )
+
+        response = self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-open-ended-puzzle/",
+            {
+                "question": "Name this empire",
+                "hint": "Think of Constantinople",
+                "correct_answer": "Byzantine Empire",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["puzzle_type"], Puzzle.OPEN_ENDED)
+        self.assertEqual(response.data["open_ended"]["answer_type"], "text")
+        self.assertNotIn("correct_answer", response.data)
+
+        puzzle = Puzzle.objects.get(step=self.step)
+        self.assertEqual(puzzle.correct_answer, "Byzantine Empire")
+        self.assertIsNone(puzzle.options)
+        self.assertEqual(puzzle.xp_reward, 25)
+        self.assertFalse(
+            TriviaPuzzleDetail.objects.filter(puzzle=puzzle).exists(),
+            "Switching puzzle type should remove stale TRIVIA detail rows.",
+        )
+
     def test_set_ar_puzzle_creates_ar_detail(self):
         response = self.client.post(
             f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-ar-puzzle/",
