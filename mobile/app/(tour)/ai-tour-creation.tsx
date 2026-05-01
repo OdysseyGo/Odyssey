@@ -220,31 +220,37 @@ export default function AITourCreation() {
             />
           </View>
 
-          <View style={styles.sectionDivider} />
+          {formData.mode !== 'STORY' && (
+            <>
+              <View style={styles.sectionDivider} />
 
-          <View style={styles.arToggleRow}>
-            <View style={styles.arToggleLabels}>
-              <Text style={styles.sectionTitle}>{t('aiTour.includeAr.title')}</Text>
-              <Text style={styles.sectionSubtitle}>{t('aiTour.includeAr.subtitle')}</Text>
-            </View>
-            <Switch
-              value={formData.includeAr}
-              onValueChange={(value) => updateFormData({ includeAr: value })}
-            />
-          </View>
+              <View style={styles.arToggleRow}>
+                <View style={styles.arToggleLabels}>
+                  <Text style={styles.sectionTitle}>{t('aiTour.includeAr.title')}</Text>
+                  <Text style={styles.sectionSubtitle}>{t('aiTour.includeAr.subtitle')}</Text>
+                </View>
+                <Switch
+                  value={formData.includeAr}
+                  onValueChange={(value) => updateFormData({ includeAr: value })}
+                />
+              </View>
 
-          <View style={styles.sectionDivider} />
+              <View style={styles.sectionDivider} />
 
-          <View style={styles.arToggleRow}>
-            <View style={styles.arToggleLabels}>
-              <Text style={styles.sectionTitle}>{t('aiTour.includeCompass.title')}</Text>
-              <Text style={styles.sectionSubtitle}>{t('aiTour.includeCompass.subtitle')}</Text>
-            </View>
-            <Switch
-              value={formData.includeCompass}
-              onValueChange={(value) => updateFormData({ includeCompass: value })}
-            />
-          </View>
+              <View style={styles.arToggleRow}>
+                <View style={styles.arToggleLabels}>
+                  <Text style={styles.sectionTitle}>{t('aiTour.includeCompass.title')}</Text>
+                  <Text style={styles.sectionSubtitle}>
+                    {t('aiTour.includeCompass.subtitle')}
+                  </Text>
+                </View>
+                <Switch
+                  value={formData.includeCompass}
+                  onValueChange={(value) => updateFormData({ includeCompass: value })}
+                />
+              </View>
+            </>
+          )}
 
           <View style={styles.sectionDivider} />
 
