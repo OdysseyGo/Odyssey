@@ -9,8 +9,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import filters
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
-from rest_framework.permissions import AllowAny
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken  # login token
@@ -280,7 +279,9 @@ class UserViewSet(ModelViewSet):
 
         try:
             user = User.objects.get(email__iexact=email)
-            otp = PasswordResetOTP.objects.filter(user=user, used=False).latest("created_at")
+            otp = PasswordResetOTP.objects.filter(user=user, used=False).latest(
+                "created_at"
+            )
         except (User.DoesNotExist, PasswordResetOTP.DoesNotExist):
             return Response({"detail": "Invalid or expired code"}, status=400)
 

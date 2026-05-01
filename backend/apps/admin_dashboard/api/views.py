@@ -1,7 +1,7 @@
 import json
+import logging
 import os
 import uuid
-import logging
 
 from django.conf import settings
 from django.core.files.storage import default_storage
