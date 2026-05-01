@@ -105,7 +105,12 @@ class TourViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
+        env_mode = os.getenv("ENV_MODE", "development")
+        if env_mode == "development":
+            status = Tour.DRAFT
+        else:
+            status = Tour.PUBLISHED
+        serializer.save(creator=self.request.user, status=status)
 
     @action(
         detail=False,

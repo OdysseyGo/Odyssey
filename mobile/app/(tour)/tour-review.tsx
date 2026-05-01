@@ -23,8 +23,6 @@ import { ApiError } from '@/api/APIClient';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
 
-const isDevMode = process.env.EXPO_PUBLIC_ENV_MODE === 'development';
-
 function getSubmitErrorMessage(error: unknown, fallbackMessage: string) {
   if (error instanceof ApiError) {
     return error.message;
@@ -180,7 +178,7 @@ export default function TourReviewScreen() {
               country_code: tourData.countryCode || '',
               city_latitude: tourData.stateLatitude,
               city_longitude: tourData.stateLongitude,
-              status: isDevMode ? 'PUBLISHED' : 'DRAFT',
+              status: 'DRAFT',
             });
 
             Alert.alert(t('creation.successTitle'), t('creation.successMessage'), [
