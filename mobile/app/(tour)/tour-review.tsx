@@ -23,6 +23,8 @@ import { ApiError } from '@/api/APIClient';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
 
+const isDevMode = process.env.EXPO_PUBLIC_ENV_MODE === 'development';
+
 function getSubmitErrorMessage(error: unknown, fallbackMessage: string) {
   if (error instanceof ApiError) {
     return error.message;
@@ -41,6 +43,9 @@ export default function TourReviewScreen() {
     tourData.locations.every((location) =>
       doesLocationMeetTourRequirements(location, tourData.tourType)
     );
+
+    console.log(isDevMode);
+    
 
   const handleSubmitTour = async () => {
     if (!isReadyToSubmit) {
@@ -76,7 +81,7 @@ export default function TourReviewScreen() {
               country_code: tourData.countryCode || '',
               city_latitude: tourData.stateLatitude,
               city_longitude: tourData.stateLongitude,
-              status: 'DRAFT',
+              status:'DRAFT', 
               is_premium: false,
             });
 
@@ -100,7 +105,6 @@ export default function TourReviewScreen() {
               const basePayload = {
                 question: loc.puzzle.question,
                 hint: loc.puzzle.hint,
-                xp_reward: loc.puzzle.xp_reward,
               };
 
               if (loc.puzzle.puzzle_type === 'TRIVIA') {
@@ -179,7 +183,7 @@ export default function TourReviewScreen() {
               country_code: tourData.countryCode || '',
               city_latitude: tourData.stateLatitude,
               city_longitude: tourData.stateLongitude,
-              status: 'DRAFT', //draft dedim ki adminler onaylasın
+              status: isDevMode ? 'PUBLISHED' :'DRAFT'  
             });
 
             Alert.alert(t('creation.successTitle'), t('creation.successMessage'), [

@@ -79,6 +79,7 @@
     "notLoggedIn": "You need to be logged in to view your profile.",
     "loginButton": "Oooh I want to log in!",
     "logout": "Logout",
+    "km": "km",
     "xp": "XP",
     "tours": "Tours",
     "badges": "Badges",
@@ -534,6 +535,10 @@
       "puzzleDesc": "Interactive challenges and trivia at each location",
       "hybrid": "Hybrid Mode",
       "hybridDesc": "Best of both - engaging stories with fun puzzles"
+    },
+    "includeAr": {
+      "title": "Include AR Puzzles",
+      "subtitle": "Let the AI add augmented-reality puzzles on stops where they fit"
     }
   },
   "tourStep": {

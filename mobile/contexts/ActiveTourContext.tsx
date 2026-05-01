@@ -10,7 +10,6 @@ import {
 
 import { ApiError } from '@/api/APIClient';
 import { getInProgressTour } from '@/api/tourProgress';
-import { getTour } from '@/api/tours';
 
 interface ActiveTourState {
   tour: Tour | null;
@@ -35,7 +34,7 @@ interface ActiveTourContextType extends ActiveTourState {
   setHighestStepIndex: (index: number) => void;
   solveStep: (stepId: string, xpReward?: number) => void;
   confirmLocation: (stepId: string) => void;
-  recordSkip: () => void;
+  recordSkip: (countsAsMistake?: boolean) => void;
   recordWrongAnswer: () => void;
   recordAnswer: (stepId: string, optionId: string) => void;
   recordAttempt: (stepId: string) => void;
@@ -226,10 +225,10 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const recordSkip = useCallback(() => {
+  const recordSkip = useCallback((countsAsMistake: boolean = true) => {
     setState((prev) => ({
       ...prev,
-      skipCount: prev.skipCount + 1,
+      skipCount: countsAsMistake ? prev.skipCount + 1 : prev.skipCount,
     }));
   }, []);
 
@@ -275,13 +274,9 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
 
     try {
       const activeProgress = await getInProgressTour();
-      //console.log(activeProgress);
       if (!activeProgress || !activeProgress.id) {
         return;
       }
-      // console.log(activeProgress.tour);
-
-      // const apiTour = await getTour(activeProgress.tour);
 
       const resumedTour = activeProgress.tour as unknown as ApiTour;
       const resumedCurrentStep = activeProgress.current_step as unknown as
@@ -291,7 +286,7 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
             order?: number;
           }
         | null;
-      const internalTour = mapApiTourToInternalTour(resumedTour); //çalışıyo çünkü tur objesini getiriyo
+      const internalTour = mapApiTourToInternalTour(resumedTour);
 
       let currentStepIdx = 0;
       if (resumedCurrentStep) {

@@ -83,7 +83,6 @@ export type Puzzle = {
 export type PuzzleBaseUpsertPayload = {
   question: string;
   hint?: string;
-  xp_reward?: number;
 };
 
 export type TriviaPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
@@ -165,9 +164,7 @@ export type Tour = {
   average_rating?: number;
 };
 
-export function getTourImageUri(
-  tour: Pick<Tour, 'id' | 'cover_image' | 'creator'>
-): string {
+export function getTourImageUri(tour: Pick<Tour, 'id' | 'cover_image' | 'creator'>): string {
   return tour.cover_image || '';
 }
 
@@ -618,7 +615,6 @@ export async function setStepPictureComparePuzzle(
   const formData = new FormData();
   formData.append('question', payload.question);
   formData.append('hint', payload.hint || '');
-  formData.append('xp_reward', String(payload.xp_reward ?? 10));
   if (payload.similarity_threshold !== undefined) {
     formData.append('similarity_threshold', String(payload.similarity_threshold));
   }

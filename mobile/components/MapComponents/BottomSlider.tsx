@@ -30,7 +30,7 @@ const TAB_BAR_GAP = Spacing.md;
 export default function BottomSlider({
   onEndTour,
   onTourComplete,
-}: BottomSliderProps & { onTourComplete?: () => Promise<void> | void }) {
+}: BottomSliderProps & { onTourComplete?: (awardedXP: number) => Promise<void> | void }) {
   const { t } = useTranslation();
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -55,7 +55,31 @@ export default function BottomSlider({
     solveStep,
     confirmLocation,
     recordSkip,
+    stepAnswers,
+    stepAttempts,
   } = useActiveTour();
+
+  const skipCountsAsMistake = useCallback(
+    (stepId: string) => {
+      const currentStep = tour?.steps.find((step) => step.id === stepId);
+      if (!currentStep || currentStep.type !== 'puzzle') return true;
+
+      const failedAttemptCount = stepAttempts.get(stepId) ?? 0;
+      const hasSubmittedTriviaAnswer =
+        currentStep.puzzle.type === 'multiple-choice' && stepAnswers.has(stepId);
+
+      if (currentStep.puzzle.type === 'multiple-choice') {
+        return !hasSubmittedTriviaAnswer && failedAttemptCount === 0;
+      }
+
+      if (currentStep.puzzle.type === 'ar-code' || currentStep.puzzle.type === 'picture-compare') {
+        return failedAttemptCount < 3;
+      }
+
+      return true;
+    },
+    [stepAnswers, stepAttempts, tour?.steps]
+  );
 
   const handleNavigateNext = useCallback(async () => {
     if (!tour || !progressId) return;
@@ -81,9 +105,12 @@ export default function BottomSlider({
 
     try {
       const response = useSkip ? await skipStep(progressId) : await completeStep(progressId);
+      if (useSkip) {
+        recordSkip(skipCountsAsMistake(currentStep.id));
+      }
 
       if (response.is_tour_complete) {
-        await onTourComplete?.();
+        await onTourComplete?.(response.awarded_xp ?? 0);
       } else if (response.new_step_id) {
         const nextStepIndex = tour.steps.findIndex(
           (s) => s.id === response.new_step_id?.toString()
@@ -110,6 +137,8 @@ export default function BottomSlider({
     solvedSteps,
     setCurrentStepIndex,
     setHighestStepIndex,
+    recordSkip,
+    skipCountsAsMistake,
     onTourComplete,
     t,
   ]);
@@ -134,10 +163,10 @@ export default function BottomSlider({
     try {
       const response = await skipStep(progressId);
 
-      recordSkip();
+      recordSkip(skipCountsAsMistake(currentStep.id));
 
       if (response.is_tour_complete) {
-        await onTourComplete?.();
+        await onTourComplete?.(response.awarded_xp ?? 0);
       } else if (response.new_step_id) {
         const nextStepIndex = tour.steps.findIndex(
           (s) => s.id === response.new_step_id?.toString()
@@ -159,6 +188,7 @@ export default function BottomSlider({
     setCurrentStepIndex,
     setHighestStepIndex,
     recordSkip,
+    skipCountsAsMistake,
     onTourComplete,
     t,
   ]);

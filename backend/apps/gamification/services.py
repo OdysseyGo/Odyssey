@@ -1,6 +1,4 @@
-from django.db.models import Q
-
-from apps.tours.models import PuzzleAttempt
+from apps.tours.models import Puzzle, PuzzleAttempt
 
 from .models import Badge, UserBadge
 
@@ -19,6 +17,11 @@ class BadgeService:
         (500, XP_500_CODE, "XP Explorer II"),
         (1000, XP_1000_CODE, "XP Explorer III"),
     )
+    CITY_TIER_RANK = {
+        CITY_BRONZE_CODE: 1,
+        CITY_SILVER_CODE: 2,
+        CITY_GOLD_CODE: 3,
+    }
 
     @staticmethod
     def _ensure_badge(code, *, name, description, criteria):
@@ -43,13 +46,13 @@ class BadgeService:
         cls._ensure_badge(
             cls.CITY_SILVER_CODE,
             name="City Silver",
-            description="Completed your first tour in a city with one or two mistakes.",
+            description="Completed your first tour in a city with one mistake.",
             criteria={"kind": "city_first_completion", "tier": "silver"},
         )
         cls._ensure_badge(
             cls.CITY_BRONZE_CODE,
             name="City Bronze",
-            description="Completed your first tour in a city with more than two mistakes.",
+            description="Completed your first tour in a city with two mistakes.",
             criteria={"kind": "city_first_completion", "tier": "bronze"},
         )
         for xp_threshold, code, name in cls.XP_MILESTONES:
@@ -64,59 +67,97 @@ class BadgeService:
     def _city_badge_code_from_mistakes(mistake_count):
         if mistake_count == 0:
             return BadgeService.CITY_GOLD_CODE
-        if mistake_count <= 2:
+        if mistake_count == 1:
             return BadgeService.CITY_SILVER_CODE
-        return BadgeService.CITY_BRONZE_CODE
+        if mistake_count == 2:
+            return BadgeService.CITY_BRONZE_CODE
+        return None
 
     @staticmethod
-    def _completed_in_city_count(user, city, country_code):
-        queryset = user.tour_progress.filter(
-            status="COMPLETED",
-            tour__city__iexact=city,
-        )
-        if country_code == "ZZ":
-            queryset = queryset.filter(
-                Q(tour__country_code__iexact="ZZ") | Q(tour__country_code__exact="")
-            )
-        else:
-            queryset = queryset.filter(tour__country_code__iexact=country_code)
-        return queryset.count()
-
-    @staticmethod
-    def _award_city_first_completion_badge(user, completed_progress):
+    def _award_or_upgrade_city_badge(user, completed_progress):
         tour = completed_progress.tour
         city = (tour.city or "Unknown City").strip() or "Unknown City"
         country_code = (tour.country_code or "ZZ").strip().upper() or "ZZ"
         country_code = country_code[:2]
 
-        if BadgeService._completed_in_city_count(user, city, country_code) != 1:
-            return []
-
+        failed_attempts = PuzzleAttempt.objects.filter(
+            user=user,
+            progress=completed_progress,
+            accepted=False,
+        )
+        ar_picture_failed_attempts = failed_attempts.filter(
+            puzzle__puzzle_type__in=(Puzzle.AR, Puzzle.PICTURE_COMPARE)
+        ).count()
+        other_failed_attempts = failed_attempts.exclude(
+            puzzle__puzzle_type__in=(Puzzle.AR, Puzzle.PICTURE_COMPARE)
+        ).count()
+        ar_picture_badge_penalty = ar_picture_failed_attempts // 3
         mistake_count = (
             completed_progress.skip_count
-            + PuzzleAttempt.objects.filter(
-                user=user,
-                progress=completed_progress,
-                accepted=False,
-            ).count()
+            + other_failed_attempts
+            + ar_picture_badge_penalty
         )
+        city_badges = list(
+            UserBadge.objects.select_related("badge").filter(
+                user=user,
+                city=city,
+                country_code=country_code,
+                badge__code__in=(
+                    BadgeService.CITY_BRONZE_CODE,
+                    BadgeService.CITY_SILVER_CODE,
+                    BadgeService.CITY_GOLD_CODE,
+                ),
+            )
+        )
+
+        best_existing = None
+        best_existing_rank = -1
+        for city_badge in city_badges:
+            city_badge_rank = BadgeService.CITY_TIER_RANK.get(
+                city_badge.badge.code or "", 0
+            )
+            if city_badge_rank > best_existing_rank:
+                best_existing = city_badge
+                best_existing_rank = city_badge_rank
+
+        for duplicate in city_badges:
+            if best_existing is not None and duplicate.id != best_existing.id:
+                duplicate.delete()
+
         badge_code = BadgeService._city_badge_code_from_mistakes(mistake_count)
+        if not badge_code:
+            return []
         badge = Badge.objects.filter(code=badge_code).first()
         if badge is None:
             return []
 
-        _, created = UserBadge.objects.get_or_create(
-            user=user,
-            badge=badge,
-            city=city,
-            country_code=country_code,
-            defaults={
-                "mistake_count": mistake_count,
-                "source_tour": tour,
-            },
-        )
-        if created:
+        if best_existing is None:
+            UserBadge.objects.create(
+                user=user,
+                badge=badge,
+                city=city,
+                country_code=country_code,
+                mistake_count=mistake_count,
+                source_tour=tour,
+            )
             return [badge.name]
+
+        existing_rank = BadgeService.CITY_TIER_RANK.get(
+            best_existing.badge.code or "", 0
+        )
+        candidate_rank = BadgeService.CITY_TIER_RANK.get(badge_code, 0)
+
+        if candidate_rank > existing_rank:
+            best_existing.badge = badge
+            best_existing.mistake_count = mistake_count
+            best_existing.source_tour = tour
+            best_existing.save(update_fields=["badge", "mistake_count", "source_tour"])
+            return [badge.name]
+
+        # Keep best existing tier; just refresh context for latest completion.
+        best_existing.mistake_count = mistake_count
+        best_existing.source_tour = tour
+        best_existing.save(update_fields=["mistake_count", "source_tour"])
         return []
 
     @staticmethod
@@ -149,9 +190,7 @@ class BadgeService:
         newly_earned = []
         if completed_progress is not None:
             newly_earned.extend(
-                BadgeService._award_city_first_completion_badge(
-                    user, completed_progress
-                )
+                BadgeService._award_or_upgrade_city_badge(user, completed_progress)
             )
         newly_earned.extend(BadgeService._award_xp_milestone_badges(user))
         return newly_earned

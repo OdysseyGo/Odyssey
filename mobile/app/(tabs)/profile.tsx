@@ -31,7 +31,8 @@ import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelec
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import { getMe, User } from '@/api/users';
-import { getMyBadges, UserBadge } from '@/api/profile';
+import { getMyBadges, getLevelInfo, LevelInfo, UserBadge } from '@/api/profile';
+import { computeLevelInfo, getLevelTier } from '@/utils/levelConfig';
 import { removeAuthToken } from '@/api/auth';
 import { consumeProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -370,6 +371,7 @@ const guestStyles = StyleSheet.create({
 
 function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }) {
   const [curUser, setCurUser] = useState<User | null>(null);
+  const [levelInfo, setLevelInfo] = useState<LevelInfo | null>(null);
   const [badgesCount, setBadgesCount] = useState(0);
   const [badges, setBadges] = useState<UserBadge[]>([]);
   const [loading, setLoading] = useState(true);
@@ -413,12 +415,16 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
     setHasToken(true);
     setFetchError(false);
     try {
-      const user = await getMe();
-      const badgesResponse = await getMyBadges();
+      const [user, badgesResponse, levelData] = await Promise.all([
+        getMe(),
+        getMyBadges(),
+        getLevelInfo(),
+      ]);
       startTransition(() => {
         setCurUser(user);
         setBadgesCount(badgesResponse.count);
         setBadges(badgesResponse.results);
+        setLevelInfo(levelData);
       });
       lastRefreshed.current = Date.now();
     } catch (err) {
@@ -504,6 +510,8 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
   }
 
   // ─── Profile data ─────────────────────────────────────
+  const effectiveLevelInfo = levelInfo ?? computeLevelInfo(curUser.xp);
+  const effectiveLevelTier = getLevelTier(effectiveLevelInfo.level);
 
   const profileHeader = {
     title: curUser.username,
@@ -512,12 +520,18 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
     onAvatarPress: () => setShowAvatarModal(true),
     onSettingsPress: () => setShowSettings(true),
     settingsAccessibilityLabel: t('tabs.settings'),
+    level: effectiveLevelInfo.level,
+    levelTitle: effectiveLevelInfo.title,
+    xpProgressPercent: effectiveLevelInfo.xp_progress_percent,
+    currentXp: effectiveLevelInfo.current_xp,
+    xpForCurrentLevel: effectiveLevelInfo.xp_for_current_level,
+    xpForNextLevel: effectiveLevelInfo.xp_for_next_level,
     onTutorialsPress: () => setShowTutorials(true),
     tutorialsAccessibilityLabel: t('tabs.tutorials'), //TODO: add this to translations
   };
 
   const profileStats = {
-    xp: curUser.xp,
+    km: Number(curUser.total_walked_km ?? 0),
     tours: curUser.tour_count,
     badges: badgesCount,
     followers: curUser.follower_count,
@@ -560,7 +574,7 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
           {
             paddingTop: insets.top,
             height: insets.top + 52,
-            backgroundColor: theme.primary,
+            backgroundColor: effectiveLevelTier.gradient[1],
             opacity: stickyOpacity,
           },
         ]}

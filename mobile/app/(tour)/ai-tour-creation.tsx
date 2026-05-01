@@ -1,11 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Switch,
+} from 'react-native';
 import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { aiTourCreationStyles } from './ai-tour-creation.styles';
 import {
   FormInputGroup,
-  FormTextInput,
   FormTextArea,
   FormChipSelect,
   FormOptionCard,
@@ -16,7 +23,6 @@ import {
 } from '@/components/TourCreation';
 import {
   AICreationHeader,
-  ThemeSuggestions,
   LanguageSelector,
   GenerateButton,
   LoadingOverlay,
@@ -95,6 +101,7 @@ export default function AITourCreation() {
         duration: formData.duration,
         language: formData.language,
         additional_details: formData.additionalDetails.trim() || undefined,
+        include_ar: formData.includeAr,
       });
 
       Alert.alert(t('aiTour.successTitle'), response.message, [
@@ -177,14 +184,12 @@ export default function AITourCreation() {
           </FormInputGroup>
 
           <FormInputGroup label={t('aiTour.theme')} required>
-            <FormTextInput
-              value={formData.theme}
-              onChangeText={(text) => updateFormData({ theme: text })}
-              placeholder={t('aiTour.themePlaceholder')}
-              maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
-            />
-            <ThemeSuggestions
-              onSelect={(selectedTheme) => updateFormData({ theme: selectedTheme })}
+            <FormChipSelect
+              options={translatedCategories}
+              selectedValue={selectedTranslatedCategory}
+              onSelect={(translatedValue) =>
+                updateFormData({ theme: categoryKeyMap[translatedValue] ?? translatedValue })
+              }
             />
           </FormInputGroup>
 
@@ -197,6 +202,19 @@ export default function AITourCreation() {
               options={tourModeOptions}
               selectedValue={formData.mode}
               onSelect={(value) => updateFormData({ mode: value as AITourFormData['mode'] })}
+            />
+          </View>
+
+          <View style={styles.sectionDivider} />
+
+          <View style={styles.arToggleRow}>
+            <View style={styles.arToggleLabels}>
+              <Text style={styles.sectionTitle}>{t('aiTour.includeAr.title')}</Text>
+              <Text style={styles.sectionSubtitle}>{t('aiTour.includeAr.subtitle')}</Text>
+            </View>
+            <Switch
+              value={formData.includeAr}
+              onValueChange={(value) => updateFormData({ includeAr: value })}
             />
           </View>
 
