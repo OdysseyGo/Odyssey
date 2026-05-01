@@ -143,6 +143,13 @@ function mapApiPuzzleToInternal(apiPuzzle: ApiTour['steps'][0]['puzzle']): Puzzl
     };
   }
 
+  if (apiPuzzle.puzzle_type === 'OPEN_ENDED') {
+    return {
+      type: 'open-ended',
+      question: apiPuzzle.question,
+    };
+  }
+
   if (apiPuzzle.puzzle_type === 'AR' && apiPuzzle.ar) {
     const metadata = apiPuzzle.ar.metadata || {};
     const anchorPosition = metadata.anchor_position;

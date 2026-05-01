@@ -28,13 +28,19 @@ import {
   StoryStep,
   PuzzleStep,
   MultipleChoicePuzzle,
+  OpenEndedPuzzle,
   PictureComparePuzzle,
   ArCodePuzzle,
   CompassBearingPuzzle,
 } from './TourStep.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
-import { submitArCode, submitPictureCompare, submitTriviaAnswer } from '@/api/tourProgress';
+import {
+  submitArCode,
+  submitOpenEndedAnswer,
+  submitPictureCompare,
+  submitTriviaAnswer,
+} from '@/api/tourProgress';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import SquareCameraOverlayCapture from '@/components/common/SquareCameraOverlayCapture';
 import {
@@ -568,6 +574,130 @@ function PictureCompareView({
           </View>
         </Pressable>
       </Modal>
+    </View>
+  );
+}
+
+interface OpenEndedViewProps {
+  puzzle: OpenEndedPuzzle;
+  isSolved: boolean;
+  onSolve: () => void;
+  onAnswered?: () => void;
+  stepId?: string;
+}
+
+function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEndedViewProps) {
+  const theme = useColorTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+  const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
+
+  const [answerInput, setAnswerInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
+  const isExhausted = attemptCount >= MAX_ATTEMPTS;
+
+  const handleSubmit = async () => {
+    if (isSolved || isSubmitting || isExhausted) return;
+
+    if (!progressId) {
+      Alert.alert('Progress missing', 'Could not verify puzzle without active tour progress.');
+      return;
+    }
+
+    const trimmedAnswer = answerInput.trim();
+    if (!trimmedAnswer) {
+      setFeedback('Enter an answer first.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFeedback('Checking answer...');
+    try {
+      const response = await submitOpenEndedAnswer(progressId, trimmedAnswer);
+      if (response.accepted) {
+        setFeedback('Answer verified.');
+        onSolve();
+      } else {
+        if (stepId) recordAttempt(stepId);
+        const newCount = response.attempt_count ?? attemptCount + 1;
+        if (newCount >= MAX_ATTEMPTS) {
+          setFeedback('Answer is not close enough. No attempts remaining.');
+          recordWrongAnswer();
+          onAnswered?.();
+        } else {
+          setFeedback(
+            `Answer is not close enough. ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`
+          );
+        }
+      }
+    } catch (error: any) {
+      const serverAttemptCount = Number(error?.response?.data?.attempt_count ?? NaN);
+      if (!Number.isNaN(serverAttemptCount) && stepId) {
+        const missingAttempts = Math.max(0, serverAttemptCount - attemptCount);
+        for (let i = 0; i < missingAttempts; i += 1) {
+          recordAttempt(stepId);
+        }
+      }
+      console.error('submit open ended answer failed', error);
+      setFeedback(
+        error?.response?.data?.error || 'Could not verify answer right now. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <View style={styles.puzzleBody}>
+      <View style={styles.questionCard}>
+        <Text style={styles.questionLabel}>Open ended</Text>
+        <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
+      </View>
+
+      {!isSolved && (
+        <View style={styles.attemptsRow}>
+          <Text style={styles.attemptsLabel}>Attempts</Text>
+          {Array.from({ length: MAX_ATTEMPTS }, (_, i) => (
+            <MaterialCommunityIcons
+              key={i}
+              name={i < attemptCount ? 'circle' : 'circle-outline'}
+              size={10}
+              color={i < attemptCount ? Colors[theme].error : Colors[theme].subText}
+            />
+          ))}
+        </View>
+      )}
+
+      <TextInput
+        style={styles.secretCodeInput}
+        value={answerInput}
+        onChangeText={setAnswerInput}
+        editable={!isSolved && !isSubmitting && !isExhausted}
+        placeholder="Type your answer"
+        autoCapitalize="none"
+      />
+
+      <Pressable
+        style={[
+          styles.captureButton,
+          (isSolved || isSubmitting || isExhausted) && styles.captureButtonDisabled,
+        ]}
+        onPress={handleSubmit}
+        disabled={isSolved || isSubmitting || isExhausted}
+      >
+        {isSubmitting ? (
+          <ActivityIndicator size="small" color={Colors[theme].white} />
+        ) : (
+          <Text style={styles.captureButtonText}>Submit answer</Text>
+        )}
+      </Pressable>
+
+      {feedback ? <Text style={styles.feedbackText}>{feedback}</Text> : null}
+
+      {isExhausted && !isSolved && (
+        <Text style={styles.exhaustedHint}>No attempts remaining. You can skip this step.</Text>
+      )}
     </View>
   );
 }
@@ -1225,6 +1355,15 @@ function PuzzleStepView({ step, isSolved, isFinished, onSolve, onAnswered }: Puz
           puzzle={step.puzzle}
           isSolved={isSolved}
           isFinished={isFinished}
+          onSolve={onSolve}
+          onAnswered={onAnswered}
+          stepId={step.id}
+        />
+      ) : step.puzzle.type === 'open-ended' ? (
+        <OpenEndedView
+          key={step.id}
+          puzzle={step.puzzle}
+          isSolved={isSolved}
           onSolve={onSolve}
           onAnswered={onAnswered}
           stepId={step.id}

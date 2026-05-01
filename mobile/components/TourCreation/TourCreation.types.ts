@@ -1,4 +1,4 @@
-export type PuzzleType = 'TRIVIA' | 'AR' | 'PICTURE_COMPARE' | 'COMPASS';
+export type PuzzleType = 'TRIVIA' | 'OPEN_ENDED' | 'AR' | 'PICTURE_COMPARE' | 'COMPASS';
 
 export const TOUR_TEXT_FIELD_MAX_LENGTH = 255;
 
@@ -35,6 +35,7 @@ export interface Puzzle {
 
 export const PUZZLE_TYPE_OPTIONS = [
   { value: 'TRIVIA', label: 'Trivia', description: 'Multiple choice question' },
+  { value: 'OPEN_ENDED', label: 'Open Ended', description: 'Type the correct answer' },
   { value: 'AR', label: 'AR Challenge', description: 'Augmented reality experience' },
   { value: 'COMPASS', label: 'Compass', description: 'Find a target heading' },
   {
@@ -147,6 +148,10 @@ export const isPuzzleValid = (puzzle?: Puzzle): boolean => {
   if (puzzle.puzzle_type === 'TRIVIA') {
     const options = puzzle.options.map((option) => option.trim()).filter(Boolean);
     return options.length >= 2 && options.includes(puzzle.correctAnswer.trim());
+  }
+
+  if (puzzle.puzzle_type === 'OPEN_ENDED') {
+    return puzzle.correctAnswer.trim().length > 0;
   }
 
   if (puzzle.puzzle_type === 'COMPASS') {

@@ -202,8 +202,17 @@ export default function TourNavigation({
     currentStep.type === 'puzzle' &&
     currentStep.puzzle.type === 'multiple-choice' &&
     (stepAttempts.get(currentStep.id) ?? 0) > 0;
+  const hasPersistedExhaustedAttempt =
+    currentStep.type === 'puzzle' &&
+    (currentStep.puzzle.type === 'picture-compare' ||
+      currentStep.puzzle.type === 'ar-code' ||
+      currentStep.puzzle.type === 'open-ended') &&
+    (stepAttempts.get(currentStep.id) ?? 0) >= 3;
   const hasAnsweredWrong =
-    (hasAnsweredCurrentStep || stepAnswers.has(currentStep.id) || hasPersistedTriviaWrongAttempt) &&
+    (hasAnsweredCurrentStep ||
+      stepAnswers.has(currentStep.id) ||
+      hasPersistedTriviaWrongAttempt ||
+      hasPersistedExhaustedAttempt) &&
     !isSolved;
 
   const isForwardLocked =

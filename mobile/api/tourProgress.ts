@@ -45,6 +45,13 @@ export type TriviaAnswerResponse = StepActionResponse & {
   attempt_count?: number;
 };
 
+export type OpenEndedAnswerResponse = StepActionResponse & {
+  accepted: boolean;
+  attempt_count?: number;
+  similarity_score?: number;
+  threshold_used?: number;
+};
+
 export type DeleteTourProgressRequest = {
   id: number;
 };
@@ -184,6 +191,23 @@ export async function submitTriviaAnswer(
   return apiRequest<TriviaAnswerResponse, { answer: string }>({
     method: 'POST',
     url: `/api/tour-progress/${id}/submit-trivia-answer/`,
+    data: { answer },
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Submit a typed answer for an OPEN_ENDED puzzle on the current step.
+ */
+export async function submitOpenEndedAnswer(
+  id: number,
+  answer: string,
+  signal?: AbortSignal
+): Promise<OpenEndedAnswerResponse> {
+  return apiRequest<OpenEndedAnswerResponse, { answer: string }>({
+    method: 'POST',
+    url: `/api/tour-progress/${id}/submit-open-ended-answer/`,
     data: { answer },
     auth: true,
     signal,

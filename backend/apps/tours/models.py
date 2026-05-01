@@ -210,6 +210,7 @@ class ARModel(models.Model):
 
 class Puzzle(models.Model):
     TRIVIA = "TRIVIA"
+    OPEN_ENDED = "OPEN_ENDED"
     AR = "AR"
     PICTURE_COMPARE = "PICTURE_COMPARE"
     TRIVIA_XP_REWARD = 25
@@ -218,6 +219,7 @@ class Puzzle(models.Model):
 
     PUZZLE_TYPE_CHOICES = [
         (TRIVIA, "Trivia"),
+        (OPEN_ENDED, "Open Ended"),
         (AR, "Augmented Reality"),
         (PICTURE_COMPARE, "Picture Compare"),
         (COMPASS, "Compass"),
@@ -245,7 +247,7 @@ class Puzzle(models.Model):
 
     @classmethod
     def fixed_xp_reward_for_type(cls, puzzle_type: str) -> int:
-        if puzzle_type == cls.TRIVIA:
+        if puzzle_type in (cls.TRIVIA, cls.OPEN_ENDED):
             return cls.TRIVIA_XP_REWARD
         return cls.NON_TRIVIA_XP_REWARD
 

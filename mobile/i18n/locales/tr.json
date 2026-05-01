@@ -482,6 +482,9 @@
       "optionsRequired": "Seçenekler (Doğru cevabı işaretleyin) *",
       "optionPlaceholder": "Seçenek {{number}}",
       "addOption": "Seçenek Ekle",
+      "correctAnswer": "Doğru Cevap",
+      "correctAnswerPlaceholder": "örn. bizans imparatorluğu",
+      "correctAnswerHint": "Kullanıcı, yazdığı cevap buna yeterince benzerse geçer.",
       "hintLabel": "İpucu (İsteğe Bağlı)",
       "hintPlaceholder": "ör. Kapının üstündeki levhaya bakın.",
       "hintText": "Kullanıcı takılırsa işe yarayacak bir ipucu."

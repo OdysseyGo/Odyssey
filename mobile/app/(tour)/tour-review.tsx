@@ -8,6 +8,7 @@ import {
   deleteTour,
   setStepArPuzzle,
   setStepCompassPuzzle,
+  setStepOpenEndedPuzzle,
   setStepPictureComparePuzzle,
   setStepTriviaPuzzle,
   updateTour,
@@ -121,6 +122,14 @@ export default function TourReviewScreen() {
                 await setStepTriviaPuzzle(createdTourId, createdStep.id, {
                   ...basePayload,
                   options: loc.puzzle.options,
+                  correct_answer: loc.puzzle.correctAnswer,
+                });
+                continue;
+              }
+
+              if (loc.puzzle.puzzle_type === 'OPEN_ENDED') {
+                await setStepOpenEndedPuzzle(createdTourId, createdStep.id, {
+                  ...basePayload,
                   correct_answer: loc.puzzle.correctAnswer,
                 });
                 continue;
