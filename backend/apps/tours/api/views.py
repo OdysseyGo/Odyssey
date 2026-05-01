@@ -9,6 +9,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
 from apps.gamification.models import TourProgress
+from apps.gamification.services import BadgeService
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
@@ -113,7 +114,8 @@ class TourViewSet(viewsets.ModelViewSet):
             status = Tour.DRAFT
         else:
             status = Tour.PUBLISHED
-        serializer.save(creator=self.request.user, status=status)
+        tour = serializer.save(creator=self.request.user, status=status)
+        BadgeService.evaluate_user_badges(tour.creator)
 
     @action(
         detail=False,
@@ -191,6 +193,16 @@ class TourViewSet(viewsets.ModelViewSet):
         status = request.query_params.get("status")
         if status:
             queryset = queryset.filter(status=status)
+
+        generation_source = request.query_params.get("generation_source")
+        if generation_source:
+            queryset = queryset.filter(generation_source=generation_source)
+
+        is_ai_generated = request.query_params.get("is_ai_generated")
+        if is_ai_generated is not None:
+            queryset = queryset.filter(
+                is_ai_generated=str(is_ai_generated).lower() == "true"
+            )
 
         queryset = queryset.annotate(average_rating=Avg("reviews__rating")).order_by(
             "-updated_at"
@@ -692,6 +704,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You cannot review your own tour.")
 
         serializer.save(user=self.request.user, tour=tour)
+        BadgeService.evaluate_user_badges(self.request.user)
+        BadgeService.evaluate_user_badges(tour.creator)
 
     def perform_update(self, serializer):
         if serializer.instance.tour.creator_id == self.request.user.id:

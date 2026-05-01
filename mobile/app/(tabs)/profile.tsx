@@ -34,7 +34,7 @@ import { getMe, User } from '@/api/users';
 import { getMyBadges, getLevelInfo, LevelInfo, UserBadge } from '@/api/profile';
 import { computeLevelInfo, getLevelTier } from '@/utils/levelConfig';
 import { removeAuthToken } from '@/api/auth';
-import { consumeProfileNeedsRefresh } from '@/lib/profileRefresh';
+import { consumeProfileNeedsRefresh, subscribeProfileRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -408,6 +408,7 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
 
     if (!token) {
       setHasToken(false);
+      setCurUser(null);
       setLoading(false);
       return;
     }
@@ -435,6 +436,13 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
     }
   }, []);
 
+  useEffect(() => {
+    return subscribeProfileRefresh(() => {
+      setLoading(true);
+      refreshProfile();
+    });
+  }, [refreshProfile]);
+
   useFocusEffect(
     useCallback(() => {
       const now = Date.now();
@@ -459,7 +467,6 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
             await removeAuthToken();
             setHasToken(false);
             setCurUser(null);
-            router.push('/login');
           },
         },
       ]
@@ -475,6 +482,10 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
   // ─── Loading ──────────────────────────────────────────
 
   if (loading) {
+    return <SkeletonLoading theme={theme} />;
+  }
+
+  if (hasToken === true && !fetchError && !curUser) {
     return <SkeletonLoading theme={theme} />;
   }
 
@@ -543,6 +554,8 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
     name: userBadge.badge.name,
     code: userBadge.badge.code,
     description: userBadge.badge.description,
+    icon: userBadge.badge.icon,
+    criteria: userBadge.badge.criteria,
     unlocked: true,
     city: userBadge.city,
     countryCode: userBadge.country_code,

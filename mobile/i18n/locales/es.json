@@ -103,12 +103,14 @@
     "tabs": {
       "published": "Publicados",
       "drafts": "Borradores",
+      "aiTours": "Tours de IA",
       "archived": "Archivados",
       "settings": "Ajustes",
       "tutorials": "Tutoriales"
     },
     "emptyPublished": "Aún no hay tours publicados. ¡Publica uno para compartirlo con la comunidad!",
     "emptyDraft": "No hay borradores. ¡Empieza a crear un nuevo tour!",
+    "emptyAiTours": "Aún no hay tours generados con IA. ¡Crea uno para empezar tu escaparate!",
     "emptyArchived": "No hay tours archivados.",
     "emptyDefault": "No se encontraron tours.",
     "followersTitle": "Seguidores",

@@ -3,6 +3,8 @@ export type BadgeType = {
   name: string;
   code?: string | null;
   description?: string;
+  icon?: string | null;
+  criteria?: Record<string, unknown> | null;
   unlocked: boolean;
   city?: string;
   countryCode?: string;

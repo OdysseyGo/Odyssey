@@ -56,7 +56,10 @@ export async function setAuthToken(token: string): Promise<void> {
  * Remove auth token on logout or when login fails
  */
 export async function removeAuthToken(): Promise<void> {
-  await SecureStore.deleteItemAsync('userToken');
+  await Promise.all([
+    SecureStore.deleteItemAsync('userToken'),
+    SecureStore.deleteItemAsync('refreshToken'),
+  ]);
 }
 
 /**
