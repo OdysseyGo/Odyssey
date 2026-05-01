@@ -147,7 +147,9 @@ class AdminUserDetailSerializer(serializers.ModelSerializer):
         return BanRecordSerializer(records, many=True).data
 
     def get_badges(self, obj):
-        badges = obj.badges.select_related("badge", "source_tour").order_by("-earned_at")
+        badges = obj.badges.select_related("badge", "source_tour").order_by(
+            "-earned_at"
+        )
         return AdminUserBadgeSerializer(badges, many=True).data
 
     def get_badge_history(self, obj):

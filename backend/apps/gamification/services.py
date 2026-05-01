@@ -217,7 +217,9 @@ class BadgeService:
                 country_code="ZZ",
                 defaults={
                     "source_tour": (
-                        completed_progress.tour if completed_progress is not None else None
+                        completed_progress.tour
+                        if completed_progress is not None
+                        else None
                     ),
                 },
             )
@@ -227,7 +229,9 @@ class BadgeService:
                     badge=badge,
                     user_badge=user_badge,
                     source_tour=(
-                        completed_progress.tour if completed_progress is not None else None
+                        completed_progress.tour
+                        if completed_progress is not None
+                        else None
                     ),
                 )
                 newly_earned.append(badge.name)
@@ -244,5 +248,7 @@ class BadgeService:
             newly_earned.extend(
                 BadgeService._award_or_upgrade_city_badge(user, completed_progress)
             )
-        newly_earned.extend(BadgeService._award_xp_milestone_badges(user, completed_progress))
+        newly_earned.extend(
+            BadgeService._award_xp_milestone_badges(user, completed_progress)
+        )
         return newly_earned
