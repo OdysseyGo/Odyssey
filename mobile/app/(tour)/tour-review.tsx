@@ -206,14 +206,15 @@ export default function TourReviewScreen() {
                     }),
                   STEP_UPLOAD_MAX_RETRIES
                 );
-              if (loc.puzzle.puzzle_type === 'OPEN_ENDED') {
-                await setStepOpenEndedPuzzle(createdTourId, createdStep.id, {
-                  ...basePayload,
-                  correct_answer: loc.puzzle.correctAnswer,
-                });
-                continue;
-              }
-
+              } else if (puzzle.puzzle_type === 'OPEN_ENDED') {
+                await withRetry(
+                  () =>
+                    setStepOpenEndedPuzzle(submittingTourId, createdStep.id, {
+                      ...basePayload,
+                      correct_answer: sanitizeSingleLineText(puzzle.correctAnswer),
+                    }),
+                  STEP_UPLOAD_MAX_RETRIES
+                );
               } else if (puzzle.puzzle_type === 'PICTURE_COMPARE') {
                 const referenceImageUri = puzzle.referenceImage;
                 if (!referenceImageUri || !referenceImageUri.startsWith('file://')) {
