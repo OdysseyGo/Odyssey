@@ -88,6 +88,7 @@ class GeminiService:
             creator: User object who will own the tour
             custom_prompt: Optional user instructions
         """
+
         def _emit(label):
             if progress_callback:
                 try:
