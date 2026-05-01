@@ -118,6 +118,15 @@ export default function EditLocationScreen() {
       return true;
     }
 
+    if (currentPuzzle.puzzle_type === 'COMPASS') {
+      return (
+        typeof currentPuzzle.targetHeadingDegrees === 'number' &&
+        Number.isInteger(currentPuzzle.targetHeadingDegrees) &&
+        currentPuzzle.targetHeadingDegrees >= 0 &&
+        currentPuzzle.targetHeadingDegrees <= 359
+      );
+    }
+
     const options = currentPuzzle.options;
     if (!currentPuzzle.correctAnswer || !options || options.length < 2) {
       return false;

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from .models import GenerationJob
+
 
 class GenerateTourRequestSerializer(serializers.Serializer):
     """Serializer for AI tour generation request."""
@@ -40,6 +42,14 @@ class GenerateTourRequestSerializer(serializers.Serializer):
         allow_blank=True,
         help_text="Additional details for tour generation",
     )
+    include_ar = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text=(
+            "When true, the AI may add AR puzzles on steps it judges thematically "
+            "appropriate, drawn from the active ARModel catalog."
+        ),
+    )
     use_ad_slot = serializers.BooleanField(
         required=False,
         default=False,
@@ -50,9 +60,24 @@ class GenerateTourRequestSerializer(serializers.Serializer):
     )
 
 
-class GenerateTourResponseSerializer(serializers.Serializer):
-    """Serializer for AI tour generation response."""
+class GenerationJobAcceptedSerializer(serializers.Serializer):
+    job_id = serializers.UUIDField()
+    status = serializers.CharField()
 
-    tour_id = serializers.IntegerField()
-    title = serializers.CharField()
-    message = serializers.CharField()
+
+class GenerationJobSerializer(serializers.ModelSerializer):
+    job_id = serializers.UUIDField(source="id", read_only=True)
+    tour_id = serializers.IntegerField(read_only=True, allow_null=True)
+
+    class Meta:
+        model = GenerationJob
+        fields = [
+            "job_id",
+            "status",
+            "progress_label",
+            "tour_id",
+            "error",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields

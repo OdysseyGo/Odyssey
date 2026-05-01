@@ -510,6 +510,7 @@
     "missingInfoTitle": "Eksik Bilgi",
     "missingInfoMessage": "Lütfen turunuz için hem bir şehir hem de bir tema girin.",
     "successTitle": "Tur Oluşturuldu! 🎉",
+    "successMessage": "Turunuz keşfedilmeye hazır.",
     "viewTour": "Turu Görüntüle",
     "createAnother": "Başka Bir Tane Oluştur",
     "failedTitle": "Oluşturma Başarısız",
@@ -520,8 +521,8 @@
       "subtitle": "Hayalinizdeki tur hakkında bize bilgi verin, yapay zeka gerçek konumlar, ilgi çekici hikayeler ve etkileşimli içeriklerle benzersiz bir deneyim tasarlasın."
     },
     "loading": {
-      "title": "Turunuz Oluşturuluyor...",
-      "subtitle": "Yapay zeka sizin için en iyi konumları buluyor ve ilgi çekici içerikler hazırlıyor"
+      "title": "Maceranız Hazırlanıyor...",
+      "subtitle": "Bu genellikle 20–30 saniye sürer"
     },
     "languageSelector": {
       "title": "İçerik Dili",
@@ -534,6 +535,10 @@
       "puzzleDesc": "Her konumda etkileşimli meydan okumalar ve bilgi soruları",
       "hybrid": "Hibrit Mod",
       "hybridDesc": "Her ikisinin en iyisi - ilgi çekici hikayeler ve eğlenceli bulmacalar"
+    },
+    "includeAr": {
+      "title": "AR Bulmacalarını Dahil Et",
+      "subtitle": "Yapay zekanın uygun olan duraklara artırılmış gerçeklik bulmacaları eklemesine izin verin"
     }
   },
   "tourStep": {

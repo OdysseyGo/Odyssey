@@ -1,6 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Switch,
+} from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { aiTourCreationStyles } from './ai-tour-creation.styles';
 import {
@@ -22,10 +31,28 @@ import {
   AITourFormData,
   createEmptyFormData,
 } from '@/components/AITourCreation';
-import { generateAITour } from '@/api/aiTours';
+import { generateAITour, getAITourJob, AITourJob, AITourJobAccepted } from '@/api/aiTours';
 import { CreationHeader } from '@/components/TourCreation/common';
-import { useTranslation } from 'react-i18next';
 import { useRewardedAd } from '@/components/Ads/useRewardedAd';
+
+const POLL_INTERVAL_MS = 1500;
+const POLL_TIMEOUT_MS = 5 * 60 * 1000;
+
+async function pollGenerationJob(
+  jobId: string,
+  onProgress: (label: string) => void
+): Promise<AITourJob> {
+  const start = Date.now();
+  while (true) {
+    const job = await getAITourJob(jobId);
+    if (job.progress_label) onProgress(job.progress_label);
+    if (job.status === 'SUCCESS' || job.status === 'FAILED') return job;
+    if (Date.now() - start > POLL_TIMEOUT_MS) {
+      return { ...job, status: 'FAILED', error: 'Generation timed out' };
+    }
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+  }
+}
 
 export default function AITourCreation() {
   const theme = useColorTheme();
@@ -33,6 +60,7 @@ export default function AITourCreation() {
   const { t } = useTranslation();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [progressLabel, setProgressLabel] = useState<string>('');
   const [formData, setFormData] = useState<AITourFormData>(createEmptyFormData());
   const rewardedAiSlot = useRewardedAd('rewarded_ai_slot');
 
@@ -66,14 +94,21 @@ export default function AITourCreation() {
       return;
     }
 
-    let useAdSlot = false;
-    if (rewardedAiSlot.available && rewardedAiSlot.status === 'loaded') {
-      const earned = await rewardedAiSlot.show();
-      if (!earned) return;
-      useAdSlot = true;
+    if (!rewardedAiSlot.available || rewardedAiSlot.status !== 'loaded') {
+      Alert.alert(
+        t('aiTour.failedTitle'),
+        t('aiTour.adUnavailableMessage', {
+          defaultValue: 'A rewarded ad is required before AI generation. Please try again shortly.',
+        })
+      );
+      return;
     }
 
+    const earned = await rewardedAiSlot.show();
+    if (!earned) return;
+
     setIsLoading(true);
+    setProgressLabel('');
 
     try {
       const buildPayload = () => ({
@@ -85,21 +120,21 @@ export default function AITourCreation() {
         duration: formData.duration,
         language: formData.language,
         additional_details: formData.additionalDetails.trim() || undefined,
-        use_ad_slot: useAdSlot || undefined,
+        include_ar: formData.includeAr,
+        use_ad_slot: true,
       });
 
-      let response;
+      let accepted: AITourJobAccepted | null = null;
       let attempt = 0;
-      const maxAttempts = useAdSlot ? 6 : 1;
+      const maxAttempts = 6;
       while (true) {
         try {
-          response = await generateAITour(buildPayload());
+          accepted = await generateAITour(buildPayload());
           break;
         } catch (err: any) {
           attempt += 1;
           const isVerificationRace =
-            useAdSlot &&
-            err?.statusCode === 400 &&
+            err?.statusCode === 403 &&
             typeof err?.message === 'string' &&
             err.message.includes('No unconsumed AI_SLOT');
           if (!isVerificationRace || attempt >= maxAttempts) throw err;
@@ -107,20 +142,32 @@ export default function AITourCreation() {
         }
       }
 
-      Alert.alert(t('aiTour.successTitle'), response.message, [
-        {
-          text: t('aiTour.viewTour'),
-          onPress: () => router.replace(`/tour/${response.tour_id}`),
-        },
-        {
-          text: t('aiTour.createAnother'),
-          style: 'cancel',
-        },
-      ]);
+      if (!accepted) {
+        throw new Error(t('aiTour.failedMessage'));
+      }
+
+      const finalJob = await pollGenerationJob(accepted.job_id, setProgressLabel);
+
+      if (finalJob.status === 'SUCCESS' && finalJob.tour_id != null) {
+        const tourId = finalJob.tour_id;
+        Alert.alert(t('aiTour.successTitle'), t('aiTour.successMessage'), [
+          {
+            text: t('aiTour.viewTour'),
+            onPress: () => router.replace(`/tour/${tourId}`),
+          },
+          {
+            text: t('aiTour.createAnother'),
+            style: 'cancel',
+          },
+        ]);
+      } else {
+        Alert.alert(t('aiTour.failedTitle'), finalJob.error || t('aiTour.failedMessage'));
+      }
     } catch (error: any) {
       Alert.alert(t('aiTour.failedTitle'), error?.message || t('aiTour.failedMessage'));
     } finally {
       setIsLoading(false);
+      setProgressLabel('');
     }
   };
 
@@ -212,6 +259,19 @@ export default function AITourCreation() {
 
           <View style={styles.sectionDivider} />
 
+          <View style={styles.arToggleRow}>
+            <View style={styles.arToggleLabels}>
+              <Text style={styles.sectionTitle}>{t('aiTour.includeAr.title')}</Text>
+              <Text style={styles.sectionSubtitle}>{t('aiTour.includeAr.subtitle')}</Text>
+            </View>
+            <Switch
+              value={formData.includeAr}
+              onValueChange={(value) => updateFormData({ includeAr: value })}
+            />
+          </View>
+
+          <View style={styles.sectionDivider} />
+
           <FormInputGroup label={t('aiTour.duration')}>
             <FormDurationPicker
               value={formData.duration}
@@ -246,7 +306,7 @@ export default function AITourCreation() {
         <GenerateButton onPress={handleGenerate} disabled={!isFormValid} isLoading={isLoading} />
       </KeyboardAvoidingView>
 
-      <LoadingOverlay visible={isLoading} />
+      <LoadingOverlay visible={isLoading} subtitle={progressLabel || undefined} />
     </View>
   );
 }

@@ -4,8 +4,11 @@ import os
 from typing import Any, Dict, List, Optional
 
 import googlemaps
+from django.core.cache import cache
 
 from .models import Tour, TourStep
+
+PLACES_CACHE_TTL_SECONDS = 24 * 60 * 60
 
 logger = logging.getLogger(__name__)
 
@@ -142,6 +145,13 @@ class GoogleMapsFacade:
         if not self.client:
             return []
 
+        cache_key = (
+            f"places:{city.strip().lower()}|{theme.strip().lower()}|{max_results}"
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         places: List[Dict[str, Any]] = []
         seen_place_ids: set = set()
 
@@ -196,7 +206,10 @@ class GoogleMapsFacade:
             except Exception as e:
                 print(f"Fallback places search failed for '{city}': {e}")
 
-        return places[:max_results]
+        result = places[:max_results]
+        if result:
+            cache.set(cache_key, result, PLACES_CACHE_TTL_SECONDS)
+        return result
 
     def calculate_route_metrics(self, steps: List[TourStep]) -> Dict[str, Any]:
         """

@@ -510,6 +510,7 @@
     "missingInfoTitle": "Missing Information",
     "missingInfoMessage": "Please provide both a state and a theme for your tour.",
     "successTitle": "Tour Created! 🎉",
+    "successMessage": "Your tour is ready to explore.",
     "viewTour": "View Tour",
     "createAnother": "Create Another",
     "failedTitle": "Generation Failed",
@@ -520,8 +521,8 @@
       "subtitle": "Tell us about your dream tour and let AI craft a unique experience with real locations, engaging stories, and interactive content."
     },
     "loading": {
-      "title": "Creating Your Tour...",
-      "subtitle": "AI is finding the best locations and crafting engaging content for you"
+      "title": "Crafting Your Adventure...",
+      "subtitle": "This usually takes about 20–30 seconds"
     },
     "languageSelector": {
       "title": "Content Language",
@@ -534,6 +535,10 @@
       "puzzleDesc": "Interactive challenges and trivia at each location",
       "hybrid": "Hybrid Mode",
       "hybridDesc": "Best of both - engaging stories with fun puzzles"
+    },
+    "includeAr": {
+      "title": "Include AR Puzzles",
+      "subtitle": "Let the AI add augmented-reality puzzles on stops where they fit"
     }
   },
   "tourStep": {

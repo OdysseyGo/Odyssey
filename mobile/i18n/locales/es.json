@@ -488,6 +488,7 @@
     "missingInfoTitle": "Falta Información",
     "missingInfoMessage": "Por favor, proporciona tanto un estado como un tema para tu tour.",
     "successTitle": "¡Tour Creado! 🎉",
+    "successMessage": "Tu tour está listo para explorar.",
     "viewTour": "Ver Tour",
     "createAnother": "Crear Otro",
     "failedTitle": "Error de Generación",
@@ -498,8 +499,8 @@
       "subtitle": "Cuéntanos sobre tu tour soñado y deja que la IA cree una experiencia única con ubicaciones reales, historias atractivas y contenido interactivo."
     },
     "loading": {
-      "title": "Creando tu Tour...",
-      "subtitle": "La IA está buscando las mejores ubicaciones y elaborando contenido atractivo para ti"
+      "title": "Creando tu Aventura...",
+      "subtitle": "Esto suele tardar unos 20–30 segundos"
     },
     "languageSelector": {
       "title": "Idioma del Contenido",
@@ -512,6 +513,10 @@
       "puzzleDesc": "Desafíos interactivos y curiosidades en cada ubicación",
       "hybrid": "Modo Híbrido",
       "hybridDesc": "Lo mejor de ambos: historias atractivas con puzzles divertidos"
+    },
+    "includeAr": {
+      "title": "Incluir Puzzles AR",
+      "subtitle": "Deja que la IA añada puzzles de realidad aumentada en las paradas donde encajen"
     }
   },
   "tourStep": {

@@ -47,6 +47,7 @@ export type AITourFormData = {
   duration: number;
   language: string;
   additionalDetails: string;
+  includeAr: boolean;
 };
 
 export const createEmptyFormData = (): AITourFormData => ({
@@ -60,4 +61,5 @@ export const createEmptyFormData = (): AITourFormData => ({
   duration: 60,
   language: 'en',
   additionalDetails: '',
+  includeAr: false,
 });
