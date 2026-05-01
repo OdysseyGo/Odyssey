@@ -71,10 +71,11 @@ class TourProgressSerializer(serializers.ModelSerializer):
             "completed_at",
             "total_xp",
             "skip_count",
+            "xp_awarded",
             "wrong_attempt_count",
             "step_attempt_counts",
         ]
-        read_only_fields = ["user", "started_at", "completed_at"]
+        read_only_fields = ["user", "started_at", "completed_at", "xp_awarded"]
 
     def get_step_attempt_counts(self, obj):
         rows = (

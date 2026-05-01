@@ -199,6 +199,8 @@ class Puzzle(models.Model):
     AR = "AR"
     GYROSCOPE = "GYROSCOPE"
     PICTURE_COMPARE = "PICTURE_COMPARE"
+    TRIVIA_XP_REWARD = 25
+    NON_TRIVIA_XP_REWARD = 50
     COMPASS = "COMPASS"
 
     PUZZLE_TYPE_CHOICES = [
@@ -219,7 +221,7 @@ class Puzzle(models.Model):
     )
     correct_answer = models.CharField(max_length=255)
     hint = models.TextField(blank=True)
-    xp_reward = models.PositiveIntegerField(default=10)
+    xp_reward = models.PositiveIntegerField(default=25)
     reference_image = models.ImageField(
         upload_to=puzzle_reference_image_upload_to, blank=True, null=True
     )
@@ -228,6 +230,12 @@ class Puzzle(models.Model):
 
     def __str__(self):
         return f"Puzzle for {self.step}"
+
+    @classmethod
+    def fixed_xp_reward_for_type(cls, puzzle_type: str) -> int:
+        if puzzle_type == cls.TRIVIA:
+            return cls.TRIVIA_XP_REWARD
+        return cls.NON_TRIVIA_XP_REWARD
 
 
 class TriviaPuzzleDetail(models.Model):

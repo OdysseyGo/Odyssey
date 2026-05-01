@@ -181,7 +181,8 @@ export default function TourNavigation({
   const colors = Colors[theme];
   const [isDirectionsModalVisible, setIsDirectionsModalVisible] = useState(false);
   const [hasAnsweredCurrentStep, setHasAnsweredCurrentStep] = useState(false);
-  const { skipCount, wrongAnswerCount, stepAnswers, stepAttempts } = useActiveTour();
+  const { skipCount, wrongAnswerCount, highestStepIndex, stepAnswers, stepAttempts } =
+    useActiveTour();
 
   useEffect(() => {
     setHasAnsweredCurrentStep(false);
@@ -429,6 +430,7 @@ export default function TourNavigation({
         <TourStepComponent
           step={currentStep}
           isSolved={isSolved}
+          isFinished={currentStepIndex < highestStepIndex}
           onSolve={handleSolve}
           onAnswered={() => setHasAnsweredCurrentStep(true)}
         />

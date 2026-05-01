@@ -28,7 +28,6 @@ export interface Puzzle {
   options: string[];
   correctAnswer: string;
   hint: string;
-  xp_reward: number;
   referenceImage?: string;
   arConfig?: ARPuzzleConfig;
   targetHeadingDegrees?: number;
@@ -52,7 +51,6 @@ export const createEmptyPuzzle = (): Puzzle => ({
   options: ['', ''],
   correctAnswer: '',
   hint: '',
-  xp_reward: 10,
 });
 
 export interface TourLocation {

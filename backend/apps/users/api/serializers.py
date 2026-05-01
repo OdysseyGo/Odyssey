@@ -34,6 +34,7 @@ class UserSerializer(serializers.ModelSerializer):
             "user_type",
             "tour_count",
             "rating",
+            "total_walked_km",
             "avatar_url",
         ]
         extra_kwargs = {
