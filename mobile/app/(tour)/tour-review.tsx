@@ -197,9 +197,7 @@ export default function TourReviewScreen() {
               is_premium: false,
             };
 
-            const tourId = isEditing
-              ? editingTourId
-              : (await createTour(tourPayload)).id;
+            const tourId = isEditing ? editingTourId : (await createTour(tourPayload)).id;
 
             if (!tourId) {
               throw new Error('Missing tour id');
