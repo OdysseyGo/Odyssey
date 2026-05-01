@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from django.test import TestCase
 
-from apps.tours.models import Puzzle, Tour, TourStep
+from apps.tours.models import CompassPuzzleDetail, Puzzle, Tour, TourStep
 
 from .services import GeminiService
 
@@ -529,6 +529,159 @@ class TestFuzzyMatchPlace(TestCase):
         candidates = _candidate_places()
         result = GeminiService._fuzzy_match_place("", candidates)
         assert result is None
+
+
+@pytest.mark.django_db
+class TestCompassPuzzleGeneration(TestCase):
+    """Tests for AI-generated COMPASS puzzles."""
+
+    def _make_creator(self):
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        return User.objects.create_user(
+            username="compass_creator",
+            password="pass123",
+            email="compass@test.com",
+        )
+
+    def _tour_with_compass(self, puzzle_overrides: dict) -> dict:
+        """Two-step tour where step 1 has a COMPASS puzzle pointing at step 2."""
+        return {
+            "title": "Compass Tour",
+            "description": "Walk and look around.",
+            "difficulty": "EASY",
+            "steps": [
+                {
+                    "title": "Hagia Sophia",
+                    "description": "Start here.",
+                    "latitude": 41.00860,
+                    "longitude": 28.98020,
+                    "puzzle": {
+                        "type": "COMPASS",
+                        "question": "Face the Blue Mosque.",
+                        "hint": "Look across the square.",
+                        "xp": 30,
+                        **puzzle_overrides,
+                    },
+                },
+                {
+                    "title": "Blue Mosque",
+                    "description": "End here.",
+                    "latitude": 41.00550,
+                    "longitude": 28.97690,
+                },
+            ],
+        }
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
+    def test_compass_via_landmark_computes_real_bearing(
+        self, mock_genai, mock_maps_cls
+    ):
+        """target_landmark should resolve to a real bearing between coords."""
+        tour_data = self._tour_with_compass({"target_landmark": "Blue Mosque"})
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
+
+        service = GeminiService()
+        tour = service.generate_tour(
+            city="Istanbul",
+            theme="History",
+            mode="HYBRID",
+            duration=30,
+            language="en",
+            creator=self._make_creator(),
+        )
+
+        compass = CompassPuzzleDetail.objects.get(puzzle__step__tour=tour)
+        # Bearing from Hagia Sophia (41.00860, 28.98020) to Blue Mosque
+        # (41.00550, 28.97690) is roughly 217° (south-southwest).
+        assert 200 <= compass.target_heading_degrees <= 235
+        assert compass.puzzle.puzzle_type == Puzzle.COMPASS
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
+    def test_compass_via_raw_heading(self, mock_genai, mock_maps_cls):
+        """Raw target_heading_degrees should be used when no landmark provided."""
+        tour_data = self._tour_with_compass({"target_heading_degrees": 90})
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
+
+        service = GeminiService()
+        tour = service.generate_tour(
+            city="Istanbul",
+            theme="History",
+            mode="HYBRID",
+            duration=30,
+            language="en",
+            creator=self._make_creator(),
+        )
+
+        compass = CompassPuzzleDetail.objects.get(puzzle__step__tour=tour)
+        assert compass.target_heading_degrees == 90
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
+    def test_invalid_compass_falls_back_to_trivia_in_puzzle_mode(
+        self, mock_genai, mock_maps_cls
+    ):
+        """A COMPASS puzzle with no usable heading should be replaced by the trivia fallback."""
+        tour_data = self._tour_with_compass({"target_landmark": "Nowhere At All"})
+        # No target_heading_degrees either — neither path resolves.
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
+
+        service = GeminiService()
+        tour = service.generate_tour(
+            city="Istanbul",
+            theme="History",
+            mode="PUZZLE",
+            duration=30,
+            language="en",
+            creator=self._make_creator(),
+        )
+
+        # No COMPASS puzzle persisted; trivia fallback wrote a trivia puzzle instead.
+        assert CompassPuzzleDetail.objects.filter(puzzle__step__tour=tour).count() == 0
+        first_step = tour.steps.order_by("order").first()
+        assert first_step.puzzle.puzzle_type == Puzzle.TRIVIA
+
+
+class TestBearingDegrees(TestCase):
+    def test_due_east(self):
+        # 1 degree east at the equator → bearing 90°
+        assert GeminiService._bearing_degrees(0.0, 0.0, 0.0, 1.0) == 90
+
+    def test_due_north(self):
+        assert GeminiService._bearing_degrees(0.0, 0.0, 1.0, 0.0) == 0
+
+    def test_due_south(self):
+        assert GeminiService._bearing_degrees(1.0, 0.0, 0.0, 0.0) == 180
+
+    def test_due_west(self):
+        assert GeminiService._bearing_degrees(0.0, 1.0, 0.0, 0.0) == 270
 
 
 class TestClusterCandidates(TestCase):
