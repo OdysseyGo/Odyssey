@@ -3,21 +3,20 @@ import json
 from rest_framework import serializers
 
 from apps.admin_dashboard.models import BanRecord, Report
+from apps.gamification.models import Badge, PictureCompareConfig
+from apps.gamification.visuals import DEFAULT_BADGE_VISUAL_CONFIG
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
+    CompassPuzzleDetail,
     GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
-    CompassPuzzleDetail,
     Puzzle,
     Review,
     Tour,
     TourStep,
     TriviaPuzzleDetail,
 )
-from apps.gamification.models import Badge, PictureCompareConfig
-from apps.gamification.visuals import DEFAULT_BADGE_VISUAL_CONFIG
-from apps.tours.models import ARModel, Puzzle, Review, Tour, TourStep
 from apps.users.models import User
 
 # ── User Management ──────────────────────────────────────────────────
@@ -619,6 +618,7 @@ class GyroscopePuzzleDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = GyroscopePuzzleDetail
         fields = ["target_pitch", "target_roll", "target_yaw", "tolerance_degrees"]
+
 
 class CompassPuzzleDetailSerializer(serializers.ModelSerializer):
     class Meta:

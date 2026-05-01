@@ -44,9 +44,6 @@ export default function TourReviewScreen() {
       doesLocationMeetTourRequirements(location, tourData.tourType)
     );
 
-    console.log(isDevMode);
-    
-
   const handleSubmitTour = async () => {
     if (!isReadyToSubmit) {
       Alert.alert(
@@ -81,7 +78,7 @@ export default function TourReviewScreen() {
               country_code: tourData.countryCode || '',
               city_latitude: tourData.stateLatitude,
               city_longitude: tourData.stateLongitude,
-              status:'DRAFT', 
+              status: 'DRAFT',
               is_premium: false,
             });
 
@@ -183,7 +180,7 @@ export default function TourReviewScreen() {
               country_code: tourData.countryCode || '',
               city_latitude: tourData.stateLatitude,
               city_longitude: tourData.stateLongitude,
-              status: isDevMode ? 'PUBLISHED' :'DRAFT'  
+              status: isDevMode ? 'PUBLISHED' : 'DRAFT',
             });
 
             Alert.alert(t('creation.successTitle'), t('creation.successMessage'), [
@@ -203,10 +200,7 @@ export default function TourReviewScreen() {
                 console.log(`Hata oluştu! Yarım kalan tur (${createdTourId}) siliniyor...`);
                 await deleteTour(createdTourId);
               } catch (deleteError) {
-                console.error(
-                  'Error on deleting tour',
-                  deleteError
-                );
+                console.error('Error on deleting tour', deleteError);
               }
             }
 
