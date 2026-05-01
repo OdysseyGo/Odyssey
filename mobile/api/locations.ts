@@ -1,4 +1,4 @@
-import { City, Country, State } from 'country-state-city';
+import { Country, State } from 'country-state-city';
 import { resolveSupportedLanguage } from '@/i18n/languageConfig';
 import type { LocaleData } from 'i18n-iso-countries';
 import stateTranslations from '@/constants/stateTranslations.generated.json';
@@ -21,7 +21,7 @@ export type CountrySuggestion = {
   country_code: string;
 };
 
-export type CitySuggestion = {
+export type StateSuggestion = {
   name: string;
   country_code: string;
   country_name?: string;
@@ -110,7 +110,7 @@ export async function fetchCountrySuggestions(
   const normalized = normalizeForSearch(query, resolvedLanguage);
   if (!normalized) return [];
 
-  const countries = Country.getAllCountries()
+  const matchedCountries = Country.getAllCountries()
     .filter((country) => {
       const localizedName = normalizeForSearch(
         getCountryDisplayName(country.isoCode || '', resolvedLanguage),
@@ -131,15 +131,15 @@ export async function fetchCountrySuggestions(
       country_code: country.isoCode || '',
     }));
 
-  return countries;
+  return matchedCountries;
 }
 
-export async function fetchCitySuggestions(
+export async function fetchStateSuggestions(
   query: string,
   countryCode?: string,
   countryName?: string,
   language = 'en'
-): Promise<CitySuggestion[]> {
+): Promise<StateSuggestion[]> {
   const resolvedLanguage = resolveSupportedLanguage(language);
   const normalized = normalizeForSearch(query, resolvedLanguage);
   if (!normalized) return [];
@@ -149,45 +149,41 @@ export async function fetchCitySuggestions(
     resolveCountryCodeByName(countryName, resolvedLanguage) ||
     '';
 
-  const cities = effectiveCountryCode
-    ? City.getCitiesOfCountry(effectiveCountryCode) || []
-    : City.getAllCities();
+  const states = effectiveCountryCode
+    ? State.getStatesOfCountry(effectiveCountryCode) || []
+    : Country.getAllCountries().flatMap(
+        (country) => State.getStatesOfCountry(country.isoCode) || []
+      );
 
   const seen = new Set<string>();
-  const results: CitySuggestion[] = [];
+  const results: StateSuggestion[] = [];
 
-  for (const city of cities) {
-    const name = (city.name || '').trim();
+  for (const state of states) {
+    const name = (state.name || '').trim();
     if (!name || !normalizeForSearch(name, resolvedLanguage).includes(normalized)) continue;
-    const lat = Number(city.latitude);
-    const lng = Number(city.longitude);
+    const lat = Number(state.latitude);
+    const lng = Number(state.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
-    const cityCountryCode = (city.countryCode || effectiveCountryCode || '').toUpperCase();
-    const cityStateCode = (city.stateCode || '').trim().toUpperCase();
-    const state =
-      cityStateCode && cityCountryCode
-        ? State.getStateByCodeAndCountry(cityStateCode, cityCountryCode)
-        : undefined;
-    const stateFallbackName = (state?.name || '').trim();
-    const cityStateName = getStateDisplayName(
-      cityCountryCode,
-      cityStateCode,
-      resolvedLanguage,
-      stateFallbackName
-    );
-    const cityCountryName = getCountryDisplayName(cityCountryCode, resolvedLanguage);
-    const key = `${name.toLowerCase()}|${cityCountryCode}`;
+
+    const stateCountryCode = (state.countryCode || effectiveCountryCode || '').toUpperCase();
+    const stateCode = (state.isoCode || '').trim().toUpperCase();
+    const displayName = getStateDisplayName(stateCountryCode, stateCode, resolvedLanguage, name);
+    const countryDisplayName = getCountryDisplayName(stateCountryCode, resolvedLanguage);
+
+    const key = `${displayName.toLowerCase()}|${stateCountryCode}|${stateCode}`;
     if (seen.has(key)) continue;
     seen.add(key);
+
     results.push({
-      name,
-      country_code: cityCountryCode,
-      country_name: cityCountryName || cityCountryCode,
-      state_code: cityStateCode || undefined,
-      state_name: cityStateName || undefined,
+      name: displayName,
+      country_code: stateCountryCode,
+      country_name: countryDisplayName || stateCountryCode,
+      state_code: stateCode || undefined,
+      state_name: displayName,
       latitude: lat,
       longitude: lng,
     });
+
     if (results.length >= 25) break;
   }
 

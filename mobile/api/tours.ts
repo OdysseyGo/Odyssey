@@ -58,9 +58,13 @@ export type GyroscopePuzzleDetail = {
   tolerance_degrees: number;
 };
 
+export type CompassPuzzleDetail = {
+  target_heading_degrees: number;
+};
+
 export type Puzzle = {
   id?: number;
-  puzzle_type: 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE';
+  puzzle_type: 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE' | 'COMPASS';
   question: string;
   hint: string;
   xp_reward: number;
@@ -69,6 +73,7 @@ export type Puzzle = {
   picture_compare?: PictureComparePuzzleDetail;
   ar?: ArPuzzleDetail;
   gyroscope?: GyroscopePuzzleDetail;
+  compass?: CompassPuzzleDetail;
   // Backward-compatible fallbacks
   options?: string[];
   correct_answer?: string;
@@ -78,7 +83,6 @@ export type Puzzle = {
 export type PuzzleBaseUpsertPayload = {
   question: string;
   hint?: string;
-  xp_reward?: number;
 };
 
 export type TriviaPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
@@ -101,6 +105,10 @@ export type GyroscopePuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
   target_roll?: number;
   target_yaw?: number;
   tolerance_degrees?: number;
+};
+
+export type CompassPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  target_heading_degrees: number;
 };
 
 export type TourStep = {
@@ -127,6 +135,8 @@ export type Tour = {
   id: number;
   title: string;
   description: string;
+  cover_image?: string;
+  cover_image_attribution?: string;
   creator: User;
   tour_type: TourType;
   category: string;
@@ -153,6 +163,10 @@ export type Tour = {
   reviews: Review[];
   average_rating?: number;
 };
+
+export function getTourImageUri(tour: Pick<Tour, 'id' | 'cover_image' | 'creator'>): string {
+  return tour.cover_image || '';
+}
 
 export type ToursResponse = {
   count: number;
@@ -184,6 +198,64 @@ export type TourFilters = {
 };
 
 // API Functions
+
+function isRemoteHttpUrl(value: unknown): boolean {
+  return typeof value === 'string' && /^https?:\/\//i.test(value);
+}
+
+function isUploadableAssetUri(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  if (!value.trim()) return false;
+  if (isRemoteHttpUrl(value) || value.startsWith('data:')) return false;
+
+  // RN/Expo may return different local schemes by platform/source.
+  return (
+    value.startsWith('file://') ||
+    value.startsWith('content://') ||
+    value.startsWith('ph://') ||
+    value.startsWith('assets-library://') ||
+    value.startsWith('/')
+  );
+}
+
+function getUniqueCoverImageName(uri: string): string {
+  const cleanUri = uri.split('?')[0].split('#')[0];
+  const match = cleanUri.match(/\.([a-zA-Z0-9]+)$/);
+  const ext = (match?.[1] || 'jpg').toLowerCase();
+  return `cover_image_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+}
+
+function appendTourField(formData: FormData, key: string, value: unknown) {
+  if (value === undefined) return;
+  if (value === null) {
+    formData.append(key, '');
+    return;
+  }
+  if (typeof value === 'boolean') {
+    formData.append(key, value ? 'true' : 'false');
+    return;
+  }
+  formData.append(key, String(value));
+}
+
+function toTourPayload(tourData: Partial<Tour>): Partial<Tour> | FormData {
+  const { cover_image, ...rest } = tourData;
+  if (!isUploadableAssetUri(cover_image)) {
+    if (isRemoteHttpUrl(cover_image)) {
+      return rest;
+    }
+    return tourData;
+  }
+
+  const formData = new FormData();
+  Object.entries(rest).forEach(([key, value]) => appendTourField(formData, key, value));
+  formData.append('cover_image', {
+    uri: cover_image,
+    name: getUniqueCoverImageName(cover_image),
+    type: 'image/jpeg',
+  } as any);
+  return formData;
+}
 
 /**
  * Fetch all tours with optional filters and search
@@ -296,10 +368,11 @@ export async function getToursByType(
  * Create a new tour (requires authentication)
  */
 export async function createTour(tourData: Partial<Tour>, signal?: AbortSignal): Promise<Tour> {
-  return apiRequest<Tour, Partial<Tour>>({
+  const data = toTourPayload(tourData);
+  return apiRequest<Tour, typeof data>({
     method: 'POST',
     url: '/api/tours/',
-    data: tourData,
+    data,
     auth: true,
     signal,
   });
@@ -313,10 +386,11 @@ export async function updateTour(
   tourData: Partial<Tour>,
   signal?: AbortSignal
 ): Promise<Tour> {
-  return apiRequest<Tour, Partial<Tour>>({
+  const data = toTourPayload(tourData);
+  return apiRequest<Tour, typeof data>({
     method: 'PATCH',
     url: `/api/tours/${tourId}/`,
-    data: tourData,
+    data,
     auth: true,
     signal,
   });
@@ -541,7 +615,6 @@ export async function setStepPictureComparePuzzle(
   const formData = new FormData();
   formData.append('question', payload.question);
   formData.append('hint', payload.hint || '');
-  formData.append('xp_reward', String(payload.xp_reward ?? 10));
   if (payload.similarity_threshold !== undefined) {
     formData.append('similarity_threshold', String(payload.similarity_threshold));
   }
@@ -593,6 +666,21 @@ export async function setStepGyroscopePuzzle(
   return apiRequest<Puzzle, GyroscopePuzzleUpsertPayload>({
     method: 'POST',
     url: `/api/tours/${tourId}/steps/${stepId}/set-gyroscope-puzzle/`,
+    data: payload,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepCompassPuzzle(
+  tourId: number,
+  stepId: number,
+  payload: CompassPuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, CompassPuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-compass-puzzle/`,
     data: payload,
     auth: true,
     signal,

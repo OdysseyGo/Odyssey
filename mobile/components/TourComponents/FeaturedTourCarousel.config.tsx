@@ -8,7 +8,7 @@ export interface FeaturedTourCarouselProps {
 export const exampleFeaturedTours: TourDisplayProps[] = [
   {
     id: '1',
-    image: 'https://picsum.photos/800/400?random=1',
+    image: '',
     title: 'Discover the Wonders of Istanbul',
     author: 'Odyssey Travel',
     duration: '4 hours',
@@ -18,7 +18,7 @@ export const exampleFeaturedTours: TourDisplayProps[] = [
   },
   {
     id: '2',
-    image: 'https://picsum.photos/800/400?random=2',
+    image: '',
     title: 'Paris: City of Lights Tour',
     author: 'EuroTours',
     duration: '6 hours',
@@ -28,7 +28,7 @@ export const exampleFeaturedTours: TourDisplayProps[] = [
   },
   {
     id: '3',
-    image: 'https://picsum.photos/800/400?random=3',
+    image: '',
     title: 'Ancient Rome Walking Tour',
     author: 'Historia Tours',
     duration: '5 hours',

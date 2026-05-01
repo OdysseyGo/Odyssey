@@ -28,6 +28,7 @@ class User(AbstractUser):
     )
     tour_count = models.IntegerField(default=0)
     rating = models.FloatField(default=0.0)
+    total_walked_km = models.DecimalField(max_digits=12, decimal_places=3, default=0)
     avatar_url = models.URLField(
         max_length=500,
         blank=True,

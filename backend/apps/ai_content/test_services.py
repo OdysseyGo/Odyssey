@@ -217,6 +217,45 @@ class TestGenerateTour(TestCase):
 
     @patch("apps.ai_content.services.GoogleMapsFacade")
     @patch("apps.ai_content.services.genai")
+    def test_ai_tour_saves_cover_image_file_from_first_place(
+        self, mock_genai, mock_maps_cls
+    ):
+        tour_data = _valid_tour_json(include_puzzles=False)
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.get_place_photo.return_value = {
+            "url": "https://example.com/cover.jpg",
+            "attribution": "Google",
+        }
+
+        creator = self._make_creator()
+        service = GeminiService()
+        with patch.object(
+            GeminiService,
+            "_download_place_photo",
+            return_value=(b"fake-image-bytes", ".jpg"),
+        ):
+            tour = service.generate_tour(
+                city="Istanbul",
+                theme="History",
+                mode="STORY",
+                duration=60,
+                language="en",
+                creator=creator,
+            )
+
+        assert tour.cover_image_attribution == "Google"
+        assert bool(tour.cover_image)
+        assert tour.cover_image.name.endswith(".jpg")
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
     def test_country_is_canonicalized_from_country_code(self, mock_genai, mock_maps_cls):
         tour_data = _valid_tour_json(include_puzzles=False)
 

@@ -1,19 +1,28 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Switch,
+} from 'react-native';
 import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { aiTourCreationStyles } from './ai-tour-creation.styles';
 import {
   FormInputGroup,
-  FormTextInput,
   FormTextArea,
+  FormChipSelect,
   FormOptionCard,
   FormDurationPicker,
   FormLocationSelect,
+  TOUR_CATEGORIES,
+  TOUR_TEXT_FIELD_MAX_LENGTH,
 } from '@/components/TourCreation';
 import {
   AICreationHeader,
-  ThemeSuggestions,
   LanguageSelector,
   GenerateButton,
   LoadingOverlay,
@@ -50,6 +59,23 @@ export default function AITourCreation() {
     [t]
   );
 
+  const categoryKeyMap = useMemo(
+    () =>
+      Object.fromEntries(
+        TOUR_CATEGORIES.map((cat) => [t(`creation.categories.${cat.toLowerCase()}`), cat])
+      ),
+    [t]
+  );
+
+  const translatedCategories = useMemo(
+    () => TOUR_CATEGORIES.map((cat) => t(`creation.categories.${cat.toLowerCase()}`)),
+    [t]
+  ) as unknown as readonly string[];
+
+  const selectedTranslatedCategory = formData.theme
+    ? t(`creation.categories.${formData.theme.toLowerCase()}`)
+    : '';
+
   const updateFormData = (updates: Partial<AITourFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
   };
@@ -57,9 +83,9 @@ export default function AITourCreation() {
   const isFormValid =
     formData.country.trim() !== '' &&
     formData.countryCode.trim() !== '' &&
-    formData.city.trim() !== '' &&
-    Number.isFinite(formData.cityLatitude) &&
-    Number.isFinite(formData.cityLongitude) &&
+    formData.state.trim() !== '' &&
+    Number.isFinite(formData.stateLatitude) &&
+    Number.isFinite(formData.stateLongitude) &&
     formData.theme.trim() !== '';
 
   const handleGenerate = async () => {
@@ -72,7 +98,7 @@ export default function AITourCreation() {
 
     try {
       const response = await generateAITour({
-        city: formData.city.trim(),
+        city: formData.state.trim(),
         country: formData.country.trim(),
         country_code: formData.countryCode.trim(),
         theme: formData.theme.trim(),
@@ -80,6 +106,7 @@ export default function AITourCreation() {
         duration: formData.duration,
         language: formData.language,
         additional_details: formData.additionalDetails.trim() || undefined,
+        include_ar: formData.includeAr,
       });
 
       Alert.alert(t('aiTour.successTitle'), response.message, [
@@ -129,62 +156,54 @@ export default function AITourCreation() {
                 updateFormData({
                   country: '',
                   countryCode: '',
-                  city: '',
-                  cityLatitude: undefined,
-                  cityLongitude: undefined,
+                  state: '',
+                  stateLatitude: undefined,
+                  stateLongitude: undefined,
                 })
               }
               onSelect={(selectedCountry) =>
                 updateFormData({
                   country: selectedCountry.value,
                   countryCode: selectedCountry.countryCode || '',
-                  city: '',
-                  cityLatitude: undefined,
-                  cityLongitude: undefined,
+                  state: '',
+                  stateLatitude: undefined,
+                  stateLongitude: undefined,
                 })
               }
             />
           </FormInputGroup>
 
-          <FormInputGroup label={t('aiTour.city')} required>
+          <FormInputGroup label={t('aiTour.state')} required>
             <FormLocationSelect
-              value={formData.city}
+              value={formData.state}
               disabled={!formData.country}
               placeholder={
                 formData.country
-                  ? t('creation.details.cityPlaceholder')
-                  : t('creation.details.cityDisabledPlaceholder', {
+                  ? t('creation.details.statePlaceholder')
+                  : t('creation.details.stateDisabledPlaceholder', {
                       defaultValue: 'Select a country first',
                     })
               }
-              types="(cities)"
+              types="(states)"
               countryCode={formData.countryCode}
               countryName={formData.country}
-              onClearSelection={() =>
+              onSelect={(selectedState) =>
                 updateFormData({
-                  city: '',
-                  cityLatitude: undefined,
-                  cityLongitude: undefined,
-                })
-              }
-              onSelect={(selectedCity) =>
-                updateFormData({
-                  city: selectedCity.value,
-                  cityLatitude: selectedCity.latitude,
-                  cityLongitude: selectedCity.longitude,
+                  state: selectedState.value,
+                  stateLatitude: selectedState.latitude,
+                  stateLongitude: selectedState.longitude,
                 })
               }
             />
           </FormInputGroup>
 
           <FormInputGroup label={t('aiTour.theme')} required>
-            <FormTextInput
-              value={formData.theme}
-              onChangeText={(text) => updateFormData({ theme: text })}
-              placeholder={t('aiTour.themePlaceholder')}
-            />
-            <ThemeSuggestions
-              onSelect={(selectedTheme) => updateFormData({ theme: selectedTheme })}
+            <FormChipSelect
+              options={translatedCategories}
+              selectedValue={selectedTranslatedCategory}
+              onSelect={(translatedValue) =>
+                updateFormData({ theme: categoryKeyMap[translatedValue] ?? translatedValue })
+              }
             />
           </FormInputGroup>
 
@@ -197,6 +216,19 @@ export default function AITourCreation() {
               options={tourModeOptions}
               selectedValue={formData.mode}
               onSelect={(value) => updateFormData({ mode: value as AITourFormData['mode'] })}
+            />
+          </View>
+
+          <View style={styles.sectionDivider} />
+
+          <View style={styles.arToggleRow}>
+            <View style={styles.arToggleLabels}>
+              <Text style={styles.sectionTitle}>{t('aiTour.includeAr.title')}</Text>
+              <Text style={styles.sectionSubtitle}>{t('aiTour.includeAr.subtitle')}</Text>
+            </View>
+            <Switch
+              value={formData.includeAr}
+              onValueChange={(value) => updateFormData({ includeAr: value })}
             />
           </View>
 
@@ -228,6 +260,7 @@ export default function AITourCreation() {
               onChangeText={(text) => updateFormData({ additionalDetails: text })}
               placeholder={t('aiTour.additionalDetailsPlaceholder')}
               numberOfLines={4}
+              maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
             />
           </FormInputGroup>
         </ScrollView>

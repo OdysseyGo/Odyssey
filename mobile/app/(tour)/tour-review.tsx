@@ -5,6 +5,7 @@ import {
   createTour,
   createTourStep,
   setStepArPuzzle,
+  setStepCompassPuzzle,
   setStepGyroscopePuzzle,
   setStepPictureComparePuzzle,
   setStepTriviaPuzzle,
@@ -34,15 +35,17 @@ export default function TourReviewScreen() {
   const { tourData, resetTourData } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { t } = useTranslation();
-  const isReadyToSubmit = tourData.locations.every((location) =>
-    doesLocationMeetTourRequirements(location, tourData.tourType)
-  );
+  const isReadyToSubmit =
+    !!tourData.coverImage &&
+    tourData.locations.every((location) =>
+      doesLocationMeetTourRequirements(location, tourData.tourType)
+    );
   const hasValidSelectedLocation =
     tourData.country.trim().length > 0 &&
     tourData.countryCode.trim().length > 0 &&
-    tourData.city.trim().length > 0 &&
-    Number.isFinite(tourData.cityLatitude) &&
-    Number.isFinite(tourData.cityLongitude);
+    tourData.state.trim().length > 0 &&
+    Number.isFinite(tourData.stateLatitude) &&
+    Number.isFinite(tourData.stateLongitude);
 
   const handleSubmitTour = async () => {
     if (!isReadyToSubmit) {
@@ -58,7 +61,7 @@ export default function TourReviewScreen() {
       Alert.alert(
         t('creation.incompleteLocationTitle', { defaultValue: 'Complete location details' }),
         t('creation.incompleteLocationMessage', {
-          defaultValue: 'Please select country and city from the dropdown lists.',
+          defaultValue: 'Please select country and state from the dropdown lists.',
         })
       );
       return;
@@ -74,20 +77,19 @@ export default function TourReviewScreen() {
             const tour = await createTour({
               title: tourData.title || 'Untitled Tour',
               description: tourData.description || 'No description provided.',
+              cover_image: tourData.coverImage,
               tour_type: tourData.tourType,
               category: tourData.category || 'General',
               difficulty: tourData.difficulty,
               duration_minutes: tourData.estimatedDuration,
-              city: tourData.city,
+              city: tourData.state,
               country: tourData.country,
               country_code: tourData.countryCode,
-              city_latitude: tourData.cityLatitude,
-              city_longitude: tourData.cityLongitude,
+              city_latitude: tourData.stateLatitude,
+              city_longitude: tourData.stateLongitude,
               status: 'DRAFT',
               is_premium: false,
             });
-
-            console.log('Tour created:', tour.id);
 
             // 2. Create steps and configure step puzzles using type-specific endpoints.
             for (const [index, loc] of tourData.locations.entries()) {
@@ -107,7 +109,6 @@ export default function TourReviewScreen() {
               const basePayload = {
                 question: loc.puzzle.question,
                 hint: loc.puzzle.hint,
-                xp_reward: loc.puzzle.xp_reward,
               };
 
               if (loc.puzzle.puzzle_type === 'TRIVIA') {
@@ -161,16 +162,31 @@ export default function TourReviewScreen() {
 
               if (loc.puzzle.puzzle_type === 'GYROSCOPE') {
                 await setStepGyroscopePuzzle(tour.id, createdStep.id, basePayload);
+                continue;
+              }
+
+              if (loc.puzzle.puzzle_type === 'COMPASS') {
+                if (
+                  typeof loc.puzzle.targetHeadingDegrees !== 'number' ||
+                  !Number.isInteger(loc.puzzle.targetHeadingDegrees)
+                ) {
+                  throw new Error('COMPASS puzzles require a valid integer target heading.');
+                }
+
+                await setStepCompassPuzzle(tour.id, createdStep.id, {
+                  ...basePayload,
+                  target_heading_degrees: ((loc.puzzle.targetHeadingDegrees % 360) + 360) % 360,
+                });
               }
             }
 
             // 3. Publish after all steps are created so backend city/step validation runs once.
             await updateTour(tour.id, {
-              city: tourData.city,
+              city: tourData.state,
               country: tourData.country,
               country_code: tourData.countryCode,
-              city_latitude: tourData.cityLatitude,
-              city_longitude: tourData.cityLongitude,
+              city_latitude: tourData.stateLatitude,
+              city_longitude: tourData.stateLongitude,
               status: 'PUBLISHED',
             });
 

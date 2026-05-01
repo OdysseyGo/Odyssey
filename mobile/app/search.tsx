@@ -14,7 +14,7 @@ import {
 import { searchScreenStyles } from './search.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
-import { searchTours, Tour } from '@/api/tours';
+import { getTourImageUri, searchTours, Tour } from '@/api/tours';
 import {
   clearSearchHistory,
   getSearchHistory,
@@ -37,7 +37,7 @@ const USER_SUGGESTIONS = ['creator', 'guide', 'traveler'];
 function mapTourToSearchResult(tour: Tour, t: (key: string) => string): SearchResultItemProps {
   return {
     id: tour.id.toString(),
-    image: tour.steps?.[0]?.image || `https://picsum.photos/400/320?random=${tour.id}`,
+    image: getTourImageUri(tour),
     title: tour.title,
     author: tour.creator?.username || t('search.unknownAuthor'),
     duration: `${tour.duration_minutes} ${t('tourId.min')}`,

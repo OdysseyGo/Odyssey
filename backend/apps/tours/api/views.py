@@ -11,6 +11,7 @@ from apps.gamification.models import TourProgress
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
+    CompassPuzzleDetail,
     GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
     Puzzle,
@@ -28,6 +29,7 @@ from .serializers import (
     DEFAULT_PICTURE_COMPARE_THRESHOLD,
     ARModelSerializer,
     ArPuzzleUpsertSerializer,
+    CompassPuzzleUpsertSerializer,
     GyroscopePuzzleUpsertSerializer,
     PictureComparePuzzleUpsertSerializer,
     PuzzleSerializer,
@@ -252,13 +254,14 @@ class TourStepViewSet(viewsets.ModelViewSet):
         return step.tour.creator_id == request.user.id or request.user.is_staff
 
     def _upsert_base_puzzle(self, *, step, puzzle_type, data):
+        fixed_xp_reward = Puzzle.fixed_xp_reward_for_type(puzzle_type)
         puzzle, created = Puzzle.objects.get_or_create(
             step=step,
             defaults={
                 "puzzle_type": puzzle_type,
                 "question": data["question"],
                 "hint": data.get("hint", ""),
-                "xp_reward": data.get("xp_reward", 10),
+                "xp_reward": fixed_xp_reward,
                 "correct_answer": "",
             },
         )
@@ -267,7 +270,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
             puzzle.puzzle_type = puzzle_type
             puzzle.question = data["question"]
             puzzle.hint = data.get("hint", "")
-            puzzle.xp_reward = data.get("xp_reward", puzzle.xp_reward)
+            puzzle.xp_reward = fixed_xp_reward
             puzzle.save(
                 update_fields=[
                     "puzzle_type",
@@ -301,6 +304,11 @@ class TourStepViewSet(viewsets.ModelViewSet):
             gyro_detail = getattr(puzzle, "gyroscope_detail", None)
             if gyro_detail is not None:
                 gyro_detail.delete()
+
+        if keep_type != Puzzle.COMPASS:
+            compass_detail = getattr(puzzle, "compass_detail", None)
+            if compass_detail is not None:
+                compass_detail.delete()
 
     @action(detail=True, methods=["get"], url_path="puzzle")
     def get_puzzle(self, request, tour_pk=None, pk=None):
@@ -547,6 +555,50 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 "target_roll": data.get("target_roll", 0.0),
                 "target_yaw": data.get("target_yaw", 0.0),
                 "tolerance_degrees": data.get("tolerance_degrees", 15.0),
+            },
+        )
+
+        serializer = PuzzleSerializer(puzzle, context={"request": request})
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="set-compass-puzzle",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def set_compass_puzzle(self, request, tour_pk=None, pk=None):
+        step = self.get_object()
+        if not self._user_can_edit_step_puzzle(request, step):
+            return Response(
+                {"error": "Only the tour creator can configure puzzles."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        payload = CompassPuzzleUpsertSerializer(data=request.data)
+        payload.is_valid(raise_exception=True)
+        data = payload.validated_data
+
+        puzzle, created = self._upsert_base_puzzle(
+            step=step,
+            puzzle_type=Puzzle.COMPASS,
+            data=data,
+        )
+        puzzle.options = None
+        puzzle.correct_answer = ""
+        puzzle.reference_image = None
+        puzzle.save(
+            update_fields=["options", "correct_answer", "reference_image", "updated_at"]
+        )
+
+        self._clear_other_puzzle_details(puzzle, Puzzle.COMPASS)
+        CompassPuzzleDetail.objects.update_or_create(
+            puzzle=puzzle,
+            defaults={
+                "target_heading_degrees": data["target_heading_degrees"],
             },
         )
 

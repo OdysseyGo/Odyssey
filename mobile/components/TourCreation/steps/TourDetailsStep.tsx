@@ -2,7 +2,11 @@ import React, { useMemo } from 'react';
 import { Text, ScrollView } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { tourDetailsStepStyles } from './TourDetailsStep.styles';
-import { TourCreationData, TOUR_CATEGORIES } from '../TourCreation.types';
+import {
+  TourCreationData,
+  TOUR_CATEGORIES,
+  TOUR_TEXT_FIELD_MAX_LENGTH,
+} from '../TourCreation.types';
 import {
   FormInputGroup,
   FormTextArea,
@@ -12,6 +16,7 @@ import {
   FormDurationPicker,
   FormLocationSelect,
 } from '../inputs';
+import ImageUploadSection from '../StoryEditor/ImageUploadSection';
 import { useTranslation } from 'react-i18next';
 
 type TourDetailsStepProps = {
@@ -95,6 +100,7 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
           value={tourData.title}
           onChangeText={(text) => onUpdate({ title: text })}
           placeholder={t('creation.details.tourTitlePlaceholder')}
+          maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
         />
       </FormInputGroup>
 
@@ -103,8 +109,16 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
           value={tourData.description}
           onChangeText={(text) => onUpdate({ description: text })}
           placeholder={t('creation.details.descriptionPlaceholder')}
+          maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
         />
       </FormInputGroup>
+
+      <ImageUploadSection
+        image={tourData.coverImage}
+        onImageChange={(coverImage) => onUpdate({ coverImage })}
+        label={t('creation.story.coverImage')}
+        required
+      />
 
       <FormInputGroup label={t('creation.details.country', { defaultValue: 'Country' })} required>
         <FormLocationSelect
@@ -117,49 +131,49 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
             onUpdate({
               country: '',
               countryCode: '',
-              city: '',
-              cityLatitude: undefined,
-              cityLongitude: undefined,
+              state: '',
+              stateLatitude: undefined,
+              stateLongitude: undefined,
             })
           }
           onSelect={(selectedCountry) =>
             onUpdate({
               country: selectedCountry.value,
               countryCode: selectedCountry.countryCode || '',
-              city: '',
-              cityLatitude: undefined,
-              cityLongitude: undefined,
+              state: '',
+              stateLatitude: undefined,
+              stateLongitude: undefined,
             })
           }
         />
       </FormInputGroup>
 
-      <FormInputGroup label={t('creation.details.city')} required>
+      <FormInputGroup label={t('creation.details.state')} required>
         <FormLocationSelect
-          value={tourData.city}
+          value={tourData.state}
           disabled={!tourData.country}
           placeholder={
             tourData.country
-              ? t('creation.details.cityPlaceholder')
-              : t('creation.details.cityDisabledPlaceholder', {
+              ? t('creation.details.statePlaceholder')
+              : t('creation.details.stateDisabledPlaceholder', {
                   defaultValue: 'Select a country first',
                 })
           }
-          types="(cities)"
+          types="(states)"
           countryCode={tourData.countryCode}
           countryName={tourData.country}
           onClearSelection={() =>
             onUpdate({
-              city: '',
-              cityLatitude: undefined,
-              cityLongitude: undefined,
+              state: '',
+              stateLatitude: undefined,
+              stateLongitude: undefined,
             })
           }
-          onSelect={(selectedCity) =>
+          onSelect={(selectedState) =>
             onUpdate({
-              city: selectedCity.value,
-              cityLatitude: selectedCity.latitude,
-              cityLongitude: selectedCity.longitude,
+              state: selectedState.value,
+              stateLatitude: selectedState.latitude,
+              stateLongitude: selectedState.longitude,
             })
           }
         />

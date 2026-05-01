@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Animated,
   TouchableOpacity,
   KeyboardAvoidingView,
+  Keyboard,
   ScrollView,
   Platform,
   Dimensions,
@@ -15,6 +16,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useNavigation } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
@@ -29,6 +31,7 @@ import { Spacing } from '@/constants/Spacing';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.28 : SCREEN_HEIGHT * 0.32;
+const AUTH_INPUT_MAX_LENGTH = 50;
 
 export default function RegisterScreen() {
   const colorScheme = useColorTheme();
@@ -56,7 +59,10 @@ export default function RegisterScreen() {
     general?: string;
   }>({});
   const [loading, setLoading] = useState(false);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const isNavigatingAway = useRef(false);
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Entrance animations
   const heroY = useRef(new Animated.Value(-24)).current;
@@ -77,6 +83,27 @@ export default function RegisterScreen() {
       }),
     ]).start();
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) clearTimeout(redirectTimeoutRef.current);
+    };
+  }, []);
+
+  const resetScrollPosition = useCallback(() => {
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+    });
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      resetScrollPosition();
+      const keyboardHideSubscription = Keyboard.addListener('keyboardDidHide', resetScrollPosition);
+
+      return () => keyboardHideSubscription.remove();
+    }, [resetScrollPosition])
+  );
 
   // Intercept back navigation when on step 2
   useEffect(() => {
@@ -129,8 +156,7 @@ export default function RegisterScreen() {
     if (validateStep1()) setStep(2);
   };
 
-  const handleRegister = async () => {
-    if (!validateStep2()) return;
+  const submitRegistration = async () => {
     setLoading(true);
     try {
       const user: CreateUserPayload = {
@@ -142,7 +168,10 @@ export default function RegisterScreen() {
       };
       await createUser(user);
       isNavigatingAway.current = true;
-      router.replace('/login');
+      setShowSuccessBanner(true);
+      redirectTimeoutRef.current = setTimeout(() => {
+        router.dismissTo('/login');
+      }, 1400);
     } catch (e) {
       console.error(e);
       setErrors({ general: t('auth.errors.registrationFailed') });
@@ -151,222 +180,265 @@ export default function RegisterScreen() {
     }
   };
 
-  return (
-    <KeyboardAvoidingView
-      style={[styles.root, { backgroundColor: theme.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        style={{ backgroundColor: theme.headerGradientTop }}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="interactive"
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-      >
-        {/* ── Hero ─────────────────────────────────────── */}
-        <Animated.View
-          style={[
-            styles.hero,
-            {
-              height: HERO_HEIGHT,
-              paddingTop: insets.top,
-              backgroundColor: theme.headerGradientTop,
-            },
-            { opacity: heroOpacity, transform: [{ translateY: heroY }] },
-          ]}
-        >
-          <BackButton
-            color="rgba(255,255,255,0.9)"
-            style={[styles.backButton, { top: insets.top + 12 }]}
-          />
-          <AuthLanguageSelector style={{ top: insets.top + 12 }} />
-          <View style={styles.logoArea}>
-            <AuthLogo variant="compact" />
-            <Text style={styles.appName}>ODYSSEY</Text>
-            <Text style={styles.tagline}>{t('auth.registerTagline')}</Text>
-          </View>
-        </Animated.View>
+  const handleRegister = async () => {
+    if (!validateStep2()) return;
 
-        {/* ── Form card ────────────────────────────────── */}
-        <Animated.View
-          style={[styles.flex, { opacity: cardOpacity, transform: [{ translateY: cardY }] }]}
+    await submitRegistration();
+  };
+
+  return (
+    <>
+      <KeyboardAvoidingView
+        style={[styles.root, { backgroundColor: theme.background }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={styles.scrollContent}
+          style={{ backgroundColor: theme.headerGradientTop }}
+          automaticallyAdjustContentInsets={false}
+          automaticallyAdjustKeyboardInsets={false}
+          contentInsetAdjustmentBehavior="never"
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          overScrollMode="never"
         >
-          <View
+          {/* ── Hero ─────────────────────────────────────── */}
+          <Animated.View
             style={[
-              styles.card,
+              styles.hero,
               {
-                backgroundColor: theme.background,
-                paddingBottom: insets.bottom + Spacing.xxl,
+                height: HERO_HEIGHT + insets.top,
+                paddingTop: insets.top + Spacing.lg,
+                backgroundColor: theme.headerGradientTop,
               },
+              { opacity: heroOpacity, transform: [{ translateY: heroY }] },
             ]}
           >
-            <Text style={[styles.cardTitle, { color: theme.text }]}>{t('auth.registerTitle')}</Text>
-            <Text style={[styles.cardSubtitle, { color: theme.subText }]}>
-              {t('auth.registerSubtitle')}
-            </Text>
-
-            {/* Step indicator */}
-            <View style={styles.stepRow}>
-              <View style={[styles.stepDot, { backgroundColor: theme.primary }]} />
-              <View
-                style={[
-                  styles.stepLine,
-                  { backgroundColor: step === 2 ? theme.primary : theme.foregroundSecondary },
-                ]}
-              />
-              <View
-                style={[
-                  styles.stepDot,
-                  { backgroundColor: step === 2 ? theme.primary : theme.foregroundSecondary },
-                ]}
-              />
+            <BackButton
+              color="rgba(255,255,255,0.9)"
+              style={[styles.backButton, { top: insets.top + 12 }]}
+            />
+            <AuthLanguageSelector style={{ top: insets.top + 12 }} />
+            <View style={styles.logoArea}>
+              <AuthLogo variant="compact" />
+              <Text style={styles.appName}>ODYSSEY</Text>
+              <Text style={styles.tagline}>{t('auth.registerTagline')}</Text>
             </View>
+          </Animated.View>
 
-            {/* Error banner */}
-            {errors.general && (
-              <View
-                style={[
-                  styles.errorBanner,
-                  { backgroundColor: `${theme.error}12`, borderColor: `${theme.error}35` },
-                ]}
-              >
-                <Ionicons name="alert-circle" size={16} color={theme.error} />
-                <Text style={[styles.errorBannerText, { color: theme.error }]}>
-                  {errors.general}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setErrors((e) => ({ ...e, general: undefined }))}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Ionicons name="close" size={16} color={theme.error} />
-                </TouchableOpacity>
+          {/* ── Form card ────────────────────────────────── */}
+          <Animated.View
+            style={[styles.flex, { opacity: cardOpacity, transform: [{ translateY: cardY }] }]}
+          >
+            <View
+              style={[
+                styles.card,
+                {
+                  backgroundColor: theme.background,
+                  paddingBottom: insets.bottom + Spacing.xxl,
+                },
+              ]}
+            >
+              <Text style={[styles.cardTitle, { color: theme.text }]}>
+                {t('auth.registerTitle')}
+              </Text>
+              <Text style={[styles.cardSubtitle, { color: theme.subText }]}>
+                {t('auth.registerSubtitle')}
+              </Text>
+
+              {/* Step indicator */}
+              <View style={styles.stepRow}>
+                <View style={[styles.stepDot, { backgroundColor: theme.primary }]} />
+                <View
+                  style={[
+                    styles.stepLine,
+                    { backgroundColor: step === 2 ? theme.primary : theme.foregroundSecondary },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.stepDot,
+                    { backgroundColor: step === 2 ? theme.primary : theme.foregroundSecondary },
+                  ]}
+                />
               </View>
-            )}
 
-            <View style={styles.inputs}>
-              {step === 1 ? (
-                <>
-                  <AuthTextInput
-                    label={t('auth.firstName')}
-                    value={firstName}
-                    onChangeText={(text) => {
-                      setFirstName(text);
-                      setErrors((e) => ({ ...e, firstName: undefined }));
-                    }}
-                    placeholder={t('auth.firstNamePlaceholder')}
-                    autoCapitalize="words"
-                    returnKeyType="next"
-                    onSubmitEditing={() => lastNameRef.current?.focus()}
-                    error={errors.firstName}
-                  />
-                  <AuthTextInput
-                    ref={lastNameRef}
-                    label={t('auth.lastName')}
-                    value={lastName}
-                    onChangeText={(text) => {
-                      setLastName(text);
-                      setErrors((e) => ({ ...e, lastName: undefined }));
-                    }}
-                    placeholder={t('auth.lastNamePlaceholder')}
-                    autoCapitalize="words"
-                    returnKeyType="next"
-                    onSubmitEditing={() => usernameRef.current?.focus()}
-                    error={errors.lastName}
-                  />
-                  <AuthTextInput
-                    ref={usernameRef}
-                    label={t('auth.username')}
-                    value={username}
-                    onChangeText={(text) => {
-                      setUsername(text);
-                      setErrors((e) => ({ ...e, username: undefined }));
-                    }}
-                    placeholder={t('auth.usernamePlaceholder')}
-                    autoCapitalize="none"
-                    returnKeyType="done"
-                    onSubmitEditing={handleNext}
-                    error={errors.username}
-                  />
-                  <AuthButton title={t('auth.continue')} onPress={handleNext} />
-                  <View style={styles.footerRow}>
-                    <Text style={[styles.footerLabel, { color: theme.subText }]}>
-                      {t('auth.alreadyHaveAccount')}
-                    </Text>
-                    <TouchableOpacity onPress={() => router.back()} disabled={loading}>
-                      <Text style={[styles.footerLink, { color: theme.primary }]}>
-                        {` ${t('auth.signIn')}`}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              ) : (
-                <>
-                  <AuthTextInput
-                    ref={emailRef}
-                    label={t('auth.email')}
-                    value={email}
-                    onChangeText={(text) => {
-                      setEmail(text);
-                      setErrors((e) => ({ ...e, email: undefined }));
-                    }}
-                    placeholder={t('auth.emailPlaceholder')}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    returnKeyType="next"
-                    onSubmitEditing={() => passwordRef.current?.focus()}
-                    error={errors.email}
-                  />
-                  <AuthTextInput
-                    ref={passwordRef}
-                    label={t('auth.password')}
-                    value={password}
-                    onChangeText={(text) => {
-                      setPassword(text);
-                      setErrors((e) => ({ ...e, password: undefined }));
-                    }}
-                    placeholder={t('auth.passwordPlaceholder')}
-                    secureTextEntry
-                    showPasswordToggle
-                    autoCapitalize="none"
-                    returnKeyType="next"
-                    onSubmitEditing={() => confirmPasswordRef.current?.focus()}
-                    error={errors.password}
-                  />
-                  <AuthTextInput
-                    ref={confirmPasswordRef}
-                    label={t('auth.confirmPassword')}
-                    value={confirmPassword}
-                    onChangeText={(text) => {
-                      setConfirmPassword(text);
-                      setErrors((e) => ({ ...e, confirmPassword: undefined }));
-                    }}
-                    placeholder={t('auth.confirmPasswordPlaceholder')}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    returnKeyType="done"
-                    onSubmitEditing={handleRegister}
-                    error={errors.confirmPassword}
-                  />
-                  <AuthButton
-                    title={t('auth.createAccount')}
-                    onPress={handleRegister}
-                    loading={loading}
-                  />
-                  <View style={styles.footerRow}>
-                    <TouchableOpacity onPress={() => setStep(1)} disabled={loading}>
-                      <Text style={[styles.footerLink, { color: theme.primary }]}>
-                        {`← ${t('auth.back')}`}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
+              {/* Error banner */}
+              {errors.general && (
+                <View
+                  style={[
+                    styles.errorBanner,
+                    { backgroundColor: `${theme.error}12`, borderColor: `${theme.error}35` },
+                  ]}
+                >
+                  <Ionicons name="alert-circle" size={16} color={theme.error} />
+                  <Text style={[styles.errorBannerText, { color: theme.error }]}>
+                    {errors.general}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setErrors((e) => ({ ...e, general: undefined }))}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons name="close" size={16} color={theme.error} />
+                  </TouchableOpacity>
+                </View>
               )}
+
+              <View style={styles.inputs}>
+                {step === 1 ? (
+                  <>
+                    <AuthTextInput
+                      label={t('auth.firstName')}
+                      value={firstName}
+                      onChangeText={(text) => {
+                        setFirstName(text);
+                        setErrors((e) => ({ ...e, firstName: undefined }));
+                      }}
+                      placeholder={t('auth.firstNamePlaceholder')}
+                      autoCapitalize="words"
+                      maxLength={AUTH_INPUT_MAX_LENGTH}
+                      returnKeyType="next"
+                      onSubmitEditing={() => lastNameRef.current?.focus()}
+                      error={errors.firstName}
+                    />
+                    <AuthTextInput
+                      ref={lastNameRef}
+                      label={t('auth.lastName')}
+                      value={lastName}
+                      onChangeText={(text) => {
+                        setLastName(text);
+                        setErrors((e) => ({ ...e, lastName: undefined }));
+                      }}
+                      placeholder={t('auth.lastNamePlaceholder')}
+                      autoCapitalize="words"
+                      maxLength={AUTH_INPUT_MAX_LENGTH}
+                      returnKeyType="next"
+                      onSubmitEditing={() => usernameRef.current?.focus()}
+                      error={errors.lastName}
+                    />
+                    <AuthTextInput
+                      ref={usernameRef}
+                      label={t('auth.username')}
+                      value={username}
+                      onChangeText={(text) => {
+                        setUsername(text);
+                        setErrors((e) => ({ ...e, username: undefined }));
+                      }}
+                      placeholder={t('auth.usernamePlaceholder')}
+                      autoCapitalize="none"
+                      maxLength={AUTH_INPUT_MAX_LENGTH}
+                      returnKeyType="done"
+                      onSubmitEditing={handleNext}
+                      error={errors.username}
+                    />
+                    <AuthButton title={t('auth.continue')} onPress={handleNext} />
+                    <View style={styles.footerRow}>
+                      <Text style={[styles.footerLabel, { color: theme.subText }]}>
+                        {t('auth.alreadyHaveAccount')}
+                      </Text>
+                      <TouchableOpacity onPress={() => router.back()} disabled={loading}>
+                        <Text style={[styles.footerLink, { color: theme.primary }]}>
+                          {` ${t('auth.signIn')}`}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <AuthTextInput
+                      ref={emailRef}
+                      label={t('auth.email')}
+                      value={email}
+                      onChangeText={(text) => {
+                        setEmail(text);
+                        setErrors((e) => ({ ...e, email: undefined }));
+                      }}
+                      placeholder={t('auth.emailPlaceholder')}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      maxLength={AUTH_INPUT_MAX_LENGTH}
+                      returnKeyType="next"
+                      onSubmitEditing={() => passwordRef.current?.focus()}
+                      error={errors.email}
+                    />
+                    <AuthTextInput
+                      ref={passwordRef}
+                      label={t('auth.password')}
+                      value={password}
+                      onChangeText={(text) => {
+                        setPassword(text);
+                        setErrors((e) => ({ ...e, password: undefined }));
+                      }}
+                      placeholder={t('auth.passwordPlaceholder')}
+                      secureTextEntry
+                      showPasswordToggle
+                      autoCapitalize="none"
+                      maxLength={AUTH_INPUT_MAX_LENGTH}
+                      returnKeyType="next"
+                      onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+                      error={errors.password}
+                    />
+                    <AuthTextInput
+                      ref={confirmPasswordRef}
+                      label={t('auth.confirmPassword')}
+                      value={confirmPassword}
+                      onChangeText={(text) => {
+                        setConfirmPassword(text);
+                        setErrors((e) => ({ ...e, confirmPassword: undefined }));
+                      }}
+                      placeholder={t('auth.confirmPasswordPlaceholder')}
+                      secureTextEntry
+                      autoCapitalize="none"
+                      maxLength={AUTH_INPUT_MAX_LENGTH}
+                      returnKeyType="done"
+                      onSubmitEditing={handleRegister}
+                      error={errors.confirmPassword}
+                    />
+                    {showSuccessBanner ? (
+                      <View
+                        style={[
+                          styles.successBanner,
+                          { backgroundColor: `${theme.correctOptionBackground}14` },
+                        ]}
+                      >
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={16}
+                          color={theme.correctOptionBackground}
+                        />
+                        <Text
+                          style={[
+                            styles.successBannerText,
+                            { color: theme.correctOptionBackground },
+                          ]}
+                        >
+                          {t('auth.accountCreatedSubtitle', { username })}
+                        </Text>
+                      </View>
+                    ) : null}
+                    <AuthButton
+                      title={t('auth.createAccount')}
+                      onPress={handleRegister}
+                      loading={loading || showSuccessBanner}
+                    />
+                    <View style={styles.footerRow}>
+                      <TouchableOpacity onPress={() => setStep(1)} disabled={loading}>
+                        <Text style={[styles.footerLink, { color: theme.primary }]}>
+                          {`← ${t('auth.back')}`}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                )}
+              </View>
             </View>
-          </View>
-        </Animated.View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </>
   );
 }
 
@@ -454,6 +526,21 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     fontWeight: '500',
+    lineHeight: 18,
+  },
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderRadius: Spacing.borderRadius,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  successBannerText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '700',
     lineHeight: 18,
   },
 

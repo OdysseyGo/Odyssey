@@ -1,4 +1,6 @@
-export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE';
+export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE' | 'COMPASS';
+
+export const TOUR_TEXT_FIELD_MAX_LENGTH = 255;
 
 export type ARAnchorPosition = {
   x: number;
@@ -26,15 +28,16 @@ export interface Puzzle {
   options: string[];
   correctAnswer: string;
   hint: string;
-  xp_reward: number;
   referenceImage?: string;
   arConfig?: ARPuzzleConfig;
+  targetHeadingDegrees?: number;
 }
 
 export const PUZZLE_TYPE_OPTIONS = [
   { value: 'TRIVIA', label: 'Trivia', description: 'Multiple choice question' },
   { value: 'AR', label: 'AR Challenge', description: 'Augmented reality experience' },
   { value: 'GYROSCOPE', label: 'Gyroscope', description: 'Motion-based challenge' },
+  { value: 'COMPASS', label: 'Compass', description: 'Find a target heading' },
   {
     value: 'PICTURE_COMPARE',
     label: 'Picture Compare',
@@ -48,7 +51,6 @@ export const createEmptyPuzzle = (): Puzzle => ({
   options: ['', ''],
   correctAnswer: '',
   hint: '',
-  xp_reward: 10,
 });
 
 export interface TourLocation {
@@ -66,6 +68,7 @@ export interface TourLocation {
 export interface TourCreationData {
   title: string;
   description: string;
+  coverImage?: string;
   category: string;
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   tourType: 'STORY' | 'PUZZLE' | 'HYBRID';
@@ -73,9 +76,9 @@ export interface TourCreationData {
   locations: TourLocation[];
   country: string;
   countryCode: string;
-  city: string;
-  cityLatitude?: number;
-  cityLongitude?: number;
+  state: string;
+  stateLatitude?: number;
+  stateLongitude?: number;
 }
 
 export const TOUR_CATEGORIES = [
@@ -106,6 +109,7 @@ export const TOUR_TYPE_OPTIONS = [
 export const createEmptyTourData = (): TourCreationData => ({
   title: '',
   description: '',
+  coverImage: undefined,
   category: '',
   difficulty: 'MEDIUM',
   tourType: 'STORY',
@@ -113,9 +117,9 @@ export const createEmptyTourData = (): TourCreationData => ({
   locations: [],
   country: '',
   countryCode: '',
-  city: '',
-  cityLatitude: undefined,
-  cityLongitude: undefined,
+  state: '',
+  stateLatitude: undefined,
+  stateLongitude: undefined,
 });
 
 export const createNewLocation = (
@@ -144,6 +148,15 @@ export const isPuzzleValid = (puzzle?: Puzzle): boolean => {
   if (puzzle.puzzle_type === 'TRIVIA') {
     const options = puzzle.options.map((option) => option.trim()).filter(Boolean);
     return options.length >= 2 && options.includes(puzzle.correctAnswer.trim());
+  }
+
+  if (puzzle.puzzle_type === 'COMPASS') {
+    return (
+      typeof puzzle.targetHeadingDegrees === 'number' &&
+      Number.isInteger(puzzle.targetHeadingDegrees) &&
+      puzzle.targetHeadingDegrees >= 0 &&
+      puzzle.targetHeadingDegrees <= 359
+    );
   }
 
   return true;

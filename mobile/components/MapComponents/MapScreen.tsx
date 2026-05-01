@@ -21,7 +21,7 @@ import type { Tour } from '@/api/tours';
 import type { MapMarkerProps } from './MapMarker.config';
 import type { Region } from './TourMap.config';
 
-import { getTourProgress, deleteTourProgress } from '@/api/tourProgress';
+import { deleteTourProgress } from '@/api/tourProgress';
 
 export default function MapScreen() {
   const theme = useColorTheme();
@@ -144,19 +144,11 @@ export default function MapScreen() {
   }, [tour, isActive]);
 
   // Active tour handlers
-  const handleTourComplete = useCallback(async () => {
-    if (progressId) {
-      try {
-        const progress = await getTourProgress(progressId);
-        setFinalXP(progress.total_xp);
-      } catch {
-        setFinalXP(earnedXP);
-      }
-    } else {
-      setFinalXP(earnedXP);
-    }
+  const handleTourComplete = useCallback(async (awardedXP: number) => {
+    // Backend is source of truth: replay completions return awarded_xp=0.
+    setFinalXP(Math.max(0, awardedXP ?? 0));
     setShowCompleteModal(true);
-  }, [progressId, earnedXP]);
+  }, []);
 
   const handleEndTourPress = useCallback(() => setShowEndConfirmModal(true), []);
 

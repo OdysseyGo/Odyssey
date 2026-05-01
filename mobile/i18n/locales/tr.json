@@ -17,6 +17,7 @@
     "password": "Şifre",
     "firstName": "Ad",
     "lastName": "Soyad",
+    "name": "Ad Soyad",
     "email": "E-posta",
     "confirmPassword": "Şifre Tekrar",
     "newPassword": "Yeni Şifre",
@@ -49,6 +50,12 @@
     "continue": "Devam Et",
     "back": "Geri",
     "resetTagline": "Şifreni sıfırla",
+    "successTitle": "Başarılı",
+    "confirmRegistrationTitle": "Bu hesap oluşturulsun mu?",
+    "confirmRegistrationSubtitle": "Odyssey hesabını oluşturmadan önce bilgileri kontrol et.",
+    "confirmRegistrationMessage": "\"{{username}}\" kullanıcı adı, {{firstName}} {{lastName}} için {{email}} e-postasıyla oluşturulacak. Emin misiniz?",
+    "accountCreatedTitle": "Hesap oluşturuldu",
+    "accountCreatedSubtitle": "\"{{username}}\" hazır. Keşfe başlamak için giriş yap.",
     "errors": {
       "usernameRequired": "Kullanıcı adı gereklidir",
       "passwordRequired": "Şifre gereklidir",
@@ -72,6 +79,7 @@
     "notLoggedIn": "Profilini görüntülemek için giriş yapman gerekiyor.",
     "loginButton": "Giriş yapmak istiyorum!",
     "logout": "Çıkış Yap",
+    "km": "km",
     "xp": "XP",
     "tours": "Turlar",
     "badges": "Rozetler",
@@ -316,7 +324,10 @@
     "min": "dk",
     "stops": "durak",
     "tourInProgressTitle": "Turun devam etmekte",
-    "tourInProgressMessage": "Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et."
+    "tourInProgressMessage": "Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et.",
+    "locationRequiredTitle": "Konum izni gerekli",
+    "locationRequiredMessage": "Bu tura başlamak için Odyssey'nin konumuna erişmesi gerekiyor. Lütfen cihaz ayarlarından konum iznini açıp tekrar dene.",
+    "locationUnavailableMessage": "Mevcut konumunu alamadık. Lütfen konum servislerini açıp tekrar dene."
   },
   "creation": {
     "loginRequired": "Giriş Gerekli",
@@ -335,7 +346,7 @@
     "ok": "Tamam",
     "errorTitle": "Hata",
     "errorMessage": "Tur gönderilemedi. Lütfen tekrar deneyin.",
-    "cityStopsMismatch": "En az bir tur durağı seçilen şehrin içinde olmalıdır.",
+    "cityStopsMismatch": "En az bir tur durağı seçilen şehir içinde olmalıdır.",
     "incompletePuzzleTitle": "Zorunlu bulmacaları tamamla",
     "incompletePuzzleMessage": "Bulmaca turunda göndermeden önce her konumda geçerli bir bulmaca olmalı.",
     "method": {
@@ -357,12 +368,12 @@
       "descriptionPlaceholder": "Turunuzu özel kılan nedir?...",
       "country": "Ülke",
       "countryPlaceholder": "Ülke ara...",
-      "city": "Şehir",
-      "cityPlaceholder": "Şehir ara...",
-      "cityDisabledPlaceholder": "Önce ülke seçin",
+      "state": "Şehir",
+      "statePlaceholder": "Şehir ara...",
+      "stateDisabledPlaceholder": "Önce ülke seçin",
       "countryOnlyError": "Lütfen bir ülke seçin.",
-      "cityOnlyError": "Lütfen bir şehir seçin.",
-      "cityCountryMismatch": "Seçilen şehir seçilen ülkede değil.",
+      "stateOnlyError": "Lütfen bir şehir seçin.",
+      "stateCountryMismatch": "Seçilen şehir seçilen ülkede değil.",
       "category": "Kategori",
       "difficulty": "Zorluk",
       "tourType": "Tur Türü",
@@ -439,7 +450,7 @@
       "difficulty": "Zorluk"
     },
     "story": {
-      "coverImage": "Kapak Görseli (İsteğe Bağlı)",
+      "coverImage": "Kapak Görseli",
       "imagePickerTitle": "Görsel Seçici",
       "imagePickerMessage": "Görsel seçici işlevi expo-image-picker kurulumunu gerektirir.",
       "ok": "Tamam",
@@ -487,8 +498,8 @@
     }
   },
   "aiTour": {
-    "city": "Şehir",
-    "cityPlaceholder": "ör. İstanbul, Paris, Tokyo",
+    "state": "Şehir",
+    "statePlaceholder": "ör. California, Texas, New York",
     "theme": "Tur Teması",
     "themePlaceholder": "ör. Korkunç Tarih, Gizli Mücevherler",
     "mode": "Tur Modu",
@@ -524,15 +535,24 @@
       "puzzleDesc": "Her konumda etkileşimli meydan okumalar ve bilgi soruları",
       "hybrid": "Hibrit Mod",
       "hybridDesc": "Her ikisinin en iyisi - ilgi çekici hikayeler ve eğlenceli bulmacalar"
+    },
+    "includeAr": {
+      "title": "AR Bulmacalarını Dahil Et",
+      "subtitle": "Yapay zekanın uygun olan duraklara artırılmış gerçeklik bulmacaları eklemesine izin verin"
     }
   },
   "tourStep": {
     "tourProgress": "Tur İlerlemesi",
     "back": "Geri",
     "next": "İleri",
-    "finish": "Bitir"
+    "finish": "Bitir",
+    "answerConfirmTitle": "Bu cevabı kilitle?",
+    "answerConfirmMessage": "Emin misiniz? Yanlış cevaplar rozet ilerlemenizi azaltabilir.",
+    "answerConfirmAction": "Cevapla"
   },
   "common": {
+    "cancel": "İptal",
+    "ok": "Tamam",
     "error": "Hata",
     "syncError": "İlerleme sunucuyla senkronize edilemedi."
   },
@@ -566,7 +586,16 @@
       "stepOf": "Adım {{current}} / {{total}}",
       "end": "Bitir",
       "skip": "ATLA",
-      "route": "Rota",
+      "skipConfirmTitle": "Bu adımı atla?",
+      "skipConfirmMessage": "Bu adım için XP kazanmayacaksınız. Bu işlem geri alınamaz.",
+      "skipConfirmAction": "Adımı atla",
+      "skipBadgeReduction": "Atlamak bu turdaki rozet ilerlemenizi azaltabilir.",
+      "badgeCurrentLabel": "MEVCUT ROZET",
+      "badgeStatusGold": "Altın",
+      "badgeStatusSilver": "Gümüş",
+      "badgeStatusBronze": "Bronz",
+      "badgeStatusLoss": "Rozet Yok",
+      "route": "Yol tarifi al",
       "directions": "Yol Tarifi",
       "openIn": "Bu durağı burada aç",
       "appleMaps": "Apple Maps",
