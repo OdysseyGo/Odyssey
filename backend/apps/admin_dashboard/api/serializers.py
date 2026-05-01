@@ -5,7 +5,18 @@ from rest_framework import serializers
 from apps.admin_dashboard.models import BanRecord, Report
 from apps.gamification.models import Badge, PictureCompareConfig
 from apps.gamification.visuals import DEFAULT_BADGE_VISUAL_CONFIG
-from apps.tours.models import ARModel, Puzzle, Review, Tour, TourStep
+from apps.tours.models import (
+    ARModel,
+    ArPuzzleDetail,
+    CompassPuzzleDetail,
+    GyroscopePuzzleDetail,
+    PictureComparePuzzleDetail,
+    Puzzle,
+    Review,
+    Tour,
+    TourStep,
+    TriviaPuzzleDetail,
+)
 from apps.users.models import User
 
 # ── User Management ──────────────────────────────────────────────────
@@ -582,6 +593,39 @@ class AdminTourStepSerializer(serializers.ModelSerializer):
         return hasattr(obj, "puzzle")
 
 
+# ── Puzzle Detail Serializers  ---------------──────────────────────
+
+
+class TriviaPuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TriviaPuzzleDetail
+        fields = ["options", "correct_answer"]
+
+
+class PictureComparePuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PictureComparePuzzleDetail
+        fields = ["reference_image", "similarity_threshold"]
+
+
+class ArPuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArPuzzleDetail
+        fields = ["scene_asset_url", "metadata"]
+
+
+class GyroscopePuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GyroscopePuzzleDetail
+        fields = ["target_pitch", "target_roll", "target_yaw", "tolerance_degrees"]
+
+
+class CompassPuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompassPuzzleDetail
+        fields = ["target_heading_degrees"]
+
+
 class AdminTourListSerializer(serializers.ModelSerializer):
     creator_username = serializers.CharField(source="creator.username", read_only=True)
     avg_rating = serializers.FloatField(read_only=True)
@@ -613,6 +657,12 @@ class AdminTourListSerializer(serializers.ModelSerializer):
 
 
 class AdminPuzzleSerializer(serializers.ModelSerializer):
+    trivia_detail = TriviaPuzzleDetailSerializer(read_only=True)
+    picture_compare_detail = PictureComparePuzzleDetailSerializer(read_only=True)
+    ar_detail = ArPuzzleDetailSerializer(read_only=True)
+    gyroscope_detail = GyroscopePuzzleDetailSerializer(read_only=True)
+    compass_detail = CompassPuzzleDetailSerializer(read_only=True)
+
     class Meta:
         model = Puzzle
         fields = [
@@ -624,6 +674,11 @@ class AdminPuzzleSerializer(serializers.ModelSerializer):
             "hint",
             "xp_reward",
             "reference_image",
+            "trivia_detail",
+            "picture_compare_detail",
+            "ar_detail",
+            "gyroscope_detail",
+            "compass_detail",
         ]
 
 
@@ -677,6 +732,7 @@ class AdminTourDetailSerializer(serializers.ModelSerializer):
             "city",
             "country",
             "country_code",
+            "cover_image",
             "total_distance",
             "walking_distance",
             "transport_distance",
@@ -684,6 +740,7 @@ class AdminTourDetailSerializer(serializers.ModelSerializer):
             "max_leg_distance",
             "requires_transport",
             "is_circular",
+            "metrics_calculated",
             "accessibility_rating",
             "status",
             "created_at",
