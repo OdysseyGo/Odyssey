@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "apps.ai_content",
     "storages",
     "apps.admin_dashboard",
+    "apps.ads",
 ]
 
 MIDDLEWARE = [

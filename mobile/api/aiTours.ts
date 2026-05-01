@@ -10,6 +10,7 @@ export type AITourGenerationRequest = {
   language: string;
   additional_details?: string;
   include_ar?: boolean;
+  use_ad_slot?: boolean;
 };
 
 export type AITourJobAccepted = {

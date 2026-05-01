@@ -37,6 +37,7 @@ import Colors from '@/constants/Colors';
 import { submitArCode, submitPictureCompare, submitTriviaAnswer } from '@/api/tourProgress';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import SquareCameraOverlayCapture from '@/components/common/SquareCameraOverlayCapture';
+import RewardedHintReveal from '@/components/Ads/RewardedHintReveal';
 import {
   circularDeltaDegrees,
   headingFromSensors,
@@ -1222,6 +1223,8 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
           stepId={step.id}
         />
       )}
+
+      {!isSolved && step.puzzle.hint ? <RewardedHintReveal hint={step.puzzle.hint} /> : null}
     </ScrollView>
   );
 }

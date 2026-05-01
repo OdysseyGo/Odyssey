@@ -50,6 +50,14 @@ class GenerateTourRequestSerializer(serializers.Serializer):
             "appropriate, drawn from the active ARModel catalog."
         ),
     )
+    use_ad_slot = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text=(
+            "If true, consume the user's most recent unconsumed AI_SLOT "
+            "rewarded-ad grant instead of charging credits."
+        ),
+    )
 
 
 class GenerationJobAcceptedSerializer(serializers.Serializer):

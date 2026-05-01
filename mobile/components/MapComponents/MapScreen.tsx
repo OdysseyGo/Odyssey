@@ -22,6 +22,7 @@ import type { MapMarkerProps } from './MapMarker.config';
 import type { Region } from './TourMap.config';
 
 import { getTourProgress, deleteTourProgress } from '@/api/tourProgress';
+import { useInterstitial } from '@/components/Ads/useInterstitial';
 
 export default function MapScreen() {
   const theme = useColorTheme();
@@ -45,6 +46,8 @@ export default function MapScreen() {
   const [showEndConfirmModal, setShowEndConfirmModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [finalXP, setFinalXP] = useState<number>(0);
+  const { show: showTourCompleteInterstitial } = useInterstitial('tour_complete_interstitial');
+  const completingTourRef = useRef(false);
 
   // Area search state
   const [nearbyTours, setNearbyTours] = useState<Tour[]>([]);
@@ -145,18 +148,23 @@ export default function MapScreen() {
 
   // Active tour handlers
   const handleTourComplete = useCallback(async () => {
+    if (completingTourRef.current) return;
+    completingTourRef.current = true;
+
+    let nextFinalXP = earnedXP;
     if (progressId) {
       try {
         const progress = await getTourProgress(progressId);
-        setFinalXP(progress.total_xp);
+        nextFinalXP = progress.total_xp;
       } catch {
-        setFinalXP(earnedXP);
+        nextFinalXP = earnedXP;
       }
-    } else {
-      setFinalXP(earnedXP);
     }
+
+    await showTourCompleteInterstitial();
+    setFinalXP(nextFinalXP);
     setShowCompleteModal(true);
-  }, [progressId, earnedXP]);
+  }, [progressId, earnedXP, showTourCompleteInterstitial]);
 
   const handleEndTourPress = useCallback(() => setShowEndConfirmModal(true), []);
 
@@ -175,6 +183,7 @@ export default function MapScreen() {
 
   const handleCloseCompleteModal = useCallback(() => {
     setShowCompleteModal(false);
+    completingTourRef.current = false;
     endTour();
   }, [endTour]);
 

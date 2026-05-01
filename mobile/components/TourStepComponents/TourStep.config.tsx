@@ -13,17 +13,20 @@ export interface MultipleChoicePuzzle {
   question: string;
   options: MultipleChoiceOption[];
   imageUri?: string;
+  hint?: string;
 }
 
 export interface PictureComparePuzzle {
   type: 'picture-compare';
   question: string;
   referenceImageUri?: string;
+  hint?: string;
 }
 
 export interface ArCodePuzzle {
   type: 'ar-code';
   question: string;
+  hint?: string;
   sceneAssetUrl?: string;
   secretCode?: string;
   anchorPosition?: {
@@ -37,6 +40,7 @@ export interface ArCodePuzzle {
 export interface CompassBearingPuzzle {
   type: 'compass-bearing';
   question: string;
+  hint?: string;
   targetHeadingDegrees: number;
 }
 

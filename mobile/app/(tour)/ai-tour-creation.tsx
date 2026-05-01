@@ -9,6 +9,7 @@ import {
   Switch,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { aiTourCreationStyles } from './ai-tour-creation.styles';
 import {
@@ -30,7 +31,9 @@ import {
   AITourFormData,
   createEmptyFormData,
 } from '@/components/AITourCreation';
-import { generateAITour, getAITourJob, AITourJob } from '@/api/aiTours';
+import { generateAITour, getAITourJob, AITourJob, AITourJobAccepted } from '@/api/aiTours';
+import { CreationHeader } from '@/components/TourCreation/common';
+import { useRewardedAd } from '@/components/Ads/useRewardedAd';
 
 const POLL_INTERVAL_MS = 1500;
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
@@ -50,8 +53,6 @@ async function pollGenerationJob(
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
 }
-import { CreationHeader } from '@/components/TourCreation/common';
-import { useTranslation } from 'react-i18next';
 
 export default function AITourCreation() {
   const theme = useColorTheme();
@@ -61,6 +62,7 @@ export default function AITourCreation() {
   const [isLoading, setIsLoading] = useState(false);
   const [progressLabel, setProgressLabel] = useState<string>('');
   const [formData, setFormData] = useState<AITourFormData>(createEmptyFormData());
+  const rewardedAiSlot = useRewardedAd('rewarded_ai_slot');
 
   const tourModeOptions = useMemo(
     () => [
@@ -92,11 +94,24 @@ export default function AITourCreation() {
       return;
     }
 
+    if (!rewardedAiSlot.available || rewardedAiSlot.status !== 'loaded') {
+      Alert.alert(
+        t('aiTour.failedTitle'),
+        t('aiTour.adUnavailableMessage', {
+          defaultValue: 'A rewarded ad is required before AI generation. Please try again shortly.',
+        })
+      );
+      return;
+    }
+
+    const earned = await rewardedAiSlot.show();
+    if (!earned) return;
+
     setIsLoading(true);
     setProgressLabel('');
 
     try {
-      const accepted = await generateAITour({
+      const buildPayload = () => ({
         city: formData.state.trim(),
         country: formData.country.trim(),
         country_code: formData.countryCode.trim(),
@@ -106,7 +121,30 @@ export default function AITourCreation() {
         language: formData.language,
         additional_details: formData.additionalDetails.trim() || undefined,
         include_ar: formData.includeAr,
+        use_ad_slot: true,
       });
+
+      let accepted: AITourJobAccepted | null = null;
+      let attempt = 0;
+      const maxAttempts = 6;
+      while (true) {
+        try {
+          accepted = await generateAITour(buildPayload());
+          break;
+        } catch (err: any) {
+          attempt += 1;
+          const isVerificationRace =
+            err?.statusCode === 403 &&
+            typeof err?.message === 'string' &&
+            err.message.includes('No unconsumed AI_SLOT');
+          if (!isVerificationRace || attempt >= maxAttempts) throw err;
+          await new Promise((r) => setTimeout(r, 700));
+        }
+      }
+
+      if (!accepted) {
+        throw new Error(t('aiTour.failedMessage'));
+      }
 
       const finalJob = await pollGenerationJob(accepted.job_id, setProgressLabel);
 

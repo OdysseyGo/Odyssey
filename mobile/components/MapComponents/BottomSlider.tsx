@@ -22,6 +22,7 @@ import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/Odyssey
 
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { completeStep, skipStep } from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
+import { useRewardedAd } from '@/components/Ads/useRewardedAd';
 
 const BOTTOM_SHEET_ANIMATION_DURATION = Animations.bottomSheet.animationDuration;
 const COLLAPSED_VISIBLE_HEIGHT = 110;
@@ -56,6 +57,9 @@ export default function BottomSlider({
     confirmLocation,
     recordSkip,
   } = useActiveTour();
+
+  const rewardedSkip = useRewardedAd('rewarded_hint');
+  const skipUsingAdRef = useRef(false);
 
   const handleNavigateNext = useCallback(async () => {
     if (!tour || !progressId) return;
@@ -129,12 +133,32 @@ export default function BottomSlider({
       return;
     }
 
+    const useAdSkip = skipUsingAdRef.current;
+    skipUsingAdRef.current = false;
+
     setIsSkipConfirmVisible(false);
 
     try {
-      const response = await skipStep(progressId);
+      let response;
+      let attempt = 0;
+      const maxAttempts = useAdSkip ? 6 : 1;
+      while (true) {
+        try {
+          response = await skipStep(progressId, { useAdSkip });
+          break;
+        } catch (err: any) {
+          attempt += 1;
+          const isVerificationRace =
+            useAdSkip &&
+            err?.statusCode === 400 &&
+            typeof err?.message === 'string' &&
+            err.message.includes('No unconsumed HINT');
+          if (!isVerificationRace || attempt >= maxAttempts) throw err;
+          await new Promise((r) => setTimeout(r, 700));
+        }
+      }
 
-      recordSkip();
+      if (!useAdSkip) recordSkip();
 
       if (response.is_tour_complete) {
         await onTourComplete?.();
@@ -173,6 +197,38 @@ export default function BottomSlider({
 
     setIsSkipConfirmVisible(true);
   }, [tour, progressId, currentStepIndex, highestStepIndex, setCurrentStepIndex]);
+
+  const handleSkipPress = useCallback(() => {
+    if (!rewardedSkip.available || rewardedSkip.status !== 'loaded') {
+      handleSkip();
+      return;
+    }
+    Alert.alert(
+      t('map.activeTour.skipPromptTitle', { defaultValue: 'Skip this step?' }),
+      t('map.activeTour.skipPromptMessage', {
+        defaultValue: 'Watch a short ad to skip without penalty, or skip anyway.',
+      }),
+      [
+        { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+        {
+          text: t('map.activeTour.skipAnyway', { defaultValue: 'Skip anyway' }),
+          onPress: () => handleSkip(),
+        },
+        {
+          text: t('map.activeTour.watchAdToSkip', { defaultValue: 'Watch ad' }),
+          onPress: async () => {
+            const earned = await rewardedSkip.show();
+            if (earned) {
+              skipUsingAdRef.current = true;
+              await handleConfirmSkip();
+            } else {
+              handleSkip();
+            }
+          },
+        },
+      ]
+    );
+  }, [rewardedSkip, handleSkip, handleConfirmSkip, t]);
 
   const handleNavigatePrev = useCallback(() => {
     if (currentStepIndex > 0) {
@@ -375,7 +431,7 @@ export default function BottomSlider({
               onStepSolved={handleStepSolved}
               onLocationConfirm={handleLocationConfirm}
               onEndTour={onEndTour}
-              onSkipStep={handleSkip}
+              onSkipStep={handleSkipPress}
             />
           </View>
         </View>

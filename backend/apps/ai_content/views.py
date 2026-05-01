@@ -2,7 +2,7 @@ import logging
 import threading
 
 from django.conf import settings
-from django.db import close_old_connections
+from django.db import close_old_connections, transaction
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView
@@ -69,6 +69,28 @@ def _run_generation(job_id, payload, user_id):
         close_old_connections()
 
 
+def _consume_ai_slot_grant(user):
+    """Find and consume the user's most recent unconsumed AI_SLOT grant.
+
+    Returns True if a grant was consumed, False if none was found.
+    """
+    from apps.ads.models import RewardedAdGrant
+    from apps.ads.services import reward_service
+
+    grant = (
+        RewardedAdGrant.objects.filter(
+            user=user,
+            reward_type=RewardedAdGrant.AI_SLOT,
+            consumed_at__isnull=True,
+        )
+        .order_by("-granted_at")
+        .first()
+    )
+    if grant is None:
+        return False
+    return reward_service.consume(grant, context={"source": "ai_generate_tour"})
+
+
 class GenerateTourView(APIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [GenerateTourRateThrottle]
@@ -99,10 +121,26 @@ class GenerateTourView(APIView):
                 status=status.HTTP_409_CONFLICT,
             )
 
-        # Keep future paid/rewarded generation entitlement checks below all
-        # validation and active-job guards, then consume the entitlement in the
-        # same transaction that creates this job.
-        job = GenerationJob.objects.create(creator=request.user)
+        if not serializer.validated_data.get("use_ad_slot"):
+            return Response(
+                {"error": "Watch a rewarded ad before generating an AI tour."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        with transaction.atomic():
+            if not _consume_ai_slot_grant(request.user):
+                return Response(
+                    {
+                        "error": (
+                            "No unconsumed AI_SLOT reward available. "
+                            "Watch a rewarded ad first or wait a few seconds for "
+                            "verification."
+                        )
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            job = GenerationJob.objects.create(creator=request.user)
 
         threading.Thread(
             target=_run_generation,
