@@ -92,7 +92,9 @@ def _numeric_score(submitted: str, correct: str) -> float:
     return 1.0 if correct_numbers <= submitted_numbers else 0.0
 
 
-def _token_overlap_score(submitted_tokens: list[str], correct_tokens: list[str]) -> float:
+def _token_overlap_score(
+    submitted_tokens: list[str], correct_tokens: list[str]
+) -> float:
     if not submitted_tokens or not correct_tokens:
         return 0.0
 
