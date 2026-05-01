@@ -488,6 +488,7 @@
     "missingInfoTitle": "Falta Información",
     "missingInfoMessage": "Por favor, proporciona tanto un estado como un tema para tu tour.",
     "successTitle": "¡Tour Creado! 🎉",
+    "successMessage": "Tu tour está listo para explorar.",
     "viewTour": "Ver Tour",
     "createAnother": "Crear Otro",
     "failedTitle": "Error de Generación",

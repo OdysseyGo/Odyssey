@@ -30,7 +30,26 @@ import {
   AITourFormData,
   createEmptyFormData,
 } from '@/components/AITourCreation';
-import { generateAITour } from '@/api/aiTours';
+import { generateAITour, getAITourJob, AITourJob } from '@/api/aiTours';
+
+const POLL_INTERVAL_MS = 1500;
+const POLL_TIMEOUT_MS = 5 * 60 * 1000;
+
+async function pollGenerationJob(
+  jobId: string,
+  onProgress: (label: string) => void
+): Promise<AITourJob> {
+  const start = Date.now();
+  while (true) {
+    const job = await getAITourJob(jobId);
+    if (job.progress_label) onProgress(job.progress_label);
+    if (job.status === 'SUCCESS' || job.status === 'FAILED') return job;
+    if (Date.now() - start > POLL_TIMEOUT_MS) {
+      return { ...job, status: 'FAILED', error: 'Generation timed out' };
+    }
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+  }
+}
 import { CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
 
@@ -40,6 +59,7 @@ export default function AITourCreation() {
   const { t } = useTranslation();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [progressLabel, setProgressLabel] = useState<string>('');
   const [formData, setFormData] = useState<AITourFormData>(createEmptyFormData());
 
   const tourModeOptions = useMemo(
@@ -73,9 +93,10 @@ export default function AITourCreation() {
     }
 
     setIsLoading(true);
+    setProgressLabel('');
 
     try {
-      const response = await generateAITour({
+      const accepted = await generateAITour({
         city: formData.state.trim(),
         country: formData.country.trim(),
         country_code: formData.countryCode.trim(),
@@ -87,20 +108,28 @@ export default function AITourCreation() {
         include_ar: formData.includeAr,
       });
 
-      Alert.alert(t('aiTour.successTitle'), response.message, [
-        {
-          text: t('aiTour.viewTour'),
-          onPress: () => router.replace(`/tour/${response.tour_id}`),
-        },
-        {
-          text: t('aiTour.createAnother'),
-          style: 'cancel',
-        },
-      ]);
+      const finalJob = await pollGenerationJob(accepted.job_id, setProgressLabel);
+
+      if (finalJob.status === 'SUCCESS' && finalJob.tour_id != null) {
+        const tourId = finalJob.tour_id;
+        Alert.alert(t('aiTour.successTitle'), t('aiTour.successMessage'), [
+          {
+            text: t('aiTour.viewTour'),
+            onPress: () => router.replace(`/tour/${tourId}`),
+          },
+          {
+            text: t('aiTour.createAnother'),
+            style: 'cancel',
+          },
+        ]);
+      } else {
+        Alert.alert(t('aiTour.failedTitle'), finalJob.error || t('aiTour.failedMessage'));
+      }
     } catch (error: any) {
       Alert.alert(t('aiTour.failedTitle'), error?.message || t('aiTour.failedMessage'));
     } finally {
       setIsLoading(false);
+      setProgressLabel('');
     }
   };
 
@@ -239,7 +268,7 @@ export default function AITourCreation() {
         <GenerateButton onPress={handleGenerate} disabled={!isFormValid} isLoading={isLoading} />
       </KeyboardAvoidingView>
 
-      <LoadingOverlay visible={isLoading} />
+      <LoadingOverlay visible={isLoading} subtitle={progressLabel || undefined} />
     </View>
   );
 }

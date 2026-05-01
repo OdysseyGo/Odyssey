@@ -510,6 +510,7 @@
     "missingInfoTitle": "Missing Information",
     "missingInfoMessage": "Please provide both a state and a theme for your tour.",
     "successTitle": "Tour Created! 🎉",
+    "successMessage": "Your tour is ready to explore.",
     "viewTour": "View Tour",
     "createAnother": "Create Another",
     "failedTitle": "Generation Failed",

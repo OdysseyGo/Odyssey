@@ -510,6 +510,7 @@
     "missingInfoTitle": "Eksik Bilgi",
     "missingInfoMessage": "Lütfen turunuz için hem bir şehir hem de bir tema girin.",
     "successTitle": "Tur Oluşturuldu! 🎉",
+    "successMessage": "Turunuz keşfedilmeye hazır.",
     "viewTour": "Turu Görüntüle",
     "createAnother": "Başka Bir Tane Oluştur",
     "failedTitle": "Oluşturma Başarısız",
