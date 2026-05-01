@@ -21,7 +21,8 @@ export default function EndTourConfirmModal({
   const colors = Colors[theme];
   const { t } = useTranslation();
 
-  const remainingSteps = totalSteps - completedSteps;
+  const safeCompletedSteps = Math.max(0, Math.min(completedSteps, totalSteps));
+  const remainingSteps = Math.max(0, totalSteps - safeCompletedSteps);
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
@@ -39,7 +40,7 @@ export default function EndTourConfirmModal({
           {/* Progress Info */}
           <View style={styles.progressInfo}>
             <View style={styles.progressItem}>
-              <Text style={styles.progressValue}>{completedSteps}</Text>
+              <Text style={styles.progressValue}>{safeCompletedSteps}</Text>
               <Text style={styles.progressLabel}>{t('map.endTour.completed')}</Text>
             </View>
             <View style={styles.progressItem}>

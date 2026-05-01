@@ -5,6 +5,7 @@ from django.db.models import Avg, OuterRef, Subquery
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from apps.gamification.models import TourProgress
@@ -105,7 +106,13 @@ class TourViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
+        # Default to production-safe behavior when ENV_MODE is unset.
+        env_mode = os.getenv("ENV_MODE", "production")
+        if env_mode != "development":
+            status = Tour.DRAFT
+        else:
+            status = Tour.PUBLISHED
+        serializer.save(creator=self.request.user, status=status)
 
     @action(
         detail=False,
@@ -687,4 +694,27 @@ class ReviewViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user, tour_id=self.kwargs["tour_pk"])
+        tour = Tour.objects.only("id", "creator_id").get(pk=self.kwargs["tour_pk"])
+        if tour.creator_id == self.request.user.id:
+            raise PermissionDenied("You cannot review your own tour.")
+
+        serializer.save(user=self.request.user, tour=tour)
+
+    def perform_update(self, serializer):
+        if serializer.instance.tour.creator_id == self.request.user.id:
+            raise PermissionDenied("You cannot review your own tour.")
+        if (
+            serializer.instance.user_id != self.request.user.id
+            and not self.request.user.is_staff
+        ):
+            raise PermissionDenied("You can only edit your own review.")
+
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if instance.tour.creator_id == self.request.user.id:
+            raise PermissionDenied("You cannot review your own tour.")
+        if instance.user_id != self.request.user.id and not self.request.user.is_staff:
+            raise PermissionDenied("You can only delete your own review.")
+
+        instance.delete()
