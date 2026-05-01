@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tours', '0008_tour_cover_image'),
+        ("tours", "0008_tour_cover_image"),
     ]
 
     operations = [
@@ -15,8 +15,8 @@ class Migration(migrations.Migration):
             database_operations=[],
             state_operations=[
                 migrations.AddField(
-                    model_name='tour',
-                    name='credit_price',
+                    model_name="tour",
+                    name="credit_price",
                     field=models.PositiveIntegerField(default=0),
                 ),
             ],

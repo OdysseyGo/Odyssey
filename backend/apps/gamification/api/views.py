@@ -193,7 +193,9 @@ class TourProgressViewSet(
     def _get_next_step(self, progress):
         snapshot = progress.tour_snapshot or {}
         steps = snapshot.get("steps", [])
-        _current_step, idx = self._find_snapshot_step(snapshot, progress.current_step_id)
+        _current_step, idx = self._find_snapshot_step(
+            snapshot, progress.current_step_id
+        )
         if idx < 0:
             return None
 

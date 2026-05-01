@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('gamification', '0003_tourprogress_snapshot'),
+        ("gamification", "0003_tourprogress_snapshot"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='tourprogress',
+            name="tourprogress",
             unique_together=set(),
         ),
     ]
