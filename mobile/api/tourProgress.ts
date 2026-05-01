@@ -24,6 +24,7 @@ export type StepActionResponse = {
   status: string;
   is_tour_complete: boolean;
   new_step_id: number | null;
+  awarded_xp: number;
 };
 
 export type PictureCompareResponse = StepActionResponse & {
@@ -171,7 +172,7 @@ export async function submitArCode(
 }
 
 /**
- * Submit a multiple-choice trivia answer for backend attempt tracking.
+ * Submit a selected answer for a TRIVIA puzzle on the current step.
  */
 export async function submitTriviaAnswer(
   id: number,

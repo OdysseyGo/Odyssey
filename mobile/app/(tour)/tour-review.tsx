@@ -93,7 +93,6 @@ export default function TourReviewScreen() {
               const basePayload = {
                 question: loc.puzzle.question,
                 hint: loc.puzzle.hint,
-                xp_reward: loc.puzzle.xp_reward,
               };
 
               if (loc.puzzle.puzzle_type === 'TRIVIA') {

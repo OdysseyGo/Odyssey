@@ -106,13 +106,15 @@ export default function TourCompleteModal({
             </View>
           </View>
 
-          {/* XP Earned */}
-          <View style={styles.xpEarnedContainer}>
-            <MaterialCommunityIcons name="star" size={24} color="#000" />
-            <Text style={styles.xpEarnedText}>
-              {t('map.tourComplete.xpEarned', { xp: earnedXP })}
-            </Text>
-          </View>
+          {/* XP Earned (only when actually awarded) */}
+          {earnedXP > 0 && (
+            <View style={styles.xpEarnedContainer}>
+              <MaterialCommunityIcons name="star" size={24} color="#000" />
+              <Text style={styles.xpEarnedText}>
+                {t('map.tourComplete.xpEarned', { xp: earnedXP })}
+              </Text>
+            </View>
+          )}
 
           {/* Buttons */}
           <View style={styles.buttonsContainer}>
