@@ -92,7 +92,7 @@ export const exampleTour: Tour = {
   id: 'tour-1',
   title: 'Historic Istanbul Tour',
   description: 'Explore the historic landmarks of Istanbul',
-  coverImageUri: 'https://picsum.photos/400/307',
+  coverImageUri: '',
   steps: [
     {
       id: 'step-1',
@@ -104,7 +104,7 @@ export const exampleTour: Tour = {
         latitude: 41.0082,
         longitude: 28.9784,
       },
-      images: ['https://picsum.photos/400/299', 'https://picsum.photos/400/301'],
+      images: [],
     },
     {
       id: 'step-2',
@@ -118,7 +118,7 @@ export const exampleTour: Tour = {
       puzzle: {
         type: 'multiple-choice',
         question: 'When was Hagia Sophia originally built?',
-        imageUri: 'https://picsum.photos/400/305',
+        imageUri: '',
         options: [
           { id: 'a', text: '325 AD', isCorrect: false },
           { id: 'b', text: '537 AD', isCorrect: true },
@@ -137,7 +137,7 @@ export const exampleTour: Tour = {
         latitude: 41.0106,
         longitude: 28.968,
       },
-      images: ['https://picsum.photos/400/308'],
+      images: [],
     },
   ],
 };

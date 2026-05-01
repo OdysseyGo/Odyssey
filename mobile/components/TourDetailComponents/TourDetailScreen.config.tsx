@@ -1,4 +1,4 @@
-import { Tour } from '@/api/tours';
+import { getTourImageUri, Tour } from '@/api/tours';
 import { TourDetail, TourStop } from './TourDetail.config';
 
 export interface TourDetailScreenProps {
@@ -34,7 +34,8 @@ export function mapApiTourToDetail(tour: Tour, t: (key: string) => string): Tour
     author: tour.creator?.username || 'Unknown',
     authorId: tour.creator?.id || 0,
     authorAvatar: tour.creator?.avatar_url || '',
-    coverImage: tour.steps?.[0]?.image || `https://picsum.photos/800/400?random=${tour.id}`,
+    coverImage: getTourImageUri(tour),
+    coverImageAttribution: tour.cover_image_attribution || '',
     duration: `${tour.duration_minutes} ${t('tourId.min')}`,
     distance: hasDistance ? `${(tour.total_distance! / 1000).toFixed(1)} km` : '—',
     rating: tour.average_rating || 0.0,

@@ -19,6 +19,7 @@ import { featuredTourCarouselStyles } from './FeaturedTourCarousel.styles';
 import { STAR } from '@/constants/Symbols';
 import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
+import TourImagePlaceholder from '@/components/common/TourImagePlaceholder';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -122,10 +123,15 @@ export default function FeaturedTourCarousel({
                 style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
               >
                 <View style={styles.imageWrapper}>
-                  <Image
-                    source={{ uri: tour.image || `https://picsum.photos/seed/${tour.id}/800/500` }}
-                    style={styles.image}
-                  />
+                  {tour.image ? (
+                    <Image source={{ uri: tour.image }} style={styles.image} />
+                  ) : (
+                    <TourImagePlaceholder
+                      style={styles.imagePlaceholder}
+                      iconSize={34}
+                      label="No tour image"
+                    />
+                  )}
                   <View style={styles.imageOverlay} />
 
                   {/* Featured badge */}

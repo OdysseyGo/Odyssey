@@ -1,6 +1,8 @@
 import logging
 import math
 import os
+import re
+from html import unescape
 from typing import Any, Dict, List, Optional
 
 import googlemaps
@@ -197,6 +199,64 @@ class GoogleMapsFacade:
                 print(f"Fallback places search failed for '{city}': {e}")
 
         return places[:max_results]
+
+    @staticmethod
+    def _strip_html(value: str) -> str:
+        if not value:
+            return ""
+        text = re.sub(r"<[^>]+>", "", value)
+        return unescape(text).strip()
+
+    def get_place_photo(
+        self,
+        place_id: str,
+        max_width: int = 1200,
+    ) -> Optional[Dict[str, str]]:
+        """
+        Resolve a Google Places photo URL and attribution for a place_id.
+
+        Returns:
+            {"url": "...", "attribution": "..."} or None
+        """
+        if not self.client or not self.api_key or not place_id:
+            return None
+
+        try:
+            details = self.client.place(place_id=place_id, fields=["photo"])
+            result = details.get("result") or {}
+            photos = result.get("photos") or []
+            if not photos:
+                return None
+
+            first_photo = photos[0]
+            photo_reference = first_photo.get("photo_reference")
+            if not photo_reference:
+                return None
+
+            attribution_items = first_photo.get("html_attributions") or []
+            attribution = ", ".join(
+                filter(
+                    None,
+                    [
+                        self._strip_html(str(item))
+                        for item in attribution_items
+                        if item is not None
+                    ],
+                )
+            )
+            photo_url = (
+                "https://maps.googleapis.com/maps/api/place/photo"
+                f"?maxwidth={max_width}"
+                f"&photo_reference={photo_reference}"
+                f"&key={self.api_key}"
+            )
+            return {
+                "url": photo_url,
+                "attribution": attribution,
+            }
+        except Exception as e:
+            print(f"Place photo lookup failed for place_id '{place_id}': {e}")
+            return None
 
     def calculate_route_metrics(self, steps: List[TourStep]) -> Dict[str, Any]:
         """

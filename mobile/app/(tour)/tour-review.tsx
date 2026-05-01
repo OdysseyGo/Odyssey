@@ -35,9 +35,11 @@ export default function TourReviewScreen() {
   const { tourData, resetTourData } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { t } = useTranslation();
-  const isReadyToSubmit = tourData.locations.every((location) =>
-    doesLocationMeetTourRequirements(location, tourData.tourType)
-  );
+  const isReadyToSubmit =
+    !!tourData.coverImage &&
+    tourData.locations.every((location) =>
+      doesLocationMeetTourRequirements(location, tourData.tourType)
+    );
 
   const handleSubmitTour = async () => {
     if (!isReadyToSubmit) {
@@ -60,6 +62,7 @@ export default function TourReviewScreen() {
             const tour = await createTour({
               title: tourData.title || 'Untitled Tour',
               description: tourData.description || 'No description provided.',
+              cover_image: tourData.coverImage,
               tour_type: tourData.tourType,
               category: tourData.category || 'General',
               difficulty: tourData.difficulty,
@@ -72,8 +75,6 @@ export default function TourReviewScreen() {
               status: 'DRAFT',
               is_premium: false,
             });
-
-            console.log('Tour created:', tour.id);
 
             // 2. Create steps and configure step puzzles using type-specific endpoints.
             for (const [index, loc] of tourData.locations.entries()) {

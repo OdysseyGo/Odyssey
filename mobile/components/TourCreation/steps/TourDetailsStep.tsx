@@ -16,6 +16,7 @@ import {
   FormDurationPicker,
   FormLocationSelect,
 } from '../inputs';
+import ImageUploadSection from '../StoryEditor/ImageUploadSection';
 import { useTranslation } from 'react-i18next';
 
 type TourDetailsStepProps = {
@@ -111,6 +112,13 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
           maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
         />
       </FormInputGroup>
+
+      <ImageUploadSection
+        image={tourData.coverImage}
+        onImageChange={(coverImage) => onUpdate({ coverImage })}
+        label={t('creation.story.coverImage')}
+        required
+      />
 
       <FormInputGroup label={t('creation.details.country', { defaultValue: 'Country' })} required>
         <FormLocationSelect
