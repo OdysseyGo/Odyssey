@@ -96,7 +96,7 @@ class GeminiService:
                 except Exception as e:
                     logger.warning("progress_callback failed: %s", e)
 
-        _emit("Finding real places…")
+        _emit(f"Exploring {city} for the perfect spots…")
         num_steps = max(3, duration // 15)
         location_query = self._format_location(city, country)
         candidate_places = self._discover_places(location_query, theme, num_steps)
@@ -124,7 +124,7 @@ class GeminiService:
             ar_models,
         )
 
-        _emit("Writing your tour…")
+        _emit("Weaving your story together…")
         max_retries = 3
         last_error = None
 
@@ -211,7 +211,7 @@ class GeminiService:
         # ---- Step 4b: Reorder stops geometrically to eliminate zigzag ----
         tour_data["steps"] = self._nearest_neighbor_order(tour_data["steps"])
 
-        _emit("Finalizing…")
+        _emit("Your adventure is almost ready…")
         with transaction.atomic():
             tour = Tour.objects.create(
                 title=tour_data["title"],
