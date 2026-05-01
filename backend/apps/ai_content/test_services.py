@@ -9,7 +9,7 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
 from apps.tours.models import Puzzle, Tour, TourStep
 
@@ -119,11 +119,11 @@ def _mock_gemini_response(tour_data: dict) -> MagicMock:
 
 @pytest.fixture(autouse=True)
 def _patch_genai():
-    """Globally patch google.generativeai for all tests."""
+    """Globally patch the Google GenAI client for all tests."""
     with patch("apps.ai_content.services.genai") as mock_genai:
-        mock_model = MagicMock()
-        mock_genai.GenerativeModel.return_value = mock_model
-        yield mock_model
+        mock_client = MagicMock()
+        mock_genai.Client.return_value = mock_client
+        yield mock_client.models.generate_content
 
 
 # ---------------------------------------------------------------------------
@@ -153,9 +153,9 @@ class TestGenerateTour(TestCase):
         """A well-formed AI response should create Tour + Steps + Puzzles."""
         tour_data = _valid_tour_json(include_puzzles=True)
 
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
+        mock_genai.Client.return_value.models.generate_content.return_value = (
+            _mock_gemini_response(tour_data)
+        )
 
         # Mock the maps facade for both search_places and calculate_route_metrics
         mock_facade = mock_maps_cls.return_value
@@ -188,10 +188,9 @@ class TestGenerateTour(TestCase):
         # AI returns slightly wrong coordinates
         tour_data["steps"][0]["latitude"] = 41.0
         tour_data["steps"][0]["longitude"] = 29.0
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
+        mock_genai.Client.return_value.models.generate_content.return_value = (
+            _mock_gemini_response(tour_data)
+        )
 
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
@@ -249,10 +248,9 @@ class TestGenerateTour(TestCase):
         tour_data["steps"][0]["title"] = "Hagia Sophia Museum"
         tour_data["steps"][0]["latitude"] = 0
         tour_data["steps"][0]["longitude"] = 0
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
+        mock_genai.Client.return_value.models.generate_content.return_value = (
+            _mock_gemini_response(tour_data)
+        )
 
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
@@ -285,10 +283,9 @@ class TestGenerateTour(TestCase):
         tour_data["steps"].append(
             {"description": "No title here", "latitude": 41.0, "longitude": 28.0}
         )
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
+        mock_genai.Client.return_value.models.generate_content.return_value = (
+            _mock_gemini_response(tour_data)
+        )
 
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
@@ -316,10 +313,9 @@ class TestGenerateTour(TestCase):
     def test_missing_title_raises_value_error(self, mock_genai, mock_maps_cls):
         """Response missing 'title' should raise ValueError before DB writes."""
         tour_data = {"description": "A tour", "steps": []}
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
+        mock_genai.Client.return_value.models.generate_content.return_value = (
+            _mock_gemini_response(tour_data)
+        )
 
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
@@ -342,10 +338,9 @@ class TestGenerateTour(TestCase):
     def test_empty_steps_raises_value_error(self, mock_genai, mock_maps_cls):
         """An empty steps list should raise ValueError."""
         tour_data = {"title": "Tour", "description": "Desc", "steps": []}
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
+        mock_genai.Client.return_value.models.generate_content.return_value = (
+            _mock_gemini_response(tour_data)
+        )
 
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
@@ -370,10 +365,9 @@ class TestGenerateTour(TestCase):
     def test_puzzle_fallback_in_puzzle_mode(self, mock_genai, mock_maps_cls):
         """In PUZZLE mode, missing puzzle data should generate a fallback."""
         tour_data = _valid_tour_json(include_puzzles=False)
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
+        mock_genai.Client.return_value.models.generate_content.return_value = (
+            _mock_gemini_response(tour_data)
+        )
 
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
@@ -400,10 +394,9 @@ class TestGenerateTour(TestCase):
     def test_no_fallback_in_story_mode(self, mock_genai, mock_maps_cls):
         """In STORY mode, missing puzzle data should NOT create puzzles."""
         tour_data = _valid_tour_json(include_puzzles=False)
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
+        mock_genai.Client.return_value.models.generate_content.return_value = (
+            _mock_gemini_response(tour_data)
+        )
 
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
@@ -430,10 +423,9 @@ class TestGenerateTour(TestCase):
     def test_duration_includes_exploration_time(self, mock_genai, mock_maps_cls):
         """Duration should be walking_time + (num_steps * MINUTES_PER_STEP)."""
         tour_data = _valid_tour_json(include_puzzles=False)
-
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
-        mock_genai.GenerativeModel.return_value = mock_model
+        mock_genai.Client.return_value.models.generate_content.return_value = (
+            _mock_gemini_response(tour_data)
+        )
 
         mock_facade = mock_maps_cls.return_value
         mock_facade.search_places.return_value = _candidate_places()
@@ -474,7 +466,7 @@ class TestGenerateTour(TestCase):
 # ---------------------------------------------------------------------------
 
 
-class TestParseResponse(TestCase):
+class TestParseResponse(SimpleTestCase):
     """Tests for GeminiService._parse_response"""
 
     def _service(self):
@@ -508,7 +500,7 @@ class TestParseResponse(TestCase):
 # ---------------------------------------------------------------------------
 
 
-class TestFuzzyMatchPlace(TestCase):
+class TestFuzzyMatchPlace(SimpleTestCase):
     """Tests for GeminiService._fuzzy_match_place"""
 
     def test_exact_match(self):
@@ -536,7 +528,7 @@ class TestFuzzyMatchPlace(TestCase):
         assert result is None
 
 
-class TestClusterCandidates(TestCase):
+class TestClusterCandidates(SimpleTestCase):
     def test_below_min_size_returns_unchanged(self):
         candidates = _candidate_places()[:3]
         result = GeminiService._cluster_candidates(candidates, keep=10)
@@ -564,7 +556,7 @@ class TestClusterCandidates(TestCase):
         assert len(result) == len(candidates)
 
 
-class TestHaversineFallbackMetrics(TestCase):
+class TestHaversineFallbackMetrics(SimpleTestCase):
     def _step(self, order, lat, lng):
         s = MagicMock()
         s.order = order
