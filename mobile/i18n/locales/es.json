@@ -525,6 +525,10 @@
     "includeAr": {
       "title": "Incluir Puzzles AR",
       "subtitle": "Deja que la IA añada puzzles de realidad aumentada en las paradas donde encajen"
+    },
+    "includeCompass": {
+      "title": "Incluir Puzzles de Brújula",
+      "subtitle": "Deja que la IA añada puzzles de orientación con brújula en las paradas donde encajen"
     }
   },
   "tourStep": {

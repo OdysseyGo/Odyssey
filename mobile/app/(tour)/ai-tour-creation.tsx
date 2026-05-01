@@ -107,6 +107,7 @@ export default function AITourCreation() {
         language: formData.language,
         additional_details: formData.additionalDetails.trim() || undefined,
         include_ar: formData.includeAr,
+        include_compass: formData.includeCompass,
       });
 
       Alert.alert(t('aiTour.successTitle'), response.message, [
@@ -229,6 +230,19 @@ export default function AITourCreation() {
             <Switch
               value={formData.includeAr}
               onValueChange={(value) => updateFormData({ includeAr: value })}
+            />
+          </View>
+
+          <View style={styles.sectionDivider} />
+
+          <View style={styles.arToggleRow}>
+            <View style={styles.arToggleLabels}>
+              <Text style={styles.sectionTitle}>{t('aiTour.includeCompass.title')}</Text>
+              <Text style={styles.sectionSubtitle}>{t('aiTour.includeCompass.subtitle')}</Text>
+            </View>
+            <Switch
+              value={formData.includeCompass}
+              onValueChange={(value) => updateFormData({ includeCompass: value })}
             />
           </View>
 

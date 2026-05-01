@@ -10,6 +10,7 @@ export type AITourGenerationRequest = {
   language: string;
   additional_details?: string;
   include_ar?: boolean;
+  include_compass?: boolean;
 };
 
 export type AITourGenerationResponse = {

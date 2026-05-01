@@ -547,6 +547,10 @@
     "includeAr": {
       "title": "Include AR Puzzles",
       "subtitle": "Let the AI add augmented-reality puzzles on stops where they fit"
+    },
+    "includeCompass": {
+      "title": "Include Compass Puzzles",
+      "subtitle": "Let the AI add compass-heading puzzles on stops where they fit"
     }
   },
   "tourStep": {

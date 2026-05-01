@@ -547,6 +547,10 @@
     "includeAr": {
       "title": "AR Bulmacalarını Dahil Et",
       "subtitle": "Yapay zekanın uygun olan duraklara artırılmış gerçeklik bulmacaları eklemesine izin verin"
+    },
+    "includeCompass": {
+      "title": "Pusula Bulmacalarını Dahil Et",
+      "subtitle": "Yapay zekanın uygun olan duraklara pusula yönü bulmacaları eklemesine izin verin"
     }
   },
   "tourStep": {
