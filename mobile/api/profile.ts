@@ -35,6 +35,12 @@ export const getMyBadges = () =>
     url: `/api/my-badges/`,
   });
 
+export const getUserBadges = (userId: string) =>
+  apiRequest<BadgesListResponse>({
+    method: 'get',
+    url: `/api/users/${userId}/badges/`,
+  });
+
 export type LevelInfo = {
   level: number;
   title: string;

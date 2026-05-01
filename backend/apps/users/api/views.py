@@ -10,7 +10,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken  # login token
 
-from apps.gamification.models import TourProgress
+from apps.gamification.api.serializers import UserBadgeSerializer
+from apps.gamification.models import TourProgress, UserBadge
 from apps.tours.api.serializers import TourSerializer
 from apps.tours.models import Tour
 from apps.users.models import Follow, SearchHistory, User
@@ -122,6 +123,23 @@ class UserViewSet(ModelViewSet):
         ).distinct()
 
         serializer = self.get_serializer(followings_qs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"], url_path="badges")
+    def badges(self, request, pk=None):
+        user = self.get_object()
+        badges_qs = (
+            UserBadge.objects.filter(user=user)
+            .select_related("badge", "source_tour")
+            .order_by("-earned_at")
+        )
+
+        page = self.paginate_queryset(badges_qs)
+        if page is not None:
+            serializer = UserBadgeSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = UserBadgeSerializer(badges_qs, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"], url_path="following-feed")
