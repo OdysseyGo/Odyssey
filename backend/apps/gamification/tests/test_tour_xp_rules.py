@@ -143,7 +143,7 @@ class TourXpRulesTests(APITestCase):
         self.assertEqual(self.player.xp, 0)
         self.assertEqual(self.player.total_walked_km, Decimal("0.000"))
 
-    def test_own_ai_tour_completion_adds_km_even_without_xp(self):
+    def test_own_ai_tour_completion_adds_km_and_xp(self):
         self.creator = self.player
         tour, _ = self._create_tour_with_single_step(
             title="Own AI KM Tour",
@@ -160,10 +160,10 @@ class TourXpRulesTests(APITestCase):
             format="json",
         )
         self.assertEqual(complete_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(complete_response.data["awarded_xp"], 0)
+        self.assertEqual(complete_response.data["awarded_xp"], 25)
 
         self.player.refresh_from_db()
-        self.assertEqual(self.player.xp, 0)
+        self.assertEqual(self.player.xp, 25)
         self.assertEqual(self.player.total_walked_km, Decimal("1.800"))
 
     def test_replay_completion_adds_km_again(self):
