@@ -26,6 +26,7 @@ class TourXpRulesTests(APITestCase):
         title="XP Tour",
         tour_type=Tour.PUZZLE,
         walking_distance_m=0.0,
+        is_ai_generated=False,
     ):
         tour = Tour.objects.create(
             title=title,
@@ -38,6 +39,7 @@ class TourXpRulesTests(APITestCase):
             city="Istanbul",
             country_code="TR",
             walking_distance=walking_distance_m,
+            is_ai_generated=is_ai_generated,
         )
         step = TourStep.objects.create(
             tour=tour,
@@ -112,11 +114,34 @@ class TourXpRulesTests(APITestCase):
         self.player.refresh_from_db()
         self.assertEqual(self.player.total_walked_km, Decimal("3.250"))
 
-    def test_own_tour_completion_adds_km_even_without_xp(self):
+    def test_own_manual_tour_completion_does_not_add_km_even_without_xp(self):
         self.creator = self.player
         tour, _ = self._create_tour_with_single_step(
             title="Own KM Tour",
             walking_distance_m=1800,
+        )
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
+        progress_id = create_response.data["id"]
+
+        complete_response = self.client.post(
+            f"/api/tour-progress/{progress_id}/complete-step/",
+            format="json",
+        )
+        self.assertEqual(complete_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(complete_response.data["awarded_xp"], 0)
+
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.xp, 0)
+        self.assertEqual(self.player.total_walked_km, Decimal("0.000"))
+
+    def test_own_ai_tour_completion_adds_km_even_without_xp(self):
+        self.creator = self.player
+        tour, _ = self._create_tour_with_single_step(
+            title="Own AI KM Tour",
+            walking_distance_m=1800,
+            is_ai_generated=True,
         )
         create_response = self.client.post(
             "/api/tour-progress/", {"tour_id": tour.id}, format="json"

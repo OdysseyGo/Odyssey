@@ -70,7 +70,8 @@ export default function TourCompleteModal({
     outputRange: ['0deg', '360deg'],
   });
 
-  const completionRate = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+  const safeCompletedSteps = Math.max(0, Math.min(completedSteps, totalSteps));
+  const completionRate = totalSteps > 0 ? Math.round((safeCompletedSteps / totalSteps) * 100) : 0;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -97,7 +98,7 @@ export default function TourCompleteModal({
           {/* Stats */}
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{completedSteps}</Text>
+              <Text style={styles.statValue}>{safeCompletedSteps}</Text>
               <Text style={styles.statLabel}>{t('map.tourComplete.steps')}</Text>
             </View>
             <View style={styles.statItem}>
