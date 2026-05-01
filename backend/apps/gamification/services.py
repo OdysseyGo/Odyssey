@@ -3,7 +3,7 @@ from decimal import Decimal
 from apps.tours.models import Puzzle, PuzzleAttempt
 
 from .level_service import LevelService
-from .models import Badge, UserBadge
+from .models import Badge, UserBadge, UserBadgeHistory
 
 
 class BadgeService:
@@ -77,6 +77,29 @@ class BadgeService:
         return None
 
     @staticmethod
+    def _record_badge_history(
+        *,
+        user,
+        badge,
+        user_badge=None,
+        source_tour=None,
+        city="",
+        country_code="ZZ",
+        mistake_count=None,
+        event_type=UserBadgeHistory.EARNED,
+    ):
+        UserBadgeHistory.objects.create(
+            user=user,
+            badge=badge,
+            user_badge=user_badge,
+            source_tour=source_tour,
+            city=city,
+            country_code=country_code,
+            mistake_count=mistake_count,
+            event_type=event_type,
+        )
+
+    @staticmethod
     def _award_or_upgrade_city_badge(user, completed_progress):
         tour = completed_progress.tour
         city = (tour.city or "Unknown City").strip() or "Unknown City"
@@ -122,13 +145,22 @@ class BadgeService:
             return []
 
         if best_existing is None:
-            UserBadge.objects.create(
+            user_badge = UserBadge.objects.create(
                 user=user,
                 badge=badge,
                 city=city,
                 country_code=country_code,
                 mistake_count=mistake_count,
                 source_tour=tour,
+            )
+            BadgeService._record_badge_history(
+                user=user,
+                badge=badge,
+                user_badge=user_badge,
+                source_tour=tour,
+                city=city,
+                country_code=country_code,
+                mistake_count=mistake_count,
             )
             return [badge.name]
 
@@ -142,16 +174,23 @@ class BadgeService:
             best_existing.mistake_count = mistake_count
             best_existing.source_tour = tour
             best_existing.save(update_fields=["badge", "mistake_count", "source_tour"])
+            BadgeService._record_badge_history(
+                user=user,
+                badge=badge,
+                user_badge=best_existing,
+                source_tour=tour,
+                city=city,
+                country_code=country_code,
+                mistake_count=mistake_count,
+                event_type=UserBadgeHistory.UPGRADED,
+            )
             return [badge.name]
 
-        # Keep best existing tier; just refresh context for latest completion.
-        best_existing.mistake_count = mistake_count
-        best_existing.source_tour = tour
-        best_existing.save(update_fields=["mistake_count", "source_tour"])
+        # Keep the original earning or upgrade context for the current badge.
         return []
 
     @staticmethod
-    def _award_xp_milestone_badges(user):
+    def _award_xp_milestone_badges(user, completed_progress=None):
         newly_earned = []
         for xp_threshold, badge_code, _ in BadgeService.XP_MILESTONES:
             if user.xp < xp_threshold:
@@ -161,13 +200,30 @@ class BadgeService:
             if badge is None:
                 continue
 
-            _, created = UserBadge.objects.get_or_create(
+            user_badge, created = UserBadge.objects.get_or_create(
                 user=user,
                 badge=badge,
                 city="",
                 country_code="ZZ",
+                defaults={
+                    "source_tour": (
+                        completed_progress.tour
+                        if completed_progress is not None
+                        else None
+                    ),
+                },
             )
             if created:
+                BadgeService._record_badge_history(
+                    user=user,
+                    badge=badge,
+                    user_badge=user_badge,
+                    source_tour=(
+                        completed_progress.tour
+                        if completed_progress is not None
+                        else None
+                    ),
+                )
                 newly_earned.append(badge.name)
         return newly_earned
 
@@ -182,7 +238,9 @@ class BadgeService:
             newly_earned.extend(
                 BadgeService._award_or_upgrade_city_badge(user, completed_progress)
             )
-        newly_earned.extend(BadgeService._award_xp_milestone_badges(user))
+        newly_earned.extend(
+            BadgeService._award_xp_milestone_badges(user, completed_progress)
+        )
         return newly_earned
 
 
@@ -315,15 +373,13 @@ class TourRewardService:
         )
         is_own_ai_tour = progress.tour.generation_source == progress.tour.AI
         km_eligible = progress.tour.creator_id != user.id or (
-            progress.tour.creator_id == user.id
-            and is_own_ai_tour
+            progress.tour.creator_id == user.id and is_own_ai_tour
         )
         if km_eligible:
             user.total_walked_km += completed_km
 
         reward_eligible = progress.tour.creator_id != user.id or (
-            progress.tour.creator_id == user.id
-            and is_own_ai_tour
+            progress.tour.creator_id == user.id and is_own_ai_tour
         )
         should_apply_reward = not progress.xp_awarded and reward_eligible
         awarded_xp = 0

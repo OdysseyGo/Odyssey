@@ -3,7 +3,12 @@ import json
 from rest_framework import serializers
 
 from apps.admin_dashboard.models import BanRecord, Report
-from apps.gamification.models import Badge, PictureCompareConfig
+from apps.gamification.models import (
+    Badge,
+    PictureCompareConfig,
+    UserBadge,
+    UserBadgeHistory,
+)
 from apps.gamification.visuals import DEFAULT_BADGE_VISUAL_CONFIG
 from apps.tours.models import (
     ARModel,
@@ -40,12 +45,82 @@ class AdminUserListSerializer(serializers.ModelSerializer):
         ]
 
 
+class AdminBadgeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Badge
+        fields = ["id", "code", "name", "description"]
+
+
+class AdminUserBadgeSerializer(serializers.ModelSerializer):
+    badge = AdminBadgeSerializer(read_only=True)
+    source_tour_detail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserBadge
+        fields = [
+            "id",
+            "badge",
+            "city",
+            "country_code",
+            "mistake_count",
+            "source_tour",
+            "source_tour_detail",
+            "earned_at",
+        ]
+
+    def get_source_tour_detail(self, obj):
+        tour = obj.source_tour
+        if tour is None:
+            return None
+        return {
+            "id": tour.id,
+            "title": tour.title,
+            "city": tour.city,
+            "country": tour.country,
+            "country_code": tour.country_code,
+        }
+
+
+class AdminUserBadgeHistorySerializer(serializers.ModelSerializer):
+    badge = AdminBadgeSerializer(read_only=True)
+    source_tour_detail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserBadgeHistory
+        fields = [
+            "id",
+            "badge",
+            "user_badge",
+            "city",
+            "country_code",
+            "mistake_count",
+            "event_type",
+            "source_tour",
+            "source_tour_detail",
+            "earned_at",
+        ]
+
+    def get_source_tour_detail(self, obj):
+        tour = obj.source_tour
+        if tour is None:
+            return None
+        return {
+            "id": tour.id,
+            "title": tour.title,
+            "city": tour.city,
+            "country": tour.country,
+            "country_code": tour.country_code,
+        }
+
+
 class AdminUserDetailSerializer(serializers.ModelSerializer):
     badges_earned_count = serializers.IntegerField(read_only=True)
     tours_created_count = serializers.IntegerField(read_only=True)
     tours_completed_count = serializers.IntegerField(read_only=True)
     reviews_count = serializers.IntegerField(read_only=True)
     ban_records = serializers.SerializerMethodField()
+    badges = serializers.SerializerMethodField()
+    badge_history = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -73,11 +148,25 @@ class AdminUserDetailSerializer(serializers.ModelSerializer):
             "tours_completed_count",
             "reviews_count",
             "ban_records",
+            "badges",
+            "badge_history",
         ]
 
     def get_ban_records(self, obj):
         records = obj.ban_records.all()[:5]
         return BanRecordSerializer(records, many=True).data
+
+    def get_badges(self, obj):
+        badges = obj.badges.select_related("badge", "source_tour").order_by(
+            "-earned_at"
+        )
+        return AdminUserBadgeSerializer(badges, many=True).data
+
+    def get_badge_history(self, obj):
+        history = obj.badge_history.select_related("badge", "source_tour").order_by(
+            "-earned_at"
+        )[:20]
+        return AdminUserBadgeHistorySerializer(history, many=True).data
 
 
 class AdminUserUpdateSerializer(serializers.ModelSerializer):

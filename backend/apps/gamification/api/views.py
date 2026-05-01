@@ -13,12 +13,18 @@ from apps.gamification.models import (
     PictureCompareConfig,
     TourProgress,
     UserBadge,
+    UserBadgeHistory,
 )
 from apps.gamification.picture_compare import compare_picture_similarity
 from apps.gamification.services import TourRewardService
 from apps.tours.models import Puzzle, PuzzleAttempt, TourStep
 
-from .serializers import BadgeSerializer, TourProgressSerializer, UserBadgeSerializer
+from .serializers import (
+    BadgeSerializer,
+    TourProgressSerializer,
+    UserBadgeHistorySerializer,
+    UserBadgeSerializer,
+)
 
 
 class BadgeViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
@@ -32,7 +38,23 @@ class UserBadgeViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return UserBadge.objects.filter(user=self.request.user).order_by("-earned_at")
+        return (
+            UserBadge.objects.filter(user=self.request.user)
+            .select_related("badge", "source_tour")
+            .order_by("-earned_at")
+        )
+
+
+class UserBadgeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = UserBadgeHistorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            UserBadgeHistory.objects.filter(user=self.request.user)
+            .select_related("badge", "source_tour", "user_badge")
+            .order_by("-earned_at")
+        )
 
 
 class TourProgressViewSet(
@@ -161,6 +183,7 @@ class TourProgressViewSet(
     ):
         user_model = get_user_model()
         awarded_xp = 0
+        awarded_badges = []
 
         with transaction.atomic():
             progress = TourProgress.objects.select_for_update().get(pk=progress.pk)
@@ -193,10 +216,31 @@ class TourProgressViewSet(
                 progress.save()
 
                 locked_user = user_model.objects.select_for_update().get(pk=user.pk)
+                latest_history_id = (
+                    UserBadgeHistory.objects.filter(user=locked_user).aggregate(
+                        max_id=models.Max("id")
+                    )["max_id"]
+                    or 0
+                )
                 awarded_xp = TourRewardService.apply_tour_completion_rewards(
                     progress=progress,
                     user=locked_user,
                 )
+                new_badge_ids = list(
+                    UserBadgeHistory.objects.filter(
+                        user=locked_user,
+                        id__gt=latest_history_id,
+                        user_badge__isnull=False,
+                    )
+                    .values_list("user_badge_id", flat=True)
+                    .distinct()
+                )
+                if new_badge_ids:
+                    awarded_badges = list(
+                        UserBadge.objects.select_related("badge", "source_tour")
+                        .filter(id__in=new_badge_ids)
+                        .order_by("-earned_at")
+                    )
                 message = "Tour completed!"
 
         return {
@@ -204,6 +248,7 @@ class TourProgressViewSet(
             "is_tour_complete": progress.status == TourProgress.COMPLETED,
             "new_step_id": next_step.id if next_step else None,
             "awarded_xp": awarded_xp,
+            "awarded_badges": UserBadgeSerializer(awarded_badges, many=True).data,
         }
 
     @staticmethod

@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from apps.gamification.models import Badge, UserBadge
+from apps.gamification.models import Badge, UserBadge, UserBadgeHistory
 from apps.gamification.services import BadgeService
 from apps.tours.models import Puzzle, PuzzleAttempt, Tour, TourStep
 
@@ -90,8 +90,8 @@ class BadgeAwardingTests(TestCase):
         bronze_progress = self._create_completed_progress(
             city="Istanbul",
             country_code="TR",
-            skip_count=3,
-            failed_attempts=2,
+            skip_count=2,
+            failed_attempts=0,
         )
         BadgeService.check_badges(self.user, completed_progress=bronze_progress)
 
@@ -118,6 +118,22 @@ class BadgeAwardingTests(TestCase):
                 city="Istanbul",
                 country_code="TR",
                 badge__code=BadgeService.CITY_GOLD_CODE,
+            ).exists()
+        )
+        self.assertEqual(
+            UserBadgeHistory.objects.filter(
+                user=self.user,
+                city="Istanbul",
+                country_code="TR",
+            ).count(),
+            2,
+        )
+        self.assertTrue(
+            UserBadgeHistory.objects.filter(
+                user=self.user,
+                badge__code=BadgeService.CITY_GOLD_CODE,
+                source_tour=gold_progress.tour,
+                event_type=UserBadgeHistory.UPGRADED,
             ).exists()
         )
 
@@ -149,6 +165,16 @@ class BadgeAwardingTests(TestCase):
                 badge__code=BadgeService.CITY_GOLD_CODE,
             ).exists()
         )
+        badge = UserBadge.objects.get(user=self.user, city="Rome", country_code="IT")
+        self.assertEqual(badge.source_tour, gold_progress.tour)
+        self.assertEqual(
+            UserBadgeHistory.objects.filter(
+                user=self.user,
+                city="Rome",
+                country_code="IT",
+            ).count(),
+            1,
+        )
 
     def test_awards_xp_milestone_badges_once(self):
         self.user.xp = 550
@@ -161,6 +187,13 @@ class BadgeAwardingTests(TestCase):
         self.assertIn("XP Explorer II", earned)
         self.assertNotIn("XP Explorer III", earned)
         self.assertEqual(earned_second_pass, [])
+        self.assertEqual(
+            UserBadgeHistory.objects.filter(
+                user=self.user,
+                badge__code__in=[BadgeService.XP_100_CODE, BadgeService.XP_500_CODE],
+            ).count(),
+            2,
+        )
 
     def test_ar_picture_failed_attempts_are_reduced_for_badge_penalty(self):
         progress_two_failures = self._create_completed_progress(

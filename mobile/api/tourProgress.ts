@@ -1,4 +1,5 @@
 import { apiRequest } from './APIClient';
+import type { UserBadge } from './profile';
 
 export type TourProgressStatus = 'IN_PROGRESS' | 'COMPLETED';
 
@@ -25,6 +26,7 @@ export type StepActionResponse = {
   is_tour_complete: boolean;
   new_step_id: number | null;
   awarded_xp: number;
+  awarded_badges?: UserBadge[];
 };
 
 export type PictureCompareResponse = StepActionResponse & {
