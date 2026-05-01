@@ -36,6 +36,12 @@
     "remembered": "Aah, hatırladım!",
     "alreadyHaveAccount": "Zaten hesabın var mı? Giriş Yap",
     "verify": "Doğrula",
+    "sendCode": "Kod Gönder",
+    "enterCode": "Sıfırlama Kodunu Gir",
+    "otpCode": "Sıfırlama Kodu",
+    "otpCodePlaceholder": "6 haneli kod",
+    "codeSentSubtitle": "{{email}} adresine 6 haneli bir kod gönderdik. Şifreni sıfırlamak için aşağıya gir.",
+    "codeSentBanner": "Kod gönderildi! Gelen kutunu (ve spam klasörünü) kontrol et.",
     "resetPassword": "Şifre Sıfırla",
     "updatePassword": "Şifreyi Güncelle",
     "cancel": "İptal",
@@ -76,7 +82,9 @@
       "somethingWentWrong": "Bir şeyler ters gitti",
       "bothFieldsRequired": "Her iki alan da gereklidir",
       "couldNotUpdate": "Şifre güncellenemedi",
-      "termsRequired": "Kullanım Koşulları ve Gizlilik Politikası'nı kabul etmelisiniz"
+      "termsRequired": "Kullanım Koşulları ve Gizlilik Politikası'nı kabul etmelisiniz",
+      "codeRequired": "Lütfen sıfırlama kodunu girin",
+      "invalidCode": "Geçersiz veya süresi dolmuş kod. Lütfen tekrar deneyin."
     },
     "userCreated": "Kullanıcı oluşturuldu!"
   },
@@ -97,13 +105,17 @@
     "cancel": "İptal",
     "tabs": {
       "published": "Yayınlandı",
+      "pending": "İncelemede",
       "drafts": "Taslaklar",
+      "aiTours": "AI Turları",
       "archived": "Arşivlendi",
       "settings": "Ayarlar",
       "tutorials": "Rehberler"
     },
     "emptyPublished": "Henüz yayınlanmış tur yok. Topluluğa katılmak için bir tur yayınla!",
+    "emptyPending": "İncelemede tur yok. Bir taslak turu gönder, en kısa sürede inceleyelim!",
     "emptyDraft": "Taslak tur yok. Yeni bir tur oluşturmaya başla!",
+    "emptyAiTours": "Henüz AI ile oluşturulmuş tur yok. Vitrinini başlatmak için bir tane oluştur!",
     "emptyArchived": "Arşivlenmiş tur yok.",
     "emptyDefault": "Tur bulunamadı.",
     "followersTitle": "Takipçiler",
@@ -548,6 +560,9 @@
       "optionsRequired": "Seçenekler (Doğru cevabı işaretleyin) *",
       "optionPlaceholder": "Seçenek {{number}}",
       "addOption": "Seçenek Ekle",
+      "correctAnswer": "Doğru Cevap",
+      "correctAnswerPlaceholder": "örn. bizans imparatorluğu",
+      "correctAnswerHint": "Kullanıcı, yazdığı cevap buna yeterince benzerse geçer.",
       "hintLabel": "İpucu (İsteğe Bağlı)",
       "hintPlaceholder": "ör. Kapının üstündeki levhaya bakın.",
       "hintText": "Kullanıcı takılırsa işe yarayacak bir ipucu."
@@ -734,7 +749,7 @@
     "legalAnd": "ve",
     "privacy": "Gizlilik Politikası",
     "legalSuffix": "'nı kabul etmiş olursunuz. Görevinize başlamak için lütfen okuyun ve kabul edin.",
-    "mascot": "Babazilla seni izliyor — gözlerini aç, kaşif!",
+    "mascot": "Ody seni izliyor — gözlerini aç, kaşif!",
     "cta": "Kabul Ediyorum"
   }
 }

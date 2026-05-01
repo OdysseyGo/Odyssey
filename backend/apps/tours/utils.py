@@ -400,11 +400,13 @@ class GoogleMapsFacade:
             # Distance between start and end < 200m?
             # Using Haversine is overkill, just use rough pythagoras on latch/lng or existing dist if we had it.
             # But we can just use the coords.
-            lat1, lng1 = float(sorted_steps[0].latitude), float(
-                sorted_steps[0].longitude
+            lat1, lng1 = (
+                float(sorted_steps[0].latitude),
+                float(sorted_steps[0].longitude),
             )
-            lat2, lng2 = float(sorted_steps[-1].latitude), float(
-                sorted_steps[-1].longitude
+            lat2, lng2 = (
+                float(sorted_steps[-1].latitude),
+                float(sorted_steps[-1].longitude),
             )
 
             # Approx distance in meters (deg * 111km)

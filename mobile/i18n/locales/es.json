@@ -98,12 +98,14 @@
     "tabs": {
       "published": "Publicados",
       "drafts": "Borradores",
+      "aiTours": "Tours de IA",
       "archived": "Archivados",
       "settings": "Ajustes",
       "tutorials": "Tutoriales"
     },
     "emptyPublished": "Aún no hay tours publicados. ¡Publica uno para compartirlo con la comunidad!",
     "emptyDraft": "No hay borradores. ¡Empieza a crear un nuevo tour!",
+    "emptyAiTours": "Aún no hay tours generados con IA. ¡Crea uno para empezar tu escaparate!",
     "emptyArchived": "No hay tours archivados.",
     "emptyDefault": "No se encontraron tours.",
     "followersTitle": "Seguidores",
@@ -526,6 +528,9 @@
       "optionsRequired": "Opciones (Marca la respuesta correcta) *",
       "optionPlaceholder": "Opción {{number}}",
       "addOption": "Añadir Opción",
+      "correctAnswer": "Respuesta Correcta",
+      "correctAnswerPlaceholder": "p. ej., imperio bizantino",
+      "correctAnswerHint": "El usuario aprueba si su respuesta escrita se parece lo suficiente a esta.",
       "hintLabel": "Pista (Opcional)",
       "hintPlaceholder": "Ej. Mira la placa sobre la puerta.",
       "hintText": "Una pista útil si el usuario se atasca."
@@ -694,7 +699,7 @@
     "legalAnd": "y la",
     "privacy": "Política de Privacidad",
     "legalSuffix": ". Lee y acepta para comenzar tu misión.",
-    "mascot": "¡Babazilla te observa — mantén los ojos abiertos, aventurero!",
+    "mascot": "¡Ody te observa — mantén los ojos abiertos, aventurero!",
     "cta": "Acepto"
   }
 }

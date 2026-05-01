@@ -235,8 +235,24 @@ class CompassPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
     target_heading_degrees = serializers.IntegerField(min_value=0, max_value=359)
 
 
+class OpenEndedPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
+    correct_answer = serializers.CharField()
+
+    def validate(self, attrs):
+        correct_answer = str(attrs.get("correct_answer", "")).strip()
+        if not correct_answer:
+            raise serializers.ValidationError(
+                {
+                    "correct_answer": "OPEN_ENDED puzzles require a non-empty correct_answer."
+                }
+            )
+        attrs["correct_answer"] = correct_answer
+        return attrs
+
+
 class PuzzleSerializer(serializers.ModelSerializer):
     trivia = serializers.SerializerMethodField()
+    open_ended = serializers.SerializerMethodField()
     picture_compare = serializers.SerializerMethodField()
     ar = serializers.SerializerMethodField()
     compass = serializers.SerializerMethodField()
@@ -252,6 +268,12 @@ class PuzzleSerializer(serializers.ModelSerializer):
         if detail is None or obj.puzzle_type != Puzzle.PICTURE_COMPARE:
             return None
         return PictureComparePuzzleDetailSerializer(detail, context=self.context).data
+
+    @staticmethod
+    def get_open_ended(obj):
+        if obj.puzzle_type != Puzzle.OPEN_ENDED:
+            return None
+        return {"answer_type": "text"}
 
     def get_ar(self, obj):
         detail = getattr(obj, "ar_detail", None)
@@ -274,6 +296,7 @@ class PuzzleSerializer(serializers.ModelSerializer):
             "hint",
             "xp_reward",
             "trivia",
+            "open_ended",
             "picture_compare",
             "ar",
             "compass",

@@ -9,6 +9,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from apps.gamification.models import TourProgress
+from apps.gamification.services import BadgeService
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
@@ -30,6 +31,7 @@ from .serializers import (
     ARModelSerializer,
     ArPuzzleUpsertSerializer,
     CompassPuzzleUpsertSerializer,
+    OpenEndedPuzzleUpsertSerializer,
     PictureComparePuzzleUpsertSerializer,
     PuzzleSerializer,
     ReviewSerializer,
@@ -107,10 +109,11 @@ class TourViewSet(viewsets.ModelViewSet):
         # Default to production-safe behavior when ENV_MODE is unset.
         env_mode = os.getenv("ENV_MODE", "production")
         if env_mode != "development":
-            status = Tour.DRAFT
+            status = Tour.PENDING
         else:
             status = Tour.PUBLISHED
-        serializer.save(creator=self.request.user, status=status)
+        tour = serializer.save(creator=self.request.user, status=status)
+        BadgeService.evaluate_user_badges(tour.creator)
 
     @action(
         detail=False,
@@ -188,6 +191,16 @@ class TourViewSet(viewsets.ModelViewSet):
         status = request.query_params.get("status")
         if status:
             queryset = queryset.filter(status=status)
+
+        generation_source = request.query_params.get("generation_source")
+        if generation_source:
+            queryset = queryset.filter(generation_source=generation_source)
+
+        is_ai_generated = request.query_params.get("is_ai_generated")
+        if is_ai_generated is not None:
+            queryset = queryset.filter(
+                is_ai_generated=str(is_ai_generated).lower() == "true"
+            )
 
         queryset = queryset.annotate(average_rating=Avg("reviews__rating")).order_by(
             "-updated_at"
@@ -384,6 +397,44 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 "correct_answer": data["correct_answer"],
             },
         )
+
+        serializer = PuzzleSerializer(puzzle, context={"request": request})
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="set-open-ended-puzzle",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def set_open_ended_puzzle(self, request, tour_pk=None, pk=None):
+        step = self.get_object()
+        if not self._user_can_edit_step_puzzle(request, step):
+            return Response(
+                {"error": "Only the tour creator can configure puzzles."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        payload = OpenEndedPuzzleUpsertSerializer(data=request.data)
+        payload.is_valid(raise_exception=True)
+        data = payload.validated_data
+
+        puzzle, created = self._upsert_base_puzzle(
+            step=step,
+            puzzle_type=Puzzle.OPEN_ENDED,
+            data=data,
+        )
+        puzzle.options = None
+        puzzle.correct_answer = data["correct_answer"]
+        puzzle.reference_image = None
+        puzzle.save(
+            update_fields=["options", "correct_answer", "reference_image", "updated_at"]
+        )
+
+        self._clear_other_puzzle_details(puzzle, Puzzle.OPEN_ENDED)
 
         serializer = PuzzleSerializer(puzzle, context={"request": request})
         return Response(
@@ -645,6 +696,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You cannot review your own tour.")
 
         serializer.save(user=self.request.user, tour=tour)
+        BadgeService.evaluate_user_badges(self.request.user)
+        BadgeService.evaluate_user_badges(tour.creator)
 
     def perform_update(self, serializer):
         if serializer.instance.tour.creator_id == self.request.user.id:
