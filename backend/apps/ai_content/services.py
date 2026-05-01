@@ -5,10 +5,11 @@ import os
 import random
 import re
 import string
+import threading
 from typing import Optional
 
 import google.generativeai as genai
-from django.db import transaction
+from django.db import connection, transaction
 
 from apps.tours.models import (
     ARModel,
@@ -293,10 +294,31 @@ class GeminiService:
                         },
                     )
 
-        # ---- Step 6: Calculate real-world metrics ----
-        self._calculate_metrics(tour)
+        # ---- Step 6: Calculate real-world metrics (background) ----
+        # Directions + Elevation API calls add 1–3s and aren't required for
+        # the response. Run them in a background thread so the user gets
+        # their tour immediately; metrics get filled in shortly after.
+        self._spawn_metrics_calculation(tour.pk)
 
         return tour
+
+    def _spawn_metrics_calculation(self, tour_pk: int) -> None:
+        def _run():
+            try:
+                tour = Tour.objects.get(pk=tour_pk)
+                self._calculate_metrics(tour)
+            except Exception as e:
+                logger.warning(
+                    "Background metrics calculation failed for tour %s: %s",
+                    tour_pk,
+                    e,
+                )
+            finally:
+                connection.close()
+
+        threading.Thread(
+            target=_run, name=f"tour-metrics-{tour_pk}", daemon=True
+        ).start()
 
     # ------------------------------------------------------------------
     # Place Discovery (RAG — Retrieval Step)
@@ -314,7 +336,10 @@ class GeminiService:
         choose from.  Typically fetches 3× the required number of steps.
         """
         maps_facade = GoogleMapsFacade()
-        max_candidates = max(num_steps * 3, 15)
+        # Cap at 20 — Google Places returns up to 20 results per page, and
+        # paginating costs a hard-coded 2s sleep waiting for the next_page_token
+        # to activate. Staying under 20 keeps generation snappy.
+        max_candidates = min(20, max(num_steps * 3, 15))
         return maps_facade.search_places(
             city=city, theme=theme, max_results=max_candidates
         )
