@@ -49,6 +49,10 @@
     "registerTagline": "Crea tu cuenta",
     "continue": "Continuar",
     "back": "Atrás",
+    "termsPrefix": "Acepto los",
+    "terms": "Términos de Uso",
+    "termsAnd": "y la",
+    "privacy": "Política de Privacidad",
     "resetTagline": "Restablece tu contraseña",
     "successTitle": "Éxito",
     "confirmRegistrationTitle": "¿Crear esta cuenta?",
@@ -71,7 +75,8 @@
       "usernameEmailMismatch": "El nombre de usuario y el correo no coinciden",
       "somethingWentWrong": "Algo salió mal",
       "bothFieldsRequired": "Ambos campos son obligatorios",
-      "couldNotUpdate": "No se pudo actualizar la contraseña"
+      "couldNotUpdate": "No se pudo actualizar la contraseña",
+      "termsRequired": "Debes aceptar los Términos de Uso y la Política de Privacidad"
     },
     "userCreated": "¡Usuario creado!"
   },
@@ -79,6 +84,7 @@
     "notLoggedIn": "Debes iniciar sesión para ver tu perfil.",
     "loginButton": "¡Quiero iniciar sesión!",
     "logout": "Cerrar sesión",
+    "km": "km",
     "xp": "XP",
     "tours": "Tours",
     "badges": "Insignias",
@@ -427,10 +433,10 @@
       "difficulty": "Dificultad"
     },
     "story": {
-      "coverImage": "Imagen de Portada (Opcional)",
-      "imagePickerTitle": "Selector de Imágenes",
-      "imagePickerMessage": "La funcionalidad del selector de imágenes requiere que expo-image-picker esté instalado.",
-      "ok": "Aceptar",
+      "coverImage": "Imagen de portada",
+      "imagePickerTitle": "Selector de imagen",
+      "imagePickerMessage": "El selector de imágenes requiere que expo-image-picker esté instalado.",
+      "ok": "OK",
       "tapToAddImage": "Toca para añadir una imagen",
       "stopOf": "Parada {{current}} de {{total}}",
       "writingTipsTitle": "💡 Consejos de Escritura",
@@ -618,5 +624,16 @@
       "step3text": "¡Puedes ver los mejores tours destacados aquí!",
       "step4text": "¡Para crear tours generados por IA, presiona aquí!"
     }
+  },
+  "disclaimer": {
+    "title": "Aventura con Seguridad",
+    "body": "Todo gran viaje comienza con conciencia. Mientras exploras con Odyssey, mantén los ojos en alto y permanece atento al mundo que te rodea.",
+    "legalPrefix": "Al embarcarte en esta aventura, aceptas nuestros",
+    "terms": "Términos de Uso",
+    "legalAnd": "y la",
+    "privacy": "Política de Privacidad",
+    "legalSuffix": ". Lee y acepta para comenzar tu misión.",
+    "mascot": "¡Babazilla te observa — mantén los ojos abiertos, aventurero!",
+    "cta": "Acepto"
   }
 }

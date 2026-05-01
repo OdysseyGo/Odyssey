@@ -26,7 +26,10 @@ export default function ProfileTourCard({ tour, onPress, containerStyle }: Profi
     } else {
       router.push({
         pathname: '/tour/[id]',
-        params: { id: tour.id.toString() },
+        params: {
+          id: tour.id.toString(),
+          ...(tour.user_has_completed_once ? { reveal: 'completed' } : {}),
+        },
       });
     }
   };

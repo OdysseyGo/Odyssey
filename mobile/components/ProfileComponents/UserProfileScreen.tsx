@@ -1,10 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, View, Text, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
+import {
+  Alert,
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Animated,
+  StyleSheet,
+} from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import {
   getUserById,
@@ -19,10 +28,13 @@ import { Tour } from '@/api/tours';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { computeLevelInfo, getLevelTier } from '@/utils/levelConfig';
 import { userProfileStyles } from './UserProfileScreen.styles';
 import ProfileHeaderComp from './ProfileHeaderComp';
 import ProfileStatsComp from './ProfileStatsComp';
 import ProfileTourCard from './ProfileTourCard';
+import ProfileBadgesContainer from './ProfileBadgesContainer';
+import { getUserBadges, UserBadge } from '@/api/profile';
 
 const HEADER_HEIGHT = 240;
 
@@ -106,7 +118,16 @@ function SkeletonLoading({ theme }: { theme: (typeof Colors)['light'] }) {
 }
 
 // ─────────────────────────────────────────────────────────
-const profileCache = new Map<string, { user: User; isFollowing: boolean; currentUserId: number }>();
+const profileCache = new Map<
+  string,
+  {
+    user: User;
+    isFollowing: boolean;
+    currentUserId: number;
+    badges: UserBadge[];
+    badgesCount: number;
+  }
+>();
 
 export default function UserProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
@@ -129,6 +150,8 @@ export default function UserProfileScreen() {
   const [isGuest, setIsGuest] = useState(true);
   const [tours, setTours] = useState<Tour[]>([]);
   const [toursLoading, setToursLoading] = useState(false);
+  const [badges, setBadges] = useState<UserBadge[]>(cached?.badges ?? []);
+  const [badgesCount, setBadgesCount] = useState(cached?.badgesCount ?? 0);
 
   const stickyOpacity = scrollY.interpolate({
     inputRange: [HEADER_HEIGHT * 0.5, HEADER_HEIGHT * 0.7],
@@ -158,6 +181,8 @@ export default function UserProfileScreen() {
     setCurrentUserId(null);
     setIsFollowing(false);
     setIsGuest(true);
+    setBadges([]);
+    setBadgesCount(0);
 
     try {
       let meId: number | null = null;
@@ -176,7 +201,11 @@ export default function UserProfileScreen() {
 
       const fetchFollowings =
         meId !== null ? getUserFollowings(meId.toString()) : Promise.resolve([]);
-      const [targetUser, followings] = await Promise.all([getUserById(userId), fetchFollowings]);
+      const [targetUser, followings, badgesResponse] = await Promise.all([
+        getUserById(userId),
+        fetchFollowings,
+        getUserBadges(userId),
+      ]);
 
       const following = meId !== null && followings.some((f) => f.id === parseInt(userId, 10));
       if (meId !== null) {
@@ -184,10 +213,14 @@ export default function UserProfileScreen() {
           user: targetUser,
           isFollowing: following,
           currentUserId: meId,
+          badges: badgesResponse.results,
+          badgesCount: badgesResponse.count,
         });
       }
       setUser(targetUser);
       setIsFollowing(following);
+      setBadges(badgesResponse.results);
+      setBadgesCount(badgesResponse.count);
       loadTours();
     } catch {
       setLoadError(true);
@@ -286,6 +319,22 @@ export default function UserProfileScreen() {
   // ── Profile ────────────────────────────────────────────
 
   const isSelf = currentUserId === user.id;
+  const levelInfo = computeLevelInfo(user.xp);
+  const stickyGradientColors = getLevelTier(levelInfo.level).gradient;
+  const formattedBadges = badges.map((userBadge) => ({
+    id: userBadge.id.toString(),
+    name: userBadge.badge.name,
+    code: userBadge.badge.code,
+    description: userBadge.badge.description,
+    unlocked: true,
+    city: userBadge.city,
+    countryCode: userBadge.country_code,
+    mistakeCount: userBadge.mistake_count,
+    earnedDate: userBadge.earned_at,
+    sourceTourId: userBadge.source_tour_detail?.id,
+    sourceTourTitle: userBadge.source_tour_detail?.title,
+    visualConfig: userBadge.visual_config,
+  }));
 
   return (
     <View style={styles.root}>
@@ -304,11 +353,17 @@ export default function UserProfileScreen() {
           {
             paddingTop: insets.top,
             height: insets.top + 52,
-            backgroundColor: color.primary,
             opacity: stickyOpacity,
           },
         ]}
       >
+        <LinearGradient
+          colors={stickyGradientColors}
+          locations={[0, 0.55, 1]}
+          start={{ x: 0.1, y: 0 }}
+          end={{ x: 0.9, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
         <Text style={styles.stickyBarText}>{user.username}</Text>
       </Animated.View>
 
@@ -326,13 +381,20 @@ export default function UserProfileScreen() {
           subtitle={user.country}
           avatarUrl={user.avatar_url || undefined}
           scrollY={scrollY}
+          level={levelInfo.level}
+          levelTitle={levelInfo.title}
+          xpProgressPercent={levelInfo.xp_progress_percent}
+          currentXp={levelInfo.current_xp}
+          xpForCurrentLevel={levelInfo.xp_for_current_level}
+          xpForNextLevel={levelInfo.xp_for_next_level}
           disableCopilot={true}
         />
 
         {/* Stats card — overlaps the header via its built-in marginTop: -32 */}
         <ProfileStatsComp
-          xp={user.xp}
+          km={Number(user.total_walked_km ?? 0)}
           tours={user.tour_count}
+          badges={badgesCount}
           followers={user.follower_count}
           following={user.following_count}
           onFollowersPress={
@@ -409,6 +471,9 @@ export default function UserProfileScreen() {
               )}
             </TouchableOpacity>
           ))}
+
+        {/* Badges */}
+        <ProfileBadgesContainer badges={formattedBadges} title={t('profile.badges')} />
 
         {/* Published tours */}
         <View style={styles.section}>

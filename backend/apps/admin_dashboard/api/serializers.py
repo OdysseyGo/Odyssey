@@ -3,9 +3,24 @@ import json
 from rest_framework import serializers
 
 from apps.admin_dashboard.models import BanRecord, Report
-from apps.gamification.models import Badge, PictureCompareConfig
+from apps.gamification.models import (
+    Badge,
+    PictureCompareConfig,
+    UserBadge,
+    UserBadgeHistory,
+)
 from apps.gamification.visuals import DEFAULT_BADGE_VISUAL_CONFIG
-from apps.tours.models import ARModel, Puzzle, Review, Tour, TourStep
+from apps.tours.models import (
+    ARModel,
+    ArPuzzleDetail,
+    CompassPuzzleDetail,
+    PictureComparePuzzleDetail,
+    Puzzle,
+    Review,
+    Tour,
+    TourStep,
+    TriviaPuzzleDetail,
+)
 from apps.users.models import User
 
 # ── User Management ──────────────────────────────────────────────────
@@ -30,12 +45,82 @@ class AdminUserListSerializer(serializers.ModelSerializer):
         ]
 
 
+class AdminBadgeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Badge
+        fields = ["id", "code", "name", "description"]
+
+
+class AdminUserBadgeSerializer(serializers.ModelSerializer):
+    badge = AdminBadgeSerializer(read_only=True)
+    source_tour_detail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserBadge
+        fields = [
+            "id",
+            "badge",
+            "city",
+            "country_code",
+            "mistake_count",
+            "source_tour",
+            "source_tour_detail",
+            "earned_at",
+        ]
+
+    def get_source_tour_detail(self, obj):
+        tour = obj.source_tour
+        if tour is None:
+            return None
+        return {
+            "id": tour.id,
+            "title": tour.title,
+            "city": tour.city,
+            "country": tour.country,
+            "country_code": tour.country_code,
+        }
+
+
+class AdminUserBadgeHistorySerializer(serializers.ModelSerializer):
+    badge = AdminBadgeSerializer(read_only=True)
+    source_tour_detail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserBadgeHistory
+        fields = [
+            "id",
+            "badge",
+            "user_badge",
+            "city",
+            "country_code",
+            "mistake_count",
+            "event_type",
+            "source_tour",
+            "source_tour_detail",
+            "earned_at",
+        ]
+
+    def get_source_tour_detail(self, obj):
+        tour = obj.source_tour
+        if tour is None:
+            return None
+        return {
+            "id": tour.id,
+            "title": tour.title,
+            "city": tour.city,
+            "country": tour.country,
+            "country_code": tour.country_code,
+        }
+
+
 class AdminUserDetailSerializer(serializers.ModelSerializer):
     badges_earned_count = serializers.IntegerField(read_only=True)
     tours_created_count = serializers.IntegerField(read_only=True)
     tours_completed_count = serializers.IntegerField(read_only=True)
     reviews_count = serializers.IntegerField(read_only=True)
     ban_records = serializers.SerializerMethodField()
+    badges = serializers.SerializerMethodField()
+    badge_history = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -63,11 +148,25 @@ class AdminUserDetailSerializer(serializers.ModelSerializer):
             "tours_completed_count",
             "reviews_count",
             "ban_records",
+            "badges",
+            "badge_history",
         ]
 
     def get_ban_records(self, obj):
         records = obj.ban_records.all()[:5]
         return BanRecordSerializer(records, many=True).data
+
+    def get_badges(self, obj):
+        badges = obj.badges.select_related("badge", "source_tour").order_by(
+            "-earned_at"
+        )
+        return AdminUserBadgeSerializer(badges, many=True).data
+
+    def get_badge_history(self, obj):
+        history = obj.badge_history.select_related("badge", "source_tour").order_by(
+            "-earned_at"
+        )[:20]
+        return AdminUserBadgeHistorySerializer(history, many=True).data
 
 
 class AdminUserUpdateSerializer(serializers.ModelSerializer):
@@ -582,6 +681,33 @@ class AdminTourStepSerializer(serializers.ModelSerializer):
         return hasattr(obj, "puzzle")
 
 
+# ── Puzzle Detail Serializers  ---------------──────────────────────
+
+
+class TriviaPuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TriviaPuzzleDetail
+        fields = ["options", "correct_answer"]
+
+
+class PictureComparePuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PictureComparePuzzleDetail
+        fields = ["reference_image", "similarity_threshold"]
+
+
+class ArPuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArPuzzleDetail
+        fields = ["scene_asset_url", "metadata"]
+
+
+class CompassPuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompassPuzzleDetail
+        fields = ["target_heading_degrees"]
+
+
 class AdminTourListSerializer(serializers.ModelSerializer):
     creator_username = serializers.CharField(source="creator.username", read_only=True)
     avg_rating = serializers.FloatField(read_only=True)
@@ -599,6 +725,7 @@ class AdminTourListSerializer(serializers.ModelSerializer):
             "tour_type",
             "difficulty",
             "status",
+            "generation_source",
             "city",
             "country",
             "country_code",
@@ -613,6 +740,11 @@ class AdminTourListSerializer(serializers.ModelSerializer):
 
 
 class AdminPuzzleSerializer(serializers.ModelSerializer):
+    trivia_detail = TriviaPuzzleDetailSerializer(read_only=True)
+    picture_compare_detail = PictureComparePuzzleDetailSerializer(read_only=True)
+    ar_detail = ArPuzzleDetailSerializer(read_only=True)
+    compass_detail = CompassPuzzleDetailSerializer(read_only=True)
+
     class Meta:
         model = Puzzle
         fields = [
@@ -624,6 +756,10 @@ class AdminPuzzleSerializer(serializers.ModelSerializer):
             "hint",
             "xp_reward",
             "reference_image",
+            "trivia_detail",
+            "picture_compare_detail",
+            "ar_detail",
+            "compass_detail",
         ]
 
 
@@ -677,6 +813,7 @@ class AdminTourDetailSerializer(serializers.ModelSerializer):
             "city",
             "country",
             "country_code",
+            "cover_image",
             "total_distance",
             "walking_distance",
             "transport_distance",
@@ -684,8 +821,10 @@ class AdminTourDetailSerializer(serializers.ModelSerializer):
             "max_leg_distance",
             "requires_transport",
             "is_circular",
+            "metrics_calculated",
             "accessibility_rating",
             "status",
+            "generation_source",
             "created_at",
             "updated_at",
             "steps",

@@ -181,7 +181,8 @@ export default function TourNavigation({
   const colors = Colors[theme];
   const [isDirectionsModalVisible, setIsDirectionsModalVisible] = useState(false);
   const [hasAnsweredCurrentStep, setHasAnsweredCurrentStep] = useState(false);
-  const { skipCount, wrongAnswerCount, stepAnswers, stepAttempts } = useActiveTour();
+  const { skipCount, wrongAnswerCount, highestStepIndex, stepAnswers, stepAttempts } =
+    useActiveTour();
 
   useEffect(() => {
     setHasAnsweredCurrentStep(false);
@@ -291,11 +292,11 @@ export default function TourNavigation({
     ]).start(() => setTierPopup(null));
   }, [currentTier]);
 
-  const handleSolve = () => {
+  const handleSolve = useCallback(() => {
     onStepSolved(currentStep.id);
-  };
+  }, [currentStep.id, onStepSolved]);
 
-  const handleLocationConfirm = async () => {
+  const handleLocationConfirm = useCallback(async () => {
     if (!requiresLocation || isLocationConfirmed) return;
 
     try {
@@ -304,7 +305,7 @@ export default function TourNavigation({
     } catch (error) {
       console.error('Failed to get location:', error);
     }
-  };
+  }, [currentStep.id, isLocationConfirmed, onLocationConfirm, requiresLocation]);
 
   const handleOpenDirections = useCallback(
     async (provider: ExternalMapsProvider) => {
@@ -429,6 +430,7 @@ export default function TourNavigation({
         <TourStepComponent
           step={currentStep}
           isSolved={isSolved}
+          isFinished={currentStepIndex < highestStepIndex}
           onSolve={handleSolve}
           onAnswered={() => setHasAnsweredCurrentStep(true)}
         />

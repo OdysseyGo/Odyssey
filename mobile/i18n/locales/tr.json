@@ -49,6 +49,10 @@
     "registerTagline": "Hesabını oluştur",
     "continue": "Devam Et",
     "back": "Geri",
+    "termsPrefix": "Şunları kabul ediyorum:",
+    "terms": "Kullanım Koşulları",
+    "termsAnd": "ve",
+    "privacy": "Gizlilik Politikası",
     "resetTagline": "Şifreni sıfırla",
     "successTitle": "Başarılı",
     "confirmRegistrationTitle": "Bu hesap oluşturulsun mu?",
@@ -71,7 +75,8 @@
       "usernameEmailMismatch": "Kullanıcı adı ve e-posta eşleşmiyor",
       "somethingWentWrong": "Bir şeyler ters gitti",
       "bothFieldsRequired": "Her iki alan da gereklidir",
-      "couldNotUpdate": "Şifre güncellenemedi"
+      "couldNotUpdate": "Şifre güncellenemedi",
+      "termsRequired": "Kullanım Koşulları ve Gizlilik Politikası'nı kabul etmelisiniz"
     },
     "userCreated": "Kullanıcı oluşturuldu!"
   },
@@ -79,6 +84,7 @@
     "notLoggedIn": "Profilini görüntülemek için giriş yapman gerekiyor.",
     "loginButton": "Giriş yapmak istiyorum!",
     "logout": "Çıkış Yap",
+    "km": "km",
     "xp": "XP",
     "tours": "Turlar",
     "badges": "Rozetler",
@@ -449,7 +455,7 @@
       "difficulty": "Zorluk"
     },
     "story": {
-      "coverImage": "Kapak Görseli (İsteğe Bağlı)",
+      "coverImage": "Kapak Görseli",
       "imagePickerTitle": "Görsel Seçici",
       "imagePickerMessage": "Görsel seçici işlevi expo-image-picker kurulumunu gerektirir.",
       "ok": "Tamam",
@@ -658,5 +664,16 @@
       "step3text": "Öne çıkan en iyi turları burada görebilirsiniz!",
       "step4text": "Yapay zeka üretimi turlar oluşturmak için buraya dokunun!"
     }
+  },
+  "disclaimer": {
+    "title": "Güvenle Keşfet",
+    "body": "Her büyük yolculuk farkındalıkla başlar. Odyssey ile keşfe çıkarken gözlerini açık tut ve çevrene karşı uyanık ol.",
+    "legalPrefix": "Bu maceraya adım atarak",
+    "terms": "Kullanım Koşulları",
+    "legalAnd": "ve",
+    "privacy": "Gizlilik Politikası",
+    "legalSuffix": "'nı kabul etmiş olursunuz. Görevinize başlamak için lütfen okuyun ve kabul edin.",
+    "mascot": "Babazilla seni izliyor — gözlerini aç, kaşif!",
+    "cta": "Kabul Ediyorum"
   }
 }

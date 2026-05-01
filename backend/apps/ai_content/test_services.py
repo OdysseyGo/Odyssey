@@ -12,6 +12,7 @@ import pytest
 from django.test import TestCase
 
 from apps.tours.models import CompassPuzzleDetail, Puzzle, Tour, TourStep
+from apps.tours.utils import normalize_tour_country
 
 from .services import GeminiService
 
@@ -175,6 +176,7 @@ class TestGenerateTour(TestCase):
         )
 
         assert tour.title == "Historic Istanbul Walking Tour"
+        assert tour.generation_source == Tour.AI
         assert tour.steps.count() == 2
         assert Puzzle.objects.filter(step__tour=tour).count() == 2
 
@@ -213,6 +215,80 @@ class TestGenerateTour(TestCase):
         # Should use the verified coordinates from _candidate_places, NOT (41.0, 29.0)
         assert float(steps[0].latitude) == pytest.approx(41.00860, abs=1e-5)
         assert float(steps[0].longitude) == pytest.approx(28.98020, abs=1e-5)
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
+    def test_ai_tour_saves_cover_image_file_from_first_place(
+        self, mock_genai, mock_maps_cls
+    ):
+        tour_data = _valid_tour_json(include_puzzles=False)
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.get_place_photo.return_value = {
+            "url": "https://example.com/cover.jpg",
+            "attribution": "Google",
+        }
+
+        creator = self._make_creator()
+        service = GeminiService()
+        with patch.object(
+            GeminiService,
+            "_download_place_photo",
+            return_value=(b"fake-image-bytes", ".jpg"),
+        ):
+            tour = service.generate_tour(
+                city="Istanbul",
+                theme="History",
+                mode="STORY",
+                duration=60,
+                language="en",
+                creator=creator,
+            )
+
+        assert tour.cover_image_attribution == "Google"
+        assert bool(tour.cover_image)
+        assert tour.cover_image.name.endswith(".jpg")
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
+    def test_country_is_canonicalized_from_country_code(
+        self, mock_genai, mock_maps_cls
+    ):
+        tour_data = _valid_tour_json(include_puzzles=False)
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
+
+        creator = self._make_creator()
+        service = GeminiService()
+        tour = service.generate_tour(
+            city="Istanbul",
+            country="Türkiye",
+            country_code="tr",
+            theme="History",
+            mode="STORY",
+            duration=60,
+            language="tr",
+            creator=creator,
+        )
+
+        expected_country, expected_country_code = normalize_tour_country(
+            "Türkiye", "tr"
+        )
+        assert tour.country == expected_country
+        assert tour.country_code == expected_country_code
 
     # ---- RAG pipeline: no places found raises ValueError -----------------
 
@@ -394,6 +470,93 @@ class TestGenerateTour(TestCase):
         puzzles = Puzzle.objects.filter(step__tour=tour)
         assert puzzles.count() == 2
         assert all("name of this location" in p.question for p in puzzles)
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
+    def test_ai_puzzle_output_is_normalized_to_renderable_trivia(
+        self, mock_genai, mock_maps_cls
+    ):
+        """Unsupported AI puzzle shapes should still render as puzzle steps."""
+        tour_data = _valid_tour_json(include_puzzles=True)
+        tour_data["steps"][0]["puzzle"] = {
+            "type": "RIDDLE",
+            "question": "I have watched empires rise beneath one dome. Where are you?",
+            "answer": "Hagia Sophia",
+        }
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
+
+        creator = self._make_creator()
+        service = GeminiService()
+        tour = service.generate_tour(
+            city="Istanbul",
+            theme="History",
+            mode="PUZZLE",
+            duration=60,
+            language="en",
+            creator=creator,
+        )
+
+        puzzle = Puzzle.objects.get(step__tour=tour, step__title="Hagia Sophia")
+        assert puzzle.puzzle_type == Puzzle.TRIVIA
+        assert puzzle.trivia_detail.options
+        assert puzzle.trivia_detail.correct_answer == "Hagia Sophia"
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
+    def test_ai_trivia_output_strips_inlined_multiple_choice_labels(
+        self, mock_genai, mock_maps_cls
+    ):
+        """Gemini sometimes embeds A)/B)/C) choices in the question text."""
+        tour_data = _valid_tour_json(include_puzzles=True)
+        tour_data["steps"][0]["puzzle"] = {
+            "type": "TRIVIA",
+            "question": (
+                "When was Hagia Sophia completed? "
+                "A) 537 AD B) 1453 AD C) 1935 AD D) 325 AD"
+            ),
+            "options": ["A) 537 AD", "B) 1453 AD", "C) 1935 AD", "D) 325 AD"],
+            "answer": "A) 537 AD",
+            "hint": "Commissioned by Justinian I.",
+            "xp": 20,
+        }
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
+
+        creator = self._make_creator()
+        service = GeminiService()
+        tour = service.generate_tour(
+            city="Istanbul",
+            theme="History",
+            mode="PUZZLE",
+            duration=60,
+            language="en",
+            creator=creator,
+        )
+
+        puzzle = Puzzle.objects.get(step__tour=tour, step__title="Hagia Sophia")
+        assert puzzle.question == "When was Hagia Sophia completed?"
+        assert puzzle.trivia_detail.options == [
+            "537 AD",
+            "1453 AD",
+            "1935 AD",
+            "325 AD",
+        ]
+        assert puzzle.trivia_detail.correct_answer == "537 AD"
 
     @patch("apps.ai_content.services.GoogleMapsFacade")
     @patch("apps.ai_content.services.genai")
@@ -599,6 +762,7 @@ class TestCompassPuzzleGeneration(TestCase):
             duration=30,
             language="en",
             creator=self._make_creator(),
+            include_compass=True,
         )
 
         compass = CompassPuzzleDetail.objects.get(puzzle__step__tour=tour)
@@ -630,6 +794,7 @@ class TestCompassPuzzleGeneration(TestCase):
             duration=30,
             language="en",
             creator=self._make_creator(),
+            include_compass=True,
         )
 
         compass = CompassPuzzleDetail.objects.get(puzzle__step__tour=tour)
@@ -661,6 +826,7 @@ class TestCompassPuzzleGeneration(TestCase):
             duration=30,
             language="en",
             creator=self._make_creator(),
+            include_compass=True,
         )
 
         # No COMPASS puzzle persisted; trivia fallback wrote a trivia puzzle instead.

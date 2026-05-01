@@ -12,6 +12,7 @@ import {
   Dimensions,
   TextInput,
   BackHandler,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,6 +50,8 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
   const [errors, setErrors] = useState<{
     firstName?: string;
     lastName?: string;
@@ -56,6 +59,7 @@ export default function RegisterScreen() {
     email?: string;
     password?: string;
     confirmPassword?: string;
+    terms?: string;
     general?: string;
   }>({});
   const [loading, setLoading] = useState(false);
@@ -148,6 +152,7 @@ export default function RegisterScreen() {
     if (!confirmPassword) newErrors.confirmPassword = t('auth.errors.confirmPasswordRequired');
     if (password && confirmPassword && password !== confirmPassword)
       newErrors.confirmPassword = t('auth.errors.passwordsMismatch');
+    if (!agreedToTerms) newErrors.terms = t('auth.errors.termsRequired');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -397,6 +402,55 @@ export default function RegisterScreen() {
                       onSubmitEditing={handleRegister}
                       error={errors.confirmPassword}
                     />
+                    {/* Terms & Privacy checkbox */}
+                    <View style={styles.checkboxRow}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setAgreedToTerms((v) => !v);
+                          setErrors((e) => ({ ...e, terms: undefined }));
+                        }}
+                        activeOpacity={0.7}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons
+                          name={agreedToTerms ? 'checkbox' : 'square-outline'}
+                          size={22}
+                          color={
+                            errors.terms
+                              ? theme.error
+                              : agreedToTerms
+                                ? theme.primary
+                                : theme.subText
+                          }
+                        />
+                      </TouchableOpacity>
+                      <Text style={[styles.checkboxLabel, { color: theme.subText }]}>
+                        {t('auth.termsPrefix')}{' '}
+                        <Text
+                          style={[styles.checkboxLink, { color: theme.primary }]}
+                          onPress={() =>
+                            Linking.openURL('https://odysseygo.github.io/Odyssey/legal')
+                          }
+                        >
+                          {t('auth.terms')}
+                        </Text>{' '}
+                        {t('auth.termsAnd')}{' '}
+                        <Text
+                          style={[styles.checkboxLink, { color: theme.primary }]}
+                          onPress={() =>
+                            Linking.openURL('https://odysseygo.github.io/Odyssey/legal')
+                          }
+                        >
+                          {t('auth.privacy')}
+                        </Text>
+                      </Text>
+                    </View>
+                    {errors.terms && (
+                      <Text style={[styles.checkboxError, { color: theme.error }]}>
+                        {errors.terms}
+                      </Text>
+                    )}
+
                     {showSuccessBanner ? (
                       <View
                         style={[
@@ -438,7 +492,6 @@ export default function RegisterScreen() {
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
-
     </>
   );
 }
@@ -549,6 +602,28 @@ const styles = StyleSheet.create({
   inputs: {
     gap: Spacing.xs,
     paddingBottom: Spacing.md,
+  },
+
+  // ── Terms checkbox
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  checkboxLink: {
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  checkboxError: {
+    fontSize: 12,
+    marginTop: 2,
+    marginLeft: 30,
   },
 
   // ── Footer link

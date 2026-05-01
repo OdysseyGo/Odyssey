@@ -47,7 +47,6 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
   const filteredHeadingRef = React.useRef<number | null>(null);
   const isPictureCompare = currentPuzzle.puzzle_type === 'PICTURE_COMPARE';
   const isArChallenge = currentPuzzle.puzzle_type === 'AR';
-  const isGyroscope = currentPuzzle.puzzle_type === 'GYROSCOPE';
   const isCompass = currentPuzzle.puzzle_type === 'COMPASS';
   const options = currentPuzzle.options;
   const correctAnswer = currentPuzzle.correctAnswer;
@@ -114,7 +113,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
       return;
     }
 
-    if (nextType === 'AR' || nextType === 'GYROSCOPE') {
+    if (nextType === 'AR') {
       onChange({
         ...currentPuzzle,
         puzzle_type: nextType,
@@ -277,7 +276,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
             toleranceDegrees={COMPASS_CREATION_TOLERANCE_DEGREES}
           />
         </View>
-      ) : isGyroscope ? null : (
+      ) : (
         <PuzzleOptions
           options={options}
           correctAnswer={correctAnswer}
@@ -290,26 +289,6 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
       )}
 
       <PuzzleHint hint={currentPuzzle.hint} onChange={(text) => handleChange('hint', text)} />
-
-      {/* XP Reward Input */}
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: color.text }]}>{t('creation.puzzle.xpReward')}</Text>
-        <TextInput
-          style={[styles.xpInput, { color: color.text, borderColor: color.borderLight }]}
-          value={String(currentPuzzle.xp_reward)}
-          onChangeText={(text) => {
-            const num = parseInt(text, 10);
-            if (!isNaN(num) && num >= 0) {
-              handleChange('xp_reward', num);
-            } else if (text === '') {
-              handleChange('xp_reward', 0);
-            }
-          }}
-          keyboardType="number-pad"
-          placeholder={t('creation.puzzle.xpPlaceholder')}
-          placeholderTextColor={color.placeholder}
-        />
-      </View>
     </View>
   );
 }

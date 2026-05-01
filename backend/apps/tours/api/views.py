@@ -5,6 +5,7 @@ from django.db.models import Avg, OuterRef, Subquery
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from apps.gamification.models import TourProgress
@@ -12,7 +13,6 @@ from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
     CompassPuzzleDetail,
-    GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
     Puzzle,
     Review,
@@ -30,7 +30,6 @@ from .serializers import (
     ARModelSerializer,
     ArPuzzleUpsertSerializer,
     CompassPuzzleUpsertSerializer,
-    GyroscopePuzzleUpsertSerializer,
     PictureComparePuzzleUpsertSerializer,
     PuzzleSerializer,
     ReviewSerializer,
@@ -105,7 +104,13 @@ class TourViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
+        # Default to production-safe behavior when ENV_MODE is unset.
+        env_mode = os.getenv("ENV_MODE", "production")
+        if env_mode != "development":
+            status = Tour.DRAFT
+        else:
+            status = Tour.PUBLISHED
+        serializer.save(creator=self.request.user, status=status)
 
     @action(
         detail=False,
@@ -205,9 +210,11 @@ class TourViewSet(viewsets.ModelViewSet):
     def my_completed_tours(self, request):
         """Return tours that the current user has completed."""
 
-        # Get tour IDs that the user has completed
+        # Use has_completed_once instead of only status=COMPLETED. Replaying a
+        # completed tour resets the same progress row to IN_PROGRESS, but the
+        # user should still be allowed to reveal completed-tour content.
         completed_tour_ids = TourProgress.objects.filter(
-            user=request.user, status=TourProgress.COMPLETED
+            user=request.user, has_completed_once=True
         ).values_list("tour_id", flat=True)
 
         queryset = Tour.objects.filter(id__in=completed_tour_ids)
@@ -254,13 +261,14 @@ class TourStepViewSet(viewsets.ModelViewSet):
         return step.tour.creator_id == request.user.id or request.user.is_staff
 
     def _upsert_base_puzzle(self, *, step, puzzle_type, data):
+        fixed_xp_reward = Puzzle.fixed_xp_reward_for_type(puzzle_type)
         puzzle, created = Puzzle.objects.get_or_create(
             step=step,
             defaults={
                 "puzzle_type": puzzle_type,
                 "question": data["question"],
                 "hint": data.get("hint", ""),
-                "xp_reward": data.get("xp_reward", 10),
+                "xp_reward": fixed_xp_reward,
                 "correct_answer": "",
             },
         )
@@ -269,7 +277,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
             puzzle.puzzle_type = puzzle_type
             puzzle.question = data["question"]
             puzzle.hint = data.get("hint", "")
-            puzzle.xp_reward = data.get("xp_reward", puzzle.xp_reward)
+            puzzle.xp_reward = fixed_xp_reward
             puzzle.save(
                 update_fields=[
                     "puzzle_type",
@@ -298,11 +306,6 @@ class TourStepViewSet(viewsets.ModelViewSet):
             ar_detail = getattr(puzzle, "ar_detail", None)
             if ar_detail is not None:
                 ar_detail.delete()
-
-        if keep_type != Puzzle.GYROSCOPE:
-            gyro_detail = getattr(puzzle, "gyroscope_detail", None)
-            if gyro_detail is not None:
-                gyro_detail.delete()
 
         if keep_type != Puzzle.COMPASS:
             compass_detail = getattr(puzzle, "compass_detail", None)
@@ -519,53 +522,6 @@ class TourStepViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=["post"],
-        url_path="set-gyroscope-puzzle",
-        permission_classes=[permissions.IsAuthenticated],
-    )
-    def set_gyroscope_puzzle(self, request, tour_pk=None, pk=None):
-        step = self.get_object()
-        if not self._user_can_edit_step_puzzle(request, step):
-            return Response(
-                {"error": "Only the tour creator can configure puzzles."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        payload = GyroscopePuzzleUpsertSerializer(data=request.data)
-        payload.is_valid(raise_exception=True)
-        data = payload.validated_data
-
-        puzzle, created = self._upsert_base_puzzle(
-            step=step,
-            puzzle_type=Puzzle.GYROSCOPE,
-            data=data,
-        )
-        puzzle.options = None
-        puzzle.correct_answer = ""
-        puzzle.reference_image = None
-        puzzle.save(
-            update_fields=["options", "correct_answer", "reference_image", "updated_at"]
-        )
-
-        self._clear_other_puzzle_details(puzzle, Puzzle.GYROSCOPE)
-        GyroscopePuzzleDetail.objects.update_or_create(
-            puzzle=puzzle,
-            defaults={
-                "target_pitch": data.get("target_pitch", 0.0),
-                "target_roll": data.get("target_roll", 0.0),
-                "target_yaw": data.get("target_yaw", 0.0),
-                "tolerance_degrees": data.get("tolerance_degrees", 15.0),
-            },
-        )
-
-        serializer = PuzzleSerializer(puzzle, context={"request": request})
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
-        )
-
-    @action(
-        detail=True,
-        methods=["post"],
         url_path="set-compass-puzzle",
         permission_classes=[permissions.IsAuthenticated],
     )
@@ -684,4 +640,27 @@ class ReviewViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user, tour_id=self.kwargs["tour_pk"])
+        tour = Tour.objects.only("id", "creator_id").get(pk=self.kwargs["tour_pk"])
+        if tour.creator_id == self.request.user.id:
+            raise PermissionDenied("You cannot review your own tour.")
+
+        serializer.save(user=self.request.user, tour=tour)
+
+    def perform_update(self, serializer):
+        if serializer.instance.tour.creator_id == self.request.user.id:
+            raise PermissionDenied("You cannot review your own tour.")
+        if (
+            serializer.instance.user_id != self.request.user.id
+            and not self.request.user.is_staff
+        ):
+            raise PermissionDenied("You can only edit your own review.")
+
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if instance.tour.creator_id == self.request.user.id:
+            raise PermissionDenied("You cannot review your own tour.")
+        if instance.user_id != self.request.user.id and not self.request.user.is_staff:
+            raise PermissionDenied("You can only delete your own review.")
+
+        instance.delete()

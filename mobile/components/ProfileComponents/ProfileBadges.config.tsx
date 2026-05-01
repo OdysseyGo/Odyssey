@@ -8,6 +8,8 @@ export type BadgeType = {
   countryCode?: string;
   mistakeCount?: number | null;
   earnedDate?: string;
+  sourceTourId?: number;
+  sourceTourTitle?: string;
   visualConfig?: Record<string, unknown>;
 };
 

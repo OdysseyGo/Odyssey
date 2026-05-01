@@ -80,6 +80,7 @@ type Props = {
   countryCode?: string;
   fallbackLabel: string;
   visualConfig?: BadgeVisualConfig | null;
+  scale?: number;
 };
 
 const WIDTH = 100;
@@ -347,7 +348,14 @@ function pivotTransform(
   return `translate(${x}, ${y}) rotate(${rotation}) scale(${scaleX}, ${scaleY}) translate(${-x}, ${-y})`;
 }
 
-export default function HexBadge({ code, city, countryCode, fallbackLabel, visualConfig }: Props) {
+export default function HexBadge({
+  code,
+  city,
+  countryCode,
+  fallbackLabel,
+  visualConfig,
+  scale = 1,
+}: Props) {
   const tier = getBadgeTier(code);
   const config = mergeVisualConfig(visualConfig);
   const palette = config.palette[tier] || DEFAULT_VISUAL_PALETTE[tier];
@@ -372,10 +380,17 @@ export default function HexBadge({ code, city, countryCode, fallbackLabel, visua
 
   const textX = WIDTH * (config.text.x ?? 0.56);
   const textY = HEIGHT * (config.text.y ?? 0.79);
+  const scaledWidth = WIDTH * scale;
+  const scaledHeight = HEIGHT * scale;
 
   return (
-    <View style={[styles.wrap, { shadowColor: palette.border }]}>
-      <Svg width={WIDTH} height={HEIGHT}>
+    <View
+      style={[
+        styles.wrap,
+        { width: scaledWidth, height: scaledHeight, shadowColor: palette.border },
+      ]}
+    >
+      <Svg width={scaledWidth} height={scaledHeight} viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
         <Defs>
           <LinearGradient id="hexBackground" x1="0%" y1="0%" x2="0%" y2="100%">
             <Stop

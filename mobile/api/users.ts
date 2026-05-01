@@ -17,6 +17,7 @@ export type User = {
   tour_count: number;
   rating: number;
   avatar_url: string;
+  total_walked_km: number | string;
 };
 
 export type AddFriendUserDisplayDTO = {
@@ -85,12 +86,14 @@ export type FeedTour = {
   title: string;
   description: string;
   category: string;
+  generation_source: 'USER' | 'AI';
   difficulty: string;
   duration_minutes: number;
   city?: string;
   country?: string;
   country_code?: string;
   cover_image?: string;
+  cover_image_attribution?: string;
   created_at: string;
 };
 
