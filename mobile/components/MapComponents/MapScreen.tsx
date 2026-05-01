@@ -20,6 +20,7 @@ import { getToursInBounds } from '@/api/tours';
 import type { Tour } from '@/api/tours';
 import type { MapMarkerProps } from './MapMarker.config';
 import type { Region } from './TourMap.config';
+import type { UserBadge } from '@/api/profile';
 
 import { deleteTourProgress } from '@/api/tourProgress';
 
@@ -45,6 +46,7 @@ export default function MapScreen() {
   const [showEndConfirmModal, setShowEndConfirmModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [finalXP, setFinalXP] = useState<number>(0);
+  const [completionBadges, setCompletionBadges] = useState<UserBadge[]>([]);
 
   // Area search state
   const [nearbyTours, setNearbyTours] = useState<Tour[]>([]);
@@ -144,9 +146,10 @@ export default function MapScreen() {
   }, [tour, isActive]);
 
   // Active tour handlers
-  const handleTourComplete = useCallback(async (awardedXP: number) => {
+  const handleTourComplete = useCallback(async (awardedXP: number, awardedBadges?: UserBadge[]) => {
     // Backend is source of truth: replay completions return awarded_xp=0.
     setFinalXP(Math.max(0, awardedXP ?? 0));
+    setCompletionBadges(awardedBadges ?? []);
     setShowCompleteModal(true);
   }, []);
 
@@ -426,6 +429,7 @@ export default function MapScreen() {
         visible={showCompleteModal}
         tour={tour}
         earnedXP={finalXP}
+        awardedBadges={completionBadges}
         completedSteps={solvedSteps.size}
         totalSteps={tour.steps.length}
         onClose={handleCloseCompleteModal}

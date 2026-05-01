@@ -166,6 +166,7 @@ class TourProgressViewSet(
     ):
         user_model = get_user_model()
         awarded_xp = 0
+        awarded_badges = []
 
         with transaction.atomic():
             progress = TourProgress.objects.select_for_update().get(pk=progress.pk)
@@ -211,9 +212,19 @@ class TourProgressViewSet(
                     progress.xp_awarded = True
                     progress.save(update_fields=["xp_awarded"])
                     if reward_eligible:
-                        BadgeService.check_badges(
+                        earned_badge_names = BadgeService.check_badges(
                             locked_user, completed_progress=progress
                         )
+                        if earned_badge_names:
+                            awarded_badges = list(
+                                UserBadge.objects.select_related("badge")
+                                .filter(
+                                    user=locked_user,
+                                    source_tour=progress.tour,
+                                    badge__name__in=earned_badge_names,
+                                )
+                                .order_by("-earned_at")
+                            )
                         awarded_xp = progress.total_xp
                 user_update_fields = ["total_walked_km"]
                 if should_apply_reward:
@@ -226,6 +237,7 @@ class TourProgressViewSet(
             "is_tour_complete": progress.status == TourProgress.COMPLETED,
             "new_step_id": next_step.id if next_step else None,
             "awarded_xp": awarded_xp,
+            "awarded_badges": UserBadgeSerializer(awarded_badges, many=True).data,
         }
 
     @staticmethod
