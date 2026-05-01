@@ -1,4 +1,4 @@
-import { apiRequest } from './APIClient';
+import { ApiError, apiRequest } from './APIClient';
 import { User } from './users';
 
 // Types
@@ -239,12 +239,26 @@ export async function getTours(
  * Fetch a single tour by ID
  */
 export async function getTour(tourId: number, signal?: AbortSignal): Promise<Tour> {
-  return apiRequest<Tour>({
-    method: 'GET',
-    url: `/api/tours/${tourId}/`,
-    auth: true, // Sends a token when available, still works anonymously for public reads.
-    signal,
-  });
+  const url = `/api/tours/${tourId}/`;
+
+  try {
+    return await apiRequest<Tour>({
+      method: 'GET',
+      url,
+      auth: true, // Prefer authenticated request for user-specific reveal fields.
+      signal,
+    });
+  } catch (error) {
+    if (error instanceof ApiError && error.statusCode === 401) {
+      return apiRequest<Tour>({
+        method: 'GET',
+        url,
+        auth: false, // Fallback for stale/invalid tokens on a publicly readable endpoint.
+        signal,
+      });
+    }
+    throw error;
+  }
 }
 
 /**
