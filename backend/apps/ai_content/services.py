@@ -251,6 +251,7 @@ class GeminiService:
                 country_code=country_code,
                 cover_image_attribution=cover_image_attribution,
                 status=Tour.ARCHIVED,
+                generation_source=Tour.AI,
             )
             if cover_image_bytes:
                 filename = f"ai_tour_cover_{uuid.uuid4().hex}{cover_image_ext}"

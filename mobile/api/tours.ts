@@ -5,6 +5,7 @@ import { User } from './users';
 export type TourType = 'STORY' | 'PUZZLE' | 'HYBRID';
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type TourStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+export type TourGenerationSource = 'USER' | 'AI';
 
 export type TriviaPuzzleDetail = {
   options: string[];
@@ -142,6 +143,7 @@ export type Tour = {
   city_latitude?: number;
   city_longitude?: number;
   status: TourStatus;
+  generation_source: TourGenerationSource;
   created_at: string;
   updated_at: string;
   steps: TourStep[];

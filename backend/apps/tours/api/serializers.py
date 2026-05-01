@@ -342,6 +342,7 @@ class TourSerializer(serializers.ModelSerializer):
             "cover_image",
             "cover_image_attribution",
             "status",
+            "generation_source",
             "created_at",
             "updated_at",
             "steps",
@@ -362,6 +363,7 @@ class TourSerializer(serializers.ModelSerializer):
             "is_circular",
             "accessibility_rating",
             "metrics_calculated",
+            "generation_source",
         ]
 
     def validate(self, attrs):

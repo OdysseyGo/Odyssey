@@ -33,6 +33,7 @@ class TourXpRulesTests(APITestCase):
         title="XP Tour",
         tour_type=Tour.PUZZLE,
         walking_distance_m=0.0,
+        generation_source=Tour.USER,
     ):
         tour = Tour.objects.create(
             title=title,
@@ -45,6 +46,7 @@ class TourXpRulesTests(APITestCase):
             city="Istanbul",
             country_code="TR",
             walking_distance=walking_distance_m,
+            generation_source=generation_source,
         )
         step = TourStep.objects.create(
             tour=tour,
@@ -656,5 +658,53 @@ class TourXpRulesTests(APITestCase):
                     BadgeService.XP_500_CODE,
                     BadgeService.XP_1000_CODE,
                 ),
+            ).exists()
+        )
+
+    def test_own_ai_tour_completion_awards_xp_and_badges(self):
+        self.creator = self.player
+        tour, step = self._create_tour_with_single_step(
+            title="Own AI Tour",
+            generation_source=Tour.AI,
+        )
+        Puzzle.objects.create(
+            step=step,
+            puzzle_type=Puzzle.TRIVIA,
+            question="Capital of Turkey?",
+            correct_answer="Ankara",
+            options=["Istanbul", "Ankara"],
+            hint="",
+            xp_reward=25,
+        )
+
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
+        progress_id = create_response.data["id"]
+
+        answer_response = self.client.post(
+            f"/api/tour-progress/{progress_id}/submit-trivia-answer/",
+            {"answer": "Ankara"},
+            format="json",
+        )
+        self.assertEqual(answer_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(answer_response.data["accepted"])
+
+        complete_response = self.client.post(
+            f"/api/tour-progress/{progress_id}/complete-step/",
+            format="json",
+        )
+        self.assertEqual(complete_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(complete_response.data["awarded_xp"], 25)
+
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.xp, 25)
+        self.assertEqual(self.player.tour_count, 1)
+        self.assertTrue(
+            UserBadge.objects.filter(
+                user=self.player,
+                badge__code=BadgeService.CITY_GOLD_CODE,
+                city="Istanbul",
+                country_code="TR",
             ).exists()
         )

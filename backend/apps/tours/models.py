@@ -52,6 +52,13 @@ class Tour(models.Model):
         (ARCHIVED, "Archived"),
     ]
 
+    USER = "USER"
+    AI = "AI"
+    GENERATION_SOURCE_CHOICES = [
+        (USER, "User"),
+        (AI, "AI"),
+    ]
+
     title = models.CharField(max_length=255)
     description = models.TextField()
     creator = models.ForeignKey(
@@ -117,6 +124,12 @@ class Tour(models.Model):
     )
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=DRAFT)
+    generation_source = models.CharField(
+        max_length=10,
+        choices=GENERATION_SOURCE_CHOICES,
+        default=USER,
+        help_text="Indicates whether the tour was manually created or AI generated.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
