@@ -485,6 +485,11 @@ class TourSerializer(serializers.ModelSerializer):
         validated_data.pop("city_latitude", None)
         validated_data.pop("city_longitude", None)
         self._canonicalize_country_fields(validated_data)
+        if (
+            instance.status == Tour.PUBLISHED
+            and validated_data.get("status", Tour.PUBLISHED) == Tour.PUBLISHED
+        ):
+            validated_data["status"] = Tour.DRAFT
         return super().update(instance, validated_data)
 
     def _canonicalize_country_fields(self, validated_data):

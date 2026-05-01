@@ -252,21 +252,29 @@ class TourStepViewSet(viewsets.ModelViewSet):
     serializer_class = TourStepSerializer
     permission_classes = [IsTourCreatorOrReadOnly]
 
+    def _send_tour_back_to_review(self, tour):
+        if tour.status == Tour.PUBLISHED and not self.request.user.is_staff:
+            tour.status = Tour.DRAFT
+            tour.save(update_fields=["status", "updated_at"])
+
     def get_queryset(self):
         return TourStep.objects.filter(tour_id=self.kwargs["tour_pk"]).order_by("order")
 
     def perform_create(self, serializer):
         step = serializer.save(tour_id=self.kwargs["tour_pk"])
         recalculate_tour_metrics(step.tour)
+        self._send_tour_back_to_review(step.tour)
 
     def perform_update(self, serializer):
         step = serializer.save()
         recalculate_tour_metrics(step.tour)
+        self._send_tour_back_to_review(step.tour)
 
     def perform_destroy(self, instance):
         tour = instance.tour
         instance.delete()
         recalculate_tour_metrics(tour)
+        self._send_tour_back_to_review(tour)
 
     def _user_can_edit_step_puzzle(self, request, step):
         return step.tour.creator_id == request.user.id or request.user.is_staff
@@ -354,6 +362,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         step.puzzle.delete()
+        self._send_tour_back_to_review(step.tour)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -395,6 +404,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 "correct_answer": data["correct_answer"],
             },
         )
+        self._send_tour_back_to_review(step.tour)
 
         serializer = PuzzleSerializer(puzzle, context={"request": request})
         return Response(
@@ -433,6 +443,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
         )
 
         self._clear_other_puzzle_details(puzzle, Puzzle.OPEN_ENDED)
+        self._send_tour_back_to_review(step.tour)
 
         serializer = PuzzleSerializer(puzzle, context={"request": request})
         return Response(
@@ -513,6 +524,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 "similarity_threshold": threshold,
             },
         )
+        self._send_tour_back_to_review(step.tour)
 
         serializer = PuzzleSerializer(puzzle, context={"request": request})
         return Response(
@@ -561,6 +573,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 "metadata": data.get("metadata", {}),
             },
         )
+        self._send_tour_back_to_review(step.tour)
 
         serializer = PuzzleSerializer(puzzle, context={"request": request})
         return Response(
@@ -605,6 +618,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 "target_heading_degrees": data["target_heading_degrees"],
             },
         )
+        self._send_tour_back_to_review(step.tour)
 
         serializer = PuzzleSerializer(puzzle, context={"request": request})
         return Response(
@@ -672,6 +686,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 },
             )
             self._clear_other_puzzle_details(puzzle, Puzzle.PICTURE_COMPARE)
+            self._send_tour_back_to_review(step.tour)
         except DjangoValidationError as exc:
             return Response(exc.message_dict, status=status.HTTP_400_BAD_REQUEST)
 

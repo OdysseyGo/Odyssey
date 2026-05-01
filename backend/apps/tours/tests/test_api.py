@@ -331,6 +331,7 @@ class TourOwnershipApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         tour.refresh_from_db()
         self.assertEqual(tour.title, "Updated Title")
+        self.assertEqual(tour.status, Tour.DRAFT)
 
     def test_non_creator_cannot_patch_tour(self):
         tour = Tour.objects.create(
@@ -426,6 +427,8 @@ class TourEditFlowApiTests(APITestCase):
         self.step_a = self._create_step("Step A", order=0)
         self.step_b = self._create_step("Step B", order=1)
         self.step_c = self._create_step("Step C", order=2)
+        self.tour.status = Tour.PUBLISHED
+        self.tour.save(update_fields=["status"])
 
     def _create_step(self, title, order):
         response = self.client.post(
@@ -476,9 +479,21 @@ class TourEditFlowApiTests(APITestCase):
         self.tour.refresh_from_db()
         self.assertEqual(self.tour.title, "Updated Title")
         self.assertEqual(self.tour.duration_minutes, 90)
+        self.assertEqual(self.tour.status, Tour.DRAFT)
 
         remaining_titles = set(self.tour.steps.values_list("title", flat=True))
         self.assertEqual(remaining_titles, {"Step A (edited)", "Step B", "Step D"})
+
+    def test_step_edit_sends_published_tour_back_to_review(self):
+        response = self.client.patch(
+            f"/api/tours/{self.tour.id}/steps/{self.step_a}/",
+            {"title": "Needs review"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.tour.refresh_from_db()
+        self.assertEqual(self.tour.status, Tour.DRAFT)
 
     def test_step_order_zero_is_preserved(self):
         response = self.client.get(f"/api/tours/{self.tour.id}/steps/{self.step_a}/")

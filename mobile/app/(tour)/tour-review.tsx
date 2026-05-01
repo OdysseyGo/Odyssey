@@ -161,10 +161,12 @@ export default function TourReviewScreen() {
       ? t('creation.updateMessage', { defaultValue: 'Do you want to save these changes?' })
       : t('creation.submitMessage');
     const successTitle = isEditing
-      ? t('creation.updateSuccessTitle', { defaultValue: 'Tour updated!' })
+      ? t('creation.updateSuccessTitle', { defaultValue: 'Tour sent for review' })
       : t('creation.successTitle');
     const successMessage = isEditing
-      ? t('creation.updateSuccessMessage', { defaultValue: 'Your tour has been updated.' })
+      ? t('creation.updateSuccessMessage', {
+          defaultValue: 'Your changes were saved and the tour is pending review again.',
+        })
       : t('creation.successMessage');
 
     Alert.alert(submitTitle, submitMessage, [
