@@ -703,11 +703,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         if serializer.instance.tour.creator_id == self.request.user.id:
             raise PermissionDenied("You cannot review your own tour.")
+        if (
+            serializer.instance.user_id != self.request.user.id
+            and not self.request.user.is_staff
+        ):
+            raise PermissionDenied("You can only edit your own review.")
 
         serializer.save()
 
     def perform_destroy(self, instance):
         if instance.tour.creator_id == self.request.user.id:
             raise PermissionDenied("You cannot review your own tour.")
+        if instance.user_id != self.request.user.id and not self.request.user.is_staff:
+            raise PermissionDenied("You can only delete your own review.")
 
         instance.delete()

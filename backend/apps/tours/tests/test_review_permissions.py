@@ -19,6 +19,11 @@ class ReviewPermissionTests(APITestCase):
             email="reviewer@example.com",
             password="password123",
         )
+        self.other_user = User.objects.create_user(
+            username="other_user",
+            email="other_user@example.com",
+            password="password123",
+        )
         self.tour = Tour.objects.create(
             title="Reviewable Tour",
             description="desc",
@@ -74,3 +79,69 @@ class ReviewPermissionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         review.refresh_from_db()
         self.assertEqual(review.comment, "Nice")
+
+    def test_non_author_cannot_update_other_users_review(self):
+        review = Review.objects.create(
+            tour=self.tour,
+            user=self.reviewer,
+            rating=4,
+            comment="Nice",
+        )
+        self.client.force_authenticate(user=self.other_user)
+
+        response = self.client.patch(
+            f"/api/tours/{self.tour.id}/reviews/{review.id}/",
+            {"comment": "Edited by other user"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        review.refresh_from_db()
+        self.assertEqual(review.comment, "Nice")
+
+    def test_author_can_update_own_review(self):
+        review = Review.objects.create(
+            tour=self.tour,
+            user=self.reviewer,
+            rating=4,
+            comment="Nice",
+        )
+        self.client.force_authenticate(user=self.reviewer)
+
+        response = self.client.patch(
+            f"/api/tours/{self.tour.id}/reviews/{review.id}/",
+            {"comment": "Updated by author"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        review.refresh_from_db()
+        self.assertEqual(review.comment, "Updated by author")
+
+    def test_non_author_cannot_delete_other_users_review(self):
+        review = Review.objects.create(
+            tour=self.tour,
+            user=self.reviewer,
+            rating=4,
+            comment="Nice",
+        )
+        self.client.force_authenticate(user=self.other_user)
+
+        response = self.client.delete(f"/api/tours/{self.tour.id}/reviews/{review.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Review.objects.filter(id=review.id).exists())
+
+    def test_author_can_delete_own_review(self):
+        review = Review.objects.create(
+            tour=self.tour,
+            user=self.reviewer,
+            rating=4,
+            comment="Nice",
+        )
+        self.client.force_authenticate(user=self.reviewer)
+
+        response = self.client.delete(f"/api/tours/{self.tour.id}/reviews/{review.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Review.objects.filter(id=review.id).exists())
