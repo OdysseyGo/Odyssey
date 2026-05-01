@@ -659,5 +659,16 @@
       "step3text": "Öne çıkan en iyi turları burada görebilirsiniz!",
       "step4text": "Yapay zeka üretimi turlar oluşturmak için buraya dokunun!"
     }
+  },
+  "disclaimer": {
+    "title": "Güvenle Keşfet",
+    "body": "Her büyük yolculuk farkındalıkla başlar. Odyssey ile keşfe çıkarken gözlerini açık tut ve çevrene karşı uyanık ol.",
+    "legalPrefix": "Bu maceraya adım atarak",
+    "terms": "Kullanım Koşulları",
+    "legalAnd": "ve",
+    "privacy": "Gizlilik Politikası",
+    "legalSuffix": "'nı kabul etmiş olursunuz. Görevinize başlamak için lütfen okuyun ve kabul edin.",
+    "mascot": "Babazilla seni izliyor — gözlerini aç, kaşif!",
+    "cta": "Kabul Ediyorum"
   }
 }

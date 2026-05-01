@@ -659,5 +659,16 @@
       "step3text": "You can see the top featured tours here!",
       "step4text": "To create tours, press here. You can generate Personal or AI-generated tours!"
     }
+  },
+  "disclaimer": {
+    "title": "Adventure Safely",
+    "body": "Every great journey starts with awareness. While exploring with Odyssey, keep your eyes up and stay alert to the world around you.",
+    "legalPrefix": "By embarking on this adventure you agree to our",
+    "terms": "Terms of Use",
+    "legalAnd": "and",
+    "privacy": "Privacy Policy",
+    "legalSuffix": ". Please read and accept to begin your quest.",
+    "mascot": "Babazilla is watching — keep your eyes up, adventurer!",
+    "cta": "I Accept"
   }
 }
