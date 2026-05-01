@@ -210,9 +210,11 @@ class TourViewSet(viewsets.ModelViewSet):
     def my_completed_tours(self, request):
         """Return tours that the current user has completed."""
 
-        # Get tour IDs that the user has completed
+        # Use has_completed_once instead of only status=COMPLETED. Replaying a
+        # completed tour resets the same progress row to IN_PROGRESS, but the
+        # user should still be allowed to reveal completed-tour content.
         completed_tour_ids = TourProgress.objects.filter(
-            user=request.user, status=TourProgress.COMPLETED
+            user=request.user, has_completed_once=True
         ).values_list("tour_id", flat=True)
 
         queryset = Tour.objects.filter(id__in=completed_tour_ids)

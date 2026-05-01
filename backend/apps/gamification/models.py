@@ -68,6 +68,7 @@ class TourProgress(models.Model):
     )
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
+    has_completed_once = models.BooleanField(default=False)
     total_xp = models.IntegerField(default=0)
     skip_count = models.IntegerField(default=0)
     xp_awarded = models.BooleanField(default=False)

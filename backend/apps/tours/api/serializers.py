@@ -2,6 +2,7 @@ import re
 
 from rest_framework import serializers
 
+from apps.gamification.models import TourProgress
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
@@ -14,7 +15,7 @@ from apps.tours.models import (
     TourStep,
     TriviaPuzzleDetail,
 )
-from apps.tours.utils import GoogleMapsFacade
+from apps.tours.utils import GoogleMapsFacade, normalize_tour_country
 from apps.users.api.serializers import UserSerializer
 
 DEFAULT_PICTURE_COMPARE_THRESHOLD = 0.7
@@ -333,8 +334,21 @@ class TourSerializer(serializers.ModelSerializer):
     steps = TourStepSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
     average_rating = serializers.FloatField(read_only=True)
+    user_has_completed_once = serializers.SerializerMethodField()
     city_latitude = serializers.FloatField(write_only=True, required=False)
     city_longitude = serializers.FloatField(write_only=True, required=False)
+
+    def get_user_has_completed_once(self, obj):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return False
+
+        return TourProgress.objects.filter(
+            tour=obj,
+            user=user,
+            has_completed_once=True,
+        ).exists()
 
     class Meta:
         model = Tour
@@ -363,6 +377,8 @@ class TourSerializer(serializers.ModelSerializer):
             "city_longitude",
             "cover_image",
             "cover_image_attribution",
+            "is_ai_generated",
+            "user_has_completed_once",
             "status",
             "created_at",
             "updated_at",
@@ -372,6 +388,8 @@ class TourSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "creator",
+            "is_ai_generated",
+            "user_has_completed_once",
             "created_at",
             "updated_at",
             "average_rating",
@@ -456,10 +474,47 @@ class TourSerializer(serializers.ModelSerializer):
         # Assign current user as creator
         validated_data.pop("city_latitude", None)
         validated_data.pop("city_longitude", None)
+        self._canonicalize_country_fields(validated_data)
         validated_data["creator"] = self.context["request"].user
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         validated_data.pop("city_latitude", None)
         validated_data.pop("city_longitude", None)
+        self._canonicalize_country_fields(validated_data)
         return super().update(instance, validated_data)
+
+    def _canonicalize_country_fields(self, validated_data):
+        if self.instance is None:
+            current_country = ""
+            current_country_code = ""
+        else:
+            current_country = self.instance.country
+            current_country_code = self.instance.country_code
+
+        incoming_has_country = "country" in validated_data
+        incoming_has_country_code = "country_code" in validated_data
+
+        effective_country = validated_data.get("country", current_country)
+        effective_country_code = validated_data.get(
+            "country_code", current_country_code
+        )
+
+        # Normalize explicit incoming text fields even when no code is available.
+        if incoming_has_country:
+            validated_data["country"] = (validated_data.get("country") or "").strip()
+        if incoming_has_country_code:
+            validated_data["country_code"] = (
+                (validated_data.get("country_code") or "").strip().upper()
+            )
+
+        if not effective_country_code:
+            return
+
+        # Keep backend storage language-agnostic by deriving canonical country from ISO code.
+        canonical_country, canonical_country_code = normalize_tour_country(
+            country=effective_country,
+            country_code=effective_country_code,
+        )
+        validated_data["country"] = canonical_country
+        validated_data["country_code"] = canonical_country_code
