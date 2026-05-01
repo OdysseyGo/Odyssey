@@ -106,7 +106,7 @@ class TourViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         env_mode = os.getenv("ENV_MODE", "development")
-        if env_mode == "development":
+        if env_mode != "development":
             status = Tour.DRAFT
         else:
             status = Tour.PUBLISHED
