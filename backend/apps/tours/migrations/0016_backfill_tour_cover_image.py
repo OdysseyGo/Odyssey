@@ -6,7 +6,9 @@ def backfill_cover_images(apps, schema_editor):
     Tour = apps.get_model("tours", "Tour")
     TourStep = apps.get_model("tours", "TourStep")
 
-    tours_without_cover = Tour.objects.filter(Q(cover_image="") | Q(cover_image__isnull=True))
+    tours_without_cover = Tour.objects.filter(
+        Q(cover_image="") | Q(cover_image__isnull=True)
+    )
     for tour in tours_without_cover.iterator():
         first_step_with_image = (
             TourStep.objects.filter(tour_id=tour.id, image__isnull=False)

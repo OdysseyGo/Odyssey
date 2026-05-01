@@ -78,13 +78,14 @@ class AdminUserViewSet(ModelViewSet):
         qs = User.objects.all()
         if self.action == "retrieve":
             qs = qs.annotate(
-                badges_earned_count=Count("badges"),
-                tours_created_count=Count("created_tours"),
+                badges_earned_count=Count("badges", distinct=True),
+                tours_created_count=Count("created_tours", distinct=True),
                 tours_completed_count=Count(
                     "tour_progress",
                     filter=Q(tour_progress__status=TourProgress.COMPLETED),
+                    distinct=True,
                 ),
-                reviews_count=Count("reviews"),
+                reviews_count=Count("reviews", distinct=True),
             )
         return qs
 

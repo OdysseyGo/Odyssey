@@ -10,7 +10,12 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.admin_dashboard.models import BanRecord, Report
-from apps.gamification.models import Badge, PictureCompareConfig
+from apps.gamification.models import (
+    Badge,
+    PictureCompareConfig,
+    UserBadge,
+    UserBadgeHistory,
+)
 from apps.gamification.visuals import BadgeVisualFileRepository
 from apps.tours.models import ARModel, Review, Tour, TourStep
 
@@ -78,12 +83,54 @@ class AdminUserViewSetTests(APITestCase):
         self.assertEqual(response.data["count"], 1)
 
     def test_retrieve_user_detail(self):
+        badge = Badge.objects.create(
+            code="CITY_GOLD",
+            name="Gold City",
+            description="Completed a city perfectly",
+            criteria={"type": "city", "tier": "gold"},
+        )
+        tour = Tour.objects.create(
+            title="Istanbul Highlights",
+            description="Historic route",
+            creator=self.admin,
+            tour_type=Tour.STORY,
+            category="History",
+            duration_minutes=45,
+            city="Istanbul",
+            country="Turkey",
+            country_code="TR",
+        )
+        user_badge = UserBadge.objects.create(
+            user=self.user1,
+            badge=badge,
+            city="Istanbul",
+            country_code="TR",
+            mistake_count=0,
+            source_tour=tour,
+        )
+        UserBadgeHistory.objects.create(
+            user=self.user1,
+            badge=badge,
+            user_badge=user_badge,
+            city="Istanbul",
+            country_code="TR",
+            mistake_count=0,
+            source_tour=tour,
+        )
+
         response = self.client.get(f"/api/admin/users/{self.user1.id}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("badges_earned_count", response.data)
         self.assertIn("tours_created_count", response.data)
         self.assertIn("tours_completed_count", response.data)
         self.assertIn("reviews_count", response.data)
+        self.assertEqual(response.data["badges_earned_count"], 1)
+        self.assertEqual(response.data["badges"][0]["badge"]["name"], "Gold City")
+        self.assertEqual(
+            response.data["badges"][0]["source_tour_detail"]["title"],
+            "Istanbul Highlights",
+        )
+        self.assertEqual(response.data["badge_history"][0]["event_type"], "EARNED")
 
     def test_update_user_role(self):
         response = self.client.patch(

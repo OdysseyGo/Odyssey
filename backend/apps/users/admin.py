@@ -1,7 +1,49 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
+from apps.gamification.models import UserBadge, UserBadgeHistory
+
 from .models import Follow, SearchHistory, User
+
+
+class UserBadgeInline(admin.TabularInline):
+    model = UserBadge
+    extra = 0
+    can_delete = False
+    fields = (
+        "badge",
+        "city",
+        "country_code",
+        "mistake_count",
+        "source_tour",
+        "earned_at",
+    )
+    readonly_fields = fields
+    show_change_link = True
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class UserBadgeHistoryInline(admin.TabularInline):
+    model = UserBadgeHistory
+    extra = 0
+    can_delete = False
+    fields = (
+        "badge",
+        "event_type",
+        "source_tour",
+        "city",
+        "country_code",
+        "mistake_count",
+        "earned_at",
+    )
+    readonly_fields = fields
+    show_change_link = True
+    verbose_name_plural = "Badge earning history"
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(User)
@@ -21,6 +63,7 @@ class CustomUserAdmin(UserAdmin):
             {"fields": ("user_type", "xp", "level", "country", "tour_count", "rating")},
         ),
     )
+    inlines = (UserBadgeInline, UserBadgeHistoryInline)
 
 
 admin.site.register(Follow)
