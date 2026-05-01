@@ -11,8 +11,16 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.SeparateDatabaseAndState(
-            # Column already exists in DB; only update Django's state
-            database_operations=[],
+            database_operations=[
+                migrations.RunSQL(
+                    sql=(
+                        "ALTER TABLE tours_tour "
+                        "ADD COLUMN IF NOT EXISTS credit_price integer "
+                        "NOT NULL DEFAULT 0 CHECK (credit_price >= 0);"
+                    ),
+                    reverse_sql="ALTER TABLE tours_tour DROP COLUMN IF EXISTS credit_price;",
+                ),
+            ],
             state_operations=[
                 migrations.AddField(
                     model_name="tour",
