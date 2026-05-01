@@ -495,6 +495,9 @@
       "optionsRequired": "Seçenekler (Doğru cevabı işaretleyin) *",
       "optionPlaceholder": "Seçenek {{number}}",
       "addOption": "Seçenek Ekle",
+      "correctAnswer": "Doğru Cevap",
+      "correctAnswerPlaceholder": "örn. bizans imparatorluğu",
+      "correctAnswerHint": "Kullanıcı, yazdığı cevap buna yeterince benzerse geçer.",
       "hintLabel": "İpucu (İsteğe Bağlı)",
       "hintPlaceholder": "ör. Kapının üstündeki levhaya bakın.",
       "hintText": "Kullanıcı takılırsa işe yarayacak bir ipucu."
@@ -675,7 +678,7 @@
     "legalAnd": "ve",
     "privacy": "Gizlilik Politikası",
     "legalSuffix": "'nı kabul etmiş olursunuz. Görevinize başlamak için lütfen okuyun ve kabul edin.",
-    "mascot": "Babazilla seni izliyor — gözlerini aç, kaşif!",
+    "mascot": "Ody seni izliyor — gözlerini aç, kaşif!",
     "cta": "Kabul Ediyorum"
   }
 }

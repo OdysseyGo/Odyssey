@@ -56,14 +56,19 @@ export type CompassPuzzleDetail = {
   target_heading_degrees: number;
 };
 
+export type OpenEndedPuzzleDetail = {
+  answer_type: 'text' | string;
+};
+
 export type Puzzle = {
   id?: number;
-  puzzle_type: 'TRIVIA' | 'AR' | 'PICTURE_COMPARE' | 'COMPASS';
+  puzzle_type: 'TRIVIA' | 'OPEN_ENDED' | 'AR' | 'PICTURE_COMPARE' | 'COMPASS';
   question: string;
   hint: string;
   xp_reward: number;
   // Normalized detail payloads from backend
   trivia?: TriviaPuzzleDetail;
+  open_ended?: OpenEndedPuzzleDetail;
   picture_compare?: PictureComparePuzzleDetail;
   ar?: ArPuzzleDetail;
   compass?: CompassPuzzleDetail;
@@ -80,6 +85,10 @@ export type PuzzleBaseUpsertPayload = {
 
 export type TriviaPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
   options: string[];
+  correct_answer: string;
+};
+
+export type OpenEndedPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
   correct_answer: string;
 };
 
@@ -631,6 +640,21 @@ export async function setStepPictureComparePuzzle(
     method: 'POST',
     url: `/api/tours/${tourId}/steps/${stepId}/set-picture-compare-puzzle/`,
     data: formData,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepOpenEndedPuzzle(
+  tourId: number,
+  stepId: number,
+  payload: OpenEndedPuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, OpenEndedPuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-open-ended-puzzle/`,
+    data: payload,
     auth: true,
     signal,
   });

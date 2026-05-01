@@ -493,6 +493,9 @@
       "optionsRequired": "Opciones (Marca la respuesta correcta) *",
       "optionPlaceholder": "Opción {{number}}",
       "addOption": "Añadir Opción",
+      "correctAnswer": "Respuesta Correcta",
+      "correctAnswerPlaceholder": "p. ej., imperio bizantino",
+      "correctAnswerHint": "El usuario aprueba si su respuesta escrita se parece lo suficiente a esta.",
       "hintLabel": "Pista (Opcional)",
       "hintPlaceholder": "Ej. Mira la placa sobre la puerta.",
       "hintText": "Una pista útil si el usuario se atasca."
@@ -675,7 +678,7 @@
     "legalAnd": "y la",
     "privacy": "Política de Privacidad",
     "legalSuffix": ". Lee y acepta para comenzar tu misión.",
-    "mascot": "¡Babazilla te observa — mantén los ojos abiertos, aventurero!",
+    "mascot": "¡Ody te observa — mantén los ojos abiertos, aventurero!",
     "cta": "Acepto"
   }
 }

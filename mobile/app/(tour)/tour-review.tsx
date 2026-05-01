@@ -8,6 +8,7 @@ import {
   deleteTour,
   setStepArPuzzle,
   setStepCompassPuzzle,
+  setStepOpenEndedPuzzle,
   setStepPictureComparePuzzle,
   setStepTriviaPuzzle,
   updateTour,
@@ -205,6 +206,14 @@ export default function TourReviewScreen() {
                     }),
                   STEP_UPLOAD_MAX_RETRIES
                 );
+              if (loc.puzzle.puzzle_type === 'OPEN_ENDED') {
+                await setStepOpenEndedPuzzle(createdTourId, createdStep.id, {
+                  ...basePayload,
+                  correct_answer: loc.puzzle.correctAnswer,
+                });
+                continue;
+              }
+
               } else if (puzzle.puzzle_type === 'PICTURE_COMPARE') {
                 const referenceImageUri = puzzle.referenceImage;
                 if (!referenceImageUri || !referenceImageUri.startsWith('file://')) {

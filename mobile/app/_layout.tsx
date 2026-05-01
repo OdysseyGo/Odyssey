@@ -20,7 +20,7 @@ export {
 } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: 'disclaimer',
+  initialRouteName: 'index',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -38,11 +38,6 @@ export default function RootLayout() {
     if (error) throw error;
   }, [error]);
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
   if (!loaded) {
     return null;
   }
@@ -76,6 +71,7 @@ function RootLayoutNavigator() {
                 },
               }}
             >
+              <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen
                 name="disclaimer"
                 options={{ headerShown: false, gestureEnabled: false }}
