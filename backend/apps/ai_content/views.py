@@ -1,56 +1,98 @@
+import logging
+import threading
+
+from django.db import close_old_connections
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import GenerateTourRequestSerializer, GenerateTourResponseSerializer
+from .models import GenerationJob
+from .serializers import (
+    GenerateTourRequestSerializer,
+    GenerationJobAcceptedSerializer,
+    GenerationJobSerializer,
+)
 from .services import GeminiService
+
+logger = logging.getLogger(__name__)
+
+
+def _run_generation(job_id, payload, user_id):
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+    try:
+        job = GenerationJob.objects.get(pk=job_id)
+        user = User.objects.get(pk=user_id)
+        job.status = GenerationJob.RUNNING
+        job.save(update_fields=["status", "updated_at"])
+
+        def _progress(label):
+            GenerationJob.objects.filter(pk=job_id).update(progress_label=label)
+
+        service = GeminiService()
+        tour = service.generate_tour(
+            city=payload["city"],
+            country=payload.get("country", ""),
+            country_code=payload.get("country_code", ""),
+            theme=payload["theme"],
+            mode=payload["mode"],
+            duration=payload["duration"],
+            language=payload["language"],
+            custom_prompt=payload.get("additional_details", ""),
+            include_ar=payload.get("include_ar", False),
+            creator=user,
+            progress_callback=_progress,
+        )
+        job.refresh_from_db()
+        job.status = GenerationJob.SUCCESS
+        job.tour = tour
+        job.progress_label = ""
+        job.save(update_fields=["status", "tour", "progress_label", "updated_at"])
+    except Exception as e:
+        logger.exception("AI generation job %s failed", job_id)
+        GenerationJob.objects.filter(pk=job_id).update(
+            status=GenerationJob.FAILED,
+            error=str(e) or e.__class__.__name__,
+        )
+    finally:
+        close_old_connections()
 
 
 class GenerateTourView(APIView):
-    """API endpoint for AI generated tours"""
-
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
         request=GenerateTourRequestSerializer,
-        responses={201: GenerateTourResponseSerializer},
-        description="Generate an AI-powered tour based on city, theme, and mode.",
+        responses={202: GenerationJobAcceptedSerializer},
+        description="Start an AI tour generation job. Poll /api/ai/jobs/<id>/ for status.",
     )
     def post(self, request):
         serializer = GenerateTourRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        try:
-            service = GeminiService()
-            tour = service.generate_tour(
-                city=serializer.validated_data["city"],
-                country=serializer.validated_data.get("country", ""),
-                country_code=serializer.validated_data.get("country_code", ""),
-                theme=serializer.validated_data["theme"],
-                mode=serializer.validated_data["mode"],
-                duration=serializer.validated_data["duration"],
-                language=serializer.validated_data["language"],
-                custom_prompt=serializer.validated_data.get("additional_details", ""),
-                include_ar=serializer.validated_data.get("include_ar", False),
-                creator=request.user,
-                request=request,
-            )
+        job = GenerationJob.objects.create(creator=request.user)
 
-            return Response(
-                {
-                    "tour_id": tour.id,
-                    "title": tour.title,
-                    "message": f"Tour '{tour.title}' generated successfully with {tour.steps.count()} steps!",
-                },
-                status=status.HTTP_201_CREATED,
-            )
+        threading.Thread(
+            target=_run_generation,
+            args=(job.id, dict(serializer.validated_data), request.user.id),
+            name=f"ai-gen-{job.id}",
+            daemon=True,
+        ).start()
 
-        except ValueError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response(
-                {"error": f"AI generation failed: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+        return Response(
+            {"job_id": str(job.id), "status": job.status},
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+
+class GenerationJobView(RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = GenerationJobSerializer
+    lookup_field = "id"
+
+    def get_queryset(self):
+        return GenerationJob.objects.filter(creator=self.request.user)

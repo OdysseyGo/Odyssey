@@ -67,6 +67,7 @@ class GeminiService:
         country_code: str = "",
         include_ar: bool = False,
         request=None,
+        progress_callback=None,
     ) -> Tour:
         """
         Generate a complete tour with steps and puzzles using RAG.
@@ -87,7 +88,14 @@ class GeminiService:
             creator: User object who will own the tour
             custom_prompt: Optional user instructions
         """
-        # ---- Step 1: Discover real places from Google Maps ----
+        def _emit(label):
+            if progress_callback:
+                try:
+                    progress_callback(label)
+                except Exception as e:
+                    logger.warning("progress_callback failed: %s", e)
+
+        _emit("Finding real places…")
         num_steps = max(3, duration // 15)
         location_query = self._format_location(city, country)
         candidate_places = self._discover_places(location_query, theme, num_steps)
@@ -115,7 +123,7 @@ class GeminiService:
             ar_models,
         )
 
-        # ---- Step 3: Generate creative content via Gemini (with retries) ----
+        _emit("Writing your tour…")
         max_retries = 3
         last_error = None
 
@@ -202,7 +210,7 @@ class GeminiService:
         # ---- Step 4b: Reorder stops geometrically to eliminate zigzag ----
         tour_data["steps"] = self._nearest_neighbor_order(tour_data["steps"])
 
-        # ---- Step 5: Persist to database ----
+        _emit("Finalizing…")
         with transaction.atomic():
             tour = Tour.objects.create(
                 title=tour_data["title"],
