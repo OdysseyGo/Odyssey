@@ -47,7 +47,6 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
   const filteredHeadingRef = React.useRef<number | null>(null);
   const isPictureCompare = currentPuzzle.puzzle_type === 'PICTURE_COMPARE';
   const isArChallenge = currentPuzzle.puzzle_type === 'AR';
-  const isGyroscope = currentPuzzle.puzzle_type === 'GYROSCOPE';
   const isCompass = currentPuzzle.puzzle_type === 'COMPASS';
   const options = currentPuzzle.options;
   const correctAnswer = currentPuzzle.correctAnswer;
@@ -114,7 +113,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
       return;
     }
 
-    if (nextType === 'AR' || nextType === 'GYROSCOPE') {
+    if (nextType === 'AR') {
       onChange({
         ...currentPuzzle,
         puzzle_type: nextType,
@@ -277,7 +276,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
             toleranceDegrees={COMPASS_CREATION_TOLERANCE_DEGREES}
           />
         </View>
-      ) : isGyroscope ? null : (
+      ) : (
         <PuzzleOptions
           options={options}
           correctAnswer={correctAnswer}

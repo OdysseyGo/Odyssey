@@ -1,4 +1,4 @@
-export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE' | 'COMPASS';
+export type PuzzleType = 'TRIVIA' | 'AR' | 'PICTURE_COMPARE' | 'COMPASS';
 
 export const TOUR_TEXT_FIELD_MAX_LENGTH = 255;
 
@@ -36,7 +36,6 @@ export interface Puzzle {
 export const PUZZLE_TYPE_OPTIONS = [
   { value: 'TRIVIA', label: 'Trivia', description: 'Multiple choice question' },
   { value: 'AR', label: 'AR Challenge', description: 'Augmented reality experience' },
-  { value: 'GYROSCOPE', label: 'Gyroscope', description: 'Motion-based challenge' },
   { value: 'COMPASS', label: 'Compass', description: 'Find a target heading' },
   {
     value: 'PICTURE_COMPARE',
@@ -74,9 +73,9 @@ export interface TourCreationData {
   tourType: 'STORY' | 'PUZZLE' | 'HYBRID';
   estimatedDuration: number; // in minutes
   locations: TourLocation[];
-  country?: string;
-  countryCode?: string;
-  state?: string;
+  country: string;
+  countryCode: string;
+  state: string;
   stateLatitude?: number;
   stateLongitude?: number;
 }

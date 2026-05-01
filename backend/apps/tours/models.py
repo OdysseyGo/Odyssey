@@ -52,6 +52,13 @@ class Tour(models.Model):
         (ARCHIVED, "Archived"),
     ]
 
+    USER = "USER"
+    AI = "AI"
+    GENERATION_SOURCE_CHOICES = [
+        (USER, "User"),
+        (AI, "AI"),
+    ]
+
     title = models.CharField(max_length=255)
     description = models.TextField()
     creator = models.ForeignKey(
@@ -79,6 +86,7 @@ class Tour(models.Model):
     )
     cover_image = models.ImageField(upload_to="tour_covers/", blank=True, null=True)
     cover_image_attribution = models.TextField(blank=True, null=True)
+    is_ai_generated = models.BooleanField(default=False)
 
     # Advanced Metrics
     total_distance = models.FloatField(
@@ -117,6 +125,12 @@ class Tour(models.Model):
     )
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=DRAFT)
+    generation_source = models.CharField(
+        max_length=10,
+        choices=GENERATION_SOURCE_CHOICES,
+        default=USER,
+        help_text="Indicates whether the tour was manually created or AI generated.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -197,7 +211,6 @@ class ARModel(models.Model):
 class Puzzle(models.Model):
     TRIVIA = "TRIVIA"
     AR = "AR"
-    GYROSCOPE = "GYROSCOPE"
     PICTURE_COMPARE = "PICTURE_COMPARE"
     TRIVIA_XP_REWARD = 25
     NON_TRIVIA_XP_REWARD = 50
@@ -206,7 +219,6 @@ class Puzzle(models.Model):
     PUZZLE_TYPE_CHOICES = [
         (TRIVIA, "Trivia"),
         (AR, "Augmented Reality"),
-        (GYROSCOPE, "Gyroscope"),
         (PICTURE_COMPARE, "Picture Compare"),
         (COMPASS, "Compass"),
     ]
@@ -299,32 +311,6 @@ class ArPuzzleDetail(models.Model):
 
     def __str__(self):
         return f"AR detail for puzzle {self.puzzle.pk}"
-
-
-class GyroscopePuzzleDetail(models.Model):
-    puzzle = models.OneToOneField(
-        Puzzle,
-        on_delete=models.CASCADE,
-        related_name="gyroscope_detail",
-    )
-    target_pitch = models.FloatField(default=0.0)
-    target_roll = models.FloatField(default=0.0)
-    target_yaw = models.FloatField(default=0.0)
-    tolerance_degrees = models.FloatField(default=15.0)
-
-    def clean(self):
-        if self.puzzle.puzzle_type != Puzzle.GYROSCOPE:
-            raise ValidationError(
-                {
-                    "puzzle": (
-                        "GyroscopePuzzleDetail can only be attached to "
-                        "GYROSCOPE puzzles."
-                    )
-                }
-            )
-
-    def __str__(self):
-        return f"Gyroscope detail for puzzle {self.puzzle.pk}"
 
 
 class CompassPuzzleDetail(models.Model):

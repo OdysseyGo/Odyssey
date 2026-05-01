@@ -11,11 +11,7 @@ import WritingTips from '@/components/TourCreation/StoryEditor/WritingTips';
 import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditorFooter';
 import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
 import { CreationHeader } from '@/components/TourCreation/common';
-import {
-  Puzzle,
-  TOUR_TEXT_FIELD_MAX_LENGTH,
-  doesLocationMeetTourRequirements,
-} from '@/components/TourCreation';
+import { Puzzle, TOUR_TEXT_FIELD_MAX_LENGTH } from '@/components/TourCreation';
 import { useTranslation } from 'react-i18next';
 
 export default function EditLocationScreen() {
@@ -112,10 +108,6 @@ export default function EditLocationScreen() {
 
     if (currentPuzzle.puzzle_type === 'AR') {
       return !!currentPuzzle.arConfig;
-    }
-
-    if (currentPuzzle.puzzle_type === 'GYROSCOPE') {
-      return true;
     }
 
     if (currentPuzzle.puzzle_type === 'COMPASS') {

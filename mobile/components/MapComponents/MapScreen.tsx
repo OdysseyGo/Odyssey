@@ -36,6 +36,7 @@ export default function MapScreen() {
     isActive,
     progressId,
     currentStepIndex,
+    highestStepIndex,
     solvedSteps,
     locationConfirmedSteps,
     earnedXP,
@@ -144,6 +145,18 @@ export default function MapScreen() {
       longitudeDelta: 0.02,
     };
   }, [tour, isActive]);
+
+  const completedStepsForModal = useMemo(() => {
+    if (!tour || tour.steps.length === 0) return 0;
+
+    if (showCompleteModal) {
+      return tour.steps.length;
+    }
+
+    // Highest reached index represents the current active step on backend;
+    // completed steps are those before it.
+    return Math.max(0, Math.min(highestStepIndex, tour.steps.length));
+  }, [tour, highestStepIndex, showCompleteModal]);
 
   // Active tour handlers
   const handleTourComplete = useCallback(async (awardedXP: number, awardedBadges?: UserBadge[]) => {
@@ -419,7 +432,7 @@ export default function MapScreen() {
       <EndTourConfirmModal
         visible={showEndConfirmModal}
         earnedXP={earnedXP}
-        completedSteps={solvedSteps.size}
+        completedSteps={completedStepsForModal}
         totalSteps={tour.steps.length}
         onConfirm={handleConfirmEndTour}
         onCancel={handleCancelEndTour}
@@ -430,7 +443,7 @@ export default function MapScreen() {
         tour={tour}
         earnedXP={finalXP}
         awardedBadges={completionBadges}
-        completedSteps={solvedSteps.size}
+        completedSteps={completedStepsForModal}
         totalSteps={tour.steps.length}
         onClose={handleCloseCompleteModal}
       />

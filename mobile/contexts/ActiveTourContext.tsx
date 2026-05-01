@@ -62,7 +62,7 @@ const ActiveTourContext = createContext<ActiveTourContextType | undefined>(undef
  * Maps an API tour to the internal Tour format with puzzles
  */
 function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
-  const steps: TourStep[] = apiTour.steps.map((apiStep, index) => {
+  const steps: TourStep[] = apiTour.steps.map((apiStep) => {
     const baseStep = {
       id: apiStep.id.toString(),
       title: apiStep.title,
@@ -75,12 +75,14 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
     if (apiStep.puzzle) {
       const puzzle = mapApiPuzzleToInternal(apiStep.puzzle);
       if (puzzle) {
+        const description = apiStep.description?.trim() ? apiStep.description : undefined;
+
         return {
           ...baseStep,
           type: 'puzzle' as const,
           puzzle,
-          description: apiStep.description,
-          requiresLocationConfirmation: true, // All puzzle steps require location confirmation
+          description,
+          requiresLocationConfirmation: true,
         } as PuzzleStep;
       }
     }
@@ -91,6 +93,7 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
       type: 'story' as const,
       description: apiStep.description,
       images: apiStep.image ? [apiStep.image] : undefined,
+      requiresLocationConfirmation: true,
     } as StoryStep;
   });
 
@@ -99,6 +102,7 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
     title: apiTour.title,
     description: apiTour.description,
     coverImageUri: getTourImageUri(apiTour),
+    hasCompletedOnce: Boolean(apiTour.user_has_completed_once),
     steps,
   };
 }
@@ -200,29 +204,45 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setHighestStepIndex = useCallback((index: number) => {
-    setState((prev) => ({
-      ...prev,
-      highestStepIndex: Math.max(prev.highestStepIndex, index),
-    }));
+    setState((prev) => {
+      const nextHighestStepIndex = Math.max(prev.highestStepIndex, index);
+      if (nextHighestStepIndex === prev.highestStepIndex) return prev;
+
+      return {
+        ...prev,
+        highestStepIndex: nextHighestStepIndex,
+      };
+    });
   }, []);
 
   const setCurrentStepIndex = useCallback((index: number) => {
-    setState((prev) => ({ ...prev, currentStepIndex: index }));
+    setState((prev) => {
+      if (prev.currentStepIndex === index) return prev;
+      return { ...prev, currentStepIndex: index };
+    });
   }, []);
 
   const solveStep = useCallback((stepId: string, xpReward: number = 10) => {
-    setState((prev) => ({
-      ...prev,
-      solvedSteps: new Set([...prev.solvedSteps, stepId]),
-      earnedXP: prev.earnedXP + xpReward,
-    }));
+    setState((prev) => {
+      if (prev.solvedSteps.has(stepId)) return prev;
+
+      return {
+        ...prev,
+        solvedSteps: new Set([...prev.solvedSteps, stepId]),
+        earnedXP: prev.earnedXP + xpReward,
+      };
+    });
   }, []);
 
   const confirmLocation = useCallback((stepId: string) => {
-    setState((prev) => ({
-      ...prev,
-      locationConfirmedSteps: new Set([...prev.locationConfirmedSteps, stepId]),
-    }));
+    setState((prev) => {
+      if (prev.locationConfirmedSteps.has(stepId)) return prev;
+
+      return {
+        ...prev,
+        locationConfirmedSteps: new Set([...prev.locationConfirmedSteps, stepId]),
+      };
+    });
   }, []);
 
   const recordSkip = useCallback((countsAsMistake: boolean = true) => {

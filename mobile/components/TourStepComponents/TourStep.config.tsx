@@ -77,6 +77,7 @@ export interface Tour {
   title: string;
   description: string;
   coverImageUri: string;
+  hasCompletedOnce?: boolean;
   steps: TourStep[];
 }
 
@@ -98,6 +99,7 @@ export const exampleTour: Tour = {
       id: 'step-1',
       type: 'story',
       title: 'Welcome to Istanbul',
+      requiresLocationConfirmation: true,
       description:
         'Istanbul is a major city in Turkey that straddles Europe and Asia. Its Old City reflects cultural influences of the many empires that once ruled here.',
       coordinate: {
@@ -131,6 +133,7 @@ export const exampleTour: Tour = {
       id: 'step-4',
       type: 'story',
       title: 'Grand Bazaar',
+      requiresLocationConfirmation: true,
       description:
         'The Grand Bazaar is one of the largest and oldest covered markets in the world, with 61 covered streets and over 4,000 shops.',
       coordinate: {
