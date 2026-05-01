@@ -84,7 +84,12 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
+    "DEFAULT_THROTTLE_RATES": {
+        "ai_generation": os.getenv("AI_GENERATION_RATE_LIMIT", "5/hour"),
+    },
 }
+
+AI_GENERATION_MAX_ACTIVE_JOBS = int(os.getenv("AI_GENERATION_MAX_ACTIVE_JOBS", "1"))
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Odyssey API",

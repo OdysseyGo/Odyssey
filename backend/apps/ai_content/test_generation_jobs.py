@@ -2,10 +2,11 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from rest_framework.test import APIRequestFactory, force_authenticate
 
 from .errors import get_generation_error_message
 from .models import GenerationJob
-from .views import _run_generation
+from .views import GenerateTourView, _run_generation
 
 
 def _payload():
@@ -70,3 +71,37 @@ class GenerationJobErrorSanitizationTests(TestCase):
             message,
             "The AI response could not be turned into a valid tour. Please try again.",
         )
+
+
+class GenerateTourViewLimitTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="limit_user",
+            email="limit@example.com",
+            password="pass123",
+        )
+        self.factory = APIRequestFactory()
+        self.view = GenerateTourView.as_view()
+
+    def _post(self):
+        request = self.factory.post("/api/ai/generate-tour/", _payload(), format="json")
+        force_authenticate(request, user=self.user)
+        return self.view(request)
+
+    def test_rejects_when_user_has_active_generation_job(self):
+        GenerationJob.objects.create(creator=self.user, status=GenerationJob.RUNNING)
+
+        response = self._post()
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(GenerationJob.objects.filter(creator=self.user).count(), 1)
+        self.assertIn("already have a tour generation", response.data["error"])
+
+    @patch("apps.ai_content.views.threading.Thread")
+    def test_creates_job_when_user_has_no_active_generation_job(self, mock_thread_cls):
+        response = self._post()
+
+        self.assertEqual(response.status_code, 202)
+        self.assertEqual(GenerationJob.objects.filter(creator=self.user).count(), 1)
+        self.assertEqual(response.data["status"], GenerationJob.PENDING)
+        mock_thread_cls.return_value.start.assert_called_once()

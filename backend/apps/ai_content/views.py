@@ -1,12 +1,14 @@
 import logging
 import threading
 
+from django.conf import settings
 from django.db import close_old_connections
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from .errors import get_generation_error_message
@@ -19,6 +21,10 @@ from .serializers import (
 from .services import GeminiService
 
 logger = logging.getLogger(__name__)
+
+
+class GenerateTourRateThrottle(ScopedRateThrottle):
+    scope = "ai_generation"
 
 
 def _run_generation(job_id, payload, user_id):
@@ -65,6 +71,8 @@ def _run_generation(job_id, payload, user_id):
 
 class GenerateTourView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [GenerateTourRateThrottle]
+    throttle_scope = "ai_generation"
 
     @extend_schema(
         request=GenerateTourRequestSerializer,
@@ -75,6 +83,25 @@ class GenerateTourView(APIView):
         serializer = GenerateTourRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        active_job_count = GenerationJob.objects.filter(
+            creator=request.user,
+            status__in=[GenerationJob.PENDING, GenerationJob.RUNNING],
+        ).count()
+        max_active_jobs = getattr(settings, "AI_GENERATION_MAX_ACTIVE_JOBS", 1)
+        if active_job_count >= max_active_jobs:
+            return Response(
+                {
+                    "error": (
+                        "You already have a tour generation in progress. "
+                        "Please wait for it to finish before starting another."
+                    )
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        # Keep future paid/rewarded generation entitlement checks below all
+        # validation and active-job guards, then consume the entitlement in the
+        # same transaction that creates this job.
         job = GenerationJob.objects.create(creator=request.user)
 
         threading.Thread(
