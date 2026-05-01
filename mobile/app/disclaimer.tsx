@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { rememberDisclaimerAccepted } from '@/lib/disclaimer';
 
 export default function DisclaimerScreen() {
   const colorScheme = useColorTheme();
@@ -20,7 +21,8 @@ export default function DisclaimerScreen() {
     Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
   }, []);
 
-  function handleAccept() {
+  async function handleAccept() {
+    await rememberDisclaimerAccepted();
     router.replace('/(tabs)/map');
   }
 
