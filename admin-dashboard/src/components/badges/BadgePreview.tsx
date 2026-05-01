@@ -1,6 +1,15 @@
 import { useId } from "react";
 
-export type BadgeTier = "gold" | "silver" | "bronze" | "xp1" | "xp2" | "xp3" | "neutral";
+export type BadgeTier =
+  | "gold"
+  | "silver"
+  | "bronze"
+  | "xp1"
+  | "xp2"
+  | "xp3"
+  | "platinum"
+  | "diamond"
+  | "neutral";
 
 export interface TierPalette {
   outer_fill: string;
@@ -65,7 +74,17 @@ const VIEW_H = 104;
 const DEFAULT_OUTER_POINTS = "50,6 89.84,29 89.84,75 50,98 10.16,75 10.16,29";
 const DEFAULT_INNER_POINTS = "50,12 84.64,32 84.64,72 50,92 15.36,72 15.36,32";
 const DEFAULT_FLAG_CLIP = DEFAULT_INNER_POINTS;
-const ALL_TIERS: BadgeTier[] = ["gold", "silver", "bronze", "xp1", "xp2", "xp3", "neutral"];
+const ALL_TIERS: BadgeTier[] = [
+  "gold",
+  "silver",
+  "bronze",
+  "xp1",
+  "xp2",
+  "xp3",
+  "platinum",
+  "diamond",
+  "neutral",
+];
 
 export const DEFAULT_PALETTE: Record<BadgeTier, TierPalette> = {
   gold: {
@@ -182,6 +201,44 @@ export const DEFAULT_PALETTE: Record<BadgeTier, TierPalette> = {
     text_plate_stroke_opacity: 0.7,
     text_plate_stroke_width: 1,
   },
+  platinum: {
+    outer_fill: "#e0f2fe",
+    inner_fill: "#7dd3fc",
+    border: "#0369a1",
+    text: "#082f49",
+    border_color: "#0369a1",
+    inner_border_color: "#0369a1",
+    frame_fill_top: "#ffffff",
+    frame_fill_bottom: "#dbe4f4",
+    frame_fill_opacity: 0.98,
+    fill_top: "#f8fafc",
+    fill_bottom: "#e2e8f0",
+    fill_opacity: 0.24,
+    text_plate_fill: "#ffffff",
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: "#0369a1",
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
+  },
+  diamond: {
+    outer_fill: "#ecfeff",
+    inner_fill: "#67e8f9",
+    border: "#0e7490",
+    text: "#083344",
+    border_color: "#0e7490",
+    inner_border_color: "#0e7490",
+    frame_fill_top: "#ffffff",
+    frame_fill_bottom: "#dbe4f4",
+    frame_fill_opacity: 0.98,
+    fill_top: "#f8fafc",
+    fill_bottom: "#e2e8f0",
+    fill_opacity: 0.24,
+    text_plate_fill: "#ffffff",
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: "#0e7490",
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
+  },
   neutral: {
     outer_fill: "#e2e8f0",
     inner_fill: "#cbd5e1",
@@ -216,6 +273,26 @@ export function getTierFromBadgeCode(code?: string): BadgeTier {
   if (code === "XP_500") return "xp2";
   if (code === "XP_1000") return "xp3";
   return "neutral";
+}
+
+function normalizeVisualTier(value?: string): BadgeTier | null {
+  if (!value) return null;
+  const normalized = value.toLowerCase();
+  if (ALL_TIERS.includes(normalized as BadgeTier)) {
+    return normalized as BadgeTier;
+  }
+  return null;
+}
+
+export function getTierFromBadge(
+  badgeCode?: string,
+  badgeCriteria?: Record<string, unknown> | null,
+): BadgeTier {
+  const criteriaTier = normalizeVisualTier(
+    typeof badgeCriteria?.visual_tier === "string" ? badgeCriteria.visual_tier : undefined,
+  );
+  if (criteriaTier) return criteriaTier;
+  return getTierFromBadgeCode(badgeCode);
 }
 
 function mergePalette(
@@ -299,11 +376,17 @@ export function BadgePreview({
   countryCode,
   label,
   badgeCode,
+  badgeCriteria,
+  imageUrl,
+  useFlag = true,
 }: {
   config: VisualConfig;
   countryCode: string;
   label: string;
   badgeCode?: string;
+  badgeCriteria?: Record<string, unknown> | null;
+  imageUrl?: string;
+  useFlag?: boolean;
 }) {
   const clipId = useId().replace(/:/g, "_");
   const flagX = VIEW_W * config.flag.x;
@@ -314,7 +397,7 @@ export function BadgePreview({
   const centerY = flagY + flagHeight / 2;
   const textX = VIEW_W * config.text.x;
   const textY = VIEW_H * config.text.y;
-  const tier = getTierFromBadgeCode(badgeCode);
+  const tier = getTierFromBadge(badgeCode, badgeCriteria);
   const palette = config.palette?.[tier] || DEFAULT_PALETTE[tier];
 
   return (
@@ -354,7 +437,7 @@ export function BadgePreview({
       <g clipPath={`url(#${clipId}-badge)`}>
         <g clipPath={`url(#${clipId}-flag)`}>
           <image
-            href={flagUrl(countryCode)}
+            href={useFlag ? flagUrl(countryCode) : imageUrl || ""}
             x={flagX}
             y={flagY}
             width={flagWidth}
@@ -395,4 +478,3 @@ export function BadgePreview({
     </svg>
   );
 }
-

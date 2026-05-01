@@ -287,3 +287,35 @@ class BadgeAwardingTests(TestCase):
                 badge__code=BadgeService.CITY_GOLD_CODE,
             ).exists()
         )
+
+    def test_friend_collector_progressive_badge_upgrades(self):
+        self.user.following_count = 5
+        self.user.save(update_fields=["following_count"])
+
+        earned = BadgeService.check_badges(self.user)
+        self.assertTrue(any(name == "Friend Collector 2" for name in earned))
+        self.assertTrue(
+            UserBadge.objects.filter(
+                user=self.user,
+                badge__code="FRIEND_COLLECTOR_2",
+            ).exists()
+        )
+
+        self.user.following_count = 60
+        self.user.save(update_fields=["following_count"])
+
+        earned = BadgeService.check_badges(self.user)
+        self.assertTrue(any(name == "Friend Collector 4" for name in earned))
+        self.assertEqual(
+            UserBadge.objects.filter(
+                user=self.user,
+                badge__code__startswith="FRIEND_COLLECTOR_",
+            ).count(),
+            1,
+        )
+        self.assertTrue(
+            UserBadge.objects.filter(
+                user=self.user,
+                badge__code="FRIEND_COLLECTOR_4",
+            ).exists()
+        )
