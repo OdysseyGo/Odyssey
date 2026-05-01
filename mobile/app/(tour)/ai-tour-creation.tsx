@@ -9,6 +9,7 @@ import {
   Switch,
 } from 'react-native';
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { aiTourCreationStyles } from './ai-tour-creation.styles';
@@ -34,6 +35,7 @@ import {
 import { generateAITour, getAITourJob, AITourJob, AITourJobAccepted } from '@/api/aiTours';
 import { CreationHeader } from '@/components/TourCreation/common';
 import { useRewardedAd } from '@/components/Ads/useRewardedAd';
+import { TOUR_LIST_REFRESH_REQUESTED_KEY } from '@/constants/StorageKeys';
 
 const POLL_INTERVAL_MS = 1500;
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
@@ -150,6 +152,7 @@ export default function AITourCreation() {
 
       if (finalJob.status === 'SUCCESS' && finalJob.tour_id != null) {
         const tourId = finalJob.tour_id;
+        await AsyncStorage.setItem(TOUR_LIST_REFRESH_REQUESTED_KEY, '1');
         Alert.alert(t('aiTour.successTitle'), t('aiTour.successMessage'), [
           {
             text: t('aiTour.viewTour'),

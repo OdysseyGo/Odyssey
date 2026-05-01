@@ -215,6 +215,7 @@
     "duration": "Süre",
     "distance": "Mesafe",
     "distanceUnknown": "Mesafe",
+    "calculatingMetrics": "Hesaplanıyor",
     "difficulty": "Zorluk",
     "loop": "Döngü turu",
     "transport": "Ulaşım gerekli",

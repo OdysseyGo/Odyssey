@@ -9,6 +9,7 @@ import threading
 from typing import Optional
 
 import google.generativeai as genai
+from django.conf import settings
 from django.db import connection, transaction
 
 from apps.tours.models import (
@@ -53,6 +54,9 @@ class GeminiService:
             raise ValueError("GEMINI_API_KEY environment variable is not set")
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel(self.GEMINI_MODEL)
+        self.provider_timeout_seconds = getattr(
+            settings, "AI_GENERATION_PROVIDER_TIMEOUT_SECONDS", 120
+        )
 
     def generate_tour(
         self,
@@ -141,7 +145,8 @@ class GeminiService:
                     )
 
                 response = self.model.generate_content(
-                    current_prompt, request_options={"timeout": 600}
+                    current_prompt,
+                    request_options={"timeout": self.provider_timeout_seconds},
                 )
                 tour_data = self._parse_response(response.text)
                 break  # Success — exit retry loop

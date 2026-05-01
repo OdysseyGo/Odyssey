@@ -199,6 +199,7 @@
     "duration": "Duración",
     "distance": "Distancia",
     "distanceUnknown": "Distancia",
+    "calculatingMetrics": "Calculando",
     "difficulty": "Dificultad",
     "loop": "Tour circular",
     "transport": "Transporte necesario",

@@ -215,6 +215,7 @@
     "duration": "Duration",
     "distance": "Distance",
     "distanceUnknown": "Distance",
+    "calculatingMetrics": "Calculating",
     "difficulty": "Difficulty",
     "loop": "Loop tour",
     "transport": "Transport needed",

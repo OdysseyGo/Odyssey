@@ -1,7 +1,10 @@
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from apps.ads.models import AdPlacement, RewardedAdGrant
@@ -138,3 +141,41 @@ class GenerateTourViewLimitTests(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertIn("rewarded ad", response.data["error"])
         self.assertEqual(GenerationJob.objects.filter(creator=self.user).count(), 0)
+
+
+class CleanupGenerationJobsCommandTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="cleanup_user",
+            email="cleanup@example.com",
+            password="pass123",
+        )
+
+    def _job(self, status, days_old):
+        job = GenerationJob.objects.create(creator=self.user, status=status)
+        GenerationJob.objects.filter(pk=job.pk).update(
+            updated_at=timezone.now() - timedelta(days=days_old)
+        )
+        job.refresh_from_db()
+        return job
+
+    def test_deletes_only_old_terminal_jobs(self):
+        old_success = self._job(GenerationJob.SUCCESS, 8)
+        old_failed = self._job(GenerationJob.FAILED, 9)
+        old_running = self._job(GenerationJob.RUNNING, 10)
+        recent_failed = self._job(GenerationJob.FAILED, 2)
+
+        call_command("cleanup_generation_jobs")
+
+        remaining_ids = set(GenerationJob.objects.values_list("id", flat=True))
+        self.assertNotIn(old_success.id, remaining_ids)
+        self.assertNotIn(old_failed.id, remaining_ids)
+        self.assertIn(old_running.id, remaining_ids)
+        self.assertIn(recent_failed.id, remaining_ids)
+
+    def test_dry_run_does_not_delete_jobs(self):
+        self._job(GenerationJob.SUCCESS, 8)
+
+        call_command("cleanup_generation_jobs", dry_run=True)
+
+        self.assertEqual(GenerationJob.objects.count(), 1)

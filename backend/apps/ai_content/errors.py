@@ -1,6 +1,7 @@
 GENERIC_GENERATION_ERROR = (
     "We could not generate your tour right now. Please try again."
 )
+STALE_GENERATION_JOB_ERROR = "Tour generation took too long. Please try again."
 
 
 def get_generation_error_message(exc: Exception) -> str:
