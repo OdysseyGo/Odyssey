@@ -4,7 +4,9 @@
     "cancel": "İptal",
     "submit": "Gönder",
     "submitting": "Gönderiliyor...",
-    "ok": "Tamam"
+    "ok": "Tamam",
+    "error": "Hata",
+    "syncError": "İlerleme sunucuyla senkronize edilemedi."
   },
   "auth": {
     "welcomeTitle": "Hoş geldin, kaşif!",
@@ -68,9 +70,12 @@
     "accountCreatedSubtitle": "\"{{username}}\" hazır. Keşfe başlamak için giriş yap.",
     "errors": {
       "usernameRequired": "Kullanıcı adı gereklidir",
+      "usernameInvalidCharacters": "Kullanıcı adında yalnızca harf, rakam ve @/./+/-/_ karakterlerini kullanın.",
       "passwordRequired": "Şifre gereklidir",
       "firstNameRequired": "Ad gereklidir",
+      "firstNameInvalidCharacters": "Ad alanında geçersiz karakterler var.",
       "lastNameRequired": "Soyad gereklidir",
+      "lastNameInvalidCharacters": "Soyad alanında geçersiz karakterler var.",
       "emailRequired": "E-posta gereklidir",
       "emailFormat": "E-posta formatı hatalı. Uzantı en az 2 karakter olmalıdır (.com, .tr vb)",
       "confirmPasswordRequired": "Şifre tekrarı gereklidir",
@@ -354,6 +359,7 @@
     "continueWithCount": "Devam Et ({{count}} konum)",
     "submit": "Turu Gönder",
     "submitting": "Gönderiliyor...",
+    "uploadingProgress": "{{total}} adımın {{current}}. adımı yükleniyor",
     "submitTitle": "Turu Gönder",
     "submitMessage": "Turunuzu inceleme için göndermeye hazır mısınız?",
     "cancel": "İptal",
@@ -408,7 +414,9 @@
       "cancel": "İptal",
       "delete": "Sil",
       "tourStops": "Tur Durakları",
-      "locationsCount": "{{count}} konum"
+      "locationsCount": "{{count}} konum",
+      "maxStepsReachedTitle": "Adım limitine ulaşıldı",
+      "maxStepsReachedMessage": "Bir tur en fazla {{max}} durak içerebilir."
     },
     "review": {
       "tourStopsTitle": "Tur Durakları ({{count}})",
@@ -569,12 +577,6 @@
     "answerConfirmTitle": "Bu cevabı kilitle?",
     "answerConfirmMessage": "Emin misiniz? Yanlış cevaplar rozet ilerlemenizi azaltabilir.",
     "answerConfirmAction": "Cevapla"
-  },
-  "common": {
-    "cancel": "İptal",
-    "ok": "Tamam",
-    "error": "Hata",
-    "syncError": "İlerleme sunucuyla senkronize edilemedi."
   },
   "map": {
     "noActiveTour": {

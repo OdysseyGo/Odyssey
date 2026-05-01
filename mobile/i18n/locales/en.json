@@ -4,7 +4,9 @@
     "cancel": "Cancel",
     "submit": "Submit",
     "submitting": "Submitting...",
-    "ok": "OK"
+    "ok": "OK",
+    "error": "Error",
+    "syncError": "Could not sync progress with server."
   },
   "auth": {
     "welcomeTitle": "Welcome, adventurer!",
@@ -68,9 +70,12 @@
     "accountCreatedSubtitle": "\"{{username}}\" is ready. Log in to start exploring.",
     "errors": {
       "usernameRequired": "Username is required",
+      "usernameInvalidCharacters": "Use only letters, numbers, and @/./+/-/_ in your username.",
       "passwordRequired": "Password is required",
       "firstNameRequired": "First name is required",
+      "firstNameInvalidCharacters": "First name contains invalid characters.",
       "lastNameRequired": "Last name is required",
+      "lastNameInvalidCharacters": "Last name contains invalid characters.",
       "emailRequired": "Email is required",
       "emailFormat": "Email format is wrong. TLD should be at least 2 chars long (.com, .tr etc)",
       "confirmPasswordRequired": "Confirm password is required",
@@ -354,6 +359,7 @@
     "continueWithCount": "Continue ({{count}} locations)",
     "submit": "Submit Tour",
     "submitting": "Submitting...",
+    "uploadingProgress": "Uploading step {{current}}/{{total}}",
     "submitTitle": "Submit Tour",
     "submitMessage": "Are you ready to submit your tour for review?",
     "cancel": "Cancel",
@@ -408,7 +414,9 @@
       "cancel": "Cancel",
       "delete": "Delete",
       "tourStops": "Tour Stops",
-      "locationsCount": "{{count}} locations"
+      "locationsCount": "{{count}} locations",
+      "maxStepsReachedTitle": "Step limit reached",
+      "maxStepsReachedMessage": "A tour can include at most {{max}} stops."
     },
     "review": {
       "tourStopsTitle": "Tour Stops ({{count}})",
@@ -569,12 +577,6 @@
     "answerConfirmTitle": "Lock this answer?",
     "answerConfirmMessage": "Are you sure? Wrong answers can reduce your badge progress.",
     "answerConfirmAction": "Answer"
-  },
-  "common": {
-    "cancel": "Cancel",
-    "ok": "OK",
-    "error": "Error",
-    "syncError": "Could not sync progress with server."
   },
   "map": {
     "noActiveTour": {
