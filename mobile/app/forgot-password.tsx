@@ -272,7 +272,6 @@ export default function ForgotPasswordScreen() {
         >
           <View style={modalStyles.overlay}>
             <View style={[modalStyles.card, { backgroundColor: theme.cardSurface }]}>
-
               {/* Header icon */}
               <View style={modalStyles.headerRow}>
                 <View style={[modalStyles.iconWrap, { backgroundColor: `${theme.primary}15` }]}>
@@ -280,7 +279,10 @@ export default function ForgotPasswordScreen() {
                 </View>
                 <TouchableOpacity
                   style={[modalStyles.closeBtn, { backgroundColor: theme.foreground }]}
-                  onPress={() => { setShowResetModal(false); setModalError(''); }}
+                  onPress={() => {
+                    setShowResetModal(false);
+                    setModalError('');
+                  }}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   <Ionicons name="close" size={18} color={theme.subText} />
@@ -296,20 +298,33 @@ export default function ForgotPasswordScreen() {
 
               {/* Error banner */}
               {modalError ? (
-                <View style={[modalStyles.errorBanner, { backgroundColor: `${theme.error}12`, borderColor: `${theme.error}30` }]}>
+                <View
+                  style={[
+                    modalStyles.errorBanner,
+                    { backgroundColor: `${theme.error}12`, borderColor: `${theme.error}30` },
+                  ]}
+                >
                   <Ionicons name="alert-circle" size={15} color={theme.error} />
                   <Text style={[modalStyles.errorText, { color: theme.error }]}>{modalError}</Text>
                 </View>
               ) : null}
 
               {/* OTP code box */}
-              <View style={[modalStyles.codeSection, { backgroundColor: theme.primaryMuted, borderColor: `${theme.primary}25` }]}>
+              <View
+                style={[
+                  modalStyles.codeSection,
+                  { backgroundColor: theme.primaryMuted, borderColor: `${theme.primary}25` },
+                ]}
+              >
                 <Text style={[modalStyles.codeLabel, { color: theme.primary }]}>
                   {t('auth.otpCode').toUpperCase()}
                 </Text>
                 <AuthTextInput
                   value={code}
-                  onChangeText={(text) => { setCode(text); setModalError(''); }}
+                  onChangeText={(text) => {
+                    setCode(text);
+                    setModalError('');
+                  }}
                   placeholder={t('auth.otpCodePlaceholder')}
                   keyboardType="number-pad"
                   autoCapitalize="none"
@@ -345,13 +360,15 @@ export default function ForgotPasswordScreen() {
               <AuthButton title={t('auth.updatePassword')} onPress={submitNewPassword} />
               <TouchableOpacity
                 style={[modalStyles.cancelButton, { borderColor: `${theme.subText}30` }]}
-                onPress={() => { setShowResetModal(false); setModalError(''); }}
+                onPress={() => {
+                  setShowResetModal(false);
+                  setModalError('');
+                }}
               >
                 <Text style={[modalStyles.cancelText, { color: theme.subText }]}>
                   {t('auth.cancel')}
                 </Text>
               </TouchableOpacity>
-
             </View>
           </View>
         </KeyboardAvoidingView>

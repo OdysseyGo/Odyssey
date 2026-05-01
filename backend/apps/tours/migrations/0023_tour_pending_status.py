@@ -6,13 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tours', '0022_tour_generation_source'),
+        ("tours", "0022_tour_generation_source"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='tour',
-            name='status',
-            field=models.CharField(choices=[('DRAFT', 'Draft'), ('PENDING', 'Pending Review'), ('PUBLISHED', 'Published'), ('ARCHIVED', 'Archived')], default='DRAFT', max_length=20),
+            model_name="tour",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("DRAFT", "Draft"),
+                    ("PENDING", "Pending Review"),
+                    ("PUBLISHED", "Published"),
+                    ("ARCHIVED", "Archived"),
+                ],
+                default="DRAFT",
+                max_length=20,
+            ),
         ),
     ]

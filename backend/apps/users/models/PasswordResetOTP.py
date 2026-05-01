@@ -16,7 +16,9 @@ class PasswordResetOTP(models.Model):
         ordering = ["-created_at"]
 
     def is_valid(self):
-        return not self.used and timezone.now() < self.created_at + timedelta(minutes=10)
+        return not self.used and timezone.now() < self.created_at + timedelta(
+            minutes=10
+        )
 
     @classmethod
     def generate_for(cls, user):

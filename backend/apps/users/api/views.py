@@ -220,7 +220,10 @@ class UserViewSet(ModelViewSet):
         return Response(response_serializer.data, status=201 if created else 200)
 
     @action(
-        detail=False, methods=["post"], url_path="request-password-reset", permission_classes=[]
+        detail=False,
+        methods=["post"],
+        url_path="request-password-reset",
+        permission_classes=[],
     )
     def request_password_reset(self, request):
         email = request.data.get("email")
@@ -248,7 +251,9 @@ class UserViewSet(ModelViewSet):
             )
         except Exception as e:
             logger.error("Failed to send password reset email to %s: %s", user.email, e)
-            return Response({"detail": "Could not send email. Please try again later."}, status=503)
+            return Response(
+                {"detail": "Could not send email. Please try again later."}, status=503
+            )
         return Response(neutral, status=200)
 
     @action(
@@ -260,13 +265,15 @@ class UserViewSet(ModelViewSet):
         new_password = request.data.get("new_password")
 
         if not all([email, code, new_password]):
-            return Response({"detail": "email, code and new_password required"}, status=400)
+            return Response(
+                {"detail": "email, code and new_password required"}, status=400
+            )
 
         try:
             user = User.objects.get(email__iexact=email)
-            otp = PasswordResetOTP.objects.filter(user=user, code=code, used=False).latest(
-                "created_at"
-            )
+            otp = PasswordResetOTP.objects.filter(
+                user=user, code=code, used=False
+            ).latest("created_at")
         except (User.DoesNotExist, PasswordResetOTP.DoesNotExist):
             return Response({"detail": "Invalid or expired code"}, status=400)
 

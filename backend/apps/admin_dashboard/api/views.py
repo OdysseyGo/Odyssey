@@ -246,10 +246,10 @@ class AdminTourViewSet(ModelViewSet):
 
         try:
             send_mail(
-                subject=f"Your tour \"{tour.title}\" has been published! 🎉",
+                subject=f'Your tour "{tour.title}" has been published! 🎉',
                 message=(
                     f"Hi {tour.creator.username},\n\n"
-                    f"Great news! Your tour \"{tour.title}\" has been reviewed and is now live on Odyssey.\n\n"
+                    f'Great news! Your tour "{tour.title}" has been reviewed and is now live on Odyssey.\n\n'
                     "Explorers can now discover and start your tour. Thank you for your contribution!\n\n"
                     "— The Odyssey Team"
                 ),
@@ -269,16 +269,12 @@ class AdminTourViewSet(ModelViewSet):
         tour.save(update_fields=["status"])
 
         try:
-            reason_block = (
-                f"\nReason from our team:\n\"{reason}\"\n"
-                if reason
-                else ""
-            )
+            reason_block = f'\nReason from our team:\n"{reason}"\n' if reason else ""
             send_mail(
-                subject=f"Update on your tour \"{tour.title}\"",
+                subject=f'Update on your tour "{tour.title}"',
                 message=(
                     f"Hi {tour.creator.username},\n\n"
-                    f"After review, your tour \"{tour.title}\" was not approved at this time "
+                    f'After review, your tour "{tour.title}" was not approved at this time '
                     f"and has been moved back to drafts.{reason_block}\n"
                     "Please make the necessary changes and resubmit when it's ready.\n\n"
                     "— The Odyssey Team"
