@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .errors import get_generation_error_message
 from .models import GenerationJob
 from .serializers import (
     GenerateTourRequestSerializer,
@@ -56,7 +57,7 @@ def _run_generation(job_id, payload, user_id):
         logger.exception("AI generation job %s failed", job_id)
         GenerationJob.objects.filter(pk=job_id).update(
             status=GenerationJob.FAILED,
-            error=str(e) or e.__class__.__name__,
+            error=get_generation_error_message(e),
         )
     finally:
         close_old_connections()
