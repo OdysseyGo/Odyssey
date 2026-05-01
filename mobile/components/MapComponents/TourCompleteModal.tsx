@@ -19,6 +19,8 @@ const MODAL_GRADIENTS: Record<BadgeTier, readonly [string, string, string]> = {
   xp1: ['#eaf2ff', '#93c5fd', '#2563eb'],
   xp2: ['#e8fff0', '#86efac', '#16a34a'],
   xp3: ['#f2edff', '#c4b5fd', '#7c3aed'],
+  platinum: ['#effbff', '#7dd3fc', '#0369a1'],
+  diamond: ['#ecfeff', '#67e8f9', '#0e7490'],
   neutral: ['#f8fafc', '#e2e8f0', '#94a3b8'],
 };
 
@@ -29,6 +31,8 @@ const MODAL_GRADIENTS_DARK: Record<BadgeTier, readonly [string, string, string]>
   xp1: ['#edf5ff', '#8fc2ff', '#3b82f6'],
   xp2: ['#ebfff3', '#87efb0', '#22c55e'],
   xp3: ['#f5f0ff', '#c6a8ff', '#8b5cf6'],
+  platinum: ['#f2fdff', '#8ee6ff', '#0ea5e9'],
+  diamond: ['#eefeff', '#7be6f5', '#0891b2'],
   neutral: ['#f8fafc', '#e2e8f0', '#9fb0c4'],
 };
 
@@ -99,7 +103,9 @@ export default function TourCompleteModal({
   const completionRate = totalSteps > 0 ? Math.round((safeCompletedSteps / totalSteps) * 100) : 0;
   const earnedCityBadge =
     awardedBadges.find((item) => isCityBadge(item.badge.code)) ?? awardedBadges[0] ?? null;
-  const earnedBadgeTier = earnedCityBadge ? getBadgeTier(earnedCityBadge.badge.code) : null;
+  const earnedBadgeTier = earnedCityBadge
+    ? getBadgeTier(earnedCityBadge.badge.code, earnedCityBadge.badge.criteria)
+    : null;
   const modalGradientColors = (theme === 'dark' ? MODAL_GRADIENTS_DARK : MODAL_GRADIENTS)[
     earnedBadgeTier ?? 'neutral'
   ];
@@ -143,6 +149,8 @@ export default function TourCompleteModal({
               <Animated.View style={[styles.earnedBadgeContainer, { transform: [{ rotate }] }]}>
                 <HexBadge
                   code={earnedCityBadge.badge.code}
+                  badgeCriteria={earnedCityBadge.badge.criteria}
+                  iconUrl={earnedCityBadge.badge.icon}
                   city={earnedCityBadge.city}
                   countryCode={earnedCityBadge.country_code}
                   fallbackLabel={earnedCityBadge.badge.name}
