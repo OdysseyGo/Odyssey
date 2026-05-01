@@ -355,11 +355,12 @@ class GeminiService:
 
     @staticmethod
     def _normalize_ai_puzzle_data(step_data: dict, puzzle_data: dict) -> dict:
-        """Coerce Gemini puzzle output into the app's supported trivia shape."""
+        """Coerce Gemini puzzle output into a supported regular puzzle shape."""
         title = step_data.get("title", "this location")
         question = puzzle_data.get("question") or f"What is the name of {title}?"
         answer = puzzle_data.get("answer") or puzzle_data.get("correct_answer") or title
         options = puzzle_data.get("options")
+        raw_type = str(puzzle_data.get("type", "")).strip().upper().replace("-", "_")
 
         if not isinstance(options, list):
             options = []
@@ -372,6 +373,32 @@ class GeminiService:
         options = [option for option in options if option]
         answer = GeminiService._clean_trivia_option(answer) or title
         question = GeminiService._clean_trivia_question(question)
+
+        wants_open_ended = raw_type in {
+            "OPEN_ENDED",
+            "OPEN_ENDED_TEXT",
+            "FREE_TEXT",
+            "TEXT",
+            "RIDDLE",
+            "SHORT_ANSWER",
+        }
+        has_usable_trivia = len(options) >= 2
+        puzzle_type = (
+            Puzzle.OPEN_ENDED
+            if wants_open_ended or not has_usable_trivia
+            else Puzzle.TRIVIA
+        )
+
+        if puzzle_type == Puzzle.OPEN_ENDED:
+            return {
+                **puzzle_data,
+                "type": Puzzle.OPEN_ENDED,
+                "question": question,
+                "options": None,
+                "answer": answer,
+                "hint": puzzle_data.get("hint", ""),
+                "xp": puzzle_data.get("xp", 25),
+            }
 
         if answer not in options:
             options.insert(0, answer)
@@ -704,8 +731,8 @@ class GeminiService:
         """
         mode_instructions = {
             "STORY": "Focus on rich narrative storytelling. Each step should have detailed historical or thematic descriptions that immerse the user in the story. No puzzles needed.",
-            "PUZZLE": "Focus on interactive challenges, but every step still needs a short story/narrative description before the puzzle. Each step MUST have a puzzle (trivia question or AR). Some trivia questions should be formatted as a riddle, others should be normal trivia questions. Make the options challenging.",
-            "HYBRID": "Balance storytelling with puzzles. Each step should have both a narrative description AND a puzzle challenge.",
+            "PUZZLE": "Focus on interactive challenges, but every step still needs a short story/narrative description before the puzzle. Each step MUST have a puzzle (TRIVIA, OPEN_ENDED, or AR). Mix multiple-choice trivia with short-answer open-ended riddles where appropriate.",
+            "HYBRID": "Balance storytelling with puzzles. Each step should have both a narrative description AND a puzzle challenge. Use a mix of TRIVIA and OPEN_ENDED regular puzzles.",
         }
 
         puzzle_schema = """
@@ -715,6 +742,16 @@ class GeminiService:
             "options": ["1850", "1875", "1900", "1925"],
             "answer": "1875",
             "hint": "It was built during the Victorian era",
+            "xp": 25
+        }
+
+        OR
+
+        "puzzle": {
+            "type": "OPEN_ENDED",
+            "question": "I have watched empires rise beneath one dome. What landmark am I?",
+            "answer": "Hagia Sophia",
+            "hint": "Its Turkish name is Ayasofya",
             "xp": 25
         }"""
 
@@ -781,6 +818,7 @@ CRITICAL RULES:
 5. Write engaging, theme-connected narrative content for each selected location.
 6. For trivia puzzles, keep the question text separate from the choices. Do NOT put answer choices or labels like "A)", "B)", "C)", or "D)" inside the "question" field. Put choices only in the "options" array, without letter prefixes.
 7. For PUZZLE and HYBRID modes, every step must include both a non-empty "description" story and a "puzzle" challenge in the same step.
+8. Regular puzzle "type" must be either "TRIVIA" or "OPEN_ENDED". For OPEN_ENDED, do not include an "options" array, and keep "answer" to one short canonical answer that users can reasonably type.
 
 OUTPUT FORMAT (strict JSON):
 {{
