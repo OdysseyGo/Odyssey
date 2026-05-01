@@ -473,10 +473,10 @@ class TestGenerateTour(TestCase):
 
     @patch("apps.ai_content.services.GoogleMapsFacade")
     @patch("apps.ai_content.services.genai")
-    def test_ai_puzzle_output_is_normalized_to_renderable_trivia(
+    def test_ai_riddle_output_is_normalized_to_open_ended(
         self, mock_genai, mock_maps_cls
     ):
-        """Unsupported AI puzzle shapes should still render as puzzle steps."""
+        """Short-answer riddle shapes should render as open-ended puzzle steps."""
         tour_data = _valid_tour_json(include_puzzles=True)
         tour_data["steps"][0]["puzzle"] = {
             "type": "RIDDLE",
@@ -505,9 +505,46 @@ class TestGenerateTour(TestCase):
         )
 
         puzzle = Puzzle.objects.get(step__tour=tour, step__title="Hagia Sophia")
-        assert puzzle.puzzle_type == Puzzle.TRIVIA
-        assert puzzle.trivia_detail.options
-        assert puzzle.trivia_detail.correct_answer == "Hagia Sophia"
+        assert puzzle.puzzle_type == Puzzle.OPEN_ENDED
+        assert puzzle.options is None
+        assert puzzle.correct_answer == "Hagia Sophia"
+
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
+    def test_ai_open_ended_output_is_preserved(self, mock_genai, mock_maps_cls):
+        tour_data = _valid_tour_json(include_puzzles=True)
+        tour_data["steps"][0]["puzzle"] = {
+            "type": "OPEN_ENDED",
+            "question": "Which landmark is known in Turkish as Ayasofya?",
+            "answer": "Hagia Sophia",
+            "hint": "It sits near Sultanahmet Square.",
+            "xp": 25,
+        }
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
+
+        creator = self._make_creator()
+        service = GeminiService()
+        tour = service.generate_tour(
+            city="Istanbul",
+            theme="History",
+            mode="PUZZLE",
+            duration=60,
+            language="en",
+            creator=creator,
+        )
+
+        puzzle = Puzzle.objects.get(step__tour=tour, step__title="Hagia Sophia")
+        assert puzzle.puzzle_type == Puzzle.OPEN_ENDED
+        assert puzzle.options is None
+        assert puzzle.correct_answer == "Hagia Sophia"
 
     @patch("apps.ai_content.services.GoogleMapsFacade")
     @patch("apps.ai_content.services.genai")

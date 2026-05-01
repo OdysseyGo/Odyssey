@@ -30,6 +30,7 @@ from .serializers import (
     ARModelSerializer,
     ArPuzzleUpsertSerializer,
     CompassPuzzleUpsertSerializer,
+    OpenEndedPuzzleUpsertSerializer,
     PictureComparePuzzleUpsertSerializer,
     PuzzleSerializer,
     ReviewSerializer,
@@ -384,6 +385,44 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 "correct_answer": data["correct_answer"],
             },
         )
+
+        serializer = PuzzleSerializer(puzzle, context={"request": request})
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="set-open-ended-puzzle",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def set_open_ended_puzzle(self, request, tour_pk=None, pk=None):
+        step = self.get_object()
+        if not self._user_can_edit_step_puzzle(request, step):
+            return Response(
+                {"error": "Only the tour creator can configure puzzles."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        payload = OpenEndedPuzzleUpsertSerializer(data=request.data)
+        payload.is_valid(raise_exception=True)
+        data = payload.validated_data
+
+        puzzle, created = self._upsert_base_puzzle(
+            step=step,
+            puzzle_type=Puzzle.OPEN_ENDED,
+            data=data,
+        )
+        puzzle.options = None
+        puzzle.correct_answer = data["correct_answer"]
+        puzzle.reference_image = None
+        puzzle.save(
+            update_fields=["options", "correct_answer", "reference_image", "updated_at"]
+        )
+
+        self._clear_other_puzzle_details(puzzle, Puzzle.OPEN_ENDED)
 
         serializer = PuzzleSerializer(puzzle, context={"request": request})
         return Response(

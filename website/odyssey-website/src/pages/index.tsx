@@ -202,12 +202,12 @@ export default function Home(): JSX.Element {
         <section className="lp-mascot-band">
           <div className="lp-container lp-mascot-inner">
             <div className="lp-mascot-text">
-              <span className="lp-section-label" style={{ color: '#FBBF24', background: 'rgba(251,191,36,0.15)' }}>Meet Babazilla</span>
+              <span className="lp-section-label" style={{ color: '#FBBF24', background: 'rgba(251,191,36,0.15)' }}>Meet Ody</span>
               <h2>Your Guide to Every Adventure</h2>
-              <p>Babazilla is Odyssey's mascot — curious, colourful, and always pointing you toward the next discovery. He'll be with you every step of the way.</p>
+              <p>Ody is Odyssey's mascot — curious, colourful, and always pointing you toward the next discovery. He'll be with you every step of the way.</p>
             </div>
             <div className="lp-mascot-images">
-              <img src={mascot2Src} alt="Babazilla standing" className="lp-mascot-img" />
+              <img src={mascot2Src} alt="Ody standing" className="lp-mascot-img" />
             </div>
           </div>
         </section>
@@ -216,7 +216,7 @@ export default function Home(): JSX.Element {
         <section className="lp-section lp-section--white" id="about">
           <div className="lp-container lp-about-grid">
             <div className="lp-about-mascot">
-              <img src={mascot1Src} alt="Babazilla mascot" className="lp-about-mascot-img" />
+              <img src={mascot1Src} alt="Ody mascot" className="lp-about-mascot-img" />
             </div>
             <div>
               <span className="lp-section-label">About the Project</span>

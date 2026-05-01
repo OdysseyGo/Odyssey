@@ -282,11 +282,41 @@ export default function getStyles(theme: ThemeName) {
       color: color.text,
       paddingHorizontal: Spacing.md,
     },
-    feedbackText: {
+    feedbackCard: {
       marginTop: Spacing.sm,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      borderRadius: Spacing.md,
+      borderWidth: 1,
+      borderColor: color.borderLight,
+      backgroundColor: color.foreground,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.sm,
+    },
+    feedbackCardSuccess: {
+      borderColor: color.easy,
+      backgroundColor: isDark ? 'rgba(22, 163, 74, 0.14)' : 'rgba(22, 163, 74, 0.08)',
+    },
+    feedbackCardError: {
+      borderColor: color.error,
+      backgroundColor: isDark ? 'rgba(220, 38, 38, 0.14)' : 'rgba(220, 38, 38, 0.06)',
+    },
+    feedbackIcon: {
+      marginTop: 1,
+    },
+    feedbackText: {
       color: color.subText,
       fontSize: 13,
       lineHeight: 18,
+      flex: 1,
+    },
+    feedbackTextSuccess: {
+      color: isDark ? '#BBF7D0' : '#166534',
+      fontWeight: '700',
+    },
+    feedbackTextError: {
+      color: isDark ? '#FECACA' : '#991B1B',
     },
     gemPuzzleFrame: {
       marginTop: Spacing.sm,
