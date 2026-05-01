@@ -313,11 +313,17 @@ class TourRewardService:
         completed_km = Decimal(str(progress.tour.walking_distance or 0.0)) / Decimal(
             "1000"
         )
-        user.total_walked_km += completed_km
+        is_own_ai_tour = progress.tour.generation_source == progress.tour.AI
+        km_eligible = progress.tour.creator_id != user.id or (
+            progress.tour.creator_id == user.id
+            and is_own_ai_tour
+        )
+        if km_eligible:
+            user.total_walked_km += completed_km
 
         reward_eligible = progress.tour.creator_id != user.id or (
             progress.tour.creator_id == user.id
-            and progress.tour.generation_source == progress.tour.AI
+            and is_own_ai_tour
         )
         should_apply_reward = not progress.xp_awarded and reward_eligible
         awarded_xp = 0
@@ -333,8 +339,11 @@ class TourRewardService:
                 BadgeService.check_badges(user, completed_progress=progress)
                 awarded_xp = progress.total_xp
 
-        user_update_fields = ["total_walked_km"]
+        user_update_fields = []
+        if km_eligible:
+            user_update_fields.append("total_walked_km")
         if should_apply_reward:
             user_update_fields.extend(["xp", "level", "tour_count"])
-        user.save(update_fields=user_update_fields)
+        if user_update_fields:
+            user.save(update_fields=user_update_fields)
         return awarded_xp
