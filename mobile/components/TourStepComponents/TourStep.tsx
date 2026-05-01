@@ -60,6 +60,7 @@ const COMPASS_HEADING_SMOOTHING_FAST_DELTA_DEGREES = 12;
 const COMPASS_HEADING_DEADBAND_DEGREES = 0.35;
 const COMPASS_HAPTIC_COOLDOWN_MS_BY_BAND = [120, 170, 240, 340, 480, 700];
 const COMPASS_HEADING_OFFSET_DEGREES = 0;
+const COMPASS_STATE_UPDATE_EPSILON = 0.01;
 const GEM_PARTICLES = [
   { x: 42, y: 98, r: 1.8 },
   { x: 58, y: 176, r: 1.3 },
@@ -858,7 +859,13 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
               );
             })();
       filteredHeadingRef.current = nextHeading;
-      setHeading(nextHeading);
+      setHeading((previousHeading) =>
+        previousHeading !== null &&
+        Math.abs(shortestAngleDelta(previousHeading, nextHeading)) <
+          COMPASS_HEADING_DEADBAND_DEGREES
+          ? previousHeading
+          : nextHeading
+      );
     });
 
     const appStateSub = AppState.addEventListener('change', (state) => {
@@ -883,7 +890,11 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
     const proximityLinear = Math.max(0, 1 - delta / COMPASS_PROXIMITY_RANGE_DEGREES);
     const proximity = Math.pow(proximityLinear, 1.6);
     proximityProgress.value = proximity;
-    setResonanceLevel(proximity);
+    setResonanceLevel((previousResonanceLevel) =>
+      Math.abs(previousResonanceLevel - proximity) < COMPASS_STATE_UPDATE_EPSILON
+        ? previousResonanceLevel
+        : proximity
+    );
 
     const now = Date.now();
     if (delta <= COMPASS_SOLVE_TOLERANCE_DEGREES) {
@@ -894,11 +905,17 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
 
       const heldFor = now - holdStartedAtMsRef.current;
       const progress = Math.min(1, heldFor / COMPASS_SOLVE_HOLD_MS);
-      setHoldProgress(progress);
+      setHoldProgress((previousHoldProgress) =>
+        Math.abs(previousHoldProgress - progress) < COMPASS_STATE_UPDATE_EPSILON
+          ? previousHoldProgress
+          : progress
+      );
 
       if (heldFor >= COMPASS_SOLVE_HOLD_MS) {
         solvedRef.current = true;
-        setHoldProgress(1);
+        setHoldProgress((previousHoldProgress) =>
+          previousHoldProgress === 1 ? previousHoldProgress : 1
+        );
         solvedShared.value = withTiming(1, { duration: 220 });
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         onSolve();
@@ -910,7 +927,9 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
       if (!stillWithinGrace) {
         holdStartedAtMsRef.current = null;
         lastInWindowAtMsRef.current = null;
-        setHoldProgress(0);
+        setHoldProgress((previousHoldProgress) =>
+          previousHoldProgress === 0 ? previousHoldProgress : 0
+        );
       }
     }
 
