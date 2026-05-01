@@ -415,21 +415,31 @@ export default function RegisterScreen() {
                         <Ionicons
                           name={agreedToTerms ? 'checkbox' : 'square-outline'}
                           size={22}
-                          color={errors.terms ? theme.error : agreedToTerms ? theme.primary : theme.subText}
+                          color={
+                            errors.terms
+                              ? theme.error
+                              : agreedToTerms
+                                ? theme.primary
+                                : theme.subText
+                          }
                         />
                       </TouchableOpacity>
                       <Text style={[styles.checkboxLabel, { color: theme.subText }]}>
                         {t('auth.termsPrefix')}{' '}
                         <Text
                           style={[styles.checkboxLink, { color: theme.primary }]}
-                          onPress={() => Linking.openURL('https://odysseygo.github.io/Odyssey/legal')}
+                          onPress={() =>
+                            Linking.openURL('https://odysseygo.github.io/Odyssey/legal')
+                          }
                         >
                           {t('auth.terms')}
-                        </Text>
-                        {' '}{t('auth.termsAnd')}{' '}
+                        </Text>{' '}
+                        {t('auth.termsAnd')}{' '}
                         <Text
                           style={[styles.checkboxLink, { color: theme.primary }]}
-                          onPress={() => Linking.openURL('https://odysseygo.github.io/Odyssey/legal')}
+                          onPress={() =>
+                            Linking.openURL('https://odysseygo.github.io/Odyssey/legal')
+                          }
                         >
                           {t('auth.privacy')}
                         </Text>

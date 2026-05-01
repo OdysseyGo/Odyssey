@@ -1,13 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-  Linking,
-  Image,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Linking, Image } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -46,7 +38,11 @@ export default function DisclaimerScreen() {
         {/* PLACEHOLDER IMAGE — replace View + Ionicons with:
             <Image source={require('@/assets/images/disclaimer.png')} style={styles.image} resizeMode="contain" /> */}
         <View style={styles.imagePlaceholder}>
-          <Image source={require('@/assets/images/mascotte3.png')} style={styles.image} resizeMode="contain" />
+          <Image
+            source={require('@/assets/images/mascotte3.png')}
+            style={styles.image}
+            resizeMode="contain"
+          />
         </View>
 
         <Text style={[styles.mascot, { color: theme.text }]}>{t('disclaimer.mascot')}</Text>
@@ -60,8 +56,8 @@ export default function DisclaimerScreen() {
             onPress={() => Linking.openURL('https://odysseygo.github.io/Odyssey/legal')}
           >
             {t('disclaimer.terms')}
-          </Text>
-          {' '}{t('disclaimer.legalAnd')}{' '}
+          </Text>{' '}
+          {t('disclaimer.legalAnd')}{' '}
           <Text
             style={[styles.link, { color: theme.primary }]}
             onPress={() => Linking.openURL('https://odysseygo.github.io/Odyssey/legal')}
@@ -110,7 +106,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    
   },
   image: {
     width: 240,
