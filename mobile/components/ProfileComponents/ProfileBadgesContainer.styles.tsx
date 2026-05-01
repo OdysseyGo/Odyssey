@@ -5,6 +5,7 @@ import { Spacing } from '@/constants/Spacing';
 export const profileBadgesContainerStyles = (theme: ThemeName) => {
   const color = Colors[theme];
   const isLight = theme === 'light';
+  const modalLight = Colors.light;
 
   return StyleSheet.create({
     container: {
@@ -158,7 +159,7 @@ export const profileBadgesContainerStyles = (theme: ThemeName) => {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: isLight ? 'rgba(255,255,255,0.72)' : 'rgba(15,23,42,0.7)',
+      backgroundColor: 'rgba(255,255,255,0.72)',
     },
     detailsCloseButton: {
       position: 'absolute',
@@ -169,9 +170,9 @@ export const profileBadgesContainerStyles = (theme: ThemeName) => {
       borderRadius: 17,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: isLight ? 'rgba(255,255,255,0.55)' : 'rgba(15,23,42,0.48)',
+      backgroundColor: 'rgba(255,255,255,0.55)',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: color.borderLight,
+      borderColor: modalLight.borderLight,
       zIndex: 2,
     },
     detailsBadgeShell: {
@@ -180,7 +181,7 @@ export const profileBadgesContainerStyles = (theme: ThemeName) => {
       borderRadius: 28,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: isLight ? 'rgba(255,255,255,0.55)' : 'rgba(15,23,42,0.42)',
+      backgroundColor: 'rgba(255,255,255,0.55)',
       marginBottom: Spacing.lg,
     },
     detailsTier: {
@@ -193,7 +194,7 @@ export const profileBadgesContainerStyles = (theme: ThemeName) => {
     detailsName: {
       fontSize: 22,
       fontWeight: '800',
-      color: color.text,
+      color: modalLight.text,
       textAlign: 'center',
       marginBottom: Spacing.sm,
     },
@@ -201,7 +202,7 @@ export const profileBadgesContainerStyles = (theme: ThemeName) => {
       fontSize: 14,
       lineHeight: 20,
       fontWeight: '500',
-      color: color.subText,
+      color: modalLight.subText,
       textAlign: 'center',
       marginBottom: Spacing.lg,
     },
@@ -217,22 +218,22 @@ export const profileBadgesContainerStyles = (theme: ThemeName) => {
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.sm,
       borderRadius: Spacing.borderRadius,
-      backgroundColor: isLight ? 'rgba(255,255,255,0.45)' : 'rgba(15,23,42,0.36)',
+      backgroundColor: 'rgba(255,255,255,0.45)',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: color.borderLight,
+      borderColor: modalLight.borderLight,
     },
     detailsInfoLinkItem: {
-      borderColor: isLight ? color.primary : color.secondary,
-      backgroundColor: isLight ? 'rgba(255,255,255,0.62)' : 'rgba(15,23,42,0.5)',
+      borderColor: modalLight.primary,
+      backgroundColor: 'rgba(255,255,255,0.62)',
     },
     detailsInfoText: {
       flex: 1,
       fontSize: 13,
       fontWeight: '700',
-      color: color.text,
+      color: modalLight.text,
     },
     detailsInfoLinkText: {
-      color: color.primary,
+      color: modalLight.primary,
     },
   });
 };

@@ -15,9 +15,9 @@ import { getBadgeTier, getXpLabel } from '@/lib/badgeVisuals';
 import HexBadge from './HexBadge';
 
 const TIER_GRADIENTS: Record<BadgeTier, readonly [string, string, string]> = {
-  gold: ['#fff7d6', '#f9d86a', '#c9891a'],
-  silver: ['#f8fafc', '#cbd5e1', '#64748b'],
-  bronze: ['#fff1df', '#f6aa64', '#9a4f1f'],
+  gold: ['#fff3b0', '#f7c948', '#b7791f'],
+  silver: ['#f5f7fa', '#c0cad6', '#5f6f83'],
+  bronze: ['#ffe1c2', '#e68a3f', '#8a3f16'],
   xp1: ['#eaf2ff', '#93c5fd', '#2563eb'],
   xp2: ['#e8fff0', '#86efac', '#16a34a'],
   xp3: ['#f2edff', '#c4b5fd', '#7c3aed'],
@@ -54,6 +54,8 @@ export default function ProfileBadgesContainer({
 
   const selectedBadgeTier = getBadgeTier(selectedBadge?.code);
   const selectedTierPalette = BADGE_TIER_PALETTE[selectedBadgeTier];
+  const selectedTierGradients = TIER_GRADIENTS[selectedBadgeTier];
+  const selectedAccentTextColor = selectedTierPalette.text;
   const selectedBadgeDate = useMemo(
     () => formatEarnedDate(selectedBadge?.earnedDate),
     [selectedBadge?.earnedDate]
@@ -155,7 +157,7 @@ export default function ProfileBadgesContainer({
             {selectedBadge ? (
               <>
                 <LinearGradient
-                  colors={TIER_GRADIENTS[selectedBadgeTier]}
+                  colors={selectedTierGradients}
                   locations={[0, 0.58, 1]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
@@ -164,7 +166,7 @@ export default function ProfileBadgesContainer({
                 <View style={styles.detailsTint} />
 
                 <Pressable style={styles.detailsCloseButton} onPress={() => setSelectedBadge(null)}>
-                  <Ionicons name="close" size={18} color={selectedTierPalette.text} />
+                  <Ionicons name="close" size={18} color={selectedAccentTextColor} />
                 </Pressable>
 
                 <View style={styles.detailsBadgeShell}>
@@ -178,7 +180,7 @@ export default function ProfileBadgesContainer({
                   />
                 </View>
 
-                <Text style={[styles.detailsTier, { color: selectedTierPalette.text }]}>
+                <Text style={[styles.detailsTier, { color: selectedAccentTextColor }]}>
                   {selectedBadgeTierLabel}
                 </Text>
                 <Text style={styles.detailsName}>{selectedBadge.name}</Text>
@@ -189,21 +191,13 @@ export default function ProfileBadgesContainer({
                 <View style={styles.detailsInfoGrid}>
                   {selectedBadgeLocation ? (
                     <View style={styles.detailsInfoItem}>
-                      <Ionicons
-                        name="location-outline"
-                        size={16}
-                        color={selectedTierPalette.text}
-                      />
+                      <Ionicons name="location-outline" size={16} color={selectedAccentTextColor} />
                       <Text style={styles.detailsInfoText}>{selectedBadgeLocation}</Text>
                     </View>
                   ) : null}
                   {selectedBadgeDate ? (
                     <View style={styles.detailsInfoItem}>
-                      <Ionicons
-                        name="calendar-outline"
-                        size={16}
-                        color={selectedTierPalette.text}
-                      />
+                      <Ionicons name="calendar-outline" size={16} color={selectedAccentTextColor} />
                       <Text style={styles.detailsInfoText}>{selectedBadgeDate}</Text>
                     </View>
                   ) : null}
@@ -217,7 +211,7 @@ export default function ProfileBadgesContainer({
                       disabled={!selectedBadgeHasTour}
                       onPress={handleSourceTourPress}
                     >
-                      <Ionicons name="map-outline" size={16} color={selectedTierPalette.text} />
+                      <Ionicons name="map-outline" size={16} color={selectedAccentTextColor} />
                       <Text
                         style={[
                           styles.detailsInfoText,
@@ -230,14 +224,14 @@ export default function ProfileBadgesContainer({
                         <Ionicons
                           name="chevron-forward"
                           size={16}
-                          color={selectedTierPalette.text}
+                          color={selectedAccentTextColor}
                         />
                       ) : null}
                     </Pressable>
                   ) : null}
                   {typeof selectedBadge.mistakeCount === 'number' ? (
                     <View style={styles.detailsInfoItem}>
-                      <Ionicons name="flag-outline" size={16} color={selectedTierPalette.text} />
+                      <Ionicons name="flag-outline" size={16} color={selectedAccentTextColor} />
                       <Text style={styles.detailsInfoText}>
                         {t('profile.badgeMistakes', {
                           count: selectedBadge.mistakeCount,

@@ -373,15 +373,13 @@ class TourRewardService:
         )
         is_own_ai_tour = progress.tour.generation_source == progress.tour.AI
         km_eligible = progress.tour.creator_id != user.id or (
-            progress.tour.creator_id == user.id
-            and is_own_ai_tour
+            progress.tour.creator_id == user.id and is_own_ai_tour
         )
         if km_eligible:
             user.total_walked_km += completed_km
 
         reward_eligible = progress.tour.creator_id != user.id or (
-            progress.tour.creator_id == user.id
-            and is_own_ai_tour
+            progress.tour.creator_id == user.id and is_own_ai_tour
         )
         should_apply_reward = not progress.xp_awarded and reward_eligible
         awarded_xp = 0
