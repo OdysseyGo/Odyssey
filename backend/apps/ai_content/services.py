@@ -13,6 +13,7 @@ from django.db import transaction
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
+    CompassPuzzleDetail,
     Puzzle,
     Tour,
     TourStep,
@@ -252,25 +253,15 @@ class GeminiService:
                         continue
 
                 # Create puzzle if present (for PUZZLE and HYBRID modes)
+                puzzle_created = False
                 if puzzle_data:
-                    puzzle = Puzzle.objects.create(
+                    puzzle_created = self._create_puzzle_from_ai(
                         step=step,
-                        puzzle_type=puzzle_data.get("type", "TRIVIA"),
-                        question=puzzle_data["question"],
-                        options=puzzle_data.get("options"),
-                        correct_answer=puzzle_data["answer"],
-                        hint=puzzle_data.get("hint", ""),
-                        xp_reward=puzzle_data.get("xp", 25),
+                        step_data=step_data,
+                        puzzle_data=puzzle_data,
+                        candidate_places=candidate_places,
                     )
-                    if puzzle.puzzle_type == Puzzle.TRIVIA:
-                        TriviaPuzzleDetail.objects.update_or_create(
-                            puzzle=puzzle,
-                            defaults={
-                                "options": puzzle.options or [],
-                                "correct_answer": puzzle.correct_answer,
-                            },
-                        )
-                elif mode in ("PUZZLE", "HYBRID"):
+                if not puzzle_created and mode in ("PUZZLE", "HYBRID"):
                     puzzle = Puzzle.objects.create(
                         step=step,
                         puzzle_type="TRIVIA",
@@ -321,6 +312,59 @@ class GeminiService:
 
     OUTLIER_MULTIPLIER = 2.5
     MIN_CANDIDATES_AFTER_TRIM = 4
+
+    @staticmethod
+    def _bearing_degrees(lat1: float, lng1: float, lat2: float, lng2: float) -> int:
+        """Initial compass bearing from point 1 to point 2, normalized to [0, 359]."""
+        lat1_r = math.radians(lat1)
+        lat2_r = math.radians(lat2)
+        dlng_r = math.radians(lng2 - lng1)
+        x = math.sin(dlng_r) * math.cos(lat2_r)
+        y = math.cos(lat1_r) * math.sin(lat2_r) - math.sin(lat1_r) * math.cos(
+            lat2_r
+        ) * math.cos(dlng_r)
+        bearing = math.degrees(math.atan2(x, y))
+        return int(round((bearing + 360) % 360)) % 360
+
+    def _resolve_compass_heading(
+        self,
+        step_data: dict,
+        puzzle_data: dict,
+        candidate_places: list[dict],
+    ) -> Optional[int]:
+        """
+        Determine a 0-359 target heading for a COMPASS puzzle.
+
+        Preference order:
+          1. ``target_landmark`` resolves to a verified place — compute the
+             real bearing from the step's coordinates to that landmark.
+          2. ``target_heading_degrees`` (or legacy ``answer``) is an int in
+             [0, 359].
+        Returns None if neither is usable.
+        """
+        landmark_name = puzzle_data.get("target_landmark")
+        if isinstance(landmark_name, str) and landmark_name.strip():
+            match = self._fuzzy_match_place(landmark_name, candidate_places)
+            if match and (
+                float(match["latitude"]) != float(step_data["latitude"])
+                or float(match["longitude"]) != float(step_data["longitude"])
+            ):
+                return self._bearing_degrees(
+                    float(step_data["latitude"]),
+                    float(step_data["longitude"]),
+                    float(match["latitude"]),
+                    float(match["longitude"]),
+                )
+
+        raw = puzzle_data.get("target_heading_degrees")
+        if raw is None:
+            raw = puzzle_data.get("answer")
+        try:
+            heading = int(round(float(raw)))
+        except (TypeError, ValueError):
+            return None
+        heading %= 360
+        return heading if 0 <= heading <= 359 else None
 
     @staticmethod
     def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -427,6 +471,85 @@ class GeminiService:
                 best_match = place
 
         return best_match if best_score >= threshold else None
+
+    # ------------------------------------------------------------------
+    # Puzzle persistence
+    # ------------------------------------------------------------------
+
+    SUPPORTED_AI_PUZZLE_TYPES = (Puzzle.TRIVIA, Puzzle.COMPASS)
+
+    def _create_puzzle_from_ai(
+        self,
+        *,
+        step: TourStep,
+        step_data: dict,
+        puzzle_data: dict,
+        candidate_places: list[dict],
+    ) -> bool:
+        """
+        Persist a Puzzle (and its type-specific detail) from an AI payload.
+
+        Returns True on success, False if the payload is unusable so the
+        caller can fall back to the default trivia puzzle.
+        """
+        puzzle_type = (puzzle_data.get("type") or "TRIVIA").upper()
+        if puzzle_type not in self.SUPPORTED_AI_PUZZLE_TYPES:
+            puzzle_type = Puzzle.TRIVIA
+
+        question = puzzle_data.get("question")
+        if not question:
+            return False
+
+        if puzzle_type == Puzzle.COMPASS:
+            heading = self._resolve_compass_heading(
+                step_data, puzzle_data, candidate_places
+            )
+            if heading is None:
+                logger.warning(
+                    "AI returned an unusable COMPASS puzzle for step '%s'; "
+                    "falling back.",
+                    step_data.get("title"),
+                )
+                return False
+
+            puzzle = Puzzle.objects.create(
+                step=step,
+                puzzle_type=Puzzle.COMPASS,
+                question=question,
+                options=None,
+                correct_answer=str(heading),
+                hint=puzzle_data.get("hint", ""),
+                xp_reward=puzzle_data.get("xp", 25),
+            )
+            CompassPuzzleDetail.objects.create(
+                puzzle=puzzle,
+                target_heading_degrees=heading,
+            )
+            return True
+
+        # Default: TRIVIA
+        answer = puzzle_data.get("answer")
+        options = puzzle_data.get("options")
+        if not answer or not isinstance(options, list) or len(options) < 2:
+            return False
+
+        puzzle = Puzzle.objects.create(
+            step=step,
+            puzzle_type=Puzzle.TRIVIA,
+            question=question,
+            options=options,
+            correct_answer=answer,
+            hint=puzzle_data.get("hint", ""),
+            xp_reward=puzzle_data.get("xp", 25),
+        )
+        TriviaPuzzleDetail.objects.update_or_create(
+            puzzle=puzzle,
+            defaults={
+                "options": options,
+                "correct_answer": answer,
+            },
+        )
+        return True
 
     # ------------------------------------------------------------------
     # Validation
@@ -569,17 +692,38 @@ class GeminiService:
         """
         mode_instructions = {
             "STORY": "Focus on rich narrative storytelling. Each step should have detailed historical or thematic descriptions that immerse the user in the story. No puzzles needed.",
-            "PUZZLE": "Focus on interactive challenges. Each step MUST have a puzzle (trivia question or AR). Keep descriptions brief. Some trivia questions should be formatted as a riddle, others should be normal trivia questions. Make the options challenging.",
+            "PUZZLE": "Focus on interactive challenges. Each step MUST have a puzzle (trivia question, AR, or compass). Keep descriptions brief. Some trivia questions should be formatted as a riddle, others should be normal trivia questions. Make the options challenging.",
             "HYBRID": "Balance storytelling with puzzles. Each step should have both a narrative description AND a puzzle challenge.",
         }
 
         puzzle_schema = """
+        Each puzzle is one of two types: TRIVIA or COMPASS. Pick whichever fits
+        the location best; mix the two across the tour so it does not feel
+        repetitive (aim for at least one COMPASS puzzle when there are 3+ steps).
+
+        TRIVIA — multiple-choice question grounded in the location's history,
+        architecture, or culture:
         "puzzle": {
             "type": "TRIVIA",
             "question": "What year was this building constructed?",
             "options": ["1850", "1875", "1900", "1925"],
             "answer": "1875",
             "hint": "It was built during the Victorian era",
+            "xp": 25
+        }
+
+        COMPASS — asks the user to physically face a direction. The phone
+        vibrates as they rotate toward the target heading. STRONGLY PREFER
+        specifying "target_landmark" with the EXACT name of another stop from
+        the VERIFIED LOCATIONS list — the backend will compute the real
+        bearing from this step to that landmark. Only fall back to a raw
+        "target_heading_degrees" integer (0-359, 0=N, 90=E, 180=S, 270=W)
+        when no nearby landmark fits the question:
+        "puzzle": {
+            "type": "COMPASS",
+            "question": "Face the direction of the Blue Mosque from where you stand.",
+            "target_landmark": "Blue Mosque",
+            "hint": "Its silhouette is visible across the square.",
             "xp": 25
         }"""
 
