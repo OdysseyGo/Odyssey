@@ -465,6 +465,9 @@
       "optionsRequired": "Opciones (Marca la respuesta correcta) *",
       "optionPlaceholder": "Opción {{number}}",
       "addOption": "Añadir Opción",
+      "correctAnswer": "Respuesta Correcta",
+      "correctAnswerPlaceholder": "p. ej., imperio bizantino",
+      "correctAnswerHint": "El usuario aprueba si su respuesta escrita se parece lo suficiente a esta.",
       "hintLabel": "Pista (Opcional)",
       "hintPlaceholder": "Ej. Mira la placa sobre la puerta.",
       "hintText": "Una pista útil si el usuario se atasca."

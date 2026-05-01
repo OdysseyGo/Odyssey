@@ -1,6 +1,11 @@
 import { markerColors } from '@/constants/Colors';
 
-export type PuzzleType = 'multiple-choice' | 'picture-compare' | 'ar-code' | 'compass-bearing';
+export type PuzzleType =
+  | 'multiple-choice'
+  | 'open-ended'
+  | 'picture-compare'
+  | 'ar-code'
+  | 'compass-bearing';
 
 export interface MultipleChoiceOption {
   id: string;
@@ -19,6 +24,11 @@ export interface PictureComparePuzzle {
   type: 'picture-compare';
   question: string;
   referenceImageUri?: string;
+}
+
+export interface OpenEndedPuzzle {
+  type: 'open-ended';
+  question: string;
 }
 
 export interface ArCodePuzzle {
@@ -42,6 +52,7 @@ export interface CompassBearingPuzzle {
 
 export type Puzzle =
   | MultipleChoicePuzzle
+  | OpenEndedPuzzle
   | PictureComparePuzzle
   | ArCodePuzzle
   | CompassBearingPuzzle;

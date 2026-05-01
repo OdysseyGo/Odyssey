@@ -252,6 +252,11 @@ class TourRewardService:
             "requires_submission": True,
             "max_failed_attempts": 0,
         },
+        Puzzle.OPEN_ENDED: {
+            "xp": Puzzle.TRIVIA_XP_REWARD,
+            "requires_submission": True,
+            "max_failed_attempts": AR_PICTURE_FAILURE_WINDOW - 1,
+        },
         Puzzle.AR: {
             "xp": Puzzle.NON_TRIVIA_XP_REWARD,
             "requires_submission": True,
@@ -288,10 +293,18 @@ class TourRewardService:
             accepted=False,
         )
         ar_picture_failed_attempts = failed_attempts.filter(
-            puzzle__puzzle_type__in=(Puzzle.AR, Puzzle.PICTURE_COMPARE)
+            puzzle__puzzle_type__in=(
+                Puzzle.AR,
+                Puzzle.PICTURE_COMPARE,
+                Puzzle.OPEN_ENDED,
+            )
         ).count()
         other_failed_attempts = failed_attempts.exclude(
-            puzzle__puzzle_type__in=(Puzzle.AR, Puzzle.PICTURE_COMPARE)
+            puzzle__puzzle_type__in=(
+                Puzzle.AR,
+                Puzzle.PICTURE_COMPARE,
+                Puzzle.OPEN_ENDED,
+            )
         ).count()
         ar_picture_badge_penalty = (
             ar_picture_failed_attempts // cls.AR_PICTURE_FAILURE_WINDOW
@@ -335,7 +348,7 @@ class TourRewardService:
         if failed_count == 0:
             return True
 
-        if puzzle.puzzle_type in (Puzzle.AR, Puzzle.PICTURE_COMPARE):
+        if puzzle.puzzle_type in (Puzzle.AR, Puzzle.PICTURE_COMPARE, Puzzle.OPEN_ENDED):
             return failed_count < cls.AR_PICTURE_FAILURE_WINDOW
 
         return False
