@@ -18,6 +18,7 @@ export type User = {
   rating: number;
   avatar_url: string;
   credit?: number;
+  total_walked_km: number | string;
 };
 
 export type AddFriendUserDisplayDTO = {

@@ -21,7 +21,7 @@ import type { Tour } from '@/api/tours';
 import type { MapMarkerProps } from './MapMarker.config';
 import type { Region } from './TourMap.config';
 
-import { getTourProgress, deleteTourProgress } from '@/api/tourProgress';
+import { deleteTourProgress } from '@/api/tourProgress';
 import { useInterstitial } from '@/components/Ads/useInterstitial';
 
 export default function MapScreen() {
@@ -147,24 +147,18 @@ export default function MapScreen() {
   }, [tour, isActive]);
 
   // Active tour handlers
-  const handleTourComplete = useCallback(async () => {
-    if (completingTourRef.current) return;
-    completingTourRef.current = true;
+  const handleTourComplete = useCallback(
+    async (awardedXP: number) => {
+      if (completingTourRef.current) return;
+      completingTourRef.current = true;
 
-    let nextFinalXP = earnedXP;
-    if (progressId) {
-      try {
-        const progress = await getTourProgress(progressId);
-        nextFinalXP = progress.total_xp;
-      } catch {
-        nextFinalXP = earnedXP;
-      }
-    }
-
-    await showTourCompleteInterstitial();
-    setFinalXP(nextFinalXP);
-    setShowCompleteModal(true);
-  }, [progressId, earnedXP, showTourCompleteInterstitial]);
+      await showTourCompleteInterstitial();
+      // Backend is source of truth: replay completions return awarded_xp=0.
+      setFinalXP(Math.max(0, awardedXP ?? 0));
+      setShowCompleteModal(true);
+    },
+    [showTourCompleteInterstitial]
+  );
 
   const handleEndTourPress = useCallback(() => setShowEndConfirmModal(true), []);
 

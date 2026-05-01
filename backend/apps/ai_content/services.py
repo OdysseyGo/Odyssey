@@ -281,7 +281,9 @@ class GeminiService:
                         options=puzzle_data.get("options"),
                         correct_answer=puzzle_data["answer"],
                         hint=puzzle_data.get("hint", ""),
-                        xp_reward=puzzle_data.get("xp", 25),
+                        xp_reward=Puzzle.fixed_xp_reward_for_type(
+                            puzzle_data.get("type", Puzzle.TRIVIA)
+                        ),
                     )
                     if puzzle.puzzle_type == Puzzle.TRIVIA:
                         TriviaPuzzleDetail.objects.update_or_create(
@@ -304,7 +306,7 @@ class GeminiService:
                         ],
                         correct_answer=step_data["title"],
                         hint="Look at the sign or landmark nearby.",
-                        xp_reward=10,
+                        xp_reward=Puzzle.fixed_xp_reward_for_type(Puzzle.TRIVIA),
                     )
                     TriviaPuzzleDetail.objects.update_or_create(
                         puzzle=puzzle,

@@ -197,6 +197,7 @@ function StoryStepView({ step }: StoryStepViewProps) {
 interface MultipleChoiceViewProps {
   puzzle: MultipleChoicePuzzle;
   isSolved: boolean;
+  isFinished?: boolean;
   onSolve: () => void;
   onAnswered?: () => void;
   stepId?: string;
@@ -205,6 +206,7 @@ interface MultipleChoiceViewProps {
 function MultipleChoiceView({
   puzzle,
   isSolved,
+  isFinished = false,
   onSolve,
   onAnswered,
   stepId,
@@ -218,9 +220,10 @@ function MultipleChoiceView({
   const persistedAnswer = stepId ? (stepAnswers.get(stepId) ?? null) : null;
   const persistedWrongAttemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
   const hasPersistedWrongAttempt = persistedWrongAttemptCount > 0 && !persistedAnswer && !isSolved;
+  const shouldRevealAnswer = isSolved || isFinished || hasPersistedWrongAttempt;
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(persistedAnswer);
   const [hasSubmitted, setHasSubmitted] = useState(
-    persistedAnswer !== null || hasPersistedWrongAttempt
+    persistedAnswer !== null || hasPersistedWrongAttempt || isFinished
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -305,7 +308,7 @@ function MultipleChoiceView({
   const getOptionStyle = (optionId: string) => {
     const baseStyle: object[] = [styles.optionButton];
 
-    if (hasSubmitted || isSolved) {
+    if (hasSubmitted || shouldRevealAnswer) {
       const option = puzzle.options.find((opt) => opt.id === optionId);
       if (option?.isCorrect) {
         baseStyle.push(styles.optionButtonCorrect);
@@ -334,7 +337,7 @@ function MultipleChoiceView({
         {puzzle.options.map((option) => {
           const isWrongSelected =
             hasSubmitted && selectedOptionId === option.id && !option.isCorrect;
-          const isCorrectRevealed = (hasSubmitted || isSolved) && option.isCorrect;
+          const isCorrectRevealed = (hasSubmitted || shouldRevealAnswer) && option.isCorrect;
           const animStyle = isWrongSelected
             ? { transform: [{ translateX: shakeAnim }] }
             : isCorrectRevealed
@@ -363,8 +366,12 @@ function MultipleChoiceView({
         })}
       </View>
 
-      {hasPersistedWrongAttempt && !isSolved && (
-        <Text style={styles.exhaustedHint}>You have already answered this question.</Text>
+      {(hasPersistedWrongAttempt || isFinished) && !isSolved && (
+        <Text style={styles.exhaustedHint}>
+          {isFinished
+            ? 'This question is finished. The correct answer is revealed.'
+            : 'You have already answered this question.'}
+        </Text>
       )}
     </View>
   );
@@ -773,6 +780,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
 interface PuzzleStepViewProps {
   step: PuzzleStep;
   isSolved: boolean;
+  isFinished?: boolean;
   onSolve: () => void;
   onAnswered?: () => void;
 }
@@ -1150,7 +1158,7 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
   );
 }
 
-function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewProps) {
+function PuzzleStepView({ step, isSolved, isFinished, onSolve, onAnswered }: PuzzleStepViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
 
@@ -1198,6 +1206,7 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
           key={step.id}
           puzzle={step.puzzle}
           isSolved={isSolved}
+          isFinished={isFinished}
           onSolve={onSolve}
           onAnswered={onAnswered}
           stepId={step.id}
@@ -1231,7 +1240,13 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
   );
 }
 
-export default function TourStepComponent({ step, isSolved, onSolve, onAnswered }: TourStepProps) {
+export default function TourStepComponent({
+  step,
+  isSolved,
+  isFinished,
+  onSolve,
+  onAnswered,
+}: TourStepProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   return (
@@ -1239,7 +1254,13 @@ export default function TourStepComponent({ step, isSolved, onSolve, onAnswered 
       {step.type === 'story' && <StoryStepView step={step} />}
 
       {step.type === 'puzzle' && (
-        <PuzzleStepView step={step} isSolved={isSolved} onSolve={onSolve} onAnswered={onAnswered} />
+        <PuzzleStepView
+          step={step}
+          isSolved={isSolved}
+          isFinished={isFinished}
+          onSolve={onSolve}
+          onAnswered={onAnswered}
+        />
       )}
     </View>
   );
