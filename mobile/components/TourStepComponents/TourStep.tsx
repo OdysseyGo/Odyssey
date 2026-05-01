@@ -776,6 +776,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPreparingAr, setIsPreparingAr] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [feedbackTone, setFeedbackTone] = useState<'neutral' | 'success' | 'error'>('neutral');
   const [maxAttempts, setMaxAttempts] = useState(MAX_ATTEMPTS);
   const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
   const isExhausted = attemptCount >= maxAttempts;
@@ -852,30 +853,35 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
     const trimmedCode = codeInput.trim();
     if (!trimmedCode) {
       setFeedback('Enter the secret code first.');
+      setFeedbackTone('error');
       return;
     }
 
     setIsSubmitting(true);
     setFeedback('Checking code...');
+    setFeedbackTone('neutral');
     try {
       const response = await submitArCode(progressId, trimmedCode);
       if (typeof response.max_attempts === 'number') {
         setMaxAttempts(response.max_attempts);
       }
       if (response.accepted) {
-        setFeedback('Code verified.');
+        setFeedback('Code accepted. This AR challenge is complete.');
+        setFeedbackTone('success');
         onSolve();
       } else {
         if (stepId) recordAttempt(stepId);
         const newCount = response.attempt_count ?? attemptCount + 1;
         if (newCount >= maxAttempts) {
           setFeedback('Code is not correct. No attempts remaining.');
+          setFeedbackTone('error');
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
             `Code is not correct. ${maxAttempts - newCount} attempt${maxAttempts - newCount === 1 ? '' : 's'} remaining.`
           );
+          setFeedbackTone('error');
         }
       }
     } catch (error: any) {
@@ -892,6 +898,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
       }
       console.error('submit ar code failed', error);
       setFeedback('Could not verify code right now. Please try again.');
+      setFeedbackTone('error');
     } finally {
       setIsSubmitting(false);
     }
@@ -970,7 +977,31 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
       </Pressable>
 
       {feedback ? (
-        <Text style={[styles.feedbackText, isExhausted && styles.exhaustedText]}>{feedback}</Text>
+        <View
+          style={[
+            styles.feedbackCard,
+            feedbackTone === 'success' && styles.feedbackCardSuccess,
+            feedbackTone === 'error' && styles.feedbackCardError,
+          ]}
+        >
+          {feedbackTone === 'success' ? (
+            <MaterialCommunityIcons
+              name="check-circle"
+              size={16}
+              color={Colors[theme].easy}
+              style={styles.feedbackIcon}
+            />
+          ) : null}
+          <Text
+            style={[
+              styles.feedbackText,
+              feedbackTone === 'success' && styles.feedbackTextSuccess,
+              feedbackTone === 'error' && styles.feedbackTextError,
+            ]}
+          >
+            {feedback}
+          </Text>
+        </View>
       ) : null}
       {isExhausted && !isSolved && (
         <Text style={styles.exhaustedHint}>Confirm your location and press Next to continue.</Text>
