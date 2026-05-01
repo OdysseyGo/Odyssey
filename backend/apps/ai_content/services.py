@@ -9,7 +9,7 @@ import threading
 from typing import Optional
 
 from django.conf import settings
-from django.db import connection, transaction
+from django.db import close_old_connections, connection, transaction
 from google import genai
 from google.genai import types
 
@@ -121,6 +121,7 @@ class GeminiService:
 
         # ---- Step 2: Build RAG prompt with verified places ----
         ar_models = self._load_ar_catalog() if include_ar else []
+        close_old_connections()
         prompt = self._build_prompt(
             location_query,
             theme,

@@ -30,7 +30,11 @@ class Command(BaseCommand):
 
         cutoff = timezone.now() - timedelta(days=days)
         queryset = GenerationJob.objects.filter(
-            status__in=[GenerationJob.SUCCESS, GenerationJob.FAILED],
+            status__in=[
+                GenerationJob.SUCCESS,
+                GenerationJob.FAILED,
+                GenerationJob.CANCELLED,
+            ],
             updated_at__lt=cutoff,
         )
         count = queryset.count()

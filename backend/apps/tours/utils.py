@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 
 import googlemaps
 from django.core.cache import cache
+from django.db import close_old_connections
 
 from .models import Tour, TourStep
 
@@ -151,6 +152,7 @@ class GoogleMapsFacade:
         cached = cache.get(cache_key)
         if cached is not None:
             return cached
+        close_old_connections()
 
         places: List[Dict[str, Any]] = []
         seen_place_ids: set = set()
@@ -209,6 +211,7 @@ class GoogleMapsFacade:
         result = places[:max_results]
         if result:
             cache.set(cache_key, result, PLACES_CACHE_TTL_SECONDS)
+            close_old_connections()
         return result
 
     def calculate_route_metrics(self, steps: List[TourStep]) -> Dict[str, Any]:
