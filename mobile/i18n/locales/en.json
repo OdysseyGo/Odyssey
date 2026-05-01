@@ -36,6 +36,12 @@
     "remembered": "Ooh, I remembered!",
     "alreadyHaveAccount": "Already have an account? Log In",
     "verify": "Verify",
+    "sendCode": "Send Code",
+    "enterCode": "Enter Reset Code",
+    "otpCode": "Reset Code",
+    "otpCodePlaceholder": "6-digit code",
+    "codeSentSubtitle": "We sent a 6-digit code to {{email}}. Enter it below to reset your password.",
+    "codeSentBanner": "Code sent! Check your inbox (and spam folder).",
     "resetPassword": "Reset Password",
     "updatePassword": "Update Password",
     "cancel": "Cancel",
@@ -71,7 +77,9 @@
       "usernameEmailMismatch": "Username and email do not match",
       "somethingWentWrong": "Something went wrong",
       "bothFieldsRequired": "Both fields are required",
-      "couldNotUpdate": "Could not update password"
+      "couldNotUpdate": "Could not update password",
+      "codeRequired": "Please enter the reset code",
+      "invalidCode": "Invalid or expired code. Please try again."
     },
     "userCreated": "User has been created!"
   },
