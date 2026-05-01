@@ -227,5 +227,5 @@ Follow the steps below to configure S3 for your environment:
 Need to have a .p8 key from APN services for sending notifications. Also backend needs another run with 
 
    ```bash
-   python manageçpy qcluster
+   python manage.py send_notifications
    ```

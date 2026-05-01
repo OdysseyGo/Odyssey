@@ -56,6 +56,7 @@ from apps.gamification.visuals import BadgeVisualService
 from apps.tours.models import ARModel, Review, Tour
 from apps.tours.utils import GoogleMapsFacade
 from apps.users.models import User
+from apps.notifications.utils import create_notification
 
 # ── User Management ──────────────────────────────────────────────────
 
@@ -241,6 +242,14 @@ class AdminTourViewSet(ModelViewSet):
         tour.save(update_fields=["status"])
 
         return Response({"detail": "Tour approved and published."})
+    
+        for follower in tour.creator.followers.all():
+            create_notification(
+                user=follower,
+                title="New Adventure!",
+                body=f"One of your followed user \'{tour.creator.username}\' published a new tour in {tour.state}.",
+                data={"tour_id": tour.id, "type": "new_tour"}
+            )
 
     @action(detail=True, methods=["post"], url_path="reject")
     def reject(self, request, pk=None):

@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken  # login token
 
+from apps.notifications.utils import create_notification
 from apps.gamification.api.serializers import UserBadgeSerializer
 from apps.gamification.models import TourProgress, UserBadge
 from apps.tours.api.serializers import TourSerializer
@@ -316,6 +317,13 @@ class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
         )
         User.objects.filter(id=follow.follower_id).update(
             following_count=F("following_count") + 1
+        )
+
+        create_notification(
+            user=follow.following, 
+            title="New Follower!",
+            body=f"{follow.follower.username} is now following you!",
+            data={"follower_id": follow.follower.id,  "type": "new_follower"}
         )
 
     def perform_destroy(self, instance):

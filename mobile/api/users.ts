@@ -111,6 +111,23 @@ export type FollowingFeedResponse = {
   results: FeedItem[];
 };
 
+// Notification related types
+export type DevicePlatform = 'ios' | 'android';
+
+export type DeviceTokenRegistrationPayload = {
+  device_token: string;
+  platform: DevicePlatform;
+};
+
+export type DeviceTokenResponse = {
+  id: number;
+  device_token: string;
+  platform: DevicePlatform;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 // API functions
 
 /**
@@ -309,4 +326,16 @@ export const getFollowingFeed = (page: number = 1) =>
   apiRequest<FollowingFeedResponse>({
     url: `/api/users/following-feed/`,
     params: { page },
+  });
+
+/**
+ * POST /api/notifications/device-tokens/register_token/
+ * Registers or updates the push notification token for the current user.
+ *
+ */
+export const registerDeviceToken = (payload: DeviceTokenRegistrationPayload) =>
+  apiRequest<DeviceTokenResponse, DeviceTokenRegistrationPayload>({
+    method: 'post',
+    url: '/api/notifications/device-tokens/register_token/',
+    data: payload,
   });

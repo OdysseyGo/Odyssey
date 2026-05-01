@@ -18,13 +18,14 @@ import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { useTranslation } from 'react-i18next';
+import * as Notifications from 'expo-notifications';
 
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
 import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import BackButton from '@/components/common/BackButton';
-import { login, UserCredentials } from '@/api/users';
+import { login, UserCredentials, registerDeviceToken } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -100,6 +101,26 @@ export default function LoginScreen() {
       const response = await login(credentials);
       SecureStore.setItem('userToken', response.access);
       SecureStore.setItem('refreshToken', response.refresh);
+      try {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus === 'granted') {
+        const tokenData = await Notifications.getDevicePushTokenAsync();
+        const token = tokenData.data;
+        await registerDeviceToken({
+          device_token: token, 
+          platform: Platform.OS === 'ios' ? 'ios' : 'android'
+        });
+      }
+    } catch (pushError) {
+      console.warn('Push token registration failed:', pushError);
+    }
       router.replace('/(tabs)/profile');
     } catch (e) {
       console.error(e);

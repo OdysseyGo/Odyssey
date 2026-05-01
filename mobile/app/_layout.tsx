@@ -4,10 +4,9 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import React, { useEffect } from 'react';
-import { Platform } from 'react-native';
+import { useRouter } from 'expo-router';
 import 'react-native-reanimated';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -51,38 +50,6 @@ export default function RootLayout() {
     if (error) throw error;
   }, [error]);
 
-  useEffect(() => {
-    async function setupNotifications() {
-      if (Platform.OS === 'ios' && !Device.isDevice) {
-        console.log('Must use physical device for Push Notifications');
-      }
-
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      
-      if (finalStatus !== 'granted') {
-        console.log('Failed to get push token for push notification!');
-        return;
-      }
-
-      try {
-        const token = await Notifications.getDevicePushTokenAsync();
-        
-        console.log("APPLE DEVICE TOKEN:", token.data);
-
-        // TODO: Once the user is logged in, you will want to send `token.data` 
-      } catch (error) {
-        console.error("Error getting push token", error);
-      }
-    }
-
-    setupNotifications();
-  }, []);
 
   useEffect(() => {
     if (loaded) {
@@ -107,6 +74,23 @@ function RootLayoutNav() {
 function RootLayoutNavigator() {
   const colorTheme = useColorTheme();
   const themeKey = colorTheme;
+  const router = useRouter(); 
+
+  useEffect(() => {
+    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data;
+
+      if (data?.type === 'new_tour' && data?.tour_id) {
+        router.push(`/tour/${data.tour_id}`);
+      } 
+      else if (data?.type === 'new_follower' && data?.follower_id) {
+        router.push(`/profile?userId=${data.follower_id}`);
+      }
+    });
+    return () => {
+      responseListener.remove(); 
+    };
+  }, []);
 
   return (
     <TutorialProvider>
