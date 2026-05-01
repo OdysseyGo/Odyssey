@@ -1,11 +1,15 @@
+import json
+
 from django.db import transaction
 from django.db.models import Avg, Count, Q
+from django.http import HttpResponse
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import CreateAPIView
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ViewSet
@@ -18,15 +22,21 @@ from apps.admin_dashboard.api.filters import (
 from apps.admin_dashboard.api.pagination import AdminPagination
 from apps.admin_dashboard.api.permissions import IsStaffUser
 from apps.admin_dashboard.api.serializers import (
+    AdminARModelSerializer,
     AdminTourDetailSerializer,
     AdminTourListSerializer,
     AdminUserDetailSerializer,
     AdminUserListSerializer,
     AdminUserUpdateSerializer,
+    BadgeVisualBundleSerializer,
+    BadgeVisualOverrideSerializer,
+    BadgeVisualTemplateSerializer,
     BanRecordSerializer,
     BanUserSerializer,
     BulkUserActionSerializer,
     DashboardSummarySerializer,
+    PictureCompareConfigSerializer,
+    PictureCompareTuningSerializer,
     ReportActionSerializer,
     ReportCreateSerializer,
     ReportSerializer,
@@ -35,8 +45,16 @@ from apps.admin_dashboard.api.serializers import (
 )
 from apps.admin_dashboard.models import BanRecord, Report
 from apps.admin_dashboard.services.analytics import AnalyticsService
-from apps.gamification.models import TourProgress
-from apps.tours.models import Review, Tour
+from apps.gamification.models import (
+    Badge,
+    PictureCompareConfig,
+    TourProgress,
+)
+from apps.gamification.picture_compare import compare_picture_similarity
+from apps.gamification.services import BadgeService
+from apps.gamification.visuals import BadgeVisualService
+from apps.tours.models import ARModel, Review, Tour
+from apps.tours.utils import GoogleMapsFacade
 from apps.users.models import User
 
 # ── User Management ──────────────────────────────────────────────────
@@ -56,13 +74,14 @@ class AdminUserViewSet(ModelViewSet):
         qs = User.objects.all()
         if self.action == "retrieve":
             qs = qs.annotate(
-                badges_earned_count=Count("badges"),
-                tours_created_count=Count("created_tours"),
+                badges_earned_count=Count("badges", distinct=True),
+                tours_created_count=Count("created_tours", distinct=True),
                 tours_completed_count=Count(
                     "tour_progress",
                     filter=Q(tour_progress__status=TourProgress.COMPLETED),
+                    distinct=True,
                 ),
-                reviews_count=Count("reviews"),
+                reviews_count=Count("reviews", distinct=True),
             )
         return qs
 
@@ -164,7 +183,7 @@ class AdminTourViewSet(ModelViewSet):
     pagination_class = AdminPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = AdminTourFilter
-    search_fields = ["title", "description", "category", "city"]
+    search_fields = ["title", "description", "category", "city", "country"]
     ordering_fields = ["created_at", "title", "avg_rating", "completion_count"]
     ordering = ["-created_at"]
     http_method_names = ["get", "delete", "post", "head", "options"]
@@ -189,8 +208,38 @@ class AdminTourViewSet(ModelViewSet):
     @action(detail=True, methods=["post"], url_path="approve")
     def approve(self, request, pk=None):
         tour = self.get_object()
+
+        if not tour.city or not tour.country:
+            return Response(
+                {"location": "City and Country are required before publishing a tour."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not tour.steps.exists():
+            return Response(
+                {"steps": "At least one tour stop is required before publishing."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        facade = GoogleMapsFacade()
+
+        city_lat, city_lon = facade.geocode_location(
+            name=tour.city, city=tour.city, fallback_lat=0.0, fallback_lng=0.0
+        )
+
+        has_step_in_city = facade.tour_has_step_in_city(
+            tour, city_latitude=city_lat, city_longitude=city_lon
+        )
+
+        if not has_step_in_city:
+            return Response(
+                {"city": "At least one tour stop must be inside the selected city."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         tour.status = Tour.PUBLISHED
         tour.save(update_fields=["status"])
+
         return Response({"detail": "Tour approved and published."})
 
     @action(detail=True, methods=["post"], url_path="reject")
@@ -219,6 +268,17 @@ class AdminTourViewSet(ModelViewSet):
             "step_count": tour.step_count,
         }
         return Response(data)
+
+
+class AdminARModelViewSet(ModelViewSet):
+    permission_classes = [IsStaffUser]
+    serializer_class = AdminARModelSerializer
+    queryset = ARModel.objects.all().order_by("sort_order", "id")
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["name", "slug"]
+    ordering_fields = ["updated_at", "created_at", "name", "sort_order"]
+    ordering = ["sort_order", "id"]
 
 
 # ── Analytics ────────────────────────────────────────────────────────
@@ -267,6 +327,146 @@ class AnalyticsViewSet(ViewSet):
         days = int(request.query_params.get("days", 7))
         count = AnalyticsService.get_active_users(days=days)
         return Response({"days": days, "active_users": count})
+
+
+# ── Picture Compare Tuning ───────────────────────────────────────────
+
+
+class PictureCompareTuningViewSet(ViewSet):
+    permission_classes = [IsStaffUser]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def create(self, request):
+        serializer = PictureCompareTuningSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        result = compare_picture_similarity(
+            reference_image_file=data["reference_image"],
+            attempt_image_file=data["attempt_image"],
+            threshold=data["threshold"],
+            tuning_config=serializer.tuning_config(),
+            include_breakdown=True,
+        )
+        result["threshold"] = data["threshold"]
+        return Response(result)
+
+
+class PictureCompareConfigViewSet(ViewSet):
+    permission_classes = [IsStaffUser]
+
+    def list(self, request):
+        serializer = PictureCompareConfigSerializer(PictureCompareConfig.load())
+        return Response(serializer.data)
+
+    def create(self, request):
+        config = PictureCompareConfig.load()
+        serializer = PictureCompareConfigSerializer(
+            config,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class BadgeVisualViewSet(ViewSet):
+    permission_classes = [IsStaffUser]
+
+    @staticmethod
+    def _badge_code_id_maps():
+        code_to_id = {}
+        id_to_code = {}
+        for badge in Badge.objects.all().values("id", "code"):
+            badge_code = (badge.get("code") or "").strip().upper()
+            badge_id = badge.get("id")
+            if badge_code:
+                code_to_id[badge_code] = badge_id
+                id_to_code[badge_id] = badge_code
+        return code_to_id, id_to_code
+
+    @classmethod
+    def _serialize_override(cls, item):
+        code_to_id, _ = cls._badge_code_id_maps()
+        badge_code = (item.get("badge_code") or "").strip().upper()
+        return {
+            "id": int(item.get("id", 0)),
+            "badge": code_to_id.get(badge_code),
+            "badge_code": badge_code,
+            "country_code": (item.get("country_code") or "").strip().upper(),
+            "config": item.get("config") or {},
+            "updated_at": "",
+        }
+
+    def list(self, request):
+        # Ensure badge records exist so admin previews never render empty on
+        # fresh environments.
+        BadgeService.ensure_default_badges()
+        payload = BadgeVisualService.read_payload()
+        payload = {
+            "template": payload.get("template") or BadgeVisualService.load_template(),
+            "overrides": [
+                self._serialize_override(item)
+                for item in (payload.get("overrides") or [])
+            ],
+        }
+        serializer = BadgeVisualBundleSerializer(payload)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["post"], url_path="template")
+    def update_template(self, request):
+        serializer = BadgeVisualTemplateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        saved = BadgeVisualService.save_template(
+            serializer.validated_data.get("config") or {}
+        )
+        return Response(
+            {
+                "config": saved.get("template") or BadgeVisualService.load_template(),
+                "updated_at": timezone.now().isoformat(),
+            }
+        )
+
+    @action(detail=False, methods=["post"], url_path="overrides")
+    def upsert_override(self, request):
+        serializer = BadgeVisualOverrideSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        _, id_to_code = self._badge_code_id_maps()
+        badge_id = data.get("badge")
+        badge_code = (
+            (id_to_code.get(badge_id) if badge_id else None)
+            or data.get("badge_code")
+            or ""
+        )
+        _, saved = BadgeVisualService.upsert_override(
+            badge_code=badge_code,
+            country_code=data.get("country_code", ""),
+            config=data.get("config", {}),
+        )
+        return Response(self._serialize_override(saved))
+
+    @action(
+        detail=False, methods=["delete"], url_path=r"overrides/(?P<override_id>\d+)"
+    )
+    def delete_override(self, request, override_id=None):
+        deleted = BadgeVisualService.delete_override(int(override_id))
+        if not deleted:
+            return Response(
+                {"detail": "Override not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=["get"], url_path="export")
+    def export(self, request):
+        body = BadgeVisualService.read_payload()
+        response = HttpResponse(
+            json.dumps(body, indent=2, sort_keys=True) + "\n",
+            content_type="application/json",
+        )
+        response["Content-Disposition"] = 'attachment; filename="badge_visuals.json"'
+        return response
 
 
 # ── Content Moderation ───────────────────────────────────────────────

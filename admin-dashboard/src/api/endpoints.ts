@@ -68,6 +68,36 @@ export const getDistributions = () =>
 export const getActiveUsers = (params?: Record<string, string | number>) =>
   api.get("/admin/analytics/active-users/", { params });
 
+// Picture compare tuning
+export const simulatePictureCompare = (data: FormData) =>
+  api.post("/admin/picture-compare-tuning/", data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+export const getPictureCompareConfig = () =>
+  api.get("/admin/picture-compare-config/");
+
+export const updatePictureCompareConfig = (data: Record<string, number>) =>
+  api.post("/admin/picture-compare-config/", data);
+
+// Badge visuals
+export const getBadgeVisualBundle = () => api.get("/admin/badge-visuals/");
+
+export const updateBadgeVisualTemplate = (config: Record<string, unknown>) =>
+  api.post("/admin/badge-visuals/template/", { config });
+
+export const upsertBadgeVisualOverride = (data: {
+  badge?: number | null;
+  country_code?: string;
+  config: Record<string, unknown>;
+}) => api.post("/admin/badge-visuals/overrides/", data);
+
+export const deleteBadgeVisualOverride = (id: number) =>
+  api.delete(`/admin/badge-visuals/overrides/${id}/`);
+
+export const exportBadgeVisualConfig = () =>
+  api.get("/admin/badge-visuals/export/", { responseType: "blob" });
+
 // Reports
 export const getReports = (params?: Record<string, string | number>) =>
   api.get("/admin/reports/", { params });

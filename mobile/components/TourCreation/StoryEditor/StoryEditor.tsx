@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { storyEditorStyles } from './StoryEditor.styles';
-import { TourLocation } from '../TourCreation.types';
+import { TourLocation, TOUR_TEXT_FIELD_MAX_LENGTH } from '../TourCreation.types';
 import StoryEditorHeader from './StoryEditorHeader';
 import LocationBadge from './LocationBadge';
 import StoryInputField from './StoryInputField';
@@ -68,7 +68,11 @@ export default function StoryEditor({
       >
         <StoryEditorHeader onClose={onCancel} onSave={handleSave} isValid={isValid} />
 
-        <ScrollView style={styles.scrollContent}>
+        <ScrollView
+          style={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
           <LocationBadge currentStop={location.order} totalStops={totalLocations} />
 
           <StoryInputField
@@ -76,6 +80,7 @@ export default function StoryEditor({
             value={title}
             onChangeText={setTitle}
             placeholder={t('creation.storyEditor.locationTitlePlaceholder')}
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <StoryInputField
@@ -83,6 +88,7 @@ export default function StoryEditor({
             value={address}
             onChangeText={setAddress}
             placeholder={t('creation.storyEditor.addressPlaceholder')}
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <ImageUploadSection image={image} onImageChange={setImage} />
@@ -95,6 +101,7 @@ export default function StoryEditor({
             hint={t('creation.storyEditor.storyHint')}
             multiline
             showCharacterCount
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <WritingTips />

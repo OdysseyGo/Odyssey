@@ -39,6 +39,13 @@ export const recentSearchesStyles = (theme: ThemeName) => {
       fontSize: 16,
       color: color.text,
     },
+    removeButton: {
+      width: 32,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: Spacing.xs,
+    },
     arrowIcon: {
       opacity: 0.5,
     },

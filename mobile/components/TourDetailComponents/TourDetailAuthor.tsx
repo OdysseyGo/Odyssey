@@ -5,7 +5,8 @@ import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
-import { getMe, getUserFollowings } from '@/api/users';
+import { getCurrentUser } from '@/api/auth';
+import { getUserFollowings } from '@/api/users';
 import { TourDetailAuthorProps } from './TourDetailAuthor.config';
 import { tourDetailAuthorStyles } from './TourDetailAuthor.styles';
 import { useTranslation } from 'react-i18next';
@@ -29,11 +30,20 @@ export default function TourDetailAuthor({
       if (!authorId) return;
       (async () => {
         try {
-          const me = await getMe();
-          if (me.id === authorId) {
-            setIsSelf(true);
+          const me = await getCurrentUser();
+          if (!me) {
+            setIsSelf(false);
+            setIsFollowing(false);
             return;
           }
+
+          if (me.id === authorId) {
+            setIsSelf(true);
+            setIsFollowing(false);
+            return;
+          }
+
+          setIsSelf(false);
           const followings = await getUserFollowings(me.id.toString());
           setIsFollowing(followings.some((f) => f.id === authorId));
         } catch {}

@@ -17,6 +17,10 @@ export const searchResultStyles = (theme: ThemeName) => {
       width: 120,
       height: 100,
     },
+    imagePlaceholder: {
+      width: 120,
+      height: 100,
+    },
     infoContainer: {
       flex: 1,
       padding: Spacing.md,

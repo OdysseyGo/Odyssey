@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Animated,
   TouchableOpacity,
   KeyboardAvoidingView,
+  Keyboard,
   ScrollView,
   Platform,
   Dimensions,
@@ -14,19 +15,24 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { useTranslation } from 'react-i18next';
 
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
+import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
+import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import BackButton from '@/components/common/BackButton';
 import { login, UserCredentials } from '@/api/users';
+import { setProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEIGHT * 0.36;
+const AUTH_INPUT_MAX_LENGTH = 50;
 
 export default function LoginScreen() {
   const colorScheme = useColorTheme();
@@ -41,6 +47,7 @@ export default function LoginScreen() {
   );
   const [loading, setLoading] = useState(false);
 
+  const scrollViewRef = useRef<ScrollView>(null);
   const passwordRef = useRef<TextInput>(null);
 
   // Entrance animations
@@ -63,6 +70,21 @@ export default function LoginScreen() {
     ]).start();
   }, []);
 
+  const resetScrollPosition = useCallback(() => {
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+    });
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      resetScrollPosition();
+      const keyboardHideSubscription = Keyboard.addListener('keyboardDidHide', resetScrollPosition);
+
+      return () => keyboardHideSubscription.remove();
+    }, [resetScrollPosition])
+  );
+
   const validate = () => {
     const newErrors: typeof errors = {};
     if (!username.trim()) newErrors.username = t('auth.errors.usernameRequired');
@@ -77,9 +99,12 @@ export default function LoginScreen() {
     try {
       const credentials: UserCredentials = { username, password };
       const response = await login(credentials);
-      SecureStore.setItem('userToken', response.access);
-      SecureStore.setItem('refreshToken', response.refresh);
-      router.replace('/(tabs)/profile');
+      await Promise.all([
+        SecureStore.setItemAsync('userToken', response.access),
+        SecureStore.setItemAsync('refreshToken', response.refresh),
+      ]);
+      setProfileNeedsRefresh();
+      router.dismissTo('/(tabs)/profile');
     } catch (e) {
       console.error(e);
       setErrors({ general: t('auth.errors.loginFailed') });
@@ -94,20 +119,25 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={styles.scrollContent}
         style={{ backgroundColor: theme.headerGradientTop }}
+        automaticallyAdjustContentInsets={false}
+        automaticallyAdjustKeyboardInsets={false}
+        contentInsetAdjustmentBehavior="never"
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         showsVerticalScrollIndicator={false}
         bounces={false}
+        overScrollMode="never"
       >
         {/* ── Hero ─────────────────────────────────────── */}
         <Animated.View
           style={[
             styles.hero,
             {
-              height: HERO_HEIGHT,
-              paddingTop: insets.top,
+              height: HERO_HEIGHT + insets.top,
+              paddingTop: insets.top + Spacing.lg,
               backgroundColor: theme.headerGradientTop,
             },
             { opacity: heroOpacity, transform: [{ translateY: heroY }] },
@@ -118,12 +148,11 @@ export default function LoginScreen() {
             color="rgba(255,255,255,0.9)"
             style={[styles.backButton, { top: insets.top + 12 }]}
           />
+          <AuthLanguageSelector style={{ top: insets.top + 12 }} />
 
           {/* Branding */}
           <View style={styles.logoArea}>
-            <View style={styles.iconRing}>
-              <Ionicons name="compass" size={46} color="#FFFFFF" />
-            </View>
+            <AuthLogo variant="compact" />
             <Text style={styles.appName}>ODYSSEY</Text>
             <Text style={styles.tagline}>{t('auth.tagline')}</Text>
           </View>
@@ -179,6 +208,7 @@ export default function LoginScreen() {
                 }}
                 placeholder={t('auth.usernamePlaceholder')}
                 autoCapitalize="none"
+                maxLength={AUTH_INPUT_MAX_LENGTH}
                 returnKeyType="next"
                 onSubmitEditing={() => passwordRef.current?.focus()}
                 error={errors.username}
@@ -195,6 +225,7 @@ export default function LoginScreen() {
                 secureTextEntry
                 showPasswordToggle
                 autoCapitalize="none"
+                maxLength={AUTH_INPUT_MAX_LENGTH}
                 returnKeyType="done"
                 onSubmitEditing={handleLogin}
                 error={errors.password}
@@ -246,20 +277,10 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     left: Spacing.lg,
-    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   logoArea: {
     alignItems: 'center',
     gap: Spacing.xs,
-  },
-  iconRing: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.sm,
   },
   appName: {
     fontSize: 30,

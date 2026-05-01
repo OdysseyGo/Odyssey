@@ -1,19 +1,109 @@
-import { apiRequest } from './APIClient';
+import { ApiError, apiRequest } from './APIClient';
 import { User } from './users';
 
 // Types
 export type TourType = 'STORY' | 'PUZZLE' | 'HYBRID';
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type TourStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+export type TourGenerationSource = 'USER' | 'AI';
+
+export type TriviaPuzzleDetail = {
+  options: string[];
+  correct_answer: string;
+};
+
+export type PictureComparePuzzleDetail = {
+  reference_image: string;
+  similarity_threshold: number;
+};
+
+export type ArPuzzleDetail = {
+  scene_asset_url?: string;
+  metadata?: Record<string, any>;
+};
+
+export type ARModelAnchor = {
+  id: string;
+  label: string;
+  description?: string;
+  position: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  rotation?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  scale?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+};
+
+export type ARModel = {
+  id: number;
+  slug: string;
+  name: string;
+  preview_image_url: string;
+  scene_asset_url: string;
+  anchors: ARModelAnchor[];
+};
+
+export type CompassPuzzleDetail = {
+  target_heading_degrees: number;
+};
+
+export type OpenEndedPuzzleDetail = {
+  answer_type: 'text' | string;
+};
 
 export type Puzzle = {
   id?: number;
-  puzzle_type: 'TRIVIA' | 'AR' | 'GYROSCOPE';
+  puzzle_type: 'TRIVIA' | 'OPEN_ENDED' | 'AR' | 'PICTURE_COMPARE' | 'COMPASS';
   question: string;
-  options?: string[];
-  correct_answer?: string; // Used when creating/updating, hidden in response
   hint: string;
   xp_reward: number;
+  // Normalized detail payloads from backend
+  trivia?: TriviaPuzzleDetail;
+  open_ended?: OpenEndedPuzzleDetail;
+  picture_compare?: PictureComparePuzzleDetail;
+  ar?: ArPuzzleDetail;
+  compass?: CompassPuzzleDetail;
+  // Backward-compatible fallbacks
+  options?: string[];
+  correct_answer?: string;
+  reference_image?: string;
+};
+
+export type PuzzleBaseUpsertPayload = {
+  question: string;
+  hint?: string;
+};
+
+export type TriviaPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  options: string[];
+  correct_answer: string;
+};
+
+export type OpenEndedPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  correct_answer: string;
+};
+
+export type PictureComparePuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  referenceImageUri: string;
+  similarity_threshold?: number;
+};
+
+export type ArPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  scene_asset_url?: string;
+  metadata?: Record<string, any>;
+};
+
+export type CompassPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
+  target_heading_degrees: number;
 };
 
 export type TourStep = {
@@ -40,21 +130,41 @@ export type Tour = {
   id: number;
   title: string;
   description: string;
+  cover_image?: string;
+  cover_image_attribution?: string;
   creator: User;
   tour_type: TourType;
   category: string;
   difficulty: Difficulty;
   duration_minutes: number;
   total_distance?: number;
+  walking_distance?: number;
+  elevation_gain?: number;
+  max_leg_distance?: number;
+  requires_transport?: boolean;
+  is_circular?: boolean;
+  accessibility_rating?: number;
+  metrics_calculated?: boolean;
   is_premium: boolean;
+  is_ai_generated: boolean;
+  user_has_completed_once?: boolean;
   city: string;
+  country?: string;
+  country_code?: string;
+  city_latitude?: number;
+  city_longitude?: number;
   status: TourStatus;
+  generation_source: TourGenerationSource;
   created_at: string;
   updated_at: string;
   steps: TourStep[];
   reviews: Review[];
   average_rating?: number;
 };
+
+export function getTourImageUri(tour: Pick<Tour, 'id' | 'cover_image' | 'creator'>): string {
+  return tour.cover_image || '';
+}
 
 export type ToursResponse = {
   count: number;
@@ -63,13 +173,24 @@ export type ToursResponse = {
   results: Tour[];
 };
 
+export type MyToursFilters = {
+  status?: TourStatus;
+  generation_source?: TourGenerationSource;
+  is_ai_generated?: boolean;
+};
+
 export type TourFilters = {
   search?: string;
+  category?: string;
+  continent?: string;
   city?: string;
+  country?: string;
+  country_code?: string;
   difficulty?: Difficulty;
   tour_type?: TourType;
   is_premium?: boolean;
   status?: TourStatus;
+  creator?: number;
   min_distance?: number;
   max_distance?: number;
   min_duration?: number;
@@ -82,6 +203,64 @@ export type TourFilters = {
 
 // API Functions
 
+function isRemoteHttpUrl(value: unknown): boolean {
+  return typeof value === 'string' && /^https?:\/\//i.test(value);
+}
+
+function isUploadableAssetUri(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  if (!value.trim()) return false;
+  if (isRemoteHttpUrl(value) || value.startsWith('data:')) return false;
+
+  // RN/Expo may return different local schemes by platform/source.
+  return (
+    value.startsWith('file://') ||
+    value.startsWith('content://') ||
+    value.startsWith('ph://') ||
+    value.startsWith('assets-library://') ||
+    value.startsWith('/')
+  );
+}
+
+function getUniqueCoverImageName(uri: string): string {
+  const cleanUri = uri.split('?')[0].split('#')[0];
+  const match = cleanUri.match(/\.([a-zA-Z0-9]+)$/);
+  const ext = (match?.[1] || 'jpg').toLowerCase();
+  return `cover_image_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+}
+
+function appendTourField(formData: FormData, key: string, value: unknown) {
+  if (value === undefined) return;
+  if (value === null) {
+    formData.append(key, '');
+    return;
+  }
+  if (typeof value === 'boolean') {
+    formData.append(key, value ? 'true' : 'false');
+    return;
+  }
+  formData.append(key, String(value));
+}
+
+function toTourPayload(tourData: Partial<Tour>): Partial<Tour> | FormData {
+  const { cover_image, ...rest } = tourData;
+  if (!isUploadableAssetUri(cover_image)) {
+    if (isRemoteHttpUrl(cover_image)) {
+      return rest;
+    }
+    return tourData;
+  }
+
+  const formData = new FormData();
+  Object.entries(rest).forEach(([key, value]) => appendTourField(formData, key, value));
+  formData.append('cover_image', {
+    uri: cover_image,
+    name: getUniqueCoverImageName(cover_image),
+    type: 'image/jpeg',
+  } as any);
+  return formData;
+}
+
 /**
  * Fetch all tours with optional filters and search
  */
@@ -93,11 +272,16 @@ export async function getTours(
 
   if (filters) {
     if (filters.search) params.search = filters.search;
+    if (filters.category) params.category = filters.category;
+    if (filters.continent) params.continent = filters.continent;
     if (filters.city) params.city = filters.city;
+    if (filters.country) params.country = filters.country;
+    if (filters.country_code) params.country_code = filters.country_code;
     if (filters.difficulty) params.difficulty = filters.difficulty;
     if (filters.tour_type) params.tour_type = filters.tour_type;
     if (filters.is_premium !== undefined) params.is_premium = filters.is_premium;
     if (filters.status) params.status = filters.status;
+    if (filters.creator) params.creator = filters.creator;
     if (filters.min_distance) params.min_distance = filters.min_distance;
     if (filters.max_distance) params.max_distance = filters.max_distance;
     if (filters.min_duration) params.min_duration = filters.min_duration;
@@ -121,12 +305,26 @@ export async function getTours(
  * Fetch a single tour by ID
  */
 export async function getTour(tourId: number, signal?: AbortSignal): Promise<Tour> {
-  return apiRequest<Tour>({
-    method: 'GET',
-    url: `/api/tours/${tourId}/`,
-    auth: false, // Public endpoint
-    signal,
-  });
+  const url = `/api/tours/${tourId}/`;
+
+  try {
+    return await apiRequest<Tour>({
+      method: 'GET',
+      url,
+      auth: true, // Prefer authenticated request for user-specific reveal fields.
+      signal,
+    });
+  } catch (error) {
+    if (error instanceof ApiError && error.statusCode === 401) {
+      return apiRequest<Tour>({
+        method: 'GET',
+        url,
+        auth: false, // Fallback for stale/invalid tokens on a publicly readable endpoint.
+        signal,
+      });
+    }
+    throw error;
+  }
 }
 
 /**
@@ -159,7 +357,7 @@ export async function getToursByCategory(
   filters?: TourFilters,
   signal?: AbortSignal
 ): Promise<ToursResponse> {
-  return getTours({ ...filters, search: category }, signal);
+  return getTours({ ...filters, category }, signal);
 }
 
 /**
@@ -188,10 +386,11 @@ export async function getToursByType(
  * Create a new tour (requires authentication)
  */
 export async function createTour(tourData: Partial<Tour>, signal?: AbortSignal): Promise<Tour> {
-  return apiRequest<Tour, Partial<Tour>>({
+  const data = toTourPayload(tourData);
+  return apiRequest<Tour, typeof data>({
     method: 'POST',
     url: '/api/tours/',
-    data: tourData,
+    data,
     auth: true,
     signal,
   });
@@ -205,10 +404,11 @@ export async function updateTour(
   tourData: Partial<Tour>,
   signal?: AbortSignal
 ): Promise<Tour> {
-  return apiRequest<Tour, Partial<Tour>>({
+  const data = toTourPayload(tourData);
+  return apiRequest<Tour, typeof data>({
     method: 'PATCH',
     url: `/api/tours/${tourId}/`,
-    data: tourData,
+    data,
     auth: true,
     signal,
   });
@@ -284,14 +484,19 @@ export async function updateTourReview(
 
 /**
  * Fetch the current user's tours (requires authentication)
- * @param status - Optional filter by tour status (DRAFT, PUBLISHED, ARCHIVED)
+ * @param filtersOrStatus - Optional filters, or a legacy status value
  */
 export async function getMyTours(
-  status?: TourStatus,
+  filtersOrStatus?: TourStatus | MyToursFilters,
   signal?: AbortSignal
 ): Promise<ToursResponse> {
   const params: Record<string, any> = {};
-  if (status) params.status = status;
+  const filters =
+    typeof filtersOrStatus === 'string' ? { status: filtersOrStatus } : filtersOrStatus;
+
+  if (filters?.status) params.status = filters.status;
+  if (filters?.generation_source) params.generation_source = filters.generation_source;
+  if (filters?.is_ai_generated !== undefined) params.is_ai_generated = filters.is_ai_generated;
 
   return apiRequest<ToursResponse>({
     method: 'GET',
@@ -322,6 +527,25 @@ export async function getMyCompletedTours(
   });
 }
 
+/**
+ * Fetch published tours whose first step falls inside the map bounding box
+ */
+export async function getToursInBounds(
+  north: number,
+  south: number,
+  east: number,
+  west: number,
+  signal?: AbortSignal
+): Promise<Tour[]> {
+  return apiRequest<Tour[]>({
+    method: 'GET',
+    url: '/api/tours/in-bounds/',
+    params: { north, south, east, west },
+    auth: false,
+    signal,
+  });
+}
+
 function prepareTourStepPayload(stepData: Partial<TourStep>): Partial<TourStep> | FormData {
   const isNewFileUpload =
     typeof stepData.image === 'string' && stepData.image.startsWith('file://');
@@ -345,8 +569,6 @@ function prepareTourStepPayload(stepData: Partial<TourStep>): Partial<TourStep> 
     return formData;
   }
 
-  // Strip `image` when it is empty/null OR a remote URL: Django's ImageField rejects
-  // empty strings and re-posting an existing URL is a no-op at best, an error at worst.
   const { image, ...rest } = stepData;
   return rest;
 }
@@ -359,10 +581,12 @@ export async function createTourStep(
   stepData: Partial<TourStep>,
   signal?: AbortSignal
 ): Promise<TourStep> {
-  return apiRequest<TourStep, Partial<TourStep> | FormData>({
+  const data = prepareTourStepPayload(stepData);
+
+  return apiRequest<TourStep, typeof data>({
     method: 'POST',
     url: `/api/tours/${tourId}/steps/`,
-    data: prepareTourStepPayload(stepData),
+    data,
     auth: true,
     signal,
   });
@@ -377,10 +601,12 @@ export async function updateTourStep(
   stepData: Partial<TourStep>,
   signal?: AbortSignal
 ): Promise<TourStep> {
-  return apiRequest<TourStep, Partial<TourStep> | FormData>({
+  const data = prepareTourStepPayload(stepData);
+
+  return apiRequest<TourStep, typeof data>({
     method: 'PATCH',
     url: `/api/tours/${tourId}/steps/${stepId}/`,
-    data: prepareTourStepPayload(stepData),
+    data,
     auth: true,
     signal,
   });
@@ -397,6 +623,127 @@ export async function deleteTourStep(
   return apiRequest<void>({
     method: 'DELETE',
     url: `/api/tours/${tourId}/steps/${stepId}/`,
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Set or update the reference image for a picture-compare puzzle on a step.
+ */
+export async function setStepPictureReference(
+  tourId: number,
+  stepId: number,
+  referenceImageUri: string,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  const formData = new FormData();
+  formData.append('reference_image', {
+    uri: referenceImageUri,
+    name: 'reference_image.jpg',
+    type: 'image/jpeg',
+  } as any);
+
+  return apiRequest<Puzzle, FormData>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-picture-reference/`,
+    data: formData,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepTriviaPuzzle(
+  tourId: number,
+  stepId: number,
+  payload: TriviaPuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, TriviaPuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-trivia-puzzle/`,
+    data: payload,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepPictureComparePuzzle(
+  tourId: number,
+  stepId: number,
+  payload: PictureComparePuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  const formData = new FormData();
+  formData.append('question', payload.question);
+  formData.append('hint', payload.hint || '');
+  if (payload.similarity_threshold !== undefined) {
+    formData.append('similarity_threshold', String(payload.similarity_threshold));
+  }
+  formData.append('reference_image', {
+    uri: payload.referenceImageUri,
+    name: 'reference_image.jpg',
+    type: 'image/jpeg',
+  } as any);
+
+  return apiRequest<Puzzle, FormData>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-picture-compare-puzzle/`,
+    data: formData,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepOpenEndedPuzzle(
+  tourId: number,
+  stepId: number,
+  payload: OpenEndedPuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, OpenEndedPuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-open-ended-puzzle/`,
+    data: payload,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepArPuzzle(
+  tourId: number,
+  stepId: number,
+  payload: ArPuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, ArPuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-ar-puzzle/`,
+    data: payload,
+    auth: true,
+    signal,
+  });
+}
+
+export async function getArModels(signal?: AbortSignal): Promise<ARModel[]> {
+  return apiRequest<ARModel[]>({
+    method: 'GET',
+    url: '/api/tours/ar-models/',
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepCompassPuzzle(
+  tourId: number,
+  stepId: number,
+  payload: CompassPuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, CompassPuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-compass-puzzle/`,
+    data: payload,
     auth: true,
     signal,
   });

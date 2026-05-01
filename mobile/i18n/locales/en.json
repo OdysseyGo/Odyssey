@@ -17,6 +17,7 @@
     "password": "Password",
     "firstName": "First Name",
     "lastName": "Last Name",
+    "name": "Name",
     "email": "Email",
     "confirmPassword": "Confirm Password",
     "newPassword": "New Password",
@@ -48,7 +49,17 @@
     "registerTagline": "Create your account",
     "continue": "Continue",
     "back": "Back",
+    "termsPrefix": "I agree to the",
+    "terms": "Terms of Use",
+    "termsAnd": "and",
+    "privacy": "Privacy Policy",
     "resetTagline": "Reset your password",
+    "successTitle": "Success",
+    "confirmRegistrationTitle": "Create this account?",
+    "confirmRegistrationSubtitle": "Review the details before we create your Odyssey account.",
+    "confirmRegistrationMessage": "Username \"{{username}}\" will be created with email {{email}} for {{firstName}} {{lastName}}. Are you sure?",
+    "accountCreatedTitle": "Account created",
+    "accountCreatedSubtitle": "\"{{username}}\" is ready. Log in to start exploring.",
     "errors": {
       "usernameRequired": "Username is required",
       "passwordRequired": "Password is required",
@@ -64,7 +75,8 @@
       "usernameEmailMismatch": "Username and email do not match",
       "somethingWentWrong": "Something went wrong",
       "bothFieldsRequired": "Both fields are required",
-      "couldNotUpdate": "Could not update password"
+      "couldNotUpdate": "Could not update password",
+      "termsRequired": "You must agree to the Terms of Use and Privacy Policy"
     },
     "userCreated": "User has been created!"
   },
@@ -72,6 +84,7 @@
     "notLoggedIn": "You need to be logged in to view your profile.",
     "loginButton": "Oooh I want to log in!",
     "logout": "Logout",
+    "km": "km",
     "xp": "XP",
     "tours": "Tours",
     "badges": "Badges",
@@ -85,10 +98,14 @@
     "tabs": {
       "published": "Published",
       "drafts": "Drafts",
-      "archived": "Archived"
+      "aiTours": "AI Tours",
+      "archived": "Archived",
+      "settings": "Settings",
+      "tutorials": "Tutorials"
     },
     "emptyPublished": "No published tours yet. Publish a tour to share it with the community!",
     "emptyDraft": "No draft tours. Start creating a new tour!",
+    "emptyAiTours": "No AI-generated tours yet. Create one to start your showcase!",
     "emptyArchived": "No archived tours.",
     "emptyDefault": "No tours found.",
     "followersTitle": "Followers",
@@ -133,6 +150,11 @@
     "feedModalCancel": "Cancel",
     "userProfileFollow": "Follow",
     "userProfileUnfollow": "Unfollow",
+    "loginToFollow": "Log in to follow",
+    "loginToFollowTitle": "Login Required",
+    "loginToFollowMessage": "You need to log in to follow this user.",
+    "socialLoginRequiredTitle": "Login Required",
+    "socialLoginRequiredMessage": "You need to log in to view followers and following.",
     "userProfileError": "Could not load this profile",
     "chooseAvatar": "Choose Your Avatar",
     "avatarStyle": "Style",
@@ -163,16 +185,35 @@
   },
   "search": {
     "placeholder": "Search tours, destinations...",
+    "userPlaceholder": "Search users by username or name...",
+    "toursTab": "Tours",
+    "usersTab": "Users",
     "unknownAuthor": "Unknown",
     "unknownLocation": "Unknown location",
     "notAvailable": "N/A",
     "noToursFound": "No tours found",
+    "noToursFoundFor": "No tours found for \"{{query}}\"",
     "noToursFoundSub": "Try searching for a different destination, tour name, or guide",
+    "noUsersFound": "No users found",
+    "noUsersFoundFor": "No users found for \"{{query}}\"",
+    "noUsersFoundSub": "Try a different username or name",
     "searchFailed": "Search failed",
     "searching": "Searching tours...",
+    "searchingUsers": "Searching users...",
     "results": "Search Results",
     "toursCount": "{{count}} tours",
+    "usersCount": "{{count}} users",
+    "userMeta": "{{followers}} followers · {{tours}} tours",
     "recentSearch": "Recent Searches",
+    "recentTourSearches": "Recent tour searches",
+    "recentUserSearches": "Recent user searches",
+    "discoverTours": "Find your next route",
+    "discoverToursSub": "Search by city, theme, category, or tour name.",
+    "discoverUsers": "Find explorers and creators",
+    "discoverUsersSub": "Search by username or real name to open a profile.",
+    "keepTypingTitle": "Type at least {{count}} characters",
+    "keepTypingTours": "A little more detail helps find better tour matches.",
+    "keepTypingUsers": "Search users by username, first name, or last name.",
     "clearAll": "Clear All"
   },
   "tourDetail": {
@@ -181,10 +222,15 @@
     "startTour": "Start Tour",
     "duration": "Duration",
     "distance": "Distance",
+    "distanceUnknown": "Distance",
     "difficulty": "Difficulty",
+    "loop": "Loop tour",
+    "transport": "Transport needed",
+    "estimated": "Estimated metrics",
     "notFound": "Tour not found",
     "reviews": "Reviews",
     "noReviews": "No reviews found for this tour.",
+    "loginToViewReviews": "Log in to view reviews.",
     "aboutThisTour": "About this tour",
     "createdBy": "Created by",
     "following": "Following",
@@ -194,7 +240,9 @@
     "medium": "Medium",
     "hard": "Hard",
     "readMore": "Read more",
-    "readLess": "Read less"
+    "readLess": "Read less",
+    "lockedStopTitle": "Hidden stop",
+    "lockedStopMessage": "Start the tour and solve the puzzle to reveal this stop."
   },
   "tabs": {
     "settings": "Settings",
@@ -205,7 +253,39 @@
   "settings": {
     "language": "Language",
     "selectLanguage": "Select Language",
+    "sections": {
+      "profile": "Profile",
+      "account": "Account",
+      "preferences": "Preferences"
+    },
+    "items": {
+      "editProfile": {
+        "label": "Edit Profile",
+        "description": "Update your personal information"
+      },
+      "notifications": {
+        "label": "Notifications",
+        "description": "Manage notification preferences"
+      },
+      "logout": {
+        "label": "Logout",
+        "description": "Sign out of your account"
+      },
+      "privacy": {
+        "label": "Privacy",
+        "description": "Control your privacy settings"
+      }
+    },
+    "appearance": {
+      "label": "Appearance",
+      "mode": {
+        "light": "Light mode",
+        "dark": "Dark mode",
+        "system": "System default"
+      }
+    },
     "languages": {
+      "system": "System Default",
       "en": "English",
       "tr": "Turkish",
       "es": "Spanish"
@@ -251,7 +331,10 @@
     "min": "min",
     "stops": "stops",
     "tourInProgressTitle": "Tour in Progress",
-    "tourInProgressMessage": "You already have an active tour! Please finish or quit it before starting a new one."
+    "tourInProgressMessage": "You already have an active tour! Please finish or quit it before starting a new one.",
+    "locationRequiredTitle": "Location permission needed",
+    "locationRequiredMessage": "To start this tour, Odyssey needs access to your location. Please allow location permission in your device settings, then try again.",
+    "locationUnavailableMessage": "We couldn't read your current location. Please turn on location services and try again."
   },
   "creation": {
     "loginRequired": "Login Required",
@@ -270,6 +353,9 @@
     "ok": "OK",
     "errorTitle": "Error",
     "errorMessage": "Failed to submit tour. Please try again.",
+    "cityStopsMismatch": "At least one tour stop must be inside the selected state.",
+    "incompletePuzzleTitle": "Complete required puzzles",
+    "incompletePuzzleMessage": "Puzzle tours need a valid puzzle at every location before submission.",
     "method": {
       "title": "Create Your Tour",
       "subtitle": "Choose how you want to create your tour experience",
@@ -287,8 +373,14 @@
       "tourTitlePlaceholder": "e.g., Hidden Gems of Old Town",
       "description": "Description",
       "descriptionPlaceholder": "Describe what makes your tour special...",
-      "city": "City",
-      "cityPlaceholder": "e.g., Istanbul, Tokyo, Paris",
+      "country": "Country",
+      "countryPlaceholder": "Search countries...",
+      "state": "State",
+      "statePlaceholder": "Search states...",
+      "stateDisabledPlaceholder": "Select a country first",
+      "countryOnlyError": "Please select a country.",
+      "stateOnlyError": "Please select a state.",
+      "stateCountryMismatch": "Selected state is not in the selected country.",
       "category": "Category",
       "difficulty": "Difficulty",
       "tourType": "Tour Type",
@@ -365,7 +457,7 @@
       "difficulty": "Difficulty"
     },
     "story": {
-      "coverImage": "Cover Image (Optional)",
+      "coverImage": "Cover Image",
       "imagePickerTitle": "Image Picker",
       "imagePickerMessage": "Image picker functionality requires expo-image-picker to be installed.",
       "ok": "OK",
@@ -397,6 +489,9 @@
       "optionsRequired": "Options (Mark the correct answer) *",
       "optionPlaceholder": "Option {{number}}",
       "addOption": "Add Option",
+      "correctAnswer": "Correct Answer",
+      "correctAnswerPlaceholder": "e.g., byzantine empire",
+      "correctAnswerHint": "Users pass if their typed answer closely matches this.",
       "hintLabel": "Hint (Optional)",
       "hintPlaceholder": "e.g., Look at the plaque above the door.",
       "hintText": "A helpful clue if the user gets stuck."
@@ -413,8 +508,8 @@
     }
   },
   "aiTour": {
-    "city": "City",
-    "cityPlaceholder": "e.g., Istanbul, Paris, Tokyo",
+    "state": "State",
+    "statePlaceholder": "e.g., California, Texas, New York",
     "theme": "Tour Theme",
     "themePlaceholder": "e.g., Haunted History, Hidden Gems",
     "mode": "Tour Mode",
@@ -424,7 +519,7 @@
     "additionalDetails": "Additional Details (Optional)",
     "additionalDetailsPlaceholder": "Any specific preferences? e.g., 'Focus on medieval architecture', 'Include cafes for breaks', 'Avoid steep hills'...",
     "missingInfoTitle": "Missing Information",
-    "missingInfoMessage": "Please provide both a city and a theme for your tour.",
+    "missingInfoMessage": "Please provide both a state and a theme for your tour.",
     "successTitle": "Tour Created! 🎉",
     "viewTour": "View Tour",
     "createAnother": "Create Another",
@@ -450,15 +545,24 @@
       "puzzleDesc": "Interactive challenges and trivia at each location",
       "hybrid": "Hybrid Mode",
       "hybridDesc": "Best of both - engaging stories with fun puzzles"
+    },
+    "includeAr": {
+      "title": "Include AR Puzzles",
+      "subtitle": "Let the AI add augmented-reality puzzles on stops where they fit"
     }
   },
   "tourStep": {
     "tourProgress": "Tour Progress",
     "back": "Back",
     "next": "Next",
-    "finish": "Finish"
+    "finish": "Finish",
+    "answerConfirmTitle": "Lock this answer?",
+    "answerConfirmMessage": "Are you sure? Wrong answers can reduce your badge progress.",
+    "answerConfirmAction": "Answer"
   },
   "common": {
+    "cancel": "Cancel",
+    "ok": "OK",
     "error": "Error",
     "syncError": "Could not sync progress with server."
   },
@@ -491,7 +595,41 @@
     "activeTour": {
       "stepOf": "Step {{current}} of {{total}}",
       "end": "End",
-      "skip": "SKIP"
+      "skip": "Skip",
+      "skipConfirmTitle": "Skip this step?",
+      "skipConfirmMessage": "You will not earn XP for this step. This action is irreversible.",
+      "skipConfirmAction": "Skip step",
+      "skipBadgeReduction": "Skipping can reduce your badge progress for this tour.",
+      "badgeCurrentLabel": "CURRENT BADGE",
+      "badgeStatusGold": "Gold",
+      "badgeStatusSilver": "Silver",
+      "badgeStatusBronze": "Bronze",
+      "badgeStatusLoss": "No Badge",
+      "route": "Get Directions",
+      "directions": "Directions",
+      "openIn": "Open this stop in",
+      "appleMaps": "Apple Maps",
+      "googleMaps": "Google Maps",
+      "yandexMaps": "Yandex Maps",
+      "directionsUnavailableMessage": "Could not open directions right now. Please try again."
+    },
+    "nearby": {
+      "title_one": "{{count}} tour nearby",
+      "title_other": "{{count}} tours nearby",
+      "areaTitle_one": "{{count}} tour in this area",
+      "areaTitle_other": "{{count}} tours in this area",
+      "searching": "Searching nearby...",
+      "radius": "Within 500 m of your tap",
+      "areaSubtitle": "Tours starting in the visible map area",
+      "emptyTitle": "No tours here",
+      "emptySubtitle": "Try tapping a different spot or explore a busier area.",
+      "duration_one": "{{count}} min",
+      "duration_other": "{{count}} min"
+    },
+    "searchMode": {
+      "searchHere": "Search here",
+      "stopDragging": "Stop dragging to search",
+      "zoomIn": "Zoom in to search"
     }
   },
   "friends": {
@@ -504,5 +642,43 @@
   },
   "badges": {
     "noBadges": "No badges yet"
+  },
+  "tutorial": {
+    "title": "Help & Tutorials",
+    "section": "Available Tutorials",
+    "skip": "Skip",
+    "previous": "Previous",
+    "finish": "Finish",
+    "next": "Next",
+    "profile": {
+      "label": "Profile Tutorial",
+      "desc": "Learn how to check your stats, review past tours, manage friends and avatar.",
+      "step1text": "Welcome to the profile tutorial!",
+      "step2text": "This is your avatar! Tap your avatar to change it.",
+      "step3text": "Track your Odyssey XP and check your followers!",
+      "step4text": "Find other travelers to join on your journey!",
+      "step5text": "Check out the badges you earned!",
+      "step6text": "Check your created (published, draft and archived) tours on this tab! You can also rate your tour with the completed tours button.",
+      "step7text": "You can change your account settings or your app preferences in the settings tab."
+    },
+    "tours": {
+      "label": "Tours Tutorial",
+      "desc": "Learn how to navigate and interact with tours.",
+      "step1text": "Welcome to the tours tutorial!",
+      "step2text": "You can search tours here.",
+      "step3text": "You can see the top featured tours here!",
+      "step4text": "To create tours, press here. You can generate Personal or AI-generated tours!"
+    }
+  },
+  "disclaimer": {
+    "title": "Adventure Safely",
+    "body": "Every great journey starts with awareness. While exploring with Odyssey, keep your eyes up and stay alert to the world around you.",
+    "legalPrefix": "By embarking on this adventure you agree to our",
+    "terms": "Terms of Use",
+    "legalAnd": "and",
+    "privacy": "Privacy Policy",
+    "legalSuffix": ". Please read and accept to begin your quest.",
+    "mascot": "Ody is watching — keep your eyes up, adventurer!",
+    "cta": "I Accept"
   }
 }

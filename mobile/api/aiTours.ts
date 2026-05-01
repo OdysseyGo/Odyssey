@@ -2,11 +2,14 @@ import { apiRequest } from './APIClient';
 
 export type AITourGenerationRequest = {
   city: string;
+  country?: string;
+  country_code?: string;
   theme: string;
   mode: 'STORY' | 'PUZZLE' | 'HYBRID';
   duration: number;
   language: string;
   additional_details?: string;
+  include_ar?: boolean;
 };
 
 export type AITourGenerationResponse = {

@@ -11,7 +11,7 @@ import WritingTips from '@/components/TourCreation/StoryEditor/WritingTips';
 import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditorFooter';
 import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
 import { CreationHeader } from '@/components/TourCreation/common';
-import { Puzzle } from '@/components/TourCreation';
+import { Puzzle, TOUR_TEXT_FIELD_MAX_LENGTH } from '@/components/TourCreation';
 import { useTranslation } from 'react-i18next';
 
 export default function EditLocationScreen() {
@@ -93,17 +93,49 @@ export default function EditLocationScreen() {
       puzzle,
       updateLocation,
       setSelectedLocation,
+      isPuzzleMode,
     ]
   );
 
+  const isPuzzleValid = (currentPuzzle?: Puzzle) => {
+    if (!currentPuzzle?.question.trim()) {
+      return false;
+    }
+
+    if (currentPuzzle.puzzle_type === 'PICTURE_COMPARE') {
+      return !!currentPuzzle.referenceImage;
+    }
+
+    if (currentPuzzle.puzzle_type === 'AR') {
+      return !!currentPuzzle.arConfig;
+    }
+
+    if (currentPuzzle.puzzle_type === 'COMPASS') {
+      return (
+        typeof currentPuzzle.targetHeadingDegrees === 'number' &&
+        Number.isInteger(currentPuzzle.targetHeadingDegrees) &&
+        currentPuzzle.targetHeadingDegrees >= 0 &&
+        currentPuzzle.targetHeadingDegrees <= 359
+      );
+    }
+
+    if (currentPuzzle.puzzle_type === 'OPEN_ENDED') {
+      return currentPuzzle.correctAnswer.trim().length > 0;
+    }
+
+    const options = currentPuzzle.options;
+    if (!currentPuzzle.correctAnswer.trim() || !options || options.length < 2) {
+      return false;
+    }
+
+    return options.every((opt) => opt.trim().length > 0);
+  };
+
+  const shouldValidatePuzzle = tourData.tourType === 'PUZZLE' || !!puzzle;
   const isValid =
     title.trim().length > 0 &&
     story.trim().length > 0 &&
-    (tourData.tourType !== 'PUZZLE' ||
-      (!!puzzle?.question &&
-        !!puzzle?.correctAnswer &&
-        (puzzle?.options?.length ?? 0) >= 2 &&
-        puzzle!.options.every((opt) => opt.trim().length > 0)));
+    (!shouldValidatePuzzle || isPuzzleValid(puzzle));
 
   const currentIndex = selectedLocation
     ? tourData.locations.findIndex((loc) => loc.id === selectedLocation.id)
@@ -122,7 +154,12 @@ export default function EditLocationScreen() {
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContainer}>
+        <ScrollView
+          style={styles.scrollContent}
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
           <LocationBadge
             currentStop={selectedLocation.order}
             totalStops={tourData.locations.length}
@@ -133,6 +170,7 @@ export default function EditLocationScreen() {
             value={title}
             onChangeText={setTitle}
             placeholder={t('creation.editLocation.titlePlaceholder')}
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <StoryInputField
@@ -140,6 +178,7 @@ export default function EditLocationScreen() {
             value={address}
             onChangeText={setAddress}
             placeholder={t('creation.editLocation.addressPlaceholder')}
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <ImageUploadSection image={image} onImageChange={setImage} />
@@ -152,6 +191,7 @@ export default function EditLocationScreen() {
             hint={t('creation.editLocation.storyHint')}
             multiline
             showCharacterCount
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           {isPuzzleMode && (

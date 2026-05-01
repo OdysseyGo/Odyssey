@@ -33,12 +33,14 @@ export default function RouteMap({ stops }: RouteMapProps) {
         rotateEnabled={false}
       >
         {/* Route path */}
-        <Polyline
-          coordinates={routeCoordinates}
-          strokeWidth={4}
-          strokeColor={colors.primary}
-          lineDashPattern={[0]}
-        />
+        {routeCoordinates.length >= 2 && (
+          <Polyline
+            coordinates={routeCoordinates}
+            strokeWidth={4}
+            strokeColor={colors.primary}
+            lineDashPattern={[0]}
+          />
+        )}
 
         {/* Stop markers */}
         {sortedStops.map((stop, index) => (

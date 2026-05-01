@@ -1,13 +1,40 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
-import { Puzzle, PuzzleType, PUZZLE_TYPE_OPTIONS, createEmptyPuzzle } from '../TourCreation.types';
+import { Accelerometer, Magnetometer } from 'expo-sensors';
+import {
+  Puzzle,
+  PuzzleType,
+  PUZZLE_TYPE_OPTIONS,
+  TOUR_TEXT_FIELD_MAX_LENGTH,
+  createEmptyPuzzle,
+} from '../TourCreation.types';
 import PuzzleQuestion from './PuzzleQuestion';
 import PuzzleOptions from './PuzzleOptions';
 import PuzzleHint from './PuzzleHint';
+import ImageUploadSection from './ImageUploadSection';
+import ARPuzzleConfigurator from './ARPuzzleConfigurator';
+import StoryInputField from './StoryInputField';
 import { puzzleEditorStyles } from './PuzzleEditor.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { useTranslation } from 'react-i18next';
+import CompassDial from '@/components/common/CompassDial';
+import {
+  headingFromSensors,
+  normalizeHeading,
+  shortestAngleDelta,
+  smoothHeading,
+} from '@/utils/compass';
+
+const COMPASS_CREATION_TOLERANCE_DEGREES = 10;
+const COMPASS_HEADING_OFFSET_DEGREES = 0;
+const COMPASS_SENSOR_UPDATE_MS = 50;
+const COMPASS_HEADING_SMOOTHING_ALPHA_SLOW = 0.16;
+const COMPASS_HEADING_SMOOTHING_ALPHA_MEDIUM = 0.3;
+const COMPASS_HEADING_SMOOTHING_ALPHA_FAST = 0.45;
+const COMPASS_HEADING_SMOOTHING_MEDIUM_DELTA_DEGREES = 5;
+const COMPASS_HEADING_SMOOTHING_FAST_DELTA_DEGREES = 12;
+const COMPASS_HEADING_DEADBAND_DEGREES = 0.35;
 
 interface PuzzleEditorProps {
   puzzle?: Puzzle;
@@ -22,6 +49,13 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
   const { t } = useTranslation();
 
   const currentPuzzle = puzzle || createEmptyPuzzle();
+  const [compassHeading, setCompassHeading] = React.useState<number | null>(null);
+  const gravityRef = React.useRef<{ x: number; y: number; z: number } | null>(null);
+  const filteredHeadingRef = React.useRef<number | null>(null);
+  const isPictureCompare = currentPuzzle.puzzle_type === 'PICTURE_COMPARE';
+  const isOpenEnded = currentPuzzle.puzzle_type === 'OPEN_ENDED';
+  const isArChallenge = currentPuzzle.puzzle_type === 'AR';
+  const isCompass = currentPuzzle.puzzle_type === 'COMPASS';
   const options = currentPuzzle.options;
   const correctAnswer = currentPuzzle.correctAnswer;
 
@@ -75,6 +109,108 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
     handleChange('correctAnswer', option);
   };
 
+  const handleTypeChange = (nextType: PuzzleType) => {
+    if (nextType === 'PICTURE_COMPARE') {
+      onChange({
+        ...currentPuzzle,
+        puzzle_type: nextType,
+        options: [],
+        // Backend serializer injects this for picture compare as fallback as well.
+        correctAnswer: 'PICTURE_COMPARE',
+      });
+      return;
+    }
+
+    if (nextType === 'OPEN_ENDED') {
+      onChange({
+        ...currentPuzzle,
+        puzzle_type: nextType,
+        options: [],
+        correctAnswer: '',
+      });
+      return;
+    }
+
+    if (nextType === 'AR') {
+      onChange({
+        ...currentPuzzle,
+        puzzle_type: nextType,
+        options: [],
+        correctAnswer: '',
+      });
+      return;
+    }
+
+    if (nextType === 'COMPASS') {
+      onChange({
+        ...currentPuzzle,
+        puzzle_type: nextType,
+        options: [],
+        correctAnswer: '',
+        targetHeadingDegrees: 0,
+      });
+      return;
+    }
+
+    onChange({
+      ...currentPuzzle,
+      puzzle_type: nextType,
+      options: currentPuzzle.options.length > 0 ? currentPuzzle.options : ['', ''],
+      correctAnswer:
+        currentPuzzle.correctAnswer === 'PICTURE_COMPARE' ? '' : currentPuzzle.correctAnswer,
+    });
+  };
+
+  React.useEffect(() => {
+    if (!isCompass) {
+      setCompassHeading(null);
+      filteredHeadingRef.current = null;
+      return;
+    }
+
+    Magnetometer.setUpdateInterval(COMPASS_SENSOR_UPDATE_MS);
+    Accelerometer.setUpdateInterval(COMPASS_SENSOR_UPDATE_MS);
+
+    const accelerometerSubscription = Accelerometer.addListener(({ x, y, z }) => {
+      gravityRef.current = { x, y, z };
+    });
+
+    const subscription = Magnetometer.addListener(({ x, y, z }) => {
+      const rawHeading = headingFromSensors(
+        { x, y, z },
+        gravityRef.current,
+        COMPASS_HEADING_OFFSET_DEGREES
+      );
+      const nextHeading =
+        filteredHeadingRef.current === null
+          ? rawHeading
+          : (() => {
+              const turnDelta = Math.abs(
+                shortestAngleDelta(filteredHeadingRef.current as number, rawHeading)
+              );
+              const alpha =
+                turnDelta > COMPASS_HEADING_SMOOTHING_FAST_DELTA_DEGREES
+                  ? COMPASS_HEADING_SMOOTHING_ALPHA_FAST
+                  : turnDelta > COMPASS_HEADING_SMOOTHING_MEDIUM_DELTA_DEGREES
+                    ? COMPASS_HEADING_SMOOTHING_ALPHA_MEDIUM
+                    : COMPASS_HEADING_SMOOTHING_ALPHA_SLOW;
+              return smoothHeading(
+                filteredHeadingRef.current as number,
+                rawHeading,
+                alpha,
+                COMPASS_HEADING_DEADBAND_DEGREES
+              );
+            })();
+      filteredHeadingRef.current = nextHeading;
+      setCompassHeading(nextHeading);
+    });
+
+    return () => {
+      subscription.remove();
+      accelerometerSubscription.remove();
+    };
+  }, [isCompass]);
+
   return (
     <View style={styles.container}>
       {/* Puzzle Type Selector */}
@@ -92,7 +228,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
                   borderColor: color.primary,
                 },
               ]}
-              onPress={() => handleChange('puzzle_type', type.value as PuzzleType)}
+              onPress={() => handleTypeChange(type.value as PuzzleType)}
             >
               <Text
                 style={[
@@ -113,37 +249,73 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
         isRequired={isRequired}
       />
 
-      <PuzzleOptions
-        options={options}
-        correctAnswer={correctAnswer}
-        onOptionChange={handleOptionChange}
-        onRemoveOption={handleRemoveOption}
-        onAddOption={handleAddOption}
-        onSelectCorrect={handleSelectCorrect}
-        isRequired={isRequired}
-      />
+      {isPictureCompare ? (
+        <ImageUploadSection
+          image={currentPuzzle.referenceImage}
+          onImageChange={(value) => handleChange('referenceImage', value)}
+          label="Pick your target image"
+          required
+          useReferenceImageUI
+          infoMessage={[
+            'Pick something that is not temporary.',
+            'Appropriate.',
+            "Has good lighting and doesn't depend much on the time of day.",
+          ].join('\n')}
+        />
+      ) : isArChallenge ? (
+        <ARPuzzleConfigurator
+          value={currentPuzzle.arConfig}
+          onChange={(config) => handleChange('arConfig', config)}
+        />
+      ) : isCompass ? (
+        <View>
+          <View style={styles.section}>
+            <Text style={[styles.label, { color: color.text }]}>Target Heading (0-359) *</Text>
+            <TextInput
+              style={[styles.xpInput, { color: color.text, borderColor: color.borderLight }]}
+              value={String(currentPuzzle.targetHeadingDegrees ?? 0)}
+              onChangeText={(text) => {
+                const num = parseInt(text, 10);
+                if (!isNaN(num)) {
+                  handleChange('targetHeadingDegrees', normalizeHeading(num));
+                } else if (text === '') {
+                  handleChange('targetHeadingDegrees', 0);
+                }
+              }}
+              keyboardType="number-pad"
+              placeholder="238"
+              placeholderTextColor={color.placeholder}
+            />
+          </View>
+          <CompassDial
+            heading={compassHeading}
+            showTarget
+            targetHeadingDegrees={currentPuzzle.targetHeadingDegrees ?? 0}
+            toleranceDegrees={COMPASS_CREATION_TOLERANCE_DEGREES}
+          />
+        </View>
+      ) : isOpenEnded ? (
+        <StoryInputField
+          label={`${t('creation.puzzle.correctAnswer')}${isRequired ? ' *' : ''}`}
+          value={currentPuzzle.correctAnswer}
+          onChangeText={(text: string) => handleChange('correctAnswer', text)}
+          placeholder={t('creation.puzzle.correctAnswerPlaceholder')}
+          hint={t('creation.puzzle.correctAnswerHint')}
+          maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
+        />
+      ) : (
+        <PuzzleOptions
+          options={options}
+          correctAnswer={correctAnswer}
+          onOptionChange={handleOptionChange}
+          onRemoveOption={handleRemoveOption}
+          onAddOption={handleAddOption}
+          onSelectCorrect={handleSelectCorrect}
+          isRequired={isRequired}
+        />
+      )}
 
       <PuzzleHint hint={currentPuzzle.hint} onChange={(text) => handleChange('hint', text)} />
-
-      {/* XP Reward Input */}
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: color.text }]}>{t('creation.puzzle.xpReward')}</Text>
-        <TextInput
-          style={[styles.xpInput, { color: color.text, borderColor: color.borderLight }]}
-          value={String(currentPuzzle.xp_reward)}
-          onChangeText={(text) => {
-            const num = parseInt(text, 10);
-            if (!isNaN(num) && num >= 0) {
-              handleChange('xp_reward', num);
-            } else if (text === '') {
-              handleChange('xp_reward', 0);
-            }
-          }}
-          keyboardType="number-pad"
-          placeholder={t('creation.puzzle.xpPlaceholder')}
-          placeholderTextColor={color.placeholder}
-        />
-      </View>
     </View>
   );
 }

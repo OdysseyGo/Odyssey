@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import * as Location from 'expo-location';
+import {
+  GooglePlacesAutocomplete,
+  GooglePlacesAutocompleteRef,
+} from 'react-native-google-places-autocomplete';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -10,27 +12,21 @@ import { fetchGoogleMapsApiKey } from '@/api/map';
 
 type LocationSearchBarProps = {
   onLocationAdd: (latitude: number, longitude: number, name: string) => void;
+  countryCode?: string;
 };
 
-export default function LocationSearchBar({ onLocationAdd }: LocationSearchBarProps) {
+export default function LocationSearchBar({ onLocationAdd, countryCode }: LocationSearchBarProps) {
   const theme = useColorTheme();
   const color = Colors[theme];
   const { t } = useTranslation();
-  const ref = useRef<any>(null);
+  const ref = useRef<GooglePlacesAutocompleteRef>(null);
   const [mapsApiKey, setMapsApiKey] = useState('');
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const normalizedCountryCode = countryCode?.trim().toLowerCase();
 
   useEffect(() => {
     fetchGoogleMapsApiKey()
       .then(setMapsApiKey)
       .catch(() => {});
-
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      setUserLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
-    })();
   }, []);
 
   return (
@@ -44,15 +40,16 @@ export default function LocationSearchBar({ onLocationAdd }: LocationSearchBarPr
           const { lat, lng } = details.geometry.location;
           const name = data.structured_formatting.main_text;
           onLocationAdd(lat, lng, name);
+          ref.current?.setAddressText('');
           ref.current?.clear();
+          ref.current?.blur();
         }}
         query={{
           key: mapsApiKey,
           language: 'en',
           types: 'geocode|establishment',
-          ...(userLocation && {
-            location: `${userLocation.lat},${userLocation.lng}`,
-            radius: 50000, // 50km bias radius — results outside still appear
+          ...(normalizedCountryCode && {
+            components: `country:${normalizedCountryCode}`,
           }),
         }}
         styles={{

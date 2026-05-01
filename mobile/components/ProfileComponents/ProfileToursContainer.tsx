@@ -1,23 +1,28 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { profileToursContainerStyles } from './ProfileToursContainer.styles';
-import { TOUR_TABS, TourTab } from './ProfileToursContainer.config';
-import { Tour, TourStatus, getMyTours } from '@/api/tours';
+import {
+  ProfileTourTabKey,
+  ProfileToursContainerProps,
+  TOUR_TABS,
+  TourTab,
+} from './ProfileToursContainer.config';
+import { Tour, getMyTours } from '@/api/tours';
 import { getCurrentUser } from '@/api/auth';
 import ProfileTourCard from './ProfileTourCard';
 import { useTranslation } from 'react-i18next';
-import { router } from 'expo-router';
 
-export default function ProfileToursContainer() {
+export default function ProfileToursContainer(_props: ProfileToursContainerProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => profileToursContainerStyles(theme), [theme]);
   const color = Colors[theme];
   const { t } = useTranslation();
 
-  const [activeTab, setActiveTab] = useState<TourStatus>('PUBLISHED');
+  const [activeTab, setActiveTab] = useState<ProfileTourTabKey>('PUBLISHED');
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
@@ -36,10 +41,11 @@ export default function ProfileToursContainer() {
     };
   }, []);
 
-  const fetchTours = useCallback(async (status: TourStatus) => {
+  const fetchTours = useCallback(async (tab: ProfileTourTabKey) => {
     setLoading(true);
     try {
-      const response = await getMyTours(status);
+      const response =
+        tab === 'AI' ? await getMyTours({ generation_source: 'AI' }) : await getMyTours(tab);
       setTours(response.results);
     } catch (error) {
       console.error('Failed to fetch tours:', error);
@@ -63,8 +69,8 @@ export default function ProfileToursContainer() {
         return t('profile.emptyPublished');
       case 'DRAFT':
         return t('profile.emptyDraft');
-      case 'ARCHIVED':
-        return t('profile.emptyArchived');
+      case 'AI':
+        return t('profile.emptyAiTours');
       default:
         return t('profile.emptyDefault');
     }
@@ -77,6 +83,14 @@ export default function ProfileToursContainer() {
           <View style={styles.accentBar} />
           <Text style={styles.title}>{t('profile.myTours')}</Text>
         </View>
+        <TouchableOpacity
+          style={styles.completedToursButton}
+          onPress={() => router.push('/(tour)/my-completed-tours')}
+          activeOpacity={0.75}
+        >
+          <Text style={styles.completedToursButtonText}>{t('profile.completedTours')}</Text>
+          <Ionicons name="chevron-forward" size={16} color={color.primary} />
+        </TouchableOpacity>
       </View>
 
       {/* Segmented control */}

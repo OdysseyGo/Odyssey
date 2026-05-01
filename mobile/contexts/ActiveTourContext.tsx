@@ -8,6 +8,7 @@ import {
   Puzzle,
 } from '@/components/TourStepComponents/TourStep.config';
 
+import { ApiError } from '@/api/APIClient';
 import { getInProgressTour } from '@/api/tourProgress';
 
 interface ActiveTourState {
@@ -18,7 +19,11 @@ interface ActiveTourState {
   highestStepIndex: number;
   solvedSteps: Set<string>;
   locationConfirmedSteps: Set<string>;
+  stepAnswers: Map<string, string>;
+  stepAttempts: Map<string, number>;
   earnedXP: number;
+  skipCount: number;
+  wrongAnswerCount: number;
 }
 
 interface ActiveTourContextType extends ActiveTourState {
@@ -29,6 +34,10 @@ interface ActiveTourContextType extends ActiveTourState {
   setHighestStepIndex: (index: number) => void;
   solveStep: (stepId: string, xpReward?: number) => void;
   confirmLocation: (stepId: string) => void;
+  recordSkip: (countsAsMistake?: boolean) => void;
+  recordWrongAnswer: () => void;
+  recordAnswer: (stepId: string, answer: string) => void;
+  recordAttempt: (stepId: string) => void;
   resetProgress: () => void;
 }
 
@@ -40,7 +49,11 @@ const initialState: ActiveTourState = {
   highestStepIndex: 0,
   solvedSteps: new Set(),
   locationConfirmedSteps: new Set(),
+  stepAnswers: new Map(),
+  stepAttempts: new Map(),
   earnedXP: 0,
+  skipCount: 0,
+  wrongAnswerCount: 0,
 };
 
 const ActiveTourContext = createContext<ActiveTourContextType | undefined>(undefined);
@@ -132,7 +145,11 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
       highestStepIndex: 0,
       solvedSteps: new Set(),
       locationConfirmedSteps: new Set(),
+      stepAnswers: new Map(),
+      stepAttempts: new Map(),
       earnedXP: 0,
+      skipCount: 0,
+      wrongAnswerCount: 0,
     });
   }, []);
 
@@ -166,13 +183,48 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const recordSkip = useCallback((countsAsMistake = true) => {
+    setState((prev) => ({
+      ...prev,
+      skipCount: prev.skipCount + 1,
+      wrongAnswerCount: countsAsMistake ? prev.wrongAnswerCount + 1 : prev.wrongAnswerCount,
+    }));
+  }, []);
+
+  const recordWrongAnswer = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      wrongAnswerCount: prev.wrongAnswerCount + 1,
+    }));
+  }, []);
+
+  const recordAnswer = useCallback((stepId: string, answer: string) => {
+    setState((prev) => {
+      const next = new Map(prev.stepAnswers);
+      next.set(stepId, answer);
+      return { ...prev, stepAnswers: next };
+    });
+  }, []);
+
+  const recordAttempt = useCallback((stepId: string) => {
+    setState((prev) => {
+      const next = new Map(prev.stepAttempts);
+      next.set(stepId, (next.get(stepId) ?? 0) + 1);
+      return { ...prev, stepAttempts: next };
+    });
+  }, []);
+
   const resetProgress = useCallback(() => {
     setState((prev) => ({
       ...prev,
       currentStepIndex: 0,
       solvedSteps: new Set(),
       locationConfirmedSteps: new Set(),
+      stepAnswers: new Map(),
+      stepAttempts: new Map(),
       earnedXP: 0,
+      skipCount: 0,
+      wrongAnswerCount: 0,
     }));
   }, []);
 
@@ -219,9 +271,20 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         highestStepIndex: currentStepIdx,
         solvedSteps: restoredSolvedSteps,
         locationConfirmedSteps: restoredLocationConfirmedSteps,
+        stepAnswers: new Map(),
+        stepAttempts: new Map(
+          Object.entries(activeProgress.step_attempt_counts ?? {}).map(([k, v]) => [k, v])
+        ),
         earnedXP: activeProgress.total_xp,
+        skipCount: activeProgress.skip_count,
+        wrongAnswerCount: activeProgress.wrong_attempt_count,
       });
     } catch (error: any) {
+      if (error instanceof ApiError && error.statusCode === 401) {
+        setState(initialState);
+        return;
+      }
+
       console.error("Couldn't fetch current active tour ", error);
     }
   }, [state.isActive]);
@@ -237,6 +300,10 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         setHighestStepIndex,
         solveStep,
         confirmLocation,
+        recordSkip,
+        recordWrongAnswer,
+        recordAnswer,
+        recordAttempt,
         resetProgress,
       }}
     >

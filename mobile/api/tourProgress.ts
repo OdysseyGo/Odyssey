@@ -1,5 +1,6 @@
 import { apiRequest } from './APIClient';
-import { Tour } from './tours';
+import type { Tour } from './tours';
+import type { UserBadge } from './profile';
 
 export type TourProgressStatus = 'IN_PROGRESS' | 'COMPLETED';
 
@@ -14,6 +15,8 @@ export type TourProgress = {
   completed_at: string | null;
   total_xp: number;
   skip_count: number;
+  wrong_attempt_count: number;
+  step_attempt_counts: Record<string, number>;
 };
 
 export type CreateTourProgressRequest = {
@@ -24,6 +27,39 @@ export type StepActionResponse = {
   status: string;
   is_tour_complete: boolean;
   new_step_id: number | null;
+  awarded_xp: number;
+  awarded_badges?: UserBadge[];
+};
+
+export const DEFAULT_MAX_FAILED_ATTEMPTS = 3;
+
+export type PictureCompareResponse = StepActionResponse & {
+  accepted: boolean;
+  attempt_count?: number;
+  similarity_score: number;
+  threshold_used: number;
+  processing_ms: number;
+  max_attempts?: number;
+};
+
+export type ArCodeResponse = StepActionResponse & {
+  accepted: boolean;
+  attempt_count?: number;
+  max_attempts?: number;
+};
+
+export type TriviaAnswerResponse = StepActionResponse & {
+  accepted: boolean;
+  attempt_count?: number;
+};
+
+export type OpenEndedAnswerResponse = StepActionResponse & {
+  accepted: boolean;
+  attempt_count?: number;
+  similarity_score?: number;
+  threshold_used?: number;
+  max_attempts?: number;
+  revealed_answer?: string;
 };
 
 export type DeleteTourProgressRequest = {
@@ -108,6 +144,81 @@ export async function skipStep(id: number, signal?: AbortSignal): Promise<StepAc
   return apiRequest<StepActionResponse, void>({
     method: 'POST',
     url: `/api/tour-progress/${id}/skip-step/`,
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Submit a captured image for backend-verified picture-compare puzzle checking.
+ */
+export async function submitPictureCompare(
+  id: number,
+  imageUri: string,
+  signal?: AbortSignal
+): Promise<PictureCompareResponse> {
+  const formData = new FormData();
+  formData.append('image', {
+    uri: imageUri,
+    name: 'picture_compare_attempt.jpg',
+    type: 'image/jpeg',
+  } as any);
+
+  return apiRequest<PictureCompareResponse, FormData>({
+    method: 'POST',
+    url: `/api/tour-progress/${id}/submit-picture-compare/`,
+    data: formData,
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Submit a code guess for an AR puzzle on the current step.
+ */
+export async function submitArCode(
+  id: number,
+  code: string,
+  signal?: AbortSignal
+): Promise<ArCodeResponse> {
+  return apiRequest<ArCodeResponse, { code: string }>({
+    method: 'POST',
+    url: `/api/tour-progress/${id}/submit-ar-code/`,
+    data: { code },
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Submit a selected answer for a TRIVIA puzzle on the current step.
+ */
+export async function submitTriviaAnswer(
+  id: number,
+  answer: string,
+  signal?: AbortSignal
+): Promise<TriviaAnswerResponse> {
+  return apiRequest<TriviaAnswerResponse, { answer: string }>({
+    method: 'POST',
+    url: `/api/tour-progress/${id}/submit-trivia-answer/`,
+    data: { answer },
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Submit a typed answer for an OPEN_ENDED puzzle on the current step.
+ */
+export async function submitOpenEndedAnswer(
+  id: number,
+  answer: string,
+  signal?: AbortSignal
+): Promise<OpenEndedAnswerResponse> {
+  return apiRequest<OpenEndedAnswerResponse, { answer: string }>({
+    method: 'POST',
+    url: `/api/tour-progress/${id}/submit-open-ended-answer/`,
+    data: { answer },
     auth: true,
     signal,
   });

@@ -34,16 +34,51 @@ export interface NavigationArrowsProps {
   isLastStep: boolean;
 }
 
+function getActiveTourRevealLimit(
+  tour: Tour,
+  currentStepIndex: number,
+  solvedSteps: Set<string>,
+  locationConfirmedSteps: Set<string>
+): number {
+  const lastStepIndex = tour.steps.length - 1;
+
+  if (lastStepIndex < 0 || tour.hasCompletedOnce) {
+    return lastStepIndex;
+  }
+
+  const currentIndex = Math.min(currentStepIndex, lastStepIndex);
+  const currentStep = tour.steps[currentIndex];
+  const canRevealNext =
+    currentStep?.type === 'puzzle' &&
+    solvedSteps.has(currentStep.id) &&
+    locationConfirmedSteps.has(currentStep.id);
+  const revealFromIndex = Math.min(canRevealNext ? currentIndex + 1 : currentIndex, lastStepIndex);
+  const nextPuzzleOffset = tour.steps
+    .slice(revealFromIndex)
+    .findIndex((step) => step.type === 'puzzle');
+
+  return nextPuzzleOffset === -1 ? lastStepIndex : revealFromIndex + nextPuzzleOffset;
+}
+
 export function getVisibleMarkers(
   tour: Tour,
   currentStepIndex: number,
-  solvedSteps: Set<string>
+  solvedSteps: Set<string>,
+  locationConfirmedSteps: Set<string>
 ): MapMarkerProps[] {
-  // Show all markers immediately for better UX - no progressive reveal
-  return tour.steps.map((step, i) => {
-    const isCurrent = i === currentStepIndex;
+  const revealLimit = getActiveTourRevealLimit(
+    tour,
+    currentStepIndex,
+    solvedSteps,
+    locationConfirmedSteps
+  );
+  const visibleSteps = tour.steps.slice(0, revealLimit + 1);
+  const visibleCurrentStepIndex = Math.min(currentStepIndex, revealLimit);
+
+  return visibleSteps.map((step, i) => {
+    const isCurrent = i === visibleCurrentStepIndex;
     const isSolved = solvedSteps.has(step.id);
-    const isPast = i < currentStepIndex;
+    const isPast = i < visibleCurrentStepIndex;
 
     return {
       id: step.id,
@@ -61,42 +96,18 @@ export function getVisibleMarkers(
 export function getVisibleRoute(
   tour: Tour,
   currentStepIndex: number,
-  solvedSteps: Set<string>
+  solvedSteps: Set<string>,
+  locationConfirmedSteps: Set<string>
 ): { latitude: number; longitude: number }[] {
-  const route: { latitude: number; longitude: number }[] = [];
+  const revealLimit = getActiveTourRevealLimit(
+    tour,
+    currentStepIndex,
+    solvedSteps,
+    locationConfirmedSteps
+  );
+  const visibleSteps = tour.steps.slice(0, revealLimit + 1);
 
-  for (let i = 0; i < currentStepIndex; i++) {
-    const step = tour.steps[i];
-    const nextStep = tour.steps[i + 1];
-
-    const currentVisible = step.type !== 'puzzle' || solvedSteps.has(step.id);
-    const nextVisible =
-      i + 1 === currentStepIndex || nextStep.type !== 'puzzle' || solvedSteps.has(nextStep.id);
-
-    if (currentVisible && route.length === 0) {
-      route.push(step.coordinate);
-    }
-
-    if (currentVisible && nextVisible) {
-      if (route.length === 0) {
-        route.push(step.coordinate);
-      }
-      route.push(nextStep.coordinate);
-    }
-  }
-
-  if (route.length > 0) {
-    const currentStep = tour.steps[currentStepIndex];
-    const lastCoord = route[route.length - 1];
-    if (
-      lastCoord.latitude !== currentStep.coordinate.latitude ||
-      lastCoord.longitude !== currentStep.coordinate.longitude
-    ) {
-      route.push(currentStep.coordinate);
-    }
-  }
-
-  return route;
+  return visibleSteps.map((step) => step.coordinate);
 }
 
 export function canNavigateForward(

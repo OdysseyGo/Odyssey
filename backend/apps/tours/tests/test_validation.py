@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -25,6 +27,78 @@ class TourValidationTests(APITestCase):
         response = self.client.post("/api/tours/", tour_data, format="json")
         print("\nEmpty Category Response:", response.data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("category", response.data)
+
+    def test_publish_tour_requires_cover_image(self):
+        tour = Tour.objects.create(
+            title="Draft Tour",
+            description="D",
+            creator=self.user,
+            tour_type="STORY",
+            category="History",
+            difficulty="EASY",
+            duration_minutes=60,
+            city="Paris",
+            country="France",
+            country_code="FR",
+            status=Tour.DRAFT,
+        )
+
+        response = self.client.patch(
+            f"/api/tours/{tour.id}/",
+            {
+                "status": Tour.PUBLISHED,
+                "city_latitude": 48.8566,
+                "city_longitude": 2.3522,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("cover_image", response.data)
+
+    def test_publish_tour_requires_cover_image_file(self):
+        tour = Tour.objects.create(
+            title="AI Draft Tour",
+            description="D",
+            creator=self.user,
+            tour_type="STORY",
+            category="History",
+            difficulty="EASY",
+            duration_minutes=60,
+            city="Paris",
+            country="France",
+            country_code="FR",
+            status=Tour.DRAFT,
+        )
+        self.client.post(
+            f"/api/tours/{tour.id}/steps/",
+            {
+                "title": "Stop 1",
+                "description": "",
+                "latitude": "48.8584",
+                "longitude": "2.2945",
+                "order": 0,
+            },
+            format="json",
+        )
+
+        with patch(
+            "apps.tours.api.serializers.GoogleMapsFacade.tour_has_step_in_city",
+            return_value=True,
+        ):
+            response = self.client.patch(
+                f"/api/tours/{tour.id}/",
+                {
+                    "status": Tour.PUBLISHED,
+                    "city_latitude": 48.8566,
+                    "city_longitude": 2.3522,
+                },
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("cover_image", response.data)
 
     def test_create_step_almost_empty_fields(self):
         # Create valid tour first

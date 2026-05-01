@@ -42,7 +42,11 @@ export function mapApiTourToCreationData(tour: Tour): TourCreationData {
     tourType: tour.tour_type,
     estimatedDuration: tour.duration_minutes,
     locations,
-    city: tour.city ?? '',
+    country: tour.country ?? '',
+    countryCode: tour.country_code ?? '',
+    state: tour.city ?? '',
+    stateLatitude: tour.city_latitude,
+    stateLongitude: tour.city_longitude,
   };
 }
 

@@ -1,5 +1,5 @@
 export type Props = {
-  xp?: number;
+  km?: number;
   tours?: number;
   badges?: number;
   followers?: number;
@@ -10,10 +10,11 @@ export type Props = {
   onBadgesPress?: () => void;
   onFollowersPress?: () => void;
   onFollowingPress?: () => void;
+  disableCopilot?: boolean;
 };
 
 export const exampleProfileStats: Props = {
-  xp: 1200,
+  km: 12.3,
   tours: 5,
   badges: 3,
   followers: 100,
