@@ -15,12 +15,18 @@ from apps.gamification.models import (
     PictureCompareConfig,
     TourProgress,
     UserBadge,
+    UserBadgeHistory,
 )
 from apps.gamification.picture_compare import compare_picture_similarity
 from apps.gamification.services import BadgeService
 from apps.tours.models import Puzzle, PuzzleAttempt, Tour, TourStep
 
-from .serializers import BadgeSerializer, TourProgressSerializer, UserBadgeSerializer
+from .serializers import (
+    BadgeSerializer,
+    TourProgressSerializer,
+    UserBadgeHistorySerializer,
+    UserBadgeSerializer,
+)
 
 TRIVIA_STEP_XP = 25
 NON_TRIVIA_STEP_XP = 50
@@ -37,7 +43,23 @@ class UserBadgeViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return UserBadge.objects.filter(user=self.request.user).order_by("-earned_at")
+        return (
+            UserBadge.objects.filter(user=self.request.user)
+            .select_related("badge", "source_tour")
+            .order_by("-earned_at")
+        )
+
+
+class UserBadgeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = UserBadgeHistorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            UserBadgeHistory.objects.filter(user=self.request.user)
+            .select_related("badge", "source_tour", "user_badge")
+            .order_by("-earned_at")
+        )
 
 
 class TourProgressViewSet(
@@ -217,7 +239,7 @@ class TourProgressViewSet(
                         )
                         if earned_badge_names:
                             awarded_badges = list(
-                                UserBadge.objects.select_related("badge")
+                                UserBadge.objects.select_related("badge", "source_tour")
                                 .filter(
                                     user=locked_user,
                                     source_tour=progress.tour,

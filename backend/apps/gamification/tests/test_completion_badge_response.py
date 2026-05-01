@@ -48,3 +48,14 @@ class CompletionBadgeResponseTests(APITestCase):
         self.assertEqual(awarded_badge["badge"]["code"], "CITY_GOLD")
         self.assertEqual(awarded_badge["city"], "Paris")
         self.assertEqual(awarded_badge["country_code"], "FR")
+        self.assertEqual(awarded_badge["source_tour"], tour.id)
+        self.assertEqual(awarded_badge["source_tour_detail"]["title"], "Paris Walk")
+
+        history_response = self.client.get("/api/my-badge-history/")
+        self.assertEqual(history_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(history_response.data["count"], 1)
+        self.assertEqual(history_response.data["results"][0]["source_tour"], tour.id)
+        self.assertEqual(
+            history_response.data["results"][0]["source_tour_detail"]["title"],
+            "Paris Walk",
+        )

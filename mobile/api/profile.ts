@@ -18,8 +18,20 @@ export type UserBadge = {
   country_code: string;
   mistake_count?: number | null;
   source_tour?: number | null;
+  source_tour_detail?: {
+    id: number;
+    title: string;
+    city?: string;
+    country?: string;
+    country_code?: string;
+  } | null;
   earned_at: string;
   visual_config?: Record<string, unknown>;
+};
+
+export type UserBadgeHistory = UserBadge & {
+  user_badge?: number | null;
+  event_type: 'EARNED' | 'UPGRADED';
 };
 
 export type BadgesListResponse = {
@@ -27,6 +39,13 @@ export type BadgesListResponse = {
   next?: string;
   previous?: string;
   results: UserBadge[];
+};
+
+export type BadgeHistoryListResponse = {
+  count: number;
+  next?: string;
+  previous?: string;
+  results: UserBadgeHistory[];
 };
 
 export const getMyBadges = () =>
@@ -39,6 +58,12 @@ export const getUserBadges = (userId: string) =>
   apiRequest<BadgesListResponse>({
     method: 'get',
     url: `/api/users/${userId}/badges/`,
+  });
+
+export const getMyBadgeHistory = () =>
+  apiRequest<BadgeHistoryListResponse>({
+    method: 'get',
+    url: `/api/my-badge-history/`,
   });
 
 export type LevelInfo = {
