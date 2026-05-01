@@ -11,25 +11,64 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('tours', '0016_alter_puzzle_puzzle_type_compasspuzzledetail'),
+        ("tours", "0016_alter_puzzle_puzzle_type_compasspuzzledetail"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='GenerationJob',
+            name="GenerationJob",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('status', models.CharField(choices=[('PENDING', 'Pending'), ('RUNNING', 'Running'), ('SUCCESS', 'Success'), ('FAILED', 'Failed')], default='PENDING', max_length=16)),
-                ('progress_label', models.CharField(blank=True, default='', max_length=120)),
-                ('error', models.TextField(blank=True, default='')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('creator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='generation_jobs', to=settings.AUTH_USER_MODEL)),
-                ('tour', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='generation_jobs', to='tours.tour')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("PENDING", "Pending"),
+                            ("RUNNING", "Running"),
+                            ("SUCCESS", "Success"),
+                            ("FAILED", "Failed"),
+                        ],
+                        default="PENDING",
+                        max_length=16,
+                    ),
+                ),
+                (
+                    "progress_label",
+                    models.CharField(blank=True, default="", max_length=120),
+                ),
+                ("error", models.TextField(blank=True, default="")),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "creator",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="generation_jobs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "tour",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="generation_jobs",
+                        to="tours.tour",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
     ]

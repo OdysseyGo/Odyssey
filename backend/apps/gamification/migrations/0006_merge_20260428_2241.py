@@ -6,9 +6,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('gamification', '0005_tourprogress_wrong_attempt_count'),
-        ('gamification', '0005_tourprogress_xp_awarded'),
+        ("gamification", "0005_tourprogress_wrong_attempt_count"),
+        ("gamification", "0005_tourprogress_xp_awarded"),
     ]
 
-    operations = [
-    ]
+    operations = []
