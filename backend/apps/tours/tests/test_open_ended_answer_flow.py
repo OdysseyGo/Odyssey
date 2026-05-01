@@ -99,6 +99,10 @@ class OpenEndedAnswerFlowTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertFalse(response.data["accepted"])
             self.assertEqual(response.data["attempt_count"], expected_attempt_count)
+            if expected_attempt_count < 3:
+                self.assertNotIn("revealed_answer", response.data)
+            else:
+                self.assertEqual(response.data["revealed_answer"], "Byzantine Empire")
 
         blocked_response = self.client.post(
             f"/api/tour-progress/{self.progress.id}/submit-open-ended-answer/",
@@ -108,6 +112,7 @@ class OpenEndedAnswerFlowTests(APITestCase):
         self.assertEqual(blocked_response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(blocked_response.data["accepted"])
         self.assertEqual(blocked_response.data["attempt_count"], 3)
+        self.assertEqual(blocked_response.data["revealed_answer"], "Byzantine Empire")
 
         self.progress.refresh_from_db()
         self.assertEqual(self.progress.current_step_id, self.step_one.id)

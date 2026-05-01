@@ -57,6 +57,7 @@ export type OpenEndedAnswerResponse = StepActionResponse & {
   similarity_score?: number;
   threshold_used?: number;
   max_attempts?: number;
+  revealed_answer?: string;
 };
 
 export type DeleteTourProgressRequest = {
