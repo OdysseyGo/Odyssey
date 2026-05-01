@@ -494,6 +494,8 @@
     "createAnother": "Crear Otro",
     "failedTitle": "Error de Generación",
     "failedMessage": "Algo salió mal al generar tu tour. Por favor, inténtalo de nuevo.",
+    "cancelledTitle": "Generación Cancelada",
+    "cancelledMessage": "La generación del tour fue cancelada.",
     "generateButton": "Generar Tour",
     "header": {
       "title": "Crear con IA",
@@ -501,7 +503,8 @@
     },
     "loading": {
       "title": "Creando tu Aventura...",
-      "subtitle": "Esto suele tardar unos 20–30 segundos"
+      "subtitle": "Esto suele tardar unos 20–30 segundos",
+      "cancel": "Cancelar generación"
     },
     "languageSelector": {
       "title": "Idioma del Contenido",

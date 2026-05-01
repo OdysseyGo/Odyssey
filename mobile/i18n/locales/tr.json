@@ -516,6 +516,8 @@
     "createAnother": "Başka Bir Tane Oluştur",
     "failedTitle": "Oluşturma Başarısız",
     "failedMessage": "Turunuz oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
+    "cancelledTitle": "Oluşturma İptal Edildi",
+    "cancelledMessage": "Tur oluşturma iptal edildi.",
     "generateButton": "Tur Oluştur",
     "header": {
       "title": "Yapay Zeka ile Oluştur",
@@ -523,7 +525,8 @@
     },
     "loading": {
       "title": "Maceranız Hazırlanıyor...",
-      "subtitle": "Bu genellikle 20–30 saniye sürer"
+      "subtitle": "Bu genellikle 20–30 saniye sürer",
+      "cancel": "Oluşturmayı iptal et"
     },
     "languageSelector": {
       "title": "İçerik Dili",

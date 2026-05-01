@@ -18,7 +18,7 @@ export type AITourJobAccepted = {
   status: GenerationJobStatus;
 };
 
-export type GenerationJobStatus = 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED';
+export type GenerationJobStatus = 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
 
 export type AITourJob = {
   job_id: string;
@@ -49,5 +49,13 @@ export async function getAITourJob(jobId: string, signal?: AbortSignal): Promise
     url: `/api/ai/jobs/${jobId}/`,
     auth: true,
     signal,
+  });
+}
+
+export async function cancelAITourJob(jobId: string): Promise<AITourJob> {
+  return apiRequest<AITourJob>({
+    method: 'POST',
+    url: `/api/ai/jobs/${jobId}/cancel/`,
+    auth: true,
   });
 }

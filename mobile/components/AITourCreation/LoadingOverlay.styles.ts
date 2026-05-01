@@ -32,5 +32,18 @@ export const loadingOverlayStyles = (theme: ThemeName) => {
       marginTop: Spacing.sm,
       textAlign: 'center',
     },
+    cancelButton: {
+      marginTop: Spacing.lg,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      borderRadius: Spacing.borderRadius,
+      borderWidth: 1,
+      borderColor: color.border,
+    },
+    cancelText: {
+      color: color.text,
+      fontSize: 14,
+      fontWeight: '600',
+    },
   });
 };

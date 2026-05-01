@@ -9,12 +9,14 @@ class GenerationJob(models.Model):
     RUNNING = "RUNNING"
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
 
     STATUS_CHOICES = [
         (PENDING, "Pending"),
         (RUNNING, "Running"),
         (SUCCESS, "Success"),
         (FAILED, "Failed"),
+        (CANCELLED, "Cancelled"),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -38,6 +40,16 @@ class GenerationJob(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(
+                fields=["creator", "status", "created_at"],
+                name="ai_job_user_status_created",
+            ),
+            models.Index(
+                fields=["creator", "status", "updated_at"],
+                name="ai_job_user_status_updated",
+            ),
+        ]
 
     def __str__(self):
         return f"GenerationJob({self.id}, {self.status})"

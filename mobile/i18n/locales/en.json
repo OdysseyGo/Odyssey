@@ -516,6 +516,8 @@
     "createAnother": "Create Another",
     "failedTitle": "Generation Failed",
     "failedMessage": "Something went wrong while generating your tour. Please try again.",
+    "cancelledTitle": "Generation Cancelled",
+    "cancelledMessage": "Tour generation was cancelled.",
     "generateButton": "Generate Tour",
     "header": {
       "title": "Create with AI",
@@ -523,7 +525,8 @@
     },
     "loading": {
       "title": "Crafting Your Adventure...",
-      "subtitle": "This usually takes about 20–30 seconds"
+      "subtitle": "This usually takes about 20–30 seconds",
+      "cancel": "Cancel generation"
     },
     "languageSelector": {
       "title": "Content Language",

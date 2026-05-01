@@ -11,7 +11,7 @@ from apps.ads.models import AdPlacement, RewardedAdGrant
 
 from .errors import STALE_GENERATION_JOB_ERROR, get_generation_error_message
 from .models import GenerationJob
-from .views import GenerateTourView, _run_generation
+from .views import CancelGenerationJobView, GenerateTourView, _run_generation
 
 
 def _payload():
@@ -165,6 +165,59 @@ class GenerateTourViewLimitTests(TestCase):
         self.assertEqual(GenerationJob.objects.filter(creator=self.user).count(), 0)
 
 
+class CancelGenerationJobViewTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="cancel_user",
+            email="cancel@example.com",
+            password="pass123",
+        )
+        self.factory = APIRequestFactory()
+        self.view = CancelGenerationJobView.as_view()
+
+    def _post(self, job):
+        request = self.factory.post(f"/api/ai/jobs/{job.id}/cancel/", {}, format="json")
+        force_authenticate(request, user=self.user)
+        return self.view(request, id=job.id)
+
+    def test_cancels_running_job(self):
+        job = GenerationJob.objects.create(
+            creator=self.user,
+            status=GenerationJob.RUNNING,
+            progress_label="Working",
+        )
+
+        response = self._post(job)
+
+        job.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(job.status, GenerationJob.CANCELLED)
+        self.assertEqual(job.progress_label, "")
+        self.assertEqual(job.error, "Tour generation was cancelled.")
+
+    def test_cancel_is_idempotent_for_cancelled_job(self):
+        job = GenerationJob.objects.create(
+            creator=self.user,
+            status=GenerationJob.CANCELLED,
+            error="Tour generation was cancelled.",
+        )
+
+        response = self._post(job)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], GenerationJob.CANCELLED)
+
+    def test_cannot_cancel_finished_job(self):
+        job = GenerationJob.objects.create(
+            creator=self.user,
+            status=GenerationJob.SUCCESS,
+        )
+
+        response = self._post(job)
+
+        self.assertEqual(response.status_code, 409)
+
+
 class CleanupGenerationJobsCommandTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
@@ -184,6 +237,7 @@ class CleanupGenerationJobsCommandTests(TestCase):
     def test_deletes_only_old_terminal_jobs(self):
         old_success = self._job(GenerationJob.SUCCESS, 8)
         old_failed = self._job(GenerationJob.FAILED, 9)
+        old_cancelled = self._job(GenerationJob.CANCELLED, 9)
         old_running = self._job(GenerationJob.RUNNING, 10)
         recent_failed = self._job(GenerationJob.FAILED, 2)
 
@@ -192,6 +246,7 @@ class CleanupGenerationJobsCommandTests(TestCase):
         remaining_ids = set(GenerationJob.objects.values_list("id", flat=True))
         self.assertNotIn(old_success.id, remaining_ids)
         self.assertNotIn(old_failed.id, remaining_ids)
+        self.assertNotIn(old_cancelled.id, remaining_ids)
         self.assertIn(old_running.id, remaining_ids)
         self.assertIn(recent_failed.id, remaining_ids)
 

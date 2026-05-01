@@ -3,6 +3,7 @@ import threading
 
 from django.conf import settings
 from django.db import close_old_connections, transaction
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView
@@ -30,15 +31,22 @@ class GenerateTourRateThrottle(ScopedRateThrottle):
 def _run_generation(job_id, payload, user_id):
     from django.contrib.auth import get_user_model
 
+    close_old_connections()
     User = get_user_model()
     try:
         job = GenerationJob.objects.get(pk=job_id)
+        if job.status != GenerationJob.PENDING:
+            return
         user = User.objects.get(pk=user_id)
         job.status = GenerationJob.RUNNING
         job.save(update_fields=["status", "updated_at"])
+        close_old_connections()
 
         def _progress(label):
-            GenerationJob.objects.filter(pk=job_id).update(progress_label=label)
+            GenerationJob.objects.filter(
+                pk=job_id, status=GenerationJob.RUNNING
+            ).update(progress_label=label, updated_at=timezone.now())
+            close_old_connections()
 
         service = GeminiService()
         tour = service.generate_tour(
@@ -54,23 +62,29 @@ def _run_generation(job_id, payload, user_id):
             creator=user,
             progress_callback=_progress,
         )
-        job.refresh_from_db()
-        if job.status != GenerationJob.RUNNING:
+        updated = GenerationJob.objects.filter(
+            pk=job_id, status=GenerationJob.RUNNING
+        ).update(
+            status=GenerationJob.SUCCESS,
+            tour=tour,
+            progress_label="",
+            updated_at=timezone.now(),
+        )
+        if not updated:
+            job.refresh_from_db()
             logger.info(
                 "AI generation job %s finished after status changed to %s",
                 job_id,
                 job.status,
             )
-            return
-        job.status = GenerationJob.SUCCESS
-        job.tour = tour
-        job.progress_label = ""
-        job.save(update_fields=["status", "tour", "progress_label", "updated_at"])
     except Exception as e:
         logger.exception("AI generation job %s failed", job_id)
-        GenerationJob.objects.filter(pk=job_id).update(
+        GenerationJob.objects.filter(pk=job_id).exclude(
+            status=GenerationJob.CANCELLED
+        ).update(
             status=GenerationJob.FAILED,
             error=get_generation_error_message(e),
+            updated_at=timezone.now(),
         )
     finally:
         close_old_connections()
@@ -169,3 +183,34 @@ class GenerationJobView(RetrieveAPIView):
 
     def get_queryset(self):
         return GenerationJob.objects.filter(creator=self.request.user)
+
+
+class CancelGenerationJobView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        responses={200: GenerationJobSerializer},
+        description="Mark an in-flight AI generation job as cancelled.",
+    )
+    def post(self, request, id):
+        try:
+            job = GenerationJob.objects.get(pk=id, creator=request.user)
+        except GenerationJob.DoesNotExist:
+            return Response(
+                {"error": "Generation job not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if job.status in [GenerationJob.SUCCESS, GenerationJob.FAILED]:
+            return Response(
+                {"error": "This generation job has already finished."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        if job.status != GenerationJob.CANCELLED:
+            job.status = GenerationJob.CANCELLED
+            job.progress_label = ""
+            job.error = "Tour generation was cancelled."
+            job.save(update_fields=["status", "progress_label", "error", "updated_at"])
+
+        return Response(GenerationJobSerializer(job).data, status=status.HTTP_200_OK)

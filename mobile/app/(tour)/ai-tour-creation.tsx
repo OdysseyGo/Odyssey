@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -32,7 +32,13 @@ import {
   AITourFormData,
   createEmptyFormData,
 } from '@/components/AITourCreation';
-import { generateAITour, getAITourJob, AITourJob, AITourJobAccepted } from '@/api/aiTours';
+import {
+  cancelAITourJob,
+  generateAITour,
+  getAITourJob,
+  AITourJob,
+  AITourJobAccepted,
+} from '@/api/aiTours';
 import { CreationHeader } from '@/components/TourCreation/common';
 import { useRewardedAd } from '@/components/Ads/useRewardedAd';
 import { TOUR_LIST_REFRESH_REQUESTED_KEY } from '@/constants/StorageKeys';
@@ -42,13 +48,27 @@ const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 
 async function pollGenerationJob(
   jobId: string,
-  onProgress: (label: string) => void
+  onProgress: (label: string) => void,
+  shouldStop: () => boolean
 ): Promise<AITourJob> {
   const start = Date.now();
   while (true) {
+    if (shouldStop()) {
+      return {
+        job_id: jobId,
+        status: 'CANCELLED',
+        progress_label: '',
+        tour_id: null,
+        error: 'Tour generation was cancelled.',
+        created_at: '',
+        updated_at: '',
+      };
+    }
     const job = await getAITourJob(jobId);
     if (job.progress_label) onProgress(job.progress_label);
-    if (job.status === 'SUCCESS' || job.status === 'FAILED') return job;
+    if (job.status === 'SUCCESS' || job.status === 'FAILED' || job.status === 'CANCELLED') {
+      return job;
+    }
     if (Date.now() - start > POLL_TIMEOUT_MS) {
       return { ...job, status: 'FAILED', error: 'Generation timed out' };
     }
@@ -63,7 +83,9 @@ export default function AITourCreation() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [progressLabel, setProgressLabel] = useState<string>('');
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
   const [formData, setFormData] = useState<AITourFormData>(createEmptyFormData());
+  const cancelRequestedRef = useRef(false);
   const rewardedAiSlot = useRewardedAd('rewarded_ai_slot');
 
   const tourModeOptions = useMemo(
@@ -111,6 +133,8 @@ export default function AITourCreation() {
 
     setIsLoading(true);
     setProgressLabel('');
+    setCurrentJobId(null);
+    cancelRequestedRef.current = false;
 
     try {
       const buildPayload = () => ({
@@ -148,7 +172,17 @@ export default function AITourCreation() {
         throw new Error(t('aiTour.failedMessage'));
       }
 
-      const finalJob = await pollGenerationJob(accepted.job_id, setProgressLabel);
+      setCurrentJobId(accepted.job_id);
+      if (cancelRequestedRef.current) {
+        await cancelAITourJob(accepted.job_id);
+        return;
+      }
+
+      const finalJob = await pollGenerationJob(
+        accepted.job_id,
+        setProgressLabel,
+        () => cancelRequestedRef.current
+      );
 
       if (finalJob.status === 'SUCCESS' && finalJob.tour_id != null) {
         const tourId = finalJob.tour_id;
@@ -163,7 +197,7 @@ export default function AITourCreation() {
             style: 'cancel',
           },
         ]);
-      } else {
+      } else if (finalJob.status !== 'CANCELLED') {
         Alert.alert(t('aiTour.failedTitle'), finalJob.error || t('aiTour.failedMessage'));
       }
     } catch (error: any) {
@@ -171,7 +205,24 @@ export default function AITourCreation() {
     } finally {
       setIsLoading(false);
       setProgressLabel('');
+      setCurrentJobId(null);
     }
+  };
+
+  const handleCancelGeneration = async () => {
+    cancelRequestedRef.current = true;
+    setProgressLabel(t('aiTour.cancelledMessage'));
+    setIsLoading(false);
+    const jobId = currentJobId;
+    setCurrentJobId(null);
+    if (jobId) {
+      try {
+        await cancelAITourJob(jobId);
+      } catch {
+        // The poll loop will stop locally even if the server already finished the job.
+      }
+    }
+    Alert.alert(t('aiTour.cancelledTitle'), t('aiTour.cancelledMessage'));
   };
 
   return (
@@ -309,7 +360,11 @@ export default function AITourCreation() {
         <GenerateButton onPress={handleGenerate} disabled={!isFormValid} isLoading={isLoading} />
       </KeyboardAvoidingView>
 
-      <LoadingOverlay visible={isLoading} subtitle={progressLabel || undefined} />
+      <LoadingOverlay
+        visible={isLoading}
+        subtitle={progressLabel || undefined}
+        onCancel={handleCancelGeneration}
+      />
     </View>
   );
 }
