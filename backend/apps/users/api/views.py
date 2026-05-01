@@ -1,4 +1,5 @@
 import logging
+import secrets
 
 from django.contrib.auth import authenticate  # login direkt
 from django.core.mail import send_mail
@@ -8,6 +9,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import filters
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
+from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
@@ -27,6 +29,7 @@ from .serializers import (
     SearchHistorySerializer,
     UserSerializer,
 )
+from .throttles import PasswordResetConfirmThrottle, PasswordResetRequestThrottle
 
 logger = logging.getLogger(__name__)
 
@@ -223,7 +226,8 @@ class UserViewSet(ModelViewSet):
         detail=False,
         methods=["post"],
         url_path="request-password-reset",
-        permission_classes=[],
+        permission_classes=[AllowAny],
+        throttle_classes=[PasswordResetRequestThrottle],
     )
     def request_password_reset(self, request):
         email = request.data.get("email")
@@ -251,13 +255,15 @@ class UserViewSet(ModelViewSet):
             )
         except Exception as e:
             logger.error("Failed to send password reset email to %s: %s", user.email, e)
-            return Response(
-                {"detail": "Could not send email. Please try again later."}, status=503
-            )
+            return Response(neutral, status=200)
         return Response(neutral, status=200)
 
     @action(
-        detail=False, methods=["post"], url_path="reset-password", permission_classes=[]
+        detail=False,
+        methods=["post"],
+        url_path="reset-password",
+        permission_classes=[AllowAny],
+        throttle_classes=[PasswordResetConfirmThrottle],
     )
     def reset_password(self, request):
         email = request.data.get("email")
@@ -271,19 +277,22 @@ class UserViewSet(ModelViewSet):
 
         try:
             user = User.objects.get(email__iexact=email)
-            otp = PasswordResetOTP.objects.filter(
-                user=user, code=code, used=False
-            ).latest("created_at")
+            otp = PasswordResetOTP.objects.filter(user=user, used=False).latest("created_at")
         except (User.DoesNotExist, PasswordResetOTP.DoesNotExist):
             return Response({"detail": "Invalid or expired code"}, status=400)
 
-        if not otp.is_valid():
-            return Response({"detail": "Code has expired"}, status=400)
+        if not otp.can_attempt():
+            return Response({"detail": "Invalid or expired code"}, status=400)
+
+        if not secrets.compare_digest(otp.code, str(code)):
+            otp.attempts = otp.attempts + 1
+            otp.save(update_fields=["attempts"])
+            return Response({"detail": "Invalid or expired code"}, status=400)
 
         user.set_password(new_password)
         user.save()
         otp.used = True
-        otp.save()
+        otp.save(update_fields=["used"])
         return Response({"detail": "Password updated successfully"}, status=200)
 
     @action(
