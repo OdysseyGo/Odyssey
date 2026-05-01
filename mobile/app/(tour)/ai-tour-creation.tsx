@@ -186,7 +186,11 @@ export default function AITourCreation() {
 
       if (finalJob.status === 'SUCCESS' && finalJob.tour_id != null) {
         const tourId = finalJob.tour_id;
-        await AsyncStorage.setItem(TOUR_LIST_REFRESH_REQUESTED_KEY, '1');
+        try {
+          await AsyncStorage.setItem(TOUR_LIST_REFRESH_REQUESTED_KEY, '1');
+        } catch (err) {
+          console.warn('Could not persist tour refresh flag', err);
+        }
         Alert.alert(t('aiTour.successTitle'), t('aiTour.successMessage'), [
           {
             text: t('aiTour.viewTour'),
