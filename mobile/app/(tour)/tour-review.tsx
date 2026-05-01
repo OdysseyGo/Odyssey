@@ -35,9 +35,17 @@ export default function TourReviewScreen() {
   const { tourData, resetTourData } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { t } = useTranslation();
-  const isReadyToSubmit = tourData.locations.every((location) =>
-    doesLocationMeetTourRequirements(location, tourData.tourType)
-  );
+  const isReadyToSubmit =
+    !!tourData.coverImage &&
+    tourData.locations.every((location) =>
+      doesLocationMeetTourRequirements(location, tourData.tourType)
+    );
+  const hasValidSelectedLocation =
+    tourData.country.trim().length > 0 &&
+    tourData.countryCode.trim().length > 0 &&
+    tourData.state.trim().length > 0 &&
+    Number.isFinite(tourData.stateLatitude) &&
+    Number.isFinite(tourData.stateLongitude);
 
   const handleSubmitTour = async () => {
     if (!isReadyToSubmit) {
@@ -45,6 +53,15 @@ export default function TourReviewScreen() {
         t('creation.incompletePuzzleTitle', { defaultValue: 'Complete required puzzles' }),
         t('creation.incompletePuzzleMessage', {
           defaultValue: 'Puzzle tours need a valid puzzle at every location before submission.',
+        })
+      );
+      return;
+    }
+    if (!hasValidSelectedLocation) {
+      Alert.alert(
+        t('creation.incompleteLocationTitle', { defaultValue: 'Complete location details' }),
+        t('creation.incompleteLocationMessage', {
+          defaultValue: 'Please select country and state from the dropdown lists.',
         })
       );
       return;
@@ -60,20 +77,19 @@ export default function TourReviewScreen() {
             const tour = await createTour({
               title: tourData.title || 'Untitled Tour',
               description: tourData.description || 'No description provided.',
+              cover_image: tourData.coverImage,
               tour_type: tourData.tourType,
               category: tourData.category || 'General',
               difficulty: tourData.difficulty,
               duration_minutes: tourData.estimatedDuration,
-              city: tourData.state || 'Unknown State',
-              country: tourData.country || '',
-              country_code: tourData.countryCode || '',
+              city: tourData.state,
+              country: tourData.country,
+              country_code: tourData.countryCode,
               city_latitude: tourData.stateLatitude,
               city_longitude: tourData.stateLongitude,
               status: 'DRAFT',
               is_premium: false,
             });
-
-            console.log('Tour created:', tour.id);
 
             // 2. Create steps and configure step puzzles using type-specific endpoints.
             for (const [index, loc] of tourData.locations.entries()) {
@@ -166,9 +182,9 @@ export default function TourReviewScreen() {
 
             // 3. Publish after all steps are created so backend city/step validation runs once.
             await updateTour(tour.id, {
-              city: tourData.state || 'Unknown State',
-              country: tourData.country || '',
-              country_code: tourData.countryCode || '',
+              city: tourData.state,
+              country: tourData.country,
+              country_code: tourData.countryCode,
               city_latitude: tourData.stateLatitude,
               city_longitude: tourData.stateLongitude,
               status: 'PUBLISHED',
@@ -204,7 +220,7 @@ export default function TourReviewScreen() {
       <CreationFooter
         buttonText={isSubmitting ? t('creation.submitting') : t('creation.submit')}
         onPress={handleSubmitTour}
-        disabled={isSubmitting || !isReadyToSubmit}
+        disabled={isSubmitting || !isReadyToSubmit || !hasValidSelectedLocation}
       />
     </View>
   );

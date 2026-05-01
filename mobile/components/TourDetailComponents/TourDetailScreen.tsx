@@ -302,6 +302,7 @@ export function TourDetailScreenContent({
       >
         <TourDetailCover
           coverImage={tour.coverImage}
+          coverImageAttribution={tour.coverImageAttribution}
           title={tour.title}
           rating={tour.rating}
           reviewCount={tour.reviewCount}

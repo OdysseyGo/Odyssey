@@ -68,14 +68,15 @@ export interface TourLocation {
 export interface TourCreationData {
   title: string;
   description: string;
+  coverImage?: string;
   category: string;
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   tourType: 'STORY' | 'PUZZLE' | 'HYBRID';
   estimatedDuration: number; // in minutes
   locations: TourLocation[];
-  country?: string;
-  countryCode?: string;
-  state?: string;
+  country: string;
+  countryCode: string;
+  state: string;
   stateLatitude?: number;
   stateLongitude?: number;
 }
@@ -108,6 +109,7 @@ export const TOUR_TYPE_OPTIONS = [
 export const createEmptyTourData = (): TourCreationData => ({
   title: '',
   description: '',
+  coverImage: undefined,
   category: '',
   difficulty: 'MEDIUM',
   tourType: 'STORY',

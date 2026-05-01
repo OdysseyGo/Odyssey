@@ -5,9 +5,13 @@ import os
 import random
 import re
 import string
+import uuid
 from typing import Optional
+from urllib.error import URLError
+from urllib.request import urlopen
 
 import google.generativeai as genai
+from django.core.files.base import ContentFile
 from django.db import transaction
 
 from apps.tours.models import (
@@ -18,7 +22,7 @@ from apps.tours.models import (
     TourStep,
     TriviaPuzzleDetail,
 )
-from apps.tours.utils import GoogleMapsFacade
+from apps.tours.utils import GoogleMapsFacade, normalize_tour_country
 
 AR_SECRET_CODE_REGEX = re.compile(r"^[A-Za-z0-9]{4,12}$")
 TRIVIA_OPTION_LABEL_REGEX = re.compile(r"\b[A-H][).:]\s+\S")
@@ -47,6 +51,8 @@ class GeminiService:
 
     # Estimated time a user spends at each stop (reading, exploring, solving puzzles)
     MINUTES_PER_STEP = 5
+    PLACE_PHOTO_TIMEOUT_SECONDS = 10
+    PLACE_PHOTO_MAX_BYTES = 10 * 1024 * 1024
 
     def __init__(self):
         api_key = os.getenv("GEMINI_API_KEY")
@@ -162,10 +168,11 @@ class GeminiService:
 
         # ---- Step 4: Validate and enrich with verified coordinates ----
         self._validate_tour_data(tour_data, mode)
+        maps_facade = GoogleMapsFacade()
 
         # Build a lookup of verified places by name (case-insensitive)
         places_lookup = {p["name"].strip().lower(): p for p in candidate_places}
-
+        selected_places_by_step: list[Optional[dict]] = []
         # Replace AI coordinates with verified Google Maps coordinates
         for step_data in tour_data["steps"]:
             step_name = step_data["title"].strip().lower()
@@ -190,7 +197,6 @@ class GeminiService:
                         "Falling back to geocoding.",
                         step_data["title"],
                     )
-                    maps_facade = GoogleMapsFacade()
                     verified_lat, verified_lng = maps_facade.geocode_location(
                         name=step_data["title"],
                         city=location_query,
@@ -199,11 +205,44 @@ class GeminiService:
                     )
                     step_data["latitude"] = verified_lat
                     step_data["longitude"] = verified_lng
+            selected_places_by_step.append(matched_place)
+
+        cover_image_attribution = ""
+        cover_image_bytes: Optional[bytes] = None
+        cover_image_ext = ".jpg"
+        if selected_places_by_step:
+            first_place = selected_places_by_step[0]
+            first_place_id = (
+                str(first_place.get("place_id"))
+                if isinstance(first_place, dict) and first_place.get("place_id")
+                else ""
+            )
+            if first_place_id:
+                photo_data = maps_facade.get_place_photo(first_place_id)
+                if isinstance(photo_data, dict):
+                    photo_url = photo_data.get("url", "") or ""
+                    cover_image_attribution = photo_data.get("attribution", "") or ""
+                    downloaded = self._download_place_photo(photo_url)
+                    if downloaded:
+                        cover_image_bytes, cover_image_ext = downloaded
+                else:
+                    logger.warning(
+                        "No Google Places photo found for AI tour cover (place_id=%s)",
+                        first_place_id,
+                    )
+            else:
+                logger.warning(
+                    "No place_id found for first AI tour step; skipping cover image."
+                )
 
         # ---- Step 4b: Reorder stops geometrically to eliminate zigzag ----
         tour_data["steps"] = self._nearest_neighbor_order(tour_data["steps"])
 
         # ---- Step 5: Persist to database ----
+        canonical_country, canonical_country_code = normalize_tour_country(
+            country=country,
+            country_code=country_code,
+        )
         with transaction.atomic():
             tour = Tour.objects.create(
                 title=tour_data["title"],
@@ -214,11 +253,20 @@ class GeminiService:
                 difficulty=tour_data.get("difficulty", "MEDIUM"),
                 duration_minutes=duration,
                 city=city,
-                country=country,
-                country_code=country_code,
+                country=canonical_country,
+                country_code=canonical_country_code,
+                cover_image_attribution=cover_image_attribution,
                 is_ai_generated=True,
                 status=Tour.ARCHIVED,
             )
+            if cover_image_bytes:
+                filename = f"ai_tour_cover_{uuid.uuid4().hex}{cover_image_ext}"
+                tour.cover_image.save(
+                    filename,
+                    ContentFile(cover_image_bytes),
+                    save=False,
+                )
+                tour.save(update_fields=["cover_image"])
 
             ar_lookup = {m.id: m for m in ar_models}
             for idx, step_data in enumerate(tour_data["steps"], start=1):
@@ -606,6 +654,32 @@ class GeminiService:
             tour.save()
         except Exception as e:
             logger.warning("Failed to calculate route metrics: %s", e)
+
+    @classmethod
+    def _content_type_to_extension(cls, content_type: str) -> str:
+        ctype = (content_type or "").split(";")[0].strip().lower()
+        if ctype == "image/png":
+            return ".png"
+        if ctype == "image/webp":
+            return ".webp"
+        return ".jpg"
+
+    @classmethod
+    def _download_place_photo(cls, photo_url: str) -> Optional[tuple[bytes, str]]:
+        if not photo_url:
+            return None
+        try:
+            with urlopen(
+                photo_url, timeout=cls.PLACE_PHOTO_TIMEOUT_SECONDS
+            ) as response:
+                content_type = response.headers.get("Content-Type", "")
+                content = response.read(cls.PLACE_PHOTO_MAX_BYTES + 1)
+            if not content or len(content) > cls.PLACE_PHOTO_MAX_BYTES:
+                return None
+            return (content, cls._content_type_to_extension(content_type))
+        except (URLError, TimeoutError, ValueError) as e:
+            logger.warning("Failed to download Google Places photo: %s", e)
+            return None
 
     # ------------------------------------------------------------------
     # Prompt (RAG — Augmented Generation Step)

@@ -15,6 +15,10 @@ export const tourDetailCoverStyles = (theme: ThemeName) => {
       width: '100%',
       height: '100%',
     },
+    coverImagePlaceholder: {
+      width: '100%',
+      height: '100%',
+    },
     topGradient: {
       position: 'absolute',
       top: 0,
@@ -65,6 +69,12 @@ export const tourDetailCoverStyles = (theme: ThemeName) => {
       color: color.white,
       fontSize: 13,
       opacity: 0.72,
+    },
+    overlayAttribution: {
+      color: color.white,
+      fontSize: 11,
+      opacity: 0.75,
+      marginTop: 4,
     },
   });
 };

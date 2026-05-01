@@ -450,7 +450,7 @@
       "difficulty": "Difficulty"
     },
     "story": {
-      "coverImage": "Cover Image (Optional)",
+      "coverImage": "Cover Image",
       "imagePickerTitle": "Image Picker",
       "imagePickerMessage": "Image picker functionality requires expo-image-picker to be installed.",
       "ok": "OK",

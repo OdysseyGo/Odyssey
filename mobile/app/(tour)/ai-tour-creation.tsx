@@ -13,16 +13,16 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { aiTourCreationStyles } from './ai-tour-creation.styles';
 import {
   FormInputGroup,
-  FormTextInput,
   FormTextArea,
+  FormChipSelect,
   FormOptionCard,
   FormDurationPicker,
   FormLocationSelect,
+  TOUR_CATEGORIES,
   TOUR_TEXT_FIELD_MAX_LENGTH,
 } from '@/components/TourCreation';
 import {
   AICreationHeader,
-  ThemeSuggestions,
   LanguageSelector,
   GenerateButton,
   LoadingOverlay,
@@ -59,12 +59,34 @@ export default function AITourCreation() {
     [t]
   );
 
+  const categoryKeyMap = useMemo(
+    () =>
+      Object.fromEntries(
+        TOUR_CATEGORIES.map((cat) => [t(`creation.categories.${cat.toLowerCase()}`), cat])
+      ),
+    [t]
+  );
+
+  const translatedCategories = useMemo(
+    () => TOUR_CATEGORIES.map((cat) => t(`creation.categories.${cat.toLowerCase()}`)),
+    [t]
+  ) as unknown as readonly string[];
+
+  const selectedTranslatedCategory = formData.theme
+    ? t(`creation.categories.${formData.theme.toLowerCase()}`)
+    : '';
+
   const updateFormData = (updates: Partial<AITourFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
   };
 
   const isFormValid =
-    formData.country.trim() !== '' && formData.state.trim() !== '' && formData.theme.trim() !== '';
+    formData.country.trim() !== '' &&
+    formData.countryCode.trim() !== '' &&
+    formData.state.trim() !== '' &&
+    Number.isFinite(formData.stateLatitude) &&
+    Number.isFinite(formData.stateLongitude) &&
+    formData.theme.trim() !== '';
 
   const handleGenerate = async () => {
     if (!isFormValid) {
@@ -130,6 +152,15 @@ export default function AITourCreation() {
                 defaultValue: 'Search countries...',
               })}
               types="(regions)"
+              onClearSelection={() =>
+                updateFormData({
+                  country: '',
+                  countryCode: '',
+                  state: '',
+                  stateLatitude: undefined,
+                  stateLongitude: undefined,
+                })
+              }
               onSelect={(selectedCountry) =>
                 updateFormData({
                   country: selectedCountry.value,
@@ -167,14 +198,12 @@ export default function AITourCreation() {
           </FormInputGroup>
 
           <FormInputGroup label={t('aiTour.theme')} required>
-            <FormTextInput
-              value={formData.theme}
-              onChangeText={(text) => updateFormData({ theme: text })}
-              placeholder={t('aiTour.themePlaceholder')}
-              maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
-            />
-            <ThemeSuggestions
-              onSelect={(selectedTheme) => updateFormData({ theme: selectedTheme })}
+            <FormChipSelect
+              options={translatedCategories}
+              selectedValue={selectedTranslatedCategory}
+              onSelect={(translatedValue) =>
+                updateFormData({ theme: categoryKeyMap[translatedValue] ?? translatedValue })
+              }
             />
           </FormInputGroup>
 

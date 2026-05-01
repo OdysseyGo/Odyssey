@@ -428,10 +428,10 @@
       "difficulty": "Dificultad"
     },
     "story": {
-      "coverImage": "Imagen de Portada (Opcional)",
-      "imagePickerTitle": "Selector de Imágenes",
-      "imagePickerMessage": "La funcionalidad del selector de imágenes requiere que expo-image-picker esté instalado.",
-      "ok": "Aceptar",
+      "coverImage": "Imagen de portada",
+      "imagePickerTitle": "Selector de imagen",
+      "imagePickerMessage": "El selector de imágenes requiere que expo-image-picker esté instalado.",
+      "ok": "OK",
       "tapToAddImage": "Toca para añadir una imagen",
       "stopOf": "Parada {{current}} de {{total}}",
       "writingTipsTitle": "💡 Consejos de Escritura",
