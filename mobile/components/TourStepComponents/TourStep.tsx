@@ -635,9 +635,9 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
     setFeedbackTone('neutral');
     try {
       const response = await submitOpenEndedAnswer(progressId, trimmedAnswer);
-      if (typeof response.max_attempts === 'number') {
-        setMaxAttempts(response.max_attempts);
-      }
+      const responseMaxAttempts =
+        typeof response.max_attempts === 'number' ? response.max_attempts : maxAttempts;
+      setMaxAttempts(responseMaxAttempts);
       if (response.accepted) {
         setFeedback('That matches. This step is unlocked.');
         setFeedbackTone('success');
@@ -645,14 +645,17 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
       } else {
         if (stepId) recordAttempt(stepId);
         const newCount = response.attempt_count ?? attemptCount + 1;
-        if (newCount >= maxAttempts) {
+        if (newCount >= responseMaxAttempts) {
+          if (response.revealed_answer) {
+            setAnswerInput(response.revealed_answer);
+          }
           setFeedback('Answer is not close enough. No attempts remaining.');
           setFeedbackTone('error');
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
-            `Answer is not close enough. ${maxAttempts - newCount} attempt${maxAttempts - newCount === 1 ? '' : 's'} remaining.`
+            `Answer is not close enough. ${responseMaxAttempts - newCount} attempt${responseMaxAttempts - newCount === 1 ? '' : 's'} remaining.`
           );
           setFeedbackTone('error');
         }
@@ -668,6 +671,10 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
         for (let i = 0; i < missingAttempts; i += 1) {
           recordAttempt(stepId);
         }
+      }
+      const revealedAnswer = error?.response?.data?.revealed_answer;
+      if (typeof revealedAnswer === 'string' && revealedAnswer.trim()) {
+        setAnswerInput(revealedAnswer);
       }
       console.error('submit open ended answer failed', error);
       setFeedback(

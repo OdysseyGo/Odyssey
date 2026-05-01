@@ -432,6 +432,7 @@ class TourProgressViewSet(
                     "accepted": False,
                     "attempt_count": failed_count,
                     "max_attempts": self.MAX_FAILED_ATTEMPTS,
+                    "revealed_answer": puzzle.correct_answer,
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -476,6 +477,11 @@ class TourProgressViewSet(
                 "is_tour_complete": False,
                 "new_step_id": current_step.id,
                 "max_attempts": self.MAX_FAILED_ATTEMPTS,
+                **(
+                    {"revealed_answer": puzzle.correct_answer}
+                    if not accepted and failed_count >= self.MAX_FAILED_ATTEMPTS
+                    else {}
+                ),
                 **({"attempt_count": failed_count} if not accepted else {}),
             }
         )
