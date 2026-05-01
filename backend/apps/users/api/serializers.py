@@ -106,6 +106,7 @@ class FollowingFeedSerializer(serializers.Serializer):
             "city": tour.city,
             "country": tour.country,
             "country_code": tour.country_code,
+            "generation_source": tour.generation_source,
             "cover_image": tour.cover_image.url if tour.cover_image else None,
             "cover_image_attribution": tour.cover_image_attribution,
             "created_at": tour.created_at,

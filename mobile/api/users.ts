@@ -86,6 +86,7 @@ export type FeedTour = {
   title: string;
   description: string;
   category: string;
+  generation_source: 'USER' | 'AI';
   difficulty: string;
   duration_minutes: number;
   city?: string;

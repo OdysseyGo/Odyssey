@@ -50,7 +50,7 @@ export default function Media(): JSX.Element {
                   src={`https://www.youtube.com/embed/${video.youtubeId}`} 
                   title={video.title}
                   frameBorder="0" 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" 
                   allowFullScreen>
                 </iframe>
               </div>
