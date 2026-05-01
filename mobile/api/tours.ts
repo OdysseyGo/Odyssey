@@ -51,20 +51,13 @@ export type ARModel = {
   anchors: ARModelAnchor[];
 };
 
-export type GyroscopePuzzleDetail = {
-  target_pitch: number;
-  target_roll: number;
-  target_yaw: number;
-  tolerance_degrees: number;
-};
-
 export type CompassPuzzleDetail = {
   target_heading_degrees: number;
 };
 
 export type Puzzle = {
   id?: number;
-  puzzle_type: 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE' | 'COMPASS';
+  puzzle_type: 'TRIVIA' | 'AR' | 'PICTURE_COMPARE' | 'COMPASS';
   question: string;
   hint: string;
   xp_reward: number;
@@ -72,7 +65,6 @@ export type Puzzle = {
   trivia?: TriviaPuzzleDetail;
   picture_compare?: PictureComparePuzzleDetail;
   ar?: ArPuzzleDetail;
-  gyroscope?: GyroscopePuzzleDetail;
   compass?: CompassPuzzleDetail;
   // Backward-compatible fallbacks
   options?: string[];
@@ -98,13 +90,6 @@ export type PictureComparePuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
 export type ArPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
   scene_asset_url?: string;
   metadata?: Record<string, any>;
-};
-
-export type GyroscopePuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
-  target_pitch?: number;
-  target_roll?: number;
-  target_yaw?: number;
-  tolerance_degrees?: number;
 };
 
 export type CompassPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
@@ -652,21 +637,6 @@ export async function getArModels(signal?: AbortSignal): Promise<ARModel[]> {
   return apiRequest<ARModel[]>({
     method: 'GET',
     url: '/api/tours/ar-models/',
-    auth: true,
-    signal,
-  });
-}
-
-export async function setStepGyroscopePuzzle(
-  tourId: number,
-  stepId: number,
-  payload: GyroscopePuzzleUpsertPayload,
-  signal?: AbortSignal
-): Promise<Puzzle> {
-  return apiRequest<Puzzle, GyroscopePuzzleUpsertPayload>({
-    method: 'POST',
-    url: `/api/tours/${tourId}/steps/${stepId}/set-gyroscope-puzzle/`,
-    data: payload,
     auth: true,
     signal,
   });

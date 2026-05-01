@@ -6,7 +6,6 @@ from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
     CompassPuzzleDetail,
-    GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
     Puzzle,
     Review,
@@ -62,12 +61,6 @@ class ArPuzzleDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArPuzzleDetail
         fields = ["scene_asset_url", "metadata"]
-
-
-class GyroscopePuzzleDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GyroscopePuzzleDetail
-        fields = ["target_pitch", "target_roll", "target_yaw", "tolerance_degrees"]
 
 
 class CompassPuzzleDetailSerializer(serializers.ModelSerializer):
@@ -237,13 +230,6 @@ class ArPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
         return attrs
 
 
-class GyroscopePuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
-    target_pitch = serializers.FloatField(required=False, default=0.0)
-    target_roll = serializers.FloatField(required=False, default=0.0)
-    target_yaw = serializers.FloatField(required=False, default=0.0)
-    tolerance_degrees = serializers.FloatField(required=False, default=15.0)
-
-
 class CompassPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
     target_heading_degrees = serializers.IntegerField(min_value=0, max_value=359)
 
@@ -252,7 +238,6 @@ class PuzzleSerializer(serializers.ModelSerializer):
     trivia = serializers.SerializerMethodField()
     picture_compare = serializers.SerializerMethodField()
     ar = serializers.SerializerMethodField()
-    gyroscope = serializers.SerializerMethodField()
     compass = serializers.SerializerMethodField()
 
     def get_trivia(self, obj):
@@ -273,12 +258,6 @@ class PuzzleSerializer(serializers.ModelSerializer):
             return None
         return ArPuzzleDetailSerializer(detail, context=self.context).data
 
-    def get_gyroscope(self, obj):
-        detail = getattr(obj, "gyroscope_detail", None)
-        if detail is None:
-            return None
-        return GyroscopePuzzleDetailSerializer(detail, context=self.context).data
-
     def get_compass(self, obj):
         detail = getattr(obj, "compass_detail", None)
         if detail is None:
@@ -296,7 +275,6 @@ class PuzzleSerializer(serializers.ModelSerializer):
             "trivia",
             "picture_compare",
             "ar",
-            "gyroscope",
             "compass",
         ]
 

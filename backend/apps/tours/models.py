@@ -197,7 +197,6 @@ class ARModel(models.Model):
 class Puzzle(models.Model):
     TRIVIA = "TRIVIA"
     AR = "AR"
-    GYROSCOPE = "GYROSCOPE"
     PICTURE_COMPARE = "PICTURE_COMPARE"
     TRIVIA_XP_REWARD = 25
     NON_TRIVIA_XP_REWARD = 50
@@ -206,7 +205,6 @@ class Puzzle(models.Model):
     PUZZLE_TYPE_CHOICES = [
         (TRIVIA, "Trivia"),
         (AR, "Augmented Reality"),
-        (GYROSCOPE, "Gyroscope"),
         (PICTURE_COMPARE, "Picture Compare"),
         (COMPASS, "Compass"),
     ]
@@ -299,32 +297,6 @@ class ArPuzzleDetail(models.Model):
 
     def __str__(self):
         return f"AR detail for puzzle {self.puzzle.pk}"
-
-
-class GyroscopePuzzleDetail(models.Model):
-    puzzle = models.OneToOneField(
-        Puzzle,
-        on_delete=models.CASCADE,
-        related_name="gyroscope_detail",
-    )
-    target_pitch = models.FloatField(default=0.0)
-    target_roll = models.FloatField(default=0.0)
-    target_yaw = models.FloatField(default=0.0)
-    tolerance_degrees = models.FloatField(default=15.0)
-
-    def clean(self):
-        if self.puzzle.puzzle_type != Puzzle.GYROSCOPE:
-            raise ValidationError(
-                {
-                    "puzzle": (
-                        "GyroscopePuzzleDetail can only be attached to "
-                        "GYROSCOPE puzzles."
-                    )
-                }
-            )
-
-    def __str__(self):
-        return f"Gyroscope detail for puzzle {self.puzzle.pk}"
 
 
 class CompassPuzzleDetail(models.Model):

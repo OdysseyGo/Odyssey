@@ -7,7 +7,14 @@ from rest_framework.test import APITestCase
 
 from apps.gamification.models import TourProgress, UserBadge
 from apps.gamification.services import BadgeService
-from apps.tours.models import ArPuzzleDetail, Puzzle, PuzzleAttempt, Tour, TourStep
+from apps.tours.models import (
+    ArPuzzleDetail,
+    CompassPuzzleDetail,
+    Puzzle,
+    PuzzleAttempt,
+    Tour,
+    TourStep,
+)
 
 User = get_user_model()
 
@@ -458,6 +465,36 @@ class TourXpRulesTests(APITestCase):
         )
         self.assertEqual(answer_response.status_code, status.HTTP_200_OK)
         self.assertTrue(answer_response.data["accepted"])
+
+        complete_response = self.client.post(
+            f"/api/tour-progress/{progress_id}/complete-step/",
+            format="json",
+        )
+        self.assertEqual(complete_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(complete_response.data["awarded_xp"], 50)
+
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.xp, 50)
+
+    def test_compass_completion_awards_50_xp_without_submission_endpoint(self):
+        tour, step = self._create_tour_with_single_step(title="Compass XP Tour")
+        puzzle = Puzzle.objects.create(
+            step=step,
+            puzzle_type=Puzzle.COMPASS,
+            question="Find north-east",
+            correct_answer="",
+            hint="",
+            xp_reward=50,
+        )
+        CompassPuzzleDetail.objects.create(
+            puzzle=puzzle,
+            target_heading_degrees=45.0,
+        )
+
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
+        progress_id = create_response.data["id"]
 
         complete_response = self.client.post(
             f"/api/tour-progress/{progress_id}/complete-step/",

@@ -1,5 +1,8 @@
+from decimal import Decimal
+
 from apps.tours.models import Puzzle, PuzzleAttempt
 
+from .level_service import LevelService
 from .models import Badge, UserBadge
 
 
@@ -80,22 +83,9 @@ class BadgeService:
         country_code = (tour.country_code or "ZZ").strip().upper() or "ZZ"
         country_code = country_code[:2]
 
-        failed_attempts = PuzzleAttempt.objects.filter(
+        mistake_count = TourRewardService.city_badge_mistake_count(
             user=user,
             progress=completed_progress,
-            accepted=False,
-        )
-        ar_picture_failed_attempts = failed_attempts.filter(
-            puzzle__puzzle_type__in=(Puzzle.AR, Puzzle.PICTURE_COMPARE)
-        ).count()
-        other_failed_attempts = failed_attempts.exclude(
-            puzzle__puzzle_type__in=(Puzzle.AR, Puzzle.PICTURE_COMPARE)
-        ).count()
-        ar_picture_badge_penalty = ar_picture_failed_attempts // 3
-        mistake_count = (
-            completed_progress.skip_count
-            + other_failed_attempts
-            + ar_picture_badge_penalty
         )
         city_badges = list(
             UserBadge.objects.select_related("badge").filter(
@@ -194,3 +184,154 @@ class BadgeService:
             )
         newly_earned.extend(BadgeService._award_xp_milestone_badges(user))
         return newly_earned
+
+
+class TourRewardService:
+    AR_PICTURE_FAILURE_WINDOW = 3
+    PUZZLE_REWARD_RULES = {
+        Puzzle.TRIVIA: {
+            "xp": Puzzle.TRIVIA_XP_REWARD,
+            "requires_submission": True,
+            "max_failed_attempts": 0,
+        },
+        Puzzle.AR: {
+            "xp": Puzzle.NON_TRIVIA_XP_REWARD,
+            "requires_submission": True,
+            "max_failed_attempts": AR_PICTURE_FAILURE_WINDOW - 1,
+        },
+        Puzzle.PICTURE_COMPARE: {
+            "xp": Puzzle.NON_TRIVIA_XP_REWARD,
+            "requires_submission": True,
+            "max_failed_attempts": AR_PICTURE_FAILURE_WINDOW - 1,
+        },
+        Puzzle.COMPASS: {
+            "xp": Puzzle.NON_TRIVIA_XP_REWARD,
+            "requires_submission": False,
+            "max_failed_attempts": 0,
+        },
+    }
+
+    @classmethod
+    def _puzzle_rule(cls, puzzle_type):
+        return cls.PUZZLE_REWARD_RULES.get(
+            puzzle_type,
+            {
+                "xp": Puzzle.NON_TRIVIA_XP_REWARD,
+                "requires_submission": False,
+                "max_failed_attempts": 0,
+            },
+        )
+
+    @classmethod
+    def city_badge_mistake_count(cls, *, user, progress) -> int:
+        failed_attempts = PuzzleAttempt.objects.filter(
+            user=user,
+            progress=progress,
+            accepted=False,
+        )
+        ar_picture_failed_attempts = failed_attempts.filter(
+            puzzle__puzzle_type__in=(Puzzle.AR, Puzzle.PICTURE_COMPARE)
+        ).count()
+        other_failed_attempts = failed_attempts.exclude(
+            puzzle__puzzle_type__in=(Puzzle.AR, Puzzle.PICTURE_COMPARE)
+        ).count()
+        ar_picture_badge_penalty = (
+            ar_picture_failed_attempts // cls.AR_PICTURE_FAILURE_WINDOW
+        )
+        return progress.skip_count + other_failed_attempts + ar_picture_badge_penalty
+
+    @classmethod
+    def requires_submission_before_completion(cls, *, progress, user):
+        current_step = progress.current_step
+        if not current_step or not hasattr(current_step, "puzzle"):
+            return None
+
+        puzzle = current_step.puzzle
+        puzzle_rule = cls._puzzle_rule(puzzle.puzzle_type)
+        if not puzzle_rule["requires_submission"]:
+            return None
+
+        has_accepted_attempt = PuzzleAttempt.objects.filter(
+            user=user,
+            progress=progress,
+            puzzle=puzzle,
+            accepted=True,
+        ).exists()
+        if has_accepted_attempt:
+            return None
+        return puzzle.puzzle_type
+
+    @classmethod
+    def skip_counts_as_badge_mistake(cls, *, progress) -> bool:
+        current_step = progress.current_step
+        if not current_step or not hasattr(current_step, "puzzle"):
+            return True
+
+        puzzle = current_step.puzzle
+        failed_count = PuzzleAttempt.objects.filter(
+            user=progress.user,
+            progress=progress,
+            puzzle=puzzle,
+            accepted=False,
+        ).count()
+        if failed_count == 0:
+            return True
+
+        if puzzle.puzzle_type in (Puzzle.AR, Puzzle.PICTURE_COMPARE):
+            return failed_count < cls.AR_PICTURE_FAILURE_WINDOW
+
+        return False
+
+    @staticmethod
+    def step_xp_for_completion(*, progress, user) -> int:
+        current_step = progress.current_step
+        if current_step is None:
+            return 0
+
+        if progress.tour.tour_type == progress.tour.STORY:
+            return Puzzle.TRIVIA_XP_REWARD
+
+        puzzle = getattr(current_step, "puzzle", None)
+        if puzzle is None:
+            return Puzzle.TRIVIA_XP_REWARD
+
+        failed_attempt_count = PuzzleAttempt.objects.filter(
+            user=user,
+            progress=progress,
+            puzzle=puzzle,
+            accepted=False,
+        ).count()
+
+        puzzle_rule = TourRewardService._puzzle_rule(puzzle.puzzle_type)
+        if failed_attempt_count > puzzle_rule["max_failed_attempts"]:
+            return 0
+
+        return puzzle_rule["xp"]
+
+    @staticmethod
+    def apply_tour_completion_rewards(*, progress, user) -> int:
+        completed_km = Decimal(str(progress.tour.walking_distance or 0.0)) / Decimal(
+            "1000"
+        )
+        user.total_walked_km += completed_km
+
+        reward_eligible = progress.tour.creator_id != user.id
+        should_apply_reward = not progress.xp_awarded and reward_eligible
+        awarded_xp = 0
+
+        if not progress.xp_awarded:
+            if reward_eligible:
+                user.xp += progress.total_xp
+                user.level = LevelService.get_level(user.xp)
+                user.tour_count += 1
+            progress.xp_awarded = True
+            progress.save(update_fields=["xp_awarded"])
+            if reward_eligible:
+                BadgeService.check_badges(user, completed_progress=progress)
+                awarded_xp = progress.total_xp
+
+        user_update_fields = ["total_walked_km"]
+        if should_apply_reward:
+            user_update_fields.extend(["xp", "level", "tour_count"])
+        user.save(update_fields=user_update_fields)
+        return awarded_xp
