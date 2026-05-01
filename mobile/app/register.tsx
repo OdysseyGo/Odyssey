@@ -438,7 +438,6 @@ export default function RegisterScreen() {
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
-
     </>
   );
 }
