@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -13,7 +13,12 @@ const TYPE_ICONS: Record<string, string> = {
   HYBRID: 'layers-outline',
 };
 
-export default function ProfileTourCard({ tour, onPress, containerStyle }: ProfileTourCardProps) {
+export default function ProfileTourCard({
+  tour,
+  onPress,
+  onEdit,
+  containerStyle,
+}: ProfileTourCardProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => profileTourCardStyles(theme), [theme]);
   const color = Colors[theme];
@@ -72,6 +77,16 @@ export default function ProfileTourCard({ tour, onPress, containerStyle }: Profi
           <Text style={styles.metaText}>{tour.tour_type}</Text>
         </View>
       </View>
+      {onEdit && (
+        <TouchableOpacity
+          style={styles.editIconButton}
+          onPress={onEdit}
+          hitSlop={8}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="create-outline" size={18} color={color.primary} />
+        </TouchableOpacity>
+      )}
       <View style={styles.arrowContainer}>
         <Ionicons name="chevron-forward" size={16} color={color.subText} />
       </View>

@@ -94,32 +94,6 @@ export const profileToursContainerStyles = (theme: ThemeName) => {
     toursList: {
       gap: Spacing.sm + 2,
     },
-    tourActionsRow: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      marginTop: -2,
-      marginBottom: Spacing.xs,
-    },
-    editActionButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.xs,
-      paddingVertical: Spacing.xs,
-      paddingHorizontal: Spacing.sm,
-      borderRadius: 8,
-      backgroundColor: color.foreground,
-      ...(isLight
-        ? {
-            borderWidth: StyleSheet.hairlineWidth,
-            borderColor: color.borderLight,
-          }
-        : {}),
-    },
-    editActionText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: color.primary,
-    },
     emptyStateText: {
       fontSize: 14,
       color: color.subText,

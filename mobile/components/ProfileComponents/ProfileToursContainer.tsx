@@ -118,9 +118,11 @@ export default function ProfileToursContainer(_props: ProfileToursContainerProps
         <Text style={styles.emptyStateText}>{getEmptyMessage()}</Text>
       ) : (
         <View style={styles.toursList}>
-          {tours.map((tour) => (
-            <View key={tour.id}>
+          {tours.map((tour) => {
+            const isOwner = currentUserId !== null && tour.creator?.id === currentUserId;
+            return (
               <ProfileTourCard
+                key={tour.id}
                 tour={tour}
                 onPress={() =>
                   router.push({
@@ -128,28 +130,18 @@ export default function ProfileToursContainer(_props: ProfileToursContainerProps
                     params: { id: tour.id.toString() },
                   })
                 }
+                onEdit={
+                  isOwner
+                    ? () =>
+                        router.push({
+                          pathname: '/tour-details',
+                          params: { tourId: tour.id.toString() },
+                        })
+                    : undefined
+                }
               />
-              {currentUserId !== null && tour.creator?.id === currentUserId && (
-                <View style={styles.tourActionsRow}>
-                  <TouchableOpacity
-                    style={styles.editActionButton}
-                    activeOpacity={0.7}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/tour-details',
-                        params: { tourId: tour.id.toString() },
-                      })
-                    }
-                  >
-                    <Ionicons name="create-outline" size={14} color={color.primary} />
-                    <Text style={styles.editActionText}>
-                      {t('profile.editTour', { defaultValue: 'Edit Tour' })}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          ))}
+            );
+          })}
         </View>
       )}
     </View>

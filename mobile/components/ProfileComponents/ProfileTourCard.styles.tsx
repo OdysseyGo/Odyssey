@@ -75,8 +75,17 @@ export const profileTourCardStyles = (theme: ThemeName) => {
       fontSize: 12,
       color: color.subText,
     },
+    editIconButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: Spacing.xs,
+      backgroundColor: color.primaryMuted,
+    },
     arrowContainer: {
-      marginLeft: Spacing.sm,
+      marginLeft: Spacing.xs,
       opacity: 0.35,
     },
   });
