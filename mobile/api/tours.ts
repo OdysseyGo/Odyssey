@@ -4,7 +4,7 @@ import { User } from './users';
 // Types
 export type TourType = 'STORY' | 'PUZZLE' | 'HYBRID';
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
-export type TourStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+export type TourStatus = 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'ARCHIVED';
 export type TourGenerationSource = 'USER' | 'AI';
 
 export type TriviaPuzzleDetail = {

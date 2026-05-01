@@ -100,12 +100,14 @@
     "cancel": "İptal",
     "tabs": {
       "published": "Yayınlandı",
+      "pending": "İncelemede",
       "drafts": "Taslaklar",
       "archived": "Arşivlendi",
       "settings": "Ayarlar",
       "tutorials": "Rehberler"
     },
     "emptyPublished": "Henüz yayınlanmış tur yok. Topluluğa katılmak için bir tur yayınla!",
+    "emptyPending": "İncelemede tur yok. Bir taslak turu gönder, en kısa sürede inceleyelim!",
     "emptyDraft": "Taslak tur yok. Yeni bir tur oluşturmaya başla!",
     "emptyArchived": "Arşivlenmiş tur yok.",
     "emptyDefault": "Tur bulunamadı.",

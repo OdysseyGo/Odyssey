@@ -100,12 +100,14 @@
     "cancel": "Cancel",
     "tabs": {
       "published": "Published",
+      "pending": "Under Review",
       "drafts": "Drafts",
       "archived": "Archived",
       "settings": "Settings",
       "tutorials": "Tutorials"
     },
     "emptyPublished": "No published tours yet. Publish a tour to share it with the community!",
+    "emptyPending": "No tours under review. Submit a draft tour and we'll review it soon!",
     "emptyDraft": "No draft tours. Start creating a new tour!",
     "emptyArchived": "No archived tours.",
     "emptyDefault": "No tours found.",

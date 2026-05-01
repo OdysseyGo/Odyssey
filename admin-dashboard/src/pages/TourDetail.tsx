@@ -160,7 +160,8 @@ interface ArPreviewState {
 
 const STATUS_VARIANT: Record<string, "success" | "warning" | "secondary"> = {
   PUBLISHED: "success",
-  DRAFT: "warning",
+  PENDING: "warning",
+  DRAFT: "secondary",
   ARCHIVED: "secondary",
 };
 
@@ -594,7 +595,7 @@ export default function TourDetail() {
                     ? "Tour is archived"
                     : "Reject and move to draft"
               }
-              className={tour.status !== "PUBLISHED" ? "opacity-40 cursor-not-allowed" : ""}
+              className={tour.status === "DRAFT" || tour.status === "ARCHIVED" ? "opacity-40 cursor-not-allowed" : ""}
             >
               <XCircle className="h-4 w-4" /> Reject
             </Button>
@@ -613,10 +614,16 @@ export default function TourDetail() {
           </div>
         </div>
 
-        {tour.status === "DRAFT" && (
+        {tour.status === "PENDING" && (
           <div className="flex items-center gap-2 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <span>This tour is <strong>awaiting review</strong> — the creator has submitted it. Approve to publish or reject to send it back to drafts.</span>
+          </div>
+        )}
+        {tour.status === "DRAFT" && (
+          <div className="flex items-center gap-2 rounded-lg border border-muted-foreground/30 bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
             <XCircle className="h-4 w-4 shrink-0" />
-            <span>This tour is in <strong>draft</strong> — it's either pending submission or was previously rejected. You can approve it to publish, or archive it.</span>
+            <span>This tour is in <strong>draft</strong> — it was rejected or is still being edited. The creator can resubmit it when ready.</span>
           </div>
         )}
         {tour.status === "PUBLISHED" && (
