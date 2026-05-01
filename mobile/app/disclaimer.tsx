@@ -57,14 +57,14 @@ export default function DisclaimerScreen() {
           {t('disclaimer.legalPrefix')}{' '}
           <Text
             style={[styles.link, { color: theme.primary }]}
-            onPress={() => Linking.openURL('https://odysseygo.app/terms')}
+            onPress={() => Linking.openURL('https://odysseygo.github.io/Odyssey/legal')}
           >
             {t('disclaimer.terms')}
           </Text>
           {' '}{t('disclaimer.legalAnd')}{' '}
           <Text
             style={[styles.link, { color: theme.primary }]}
-            onPress={() => Linking.openURL('https://odysseygo.app/privacy')}
+            onPress={() => Linking.openURL('https://odysseygo.github.io/Odyssey/legal')}
           >
             {t('disclaimer.privacy')}
           </Text>

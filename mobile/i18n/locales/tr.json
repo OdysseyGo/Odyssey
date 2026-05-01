@@ -49,6 +49,10 @@
     "registerTagline": "Hesabını oluştur",
     "continue": "Devam Et",
     "back": "Geri",
+    "termsPrefix": "Şunları kabul ediyorum:",
+    "terms": "Kullanım Koşulları",
+    "termsAnd": "ve",
+    "privacy": "Gizlilik Politikası",
     "resetTagline": "Şifreni sıfırla",
     "successTitle": "Başarılı",
     "confirmRegistrationTitle": "Bu hesap oluşturulsun mu?",
@@ -71,7 +75,8 @@
       "usernameEmailMismatch": "Kullanıcı adı ve e-posta eşleşmiyor",
       "somethingWentWrong": "Bir şeyler ters gitti",
       "bothFieldsRequired": "Her iki alan da gereklidir",
-      "couldNotUpdate": "Şifre güncellenemedi"
+      "couldNotUpdate": "Şifre güncellenemedi",
+      "termsRequired": "Kullanım Koşulları ve Gizlilik Politikası'nı kabul etmelisiniz"
     },
     "userCreated": "Kullanıcı oluşturuldu!"
   },

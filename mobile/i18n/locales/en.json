@@ -49,6 +49,10 @@
     "registerTagline": "Create your account",
     "continue": "Continue",
     "back": "Back",
+    "termsPrefix": "I agree to the",
+    "terms": "Terms of Use",
+    "termsAnd": "and",
+    "privacy": "Privacy Policy",
     "resetTagline": "Reset your password",
     "successTitle": "Success",
     "confirmRegistrationTitle": "Create this account?",
@@ -71,7 +75,8 @@
       "usernameEmailMismatch": "Username and email do not match",
       "somethingWentWrong": "Something went wrong",
       "bothFieldsRequired": "Both fields are required",
-      "couldNotUpdate": "Could not update password"
+      "couldNotUpdate": "Could not update password",
+      "termsRequired": "You must agree to the Terms of Use and Privacy Policy"
     },
     "userCreated": "User has been created!"
   },
