@@ -9,7 +9,7 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 
 from apps.ads.models import AdPlacement, RewardedAdGrant
 
-from .errors import get_generation_error_message
+from .errors import STALE_GENERATION_JOB_ERROR, get_generation_error_message
 from .models import GenerationJob
 from .views import GenerateTourView, _run_generation
 
@@ -76,6 +76,28 @@ class GenerationJobErrorSanitizationTests(TestCase):
             message,
             "The AI response could not be turned into a valid tour. Please try again.",
         )
+
+    @patch("apps.ai_content.views.GeminiService")
+    def test_finished_job_does_not_overwrite_stale_failure(self, mock_service_cls):
+        job = GenerationJob.objects.create(creator=self.user)
+
+        def _finish_after_stale_mark(*args, **kwargs):
+            GenerationJob.objects.filter(pk=job.pk).update(
+                status=GenerationJob.FAILED,
+                error=STALE_GENERATION_JOB_ERROR,
+            )
+            return object()
+
+        mock_service_cls.return_value.generate_tour.side_effect = (
+            _finish_after_stale_mark
+        )
+
+        _run_generation(job.id, _payload(), self.user.id)
+
+        job.refresh_from_db()
+        self.assertEqual(job.status, GenerationJob.FAILED)
+        self.assertEqual(job.error, STALE_GENERATION_JOB_ERROR)
+        self.assertIsNone(job.tour)
 
 
 class GenerateTourViewLimitTests(TestCase):
@@ -179,3 +201,52 @@ class CleanupGenerationJobsCommandTests(TestCase):
         call_command("cleanup_generation_jobs", dry_run=True)
 
         self.assertEqual(GenerationJob.objects.count(), 1)
+
+
+class FailStaleGenerationJobsCommandTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="stale_user",
+            email="stale@example.com",
+            password="pass123",
+        )
+
+    def _job(self, status, minutes_old):
+        job = GenerationJob.objects.create(
+            creator=self.user,
+            status=status,
+            progress_label="Working",
+        )
+        GenerationJob.objects.filter(pk=job.pk).update(
+            updated_at=timezone.now() - timedelta(minutes=minutes_old)
+        )
+        job.refresh_from_db()
+        return job
+
+    def test_fails_only_stale_active_jobs(self):
+        stale_running = self._job(GenerationJob.RUNNING, 31)
+        stale_pending = self._job(GenerationJob.PENDING, 45)
+        recent_running = self._job(GenerationJob.RUNNING, 5)
+        old_success = self._job(GenerationJob.SUCCESS, 60)
+
+        call_command("fail_stale_generation_jobs", minutes=30)
+
+        stale_running.refresh_from_db()
+        stale_pending.refresh_from_db()
+        recent_running.refresh_from_db()
+        old_success.refresh_from_db()
+
+        self.assertEqual(stale_running.status, GenerationJob.FAILED)
+        self.assertEqual(stale_running.error, STALE_GENERATION_JOB_ERROR)
+        self.assertEqual(stale_running.progress_label, "")
+        self.assertEqual(stale_pending.status, GenerationJob.FAILED)
+        self.assertEqual(recent_running.status, GenerationJob.RUNNING)
+        self.assertEqual(old_success.status, GenerationJob.SUCCESS)
+
+    def test_dry_run_does_not_fail_jobs(self):
+        stale_running = self._job(GenerationJob.RUNNING, 31)
+
+        call_command("fail_stale_generation_jobs", minutes=30, dry_run=True)
+
+        stale_running.refresh_from_db()
+        self.assertEqual(stale_running.status, GenerationJob.RUNNING)

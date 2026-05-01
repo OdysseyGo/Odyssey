@@ -55,6 +55,13 @@ def _run_generation(job_id, payload, user_id):
             progress_callback=_progress,
         )
         job.refresh_from_db()
+        if job.status != GenerationJob.RUNNING:
+            logger.info(
+                "AI generation job %s finished after status changed to %s",
+                job_id,
+                job.status,
+            )
+            return
         job.status = GenerationJob.SUCCESS
         job.tour = tour
         job.progress_label = ""
