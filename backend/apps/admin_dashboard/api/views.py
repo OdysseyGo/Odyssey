@@ -1,9 +1,13 @@
 import json
+import logging
 
+from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Avg, Count, Q
 from django.http import HttpResponse
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
@@ -239,13 +243,51 @@ class AdminTourViewSet(ModelViewSet):
         tour.status = Tour.PUBLISHED
         tour.save(update_fields=["status"])
 
+        try:
+            send_mail(
+                subject=f"Your tour \"{tour.title}\" has been published! 🎉",
+                message=(
+                    f"Hi {tour.creator.username},\n\n"
+                    f"Great news! Your tour \"{tour.title}\" has been reviewed and is now live on Odyssey.\n\n"
+                    "Explorers can now discover and start your tour. Thank you for your contribution!\n\n"
+                    "— The Odyssey Team"
+                ),
+                from_email=None,
+                recipient_list=[tour.creator.email],
+            )
+        except Exception as e:
+            logger.error("Failed to send approval email for tour %s: %s", tour.id, e)
+
         return Response({"detail": "Tour approved and published."})
 
     @action(detail=True, methods=["post"], url_path="reject")
     def reject(self, request, pk=None):
         tour = self.get_object()
+        reason = request.data.get("reason", "").strip()
         tour.status = Tour.DRAFT
         tour.save(update_fields=["status"])
+
+        try:
+            reason_block = (
+                f"\nReason from our team:\n\"{reason}\"\n"
+                if reason
+                else ""
+            )
+            send_mail(
+                subject=f"Update on your tour \"{tour.title}\"",
+                message=(
+                    f"Hi {tour.creator.username},\n\n"
+                    f"After review, your tour \"{tour.title}\" was not approved at this time "
+                    f"and has been moved back to drafts.{reason_block}\n"
+                    "Please make the necessary changes and resubmit when it's ready.\n\n"
+                    "— The Odyssey Team"
+                ),
+                from_email=None,
+                recipient_list=[tour.creator.email],
+            )
+        except Exception as e:
+            logger.error("Failed to send rejection email for tour %s: %s", tour.id, e)
+
         return Response({"detail": "Tour rejected and set to draft."})
 
     @action(detail=True, methods=["post"], url_path="archive")
