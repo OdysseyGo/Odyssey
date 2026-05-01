@@ -107,6 +107,7 @@
       "published": "Published",
       "pending": "Under Review",
       "drafts": "Drafts",
+      "aiTours": "AI Tours",
       "archived": "Archived",
       "settings": "Settings",
       "tutorials": "Tutorials"
@@ -114,6 +115,7 @@
     "emptyPublished": "No published tours yet. Publish a tour to share it with the community!",
     "emptyPending": "No tours under review. Submit a draft tour and we'll review it soon!",
     "emptyDraft": "No draft tours. Start creating a new tour!",
+    "emptyAiTours": "No AI-generated tours yet. Create one to start your showcase!",
     "emptyArchived": "No archived tours.",
     "emptyDefault": "No tours found.",
     "followersTitle": "Followers",

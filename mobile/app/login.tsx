@@ -25,6 +25,7 @@ import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelec
 import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import BackButton from '@/components/common/BackButton';
 import { login, UserCredentials } from '@/api/users';
+import { setProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -98,9 +99,12 @@ export default function LoginScreen() {
     try {
       const credentials: UserCredentials = { username, password };
       const response = await login(credentials);
-      SecureStore.setItem('userToken', response.access);
-      SecureStore.setItem('refreshToken', response.refresh);
-      router.replace('/(tabs)/profile');
+      await Promise.all([
+        SecureStore.setItemAsync('userToken', response.access),
+        SecureStore.setItemAsync('refreshToken', response.refresh),
+      ]);
+      setProfileNeedsRefresh();
+      router.dismissTo('/(tabs)/profile');
     } catch (e) {
       console.error(e);
       setErrors({ general: t('auth.errors.loginFailed') });

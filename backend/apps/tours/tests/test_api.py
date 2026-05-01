@@ -197,6 +197,7 @@ class TourCompletionVisibilityApiTests(APITestCase):
             difficulty=Tour.EASY,
             duration_minutes=20,
             is_ai_generated=True,
+            generation_source=Tour.AI,
         )
         self.first_step = TourStep.objects.create(
             tour=self.tour,
@@ -234,3 +235,36 @@ class TourCompletionVisibilityApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data["user_has_completed_once"])
+
+    def test_my_tours_can_filter_ai_generated_tours(self):
+        Tour.objects.create(
+            title="Manual Tour",
+            description="User created tour",
+            creator=self.creator,
+            tour_type=Tour.STORY,
+            category="History",
+            difficulty=Tour.EASY,
+            duration_minutes=30,
+            generation_source=Tour.USER,
+        )
+        Tour.objects.create(
+            title="Other User AI Tour",
+            description="Should not leak into this user's showcase",
+            creator=self.other_user,
+            tour_type=Tour.PUZZLE,
+            category="Mystery",
+            difficulty=Tour.EASY,
+            duration_minutes=25,
+            is_ai_generated=True,
+            generation_source=Tour.AI,
+        )
+
+        self.client.force_authenticate(user=self.creator)
+        response = self.client.get(
+            "/api/tours/my-tours/", {"generation_source": Tour.AI}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["id"], self.tour.id)
+        self.assertEqual(response.data["results"][0]["generation_source"], Tour.AI)
