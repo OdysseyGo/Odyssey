@@ -2,8 +2,6 @@ import logging
 
 from django.contrib.auth import authenticate  # login direkt
 from django.core.mail import send_mail
-
-logger = logging.getLogger(__name__)
 from django.db.models import Avg, F, QuerySet  # F dbden çıkarmadan yazıyon
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
@@ -29,6 +27,8 @@ from .serializers import (
     SearchHistorySerializer,
     UserSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class UserViewSet(ModelViewSet):

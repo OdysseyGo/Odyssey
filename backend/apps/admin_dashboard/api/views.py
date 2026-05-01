@@ -6,8 +6,6 @@ from django.db import transaction
 from django.db.models import Avg, Count, Q
 from django.http import HttpResponse
 from django.utils import timezone
-
-logger = logging.getLogger(__name__)
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
@@ -60,6 +58,8 @@ from apps.gamification.visuals import BadgeVisualService
 from apps.tours.models import ARModel, Review, Tour
 from apps.tours.utils import GoogleMapsFacade
 from apps.users.models import User
+
+logger = logging.getLogger(__name__)
 
 # ── User Management ──────────────────────────────────────────────────
 
