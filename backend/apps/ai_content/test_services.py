@@ -451,15 +451,20 @@ class TestGenerateTour(TestCase):
 
         creator = self._make_creator()
         service = GeminiService()
-        tour = service.generate_tour(
-            city="Istanbul",
-            theme="History",
-            mode="STORY",
-            duration=60,
-            language="en",
-            creator=creator,
-        )
 
+        with patch.object(GeminiService, "_spawn_metrics_calculation") as mock_spawn:
+            tour = service.generate_tour(
+                city="Istanbul",
+                theme="History",
+                mode="STORY",
+                duration=60,
+                language="en",
+                creator=creator,
+            )
+            service._calculate_metrics(tour)
+            tour.refresh_from_db()
+
+        mock_spawn.assert_called_once_with(tour.pk)
         # 30 min walking + 2 steps * 5 min = 40 min total
         assert tour.duration_minutes == 40
 
