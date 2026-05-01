@@ -68,12 +68,20 @@ class OpenEndedAnswerFlowTests(APITestCase):
     def test_submit_similar_open_ended_answer_allows_completion(self):
         submit_response = self.client.post(
             f"/api/tour-progress/{self.progress.id}/submit-open-ended-answer/",
-            {"answer": "byzantine empire"},
+            {"answer": "the answer is byzantine empire"},
             format="json",
         )
         self.assertEqual(submit_response.status_code, status.HTTP_200_OK)
         self.assertTrue(submit_response.data["accepted"])
         self.assertGreaterEqual(submit_response.data["similarity_score"], 0.8)
+        self.assertEqual(
+            PuzzleAttempt.objects.get(
+                progress=self.progress,
+                puzzle=self.puzzle,
+                accepted=True,
+            ).similarity_score,
+            1.0,
+        )
 
         complete_response = self.client.post(
             f"/api/tour-progress/{self.progress.id}/complete-step/", format="json"
@@ -109,6 +117,14 @@ class OpenEndedAnswerFlowTests(APITestCase):
                 progress=self.progress, puzzle=self.puzzle, accepted=False
             ).count(),
             3,
+        )
+        self.assertTrue(
+            PuzzleAttempt.objects.filter(
+                progress=self.progress,
+                puzzle=self.puzzle,
+                accepted=False,
+                similarity_score__isnull=False,
+            ).exists()
         )
 
     def test_exhausted_open_ended_step_can_be_skipped(self):

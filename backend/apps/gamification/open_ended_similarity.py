@@ -21,6 +21,16 @@ def open_ended_similarity_score(left: str, right: str) -> float:
         return 0.0
     if left == right:
         return 1.0
+
+    left_tokens = set(left.split())
+    right_tokens = set(right.split())
+    if left_tokens and right_tokens:
+        if right_tokens <= left_tokens:
+            return 1.0
+
+    if right in left:
+        return 1.0
+
     return SequenceMatcher(None, left, right).ratio()
 
 

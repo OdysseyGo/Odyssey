@@ -377,7 +377,6 @@ class TourProgressViewSet(
             user=request.user,
             progress=progress,
             accepted=accepted,
-            similarity_score=similarity_score,
         )
 
         if not accepted:
@@ -454,6 +453,7 @@ class TourProgressViewSet(
             user=request.user,
             progress=progress,
             accepted=accepted,
+            similarity_score=similarity_score,
         )
 
         if not accepted:
