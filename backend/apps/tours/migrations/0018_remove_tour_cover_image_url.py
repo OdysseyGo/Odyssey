@@ -13,4 +13,3 @@ class Migration(migrations.Migration):
             name="cover_image_url",
         ),
     ]
-

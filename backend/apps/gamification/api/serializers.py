@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.gamification.models import Badge, TourProgress, UserBadge
+from apps.gamification.models import Badge, TourProgress, UserBadge, UserBadgeHistory
 from apps.gamification.visuals import BadgeVisualService
 from apps.tours.api.serializers import TourSerializer, TourStepSerializer
 
@@ -14,6 +14,7 @@ class BadgeSerializer(serializers.ModelSerializer):
 class UserBadgeSerializer(serializers.ModelSerializer):
     badge = BadgeSerializer(read_only=True)
     visual_config = serializers.SerializerMethodField()
+    source_tour_detail = serializers.SerializerMethodField()
 
     class Meta:
         model = UserBadge
@@ -25,6 +26,7 @@ class UserBadgeSerializer(serializers.ModelSerializer):
             "country_code",
             "mistake_count",
             "source_tour",
+            "source_tour_detail",
             "earned_at",
             "visual_config",
         ]
@@ -35,6 +37,59 @@ class UserBadgeSerializer(serializers.ModelSerializer):
             badge=obj.badge,
             country_code=obj.country_code,
         )
+
+    def get_source_tour_detail(self, obj):
+        tour = obj.source_tour
+        if tour is None:
+            return None
+        return {
+            "id": tour.id,
+            "title": tour.title,
+            "city": tour.city,
+            "country": tour.country,
+            "country_code": tour.country_code,
+        }
+
+
+class UserBadgeHistorySerializer(serializers.ModelSerializer):
+    badge = BadgeSerializer(read_only=True)
+    visual_config = serializers.SerializerMethodField()
+    source_tour_detail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserBadgeHistory
+        fields = [
+            "id",
+            "user",
+            "badge",
+            "user_badge",
+            "source_tour",
+            "source_tour_detail",
+            "city",
+            "country_code",
+            "mistake_count",
+            "event_type",
+            "earned_at",
+            "visual_config",
+        ]
+
+    def get_visual_config(self, obj):
+        return BadgeVisualService.resolve_config(
+            badge=obj.badge,
+            country_code=obj.country_code,
+        )
+
+    def get_source_tour_detail(self, obj):
+        tour = obj.source_tour
+        if tour is None:
+            return None
+        return {
+            "id": tour.id,
+            "title": tour.title,
+            "city": tour.city,
+            "country": tour.country,
+            "country_code": tour.country_code,
+        }
 
 
 from django.db.models import Count

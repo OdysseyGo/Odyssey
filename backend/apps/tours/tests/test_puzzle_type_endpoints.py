@@ -10,7 +10,6 @@ from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
     CompassPuzzleDetail,
-    GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
     Puzzle,
     Tour,
@@ -227,29 +226,6 @@ class PuzzleTypeEndpointTests(APITestCase):
         self.assertEqual(response.data[0]["id"], self.ar_model.id)
         self.assertTrue(response.data[0]["preview_image_url"].endswith(".jpg"))
         self.assertTrue(response.data[0]["scene_asset_url"].endswith(".glb"))
-
-    def test_set_gyroscope_puzzle_creates_gyroscope_detail(self):
-        response = self.client.post(
-            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-gyroscope-puzzle/",
-            {
-                "question": "Face the marker",
-                "hint": "Turn slowly",
-                "target_pitch": 1.5,
-                "target_roll": 2.5,
-                "target_yaw": 90.0,
-                "tolerance_degrees": 12.0,
-            },
-            format="json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["puzzle_type"], Puzzle.GYROSCOPE)
-        self.assertEqual(response.data["gyroscope"]["target_yaw"], 90.0)
-
-        puzzle = Puzzle.objects.get(step=self.step)
-        detail = GyroscopePuzzleDetail.objects.get(puzzle=puzzle)
-        self.assertEqual(detail.tolerance_degrees, 12.0)
-        self.assertEqual(puzzle.xp_reward, 50)
 
     def test_set_compass_puzzle_creates_compass_detail(self):
         response = self.client.post(

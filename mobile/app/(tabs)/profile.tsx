@@ -548,6 +548,8 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
     countryCode: userBadge.country_code,
     mistakeCount: userBadge.mistake_count,
     earnedDate: userBadge.earned_at,
+    sourceTourId: userBadge.source_tour_detail?.id,
+    sourceTourTitle: userBadge.source_tour_detail?.title,
     visualConfig: userBadge.visual_config,
   }));
 
