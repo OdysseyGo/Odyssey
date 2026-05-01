@@ -20,8 +20,12 @@ import { TourReviewStep } from '@/components/TourCreation/steps';
 import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/api/APIClient';
+import { sanitizeMultiLineText, sanitizeSingleLineText } from '@/utils/inputSanitizers';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
+const STEP_UPLOAD_CONCURRENCY = 3;
+const STEP_UPLOAD_MAX_RETRIES = 2;
+const STEP_UPLOAD_RETRY_BASE_MS = 1200;
 
 function getSubmitErrorMessage(error: unknown, fallbackMessage: string) {
   if (error instanceof ApiError) {
@@ -30,11 +34,64 @@ function getSubmitErrorMessage(error: unknown, fallbackMessage: string) {
   return fallbackMessage;
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isTransientSubmissionError(error: unknown) {
+  if (error instanceof ApiError) {
+    if (!error.statusCode) return true;
+    return error.statusCode === 429 || error.statusCode >= 500;
+  }
+  if (error instanceof Error) {
+    return /timeout|network|cannot reach/i.test(error.message);
+  }
+  return false;
+}
+
+async function withRetry<T>(operation: () => Promise<T>, maxRetries: number): Promise<T> {
+  let attempt = 0;
+  // Retry only transient errors. Non-transient errors fail fast.
+  while (true) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (attempt >= maxRetries || !isTransientSubmissionError(error)) {
+        throw error;
+      }
+      attempt += 1;
+      await sleep(STEP_UPLOAD_RETRY_BASE_MS * attempt);
+    }
+  }
+}
+
+async function runWithConcurrency(
+  tasks: Array<() => Promise<void>>,
+  concurrency: number
+): Promise<void> {
+  let nextIndex = 0;
+
+  const worker = async () => {
+    while (nextIndex < tasks.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      await tasks[currentIndex]();
+    }
+  };
+
+  const workerCount = Math.max(1, Math.min(concurrency, tasks.length));
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+}
+
 export default function TourReviewScreen() {
   const theme = useColorTheme();
   const color = Colors[theme];
   const { tourData, resetTourData } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [submitProgress, setSubmitProgress] = React.useState<{
+    completed: number;
+    total: number;
+  } | null>(null);
   const [showUnderReviewNotice, setShowUnderReviewNotice] = React.useState(false);
   const { t } = useTranslation();
   const isReadyToSubmit =
@@ -75,21 +132,23 @@ export default function TourReviewScreen() {
         text: t('creation.submitConfirm'),
         onPress: async () => {
           setIsSubmitting(true);
+          setSubmitProgress({ completed: 0, total: tourData.locations.length });
 
-          let createdTourId = null;
+          let createdTourId: number | null = null;
 
           try {
             const tour = await createTour({
-              title: tourData.title || 'Untitled Tour',
-              description: tourData.description || 'No description provided.',
+              title: sanitizeSingleLineText(tourData.title).trim() || 'Untitled Tour',
+              description:
+                sanitizeMultiLineText(tourData.description).trim() || 'No description provided.',
               cover_image: tourData.coverImage,
               tour_type: tourData.tourType,
               category: tourData.category || 'General',
               difficulty: tourData.difficulty,
               duration_minutes: tourData.estimatedDuration,
-              city: tourData.state,
-              country: tourData.country,
-              country_code: tourData.countryCode,
+              city: sanitizeSingleLineText(tourData.state).trim(),
+              country: sanitizeSingleLineText(tourData.country).trim(),
+              country_code: sanitizeSingleLineText(tourData.countryCode).trim(),
               city_latitude: tourData.stateLatitude,
               city_longitude: tourData.stateLongitude,
               is_premium: false,
@@ -97,95 +156,121 @@ export default function TourReviewScreen() {
 
             createdTourId = tour.id;
             console.log('Tour created:', createdTourId);
+            const submittingTourId = createdTourId;
 
-            for (const [index, loc] of tourData.locations.entries()) {
-              const createdStep = await createTourStep(createdTourId, {
-                title: loc.title || `Stop ${index + 1}`,
-                description: loc.story || '',
-                latitude: Number(loc.latitude).toFixed(8),
-                longitude: Number(loc.longitude).toFixed(8),
-                order: loc.order,
-                image: loc.image,
-              });
+            const stepTasks = tourData.locations.map(
+              (loc, index) => async () => {
+                const createdStep = await withRetry(
+                  () =>
+                    createTourStep(submittingTourId, {
+                      title: sanitizeSingleLineText(loc.title).trim() || `Stop ${index + 1}`,
+                      description: sanitizeMultiLineText(loc.story),
+                      latitude: Number(loc.latitude).toFixed(8),
+                      longitude: Number(loc.longitude).toFixed(8),
+                      order: loc.order,
+                      image: loc.image,
+                    }),
+                  STEP_UPLOAD_MAX_RETRIES
+                );
 
-              if (!loc.puzzle) {
-                continue;
-              }
+                if (!loc.puzzle) {
+                  setSubmitProgress((prev) => {
+                    if (!prev) return prev;
+                    return { ...prev, completed: Math.min(prev.total, prev.completed + 1) };
+                  });
+                  return;
+                }
+                const puzzle = loc.puzzle;
 
-              const basePayload = {
-                question: loc.puzzle.question,
-                hint: loc.puzzle.hint,
-              };
+                const basePayload = {
+                  question: sanitizeMultiLineText(puzzle.question).trim(),
+                  hint: sanitizeMultiLineText(puzzle.hint),
+                };
 
-              if (loc.puzzle.puzzle_type === 'TRIVIA') {
-                await setStepTriviaPuzzle(createdTourId, createdStep.id, {
-                  ...basePayload,
-                  options: loc.puzzle.options,
-                  correct_answer: loc.puzzle.correctAnswer,
-                });
-                continue;
-              }
+                if (puzzle.puzzle_type === 'TRIVIA') {
+                  await withRetry(
+                    () =>
+                      setStepTriviaPuzzle(submittingTourId, createdStep.id, {
+                        ...basePayload,
+                        options: puzzle.options.map((opt) => sanitizeSingleLineText(opt)),
+                        correct_answer: sanitizeSingleLineText(puzzle.correctAnswer),
+                      }),
+                    STEP_UPLOAD_MAX_RETRIES
+                  );
+                } else if (puzzle.puzzle_type === 'PICTURE_COMPARE') {
+                  const referenceImageUri = puzzle.referenceImage;
+                  if (!referenceImageUri || !referenceImageUri.startsWith('file://')) {
+                    throw new Error('PICTURE_COMPARE puzzles require a local reference image.');
+                  }
 
-              if (loc.puzzle.puzzle_type === 'PICTURE_COMPARE') {
-                if (
-                  !loc.puzzle.referenceImage ||
-                  !loc.puzzle.referenceImage.startsWith('file://')
-                ) {
-                  throw new Error('PICTURE_COMPARE puzzles require a local reference image.');
+                  await withRetry(
+                    () =>
+                      setStepPictureComparePuzzle(submittingTourId, createdStep.id, {
+                        ...basePayload,
+                        referenceImageUri,
+                      }),
+                    STEP_UPLOAD_MAX_RETRIES
+                  );
+                } else if (puzzle.puzzle_type === 'AR') {
+                  const arConfig = puzzle.arConfig;
+                  if (!arConfig) {
+                    throw new Error('AR puzzles require a selected model, code, and anchor.');
+                  }
+
+                  await withRetry(
+                    () =>
+                      setStepArPuzzle(submittingTourId, createdStep.id, {
+                        ...basePayload,
+                        scene_asset_url: arConfig.sceneAssetUrl,
+                        metadata: {
+                          version: 1,
+                          model_id: arConfig.modelId,
+                          anchor_id: arConfig.anchorId,
+                          placement_mode: arConfig.placementMode,
+                          secret_code: arConfig.secretCode,
+                          model_scale_meters: arConfig.modelScaleMeters,
+                          anchor_position: {
+                            x: arConfig.anchorPosition.x,
+                            y: arConfig.anchorPosition.y,
+                            z: arConfig.anchorPosition.z,
+                          },
+                        },
+                      }),
+                    STEP_UPLOAD_MAX_RETRIES
+                  );
+                } else if (puzzle.puzzle_type === 'COMPASS') {
+                  const targetHeadingDegrees = puzzle.targetHeadingDegrees;
+                  if (
+                    typeof targetHeadingDegrees !== 'number' ||
+                    !Number.isInteger(targetHeadingDegrees)
+                  ) {
+                    throw new Error('COMPASS puzzles require a valid integer target heading.');
+                  }
+
+                  await withRetry(
+                    () =>
+                      setStepCompassPuzzle(submittingTourId, createdStep.id, {
+                        ...basePayload,
+                        target_heading_degrees: ((targetHeadingDegrees % 360) + 360) % 360,
+                      }),
+                    STEP_UPLOAD_MAX_RETRIES
+                  );
                 }
 
-                await setStepPictureComparePuzzle(createdTourId, createdStep.id, {
-                  ...basePayload,
-                  referenceImageUri: loc.puzzle.referenceImage,
-                });
-                continue;
-              }
-
-              if (loc.puzzle.puzzle_type === 'AR') {
-                if (!loc.puzzle.arConfig) {
-                  throw new Error('AR puzzles require a selected model, code, and anchor.');
-                }
-
-                await setStepArPuzzle(createdTourId, createdStep.id, {
-                  ...basePayload,
-                  scene_asset_url: loc.puzzle.arConfig.sceneAssetUrl,
-                  metadata: {
-                    version: 1,
-                    model_id: loc.puzzle.arConfig.modelId,
-                    anchor_id: loc.puzzle.arConfig.anchorId,
-                    placement_mode: loc.puzzle.arConfig.placementMode,
-                    secret_code: loc.puzzle.arConfig.secretCode,
-                    model_scale_meters: loc.puzzle.arConfig.modelScaleMeters,
-                    anchor_position: {
-                      x: loc.puzzle.arConfig.anchorPosition.x,
-                      y: loc.puzzle.arConfig.anchorPosition.y,
-                      z: loc.puzzle.arConfig.anchorPosition.z,
-                    },
-                  },
-                });
-                continue;
-              }
-
-              if (loc.puzzle.puzzle_type === 'COMPASS') {
-                if (
-                  typeof loc.puzzle.targetHeadingDegrees !== 'number' ||
-                  !Number.isInteger(loc.puzzle.targetHeadingDegrees)
-                ) {
-                  throw new Error('COMPASS puzzles require a valid integer target heading.');
-                }
-
-                await setStepCompassPuzzle(tour.id, createdStep.id, {
-                  ...basePayload,
-                  target_heading_degrees: ((loc.puzzle.targetHeadingDegrees % 360) + 360) % 360,
+                setSubmitProgress((prev) => {
+                  if (!prev) return prev;
+                  return { ...prev, completed: Math.min(prev.total, prev.completed + 1) };
                 });
               }
-            }
+            );
+
+            await runWithConcurrency(stepTasks, STEP_UPLOAD_CONCURRENCY);
 
             // 3. Finalize tour metadata after all steps are created.
             await updateTour(tour.id, {
-              city: tourData.state,
-              country: tourData.country,
-              country_code: tourData.countryCode,
+              city: sanitizeSingleLineText(tourData.state).trim(),
+              country: sanitizeSingleLineText(tourData.country).trim(),
+              country_code: sanitizeSingleLineText(tourData.countryCode).trim(),
               city_latitude: tourData.stateLatitude,
               city_longitude: tourData.stateLongitude,
             });
@@ -209,6 +294,7 @@ export default function TourReviewScreen() {
             );
           } finally {
             setIsSubmitting(false);
+            setSubmitProgress(null);
           }
         },
       },
@@ -252,7 +338,17 @@ export default function TourReviewScreen() {
       <StepIndicator steps={STEPS} currentStepIndex={3} />
       <TourReviewStep tourData={tourData} />
       <CreationFooter
-        buttonText={isSubmitting ? t('creation.submitting') : t('creation.submit')}
+        buttonText={
+          isSubmitting && submitProgress
+            ? t('creation.uploadingProgress', {
+                current: submitProgress.completed,
+                total: submitProgress.total,
+                defaultValue: 'Uploading step {{current}}/{{total}}',
+              })
+            : isSubmitting
+              ? t('creation.submitting')
+              : t('creation.submit')
+        }
         onPress={handleSubmitTour}
         disabled={isSubmitting || !isReadyToSubmit || !hasValidSelectedLocation}
       />

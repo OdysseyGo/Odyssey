@@ -28,6 +28,7 @@ import { login, UserCredentials } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { isUsernameValid, sanitizeUsernameInput } from '@/utils/inputSanitizers';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEIGHT * 0.36;
@@ -86,7 +87,10 @@ export default function LoginScreen() {
 
   const validate = () => {
     const newErrors: typeof errors = {};
-    if (!username.trim()) newErrors.username = t('auth.errors.usernameRequired');
+    const normalizedUsername = username.trim();
+    if (!normalizedUsername) newErrors.username = t('auth.errors.usernameRequired');
+    else if (!isUsernameValid(normalizedUsername))
+      newErrors.username = t('auth.errors.usernameInvalidCharacters');
     if (!password.trim()) newErrors.password = t('auth.errors.passwordRequired');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -96,7 +100,7 @@ export default function LoginScreen() {
     if (!validate()) return;
     setLoading(true);
     try {
-      const credentials: UserCredentials = { username, password };
+      const credentials: UserCredentials = { username: username.trim(), password };
       const response = await login(credentials);
       SecureStore.setItem('userToken', response.access);
       SecureStore.setItem('refreshToken', response.refresh);
@@ -199,8 +203,8 @@ export default function LoginScreen() {
                 label={t('auth.username')}
                 value={username}
                 onChangeText={(text) => {
-                  setUsername(text);
-                  setErrors((e) => ({ ...e, username: undefined }));
+                  setUsername(sanitizeUsernameInput(text));
+                  setErrors((e) => ({ ...e, username: undefined, general: undefined }));
                 }}
                 placeholder={t('auth.usernamePlaceholder')}
                 autoCapitalize="none"

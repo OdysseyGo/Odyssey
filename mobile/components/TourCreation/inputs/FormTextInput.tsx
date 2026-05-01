@@ -3,6 +3,7 @@ import { TextInput, TextInputProps } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { formTextInputStyles } from './FormTextInput.styles';
+import { sanitizeSingleLineText } from '@/utils/inputSanitizers';
 
 type FormTextInputProps = {
   value: string | undefined;
@@ -24,7 +25,7 @@ export default function FormTextInput({
     <TextInput
       style={styles.textInput}
       value={value ?? ''}
-      onChangeText={onChangeText}
+      onChangeText={(text) => onChangeText(sanitizeSingleLineText(text))}
       placeholder={placeholder}
       placeholderTextColor={color.placeholderTextColor}
       {...rest}
