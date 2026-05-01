@@ -29,15 +29,21 @@ export type StepActionResponse = {
   awarded_badges?: UserBadge[];
 };
 
+export const DEFAULT_MAX_FAILED_ATTEMPTS = 3;
+
 export type PictureCompareResponse = StepActionResponse & {
   accepted: boolean;
+  attempt_count?: number;
   similarity_score: number;
   threshold_used: number;
   processing_ms: number;
+  max_attempts?: number;
 };
 
 export type ArCodeResponse = StepActionResponse & {
   accepted: boolean;
+  attempt_count?: number;
+  max_attempts?: number;
 };
 
 export type TriviaAnswerResponse = StepActionResponse & {
@@ -50,6 +56,7 @@ export type OpenEndedAnswerResponse = StepActionResponse & {
   attempt_count?: number;
   similarity_score?: number;
   threshold_used?: number;
+  max_attempts?: number;
 };
 
 export type DeleteTourProgressRequest = {

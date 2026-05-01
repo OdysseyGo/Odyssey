@@ -17,6 +17,7 @@ import Colors from '@/constants/Colors';
 import HexBadge from '@/components/ProfileComponents/HexBadge';
 import { openExternalMapsDirections, type ExternalMapsProvider } from '@/utils/externalMaps';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
+import { DEFAULT_MAX_FAILED_ATTEMPTS } from '@/api/tourProgress';
 
 function NavigationArrows({
   canGoBack,
@@ -207,7 +208,7 @@ export default function TourNavigation({
     (currentStep.puzzle.type === 'picture-compare' ||
       currentStep.puzzle.type === 'ar-code' ||
       currentStep.puzzle.type === 'open-ended') &&
-    (stepAttempts.get(currentStep.id) ?? 0) >= 3;
+    (stepAttempts.get(currentStep.id) ?? 0) >= DEFAULT_MAX_FAILED_ATTEMPTS;
   const hasAnsweredWrong =
     (hasAnsweredCurrentStep ||
       stepAnswers.has(currentStep.id) ||

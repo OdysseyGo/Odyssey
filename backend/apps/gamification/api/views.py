@@ -74,6 +74,7 @@ class TourProgressViewSet(
     MAX_PICTURE_UPLOAD_BYTES = 5 * 1024 * 1024
     PICTURE_COMPARE_THRESHOLD = 0.7
     OPEN_ENDED_SIMILARITY_THRESHOLD = DEFAULT_OPEN_ENDED_SIMILARITY_THRESHOLD
+    MAX_FAILED_ATTEMPTS = TourRewardService.AR_PICTURE_FAILURE_WINDOW
 
     @staticmethod
     def _picture_compare_config(puzzle):
@@ -424,12 +425,13 @@ class TourProgressViewSet(
         failed_count = PuzzleAttempt.objects.filter(
             progress=progress, puzzle=puzzle, accepted=False
         ).count()
-        if failed_count >= 3:
+        if failed_count >= self.MAX_FAILED_ATTEMPTS:
             return Response(
                 {
                     "error": "Open ended answer attempts are exhausted.",
                     "accepted": False,
                     "attempt_count": failed_count,
+                    "max_attempts": self.MAX_FAILED_ATTEMPTS,
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -455,7 +457,7 @@ class TourProgressViewSet(
 
         if not accepted:
             failed_count += 1
-            if failed_count == 3:
+            if failed_count == self.MAX_FAILED_ATTEMPTS:
                 TourProgress.objects.filter(pk=progress.pk).update(
                     wrong_attempt_count=models.F("wrong_attempt_count") + 1
                 )
@@ -472,6 +474,7 @@ class TourProgressViewSet(
                 "threshold_used": self.OPEN_ENDED_SIMILARITY_THRESHOLD,
                 "is_tour_complete": False,
                 "new_step_id": current_step.id,
+                "max_attempts": self.MAX_FAILED_ATTEMPTS,
                 **({"attempt_count": failed_count} if not accepted else {}),
             }
         )
@@ -572,13 +575,14 @@ class TourProgressViewSet(
                     "processing_ms": attempt.processing_ms,
                     "is_tour_complete": False,
                     "new_step_id": current_step.id,
+                    "max_attempts": self.MAX_FAILED_ATTEMPTS,
                 }
             )
 
         failed_count = PuzzleAttempt.objects.filter(
             progress=progress, puzzle=puzzle, accepted=False
         ).count()
-        if failed_count == 3:
+        if failed_count == self.MAX_FAILED_ATTEMPTS:
             TourProgress.objects.filter(pk=progress.pk).update(
                 wrong_attempt_count=models.F("wrong_attempt_count") + 1
             )
@@ -592,6 +596,7 @@ class TourProgressViewSet(
                 "processing_ms": attempt.processing_ms,
                 "is_tour_complete": False,
                 "new_step_id": current_step.id,
+                "max_attempts": self.MAX_FAILED_ATTEMPTS,
                 "attempt_count": failed_count,
             }
         )
@@ -650,7 +655,7 @@ class TourProgressViewSet(
             failed_count = PuzzleAttempt.objects.filter(
                 progress=progress, puzzle=puzzle, accepted=False
             ).count()
-            if failed_count == 3:
+            if failed_count == self.MAX_FAILED_ATTEMPTS:
                 TourProgress.objects.filter(pk=progress.pk).update(
                     wrong_attempt_count=models.F("wrong_attempt_count") + 1
                 )
@@ -665,6 +670,7 @@ class TourProgressViewSet(
                 "accepted": accepted,
                 "is_tour_complete": False,
                 "new_step_id": current_step.id,
+                "max_attempts": self.MAX_FAILED_ATTEMPTS,
                 **({"attempt_count": failed_count} if failed_count is not None else {}),
             }
         )

@@ -36,6 +36,7 @@ import {
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import {
+  DEFAULT_MAX_FAILED_ATTEMPTS,
   submitArCode,
   submitOpenEndedAnswer,
   submitPictureCompare,
@@ -383,7 +384,7 @@ function MultipleChoiceView({
   );
 }
 
-const MAX_ATTEMPTS = 3;
+const MAX_ATTEMPTS = DEFAULT_MAX_FAILED_ATTEMPTS;
 
 interface PictureCompareViewProps {
   puzzle: PictureComparePuzzle;
@@ -409,8 +410,9 @@ function PictureCompareView({
   const [isCameraVisible, setIsCameraVisible] = useState(false);
   const [fullscreenImageUri, setFullscreenImageUri] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string>('');
+  const [maxAttempts, setMaxAttempts] = useState(MAX_ATTEMPTS);
   const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
-  const isExhausted = attemptCount >= MAX_ATTEMPTS;
+  const isExhausted = attemptCount >= maxAttempts;
   const referenceImageUri = puzzle.referenceImageUri;
 
   const handleCaptureAndCheck = async () => {
@@ -433,6 +435,9 @@ function PictureCompareView({
 
     try {
       const response = await submitPictureCompare(progressId, photoUri);
+      if (typeof response.max_attempts === 'number') {
+        setMaxAttempts(response.max_attempts);
+      }
       const similarityPercent = Math.round((response.similarity_score || 0) * 100);
 
       if (response.accepted) {
@@ -440,18 +445,29 @@ function PictureCompareView({
         onSolve();
       } else {
         if (stepId) recordAttempt(stepId);
-        const newCount = attemptCount + 1;
-        if (newCount >= MAX_ATTEMPTS) {
+        const newCount = response.attempt_count ?? attemptCount + 1;
+        if (newCount >= maxAttempts) {
           setFeedback(`Not close enough (${similarityPercent}%). No attempts remaining.`);
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
-            `Not close enough (${similarityPercent}%). ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`
+            `Not close enough (${similarityPercent}%). ${maxAttempts - newCount} attempt${maxAttempts - newCount === 1 ? '' : 's'} remaining.`
           );
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      const serverAttemptCount = Number(error?.response?.data?.attempt_count ?? NaN);
+      const serverMaxAttempts = Number(error?.response?.data?.max_attempts ?? NaN);
+      if (!Number.isNaN(serverMaxAttempts)) {
+        setMaxAttempts(serverMaxAttempts);
+      }
+      if (!Number.isNaN(serverAttemptCount) && stepId) {
+        const missingAttempts = Math.max(0, serverAttemptCount - attemptCount);
+        for (let i = 0; i < missingAttempts; i += 1) {
+          recordAttempt(stepId);
+        }
+      }
       console.error('submit picture compare failed', error);
       setFeedback('Could not verify image right now. Please try again.');
     } finally {
@@ -513,7 +529,7 @@ function PictureCompareView({
       {!isSolved && (
         <View style={styles.attemptsRow}>
           <Text style={styles.attemptsLabel}>Attempts</Text>
-          {Array.from({ length: MAX_ATTEMPTS }, (_, i) => (
+          {Array.from({ length: maxAttempts }, (_, i) => (
             <MaterialCommunityIcons
               key={i}
               name={i < attemptCount ? 'circle' : 'circle-outline'}
@@ -594,8 +610,9 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
   const [answerInput, setAnswerInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [maxAttempts, setMaxAttempts] = useState(MAX_ATTEMPTS);
   const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
-  const isExhausted = attemptCount >= MAX_ATTEMPTS;
+  const isExhausted = attemptCount >= maxAttempts;
 
   const handleSubmit = async () => {
     if (isSolved || isSubmitting || isExhausted) return;
@@ -615,24 +632,31 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
     setFeedback('Checking answer...');
     try {
       const response = await submitOpenEndedAnswer(progressId, trimmedAnswer);
+      if (typeof response.max_attempts === 'number') {
+        setMaxAttempts(response.max_attempts);
+      }
       if (response.accepted) {
         setFeedback('Answer verified.');
         onSolve();
       } else {
         if (stepId) recordAttempt(stepId);
         const newCount = response.attempt_count ?? attemptCount + 1;
-        if (newCount >= MAX_ATTEMPTS) {
+        if (newCount >= maxAttempts) {
           setFeedback('Answer is not close enough. No attempts remaining.');
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
-            `Answer is not close enough. ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`
+            `Answer is not close enough. ${maxAttempts - newCount} attempt${maxAttempts - newCount === 1 ? '' : 's'} remaining.`
           );
         }
       }
     } catch (error: any) {
       const serverAttemptCount = Number(error?.response?.data?.attempt_count ?? NaN);
+      const serverMaxAttempts = Number(error?.response?.data?.max_attempts ?? NaN);
+      if (!Number.isNaN(serverMaxAttempts)) {
+        setMaxAttempts(serverMaxAttempts);
+      }
       if (!Number.isNaN(serverAttemptCount) && stepId) {
         const missingAttempts = Math.max(0, serverAttemptCount - attemptCount);
         for (let i = 0; i < missingAttempts; i += 1) {
@@ -658,7 +682,7 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
       {!isSolved && (
         <View style={styles.attemptsRow}>
           <Text style={styles.attemptsLabel}>Attempts</Text>
-          {Array.from({ length: MAX_ATTEMPTS }, (_, i) => (
+          {Array.from({ length: maxAttempts }, (_, i) => (
             <MaterialCommunityIcons
               key={i}
               name={i < attemptCount ? 'circle' : 'circle-outline'}
@@ -719,8 +743,9 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPreparingAr, setIsPreparingAr] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [maxAttempts, setMaxAttempts] = useState(MAX_ATTEMPTS);
   const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
-  const isExhausted = attemptCount >= MAX_ATTEMPTS;
+  const isExhausted = attemptCount >= maxAttempts;
 
   const ensureArPermissions = async () => {
     const locationPerm = await Location.getForegroundPermissionsAsync();
@@ -801,23 +826,37 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
     setFeedback('Checking code...');
     try {
       const response = await submitArCode(progressId, trimmedCode);
+      if (typeof response.max_attempts === 'number') {
+        setMaxAttempts(response.max_attempts);
+      }
       if (response.accepted) {
         setFeedback('Code verified.');
         onSolve();
       } else {
         if (stepId) recordAttempt(stepId);
-        const newCount = attemptCount + 1;
-        if (newCount >= MAX_ATTEMPTS) {
+        const newCount = response.attempt_count ?? attemptCount + 1;
+        if (newCount >= maxAttempts) {
           setFeedback('Code is not correct. No attempts remaining.');
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
-            `Code is not correct. ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`
+            `Code is not correct. ${maxAttempts - newCount} attempt${maxAttempts - newCount === 1 ? '' : 's'} remaining.`
           );
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      const serverAttemptCount = Number(error?.response?.data?.attempt_count ?? NaN);
+      const serverMaxAttempts = Number(error?.response?.data?.max_attempts ?? NaN);
+      if (!Number.isNaN(serverMaxAttempts)) {
+        setMaxAttempts(serverMaxAttempts);
+      }
+      if (!Number.isNaN(serverAttemptCount) && stepId) {
+        const missingAttempts = Math.max(0, serverAttemptCount - attemptCount);
+        for (let i = 0; i < missingAttempts; i += 1) {
+          recordAttempt(stepId);
+        }
+      }
       console.error('submit ar code failed', error);
       setFeedback('Could not verify code right now. Please try again.');
     } finally {
@@ -861,7 +900,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
       {!isSolved && (
         <View style={styles.attemptsRow}>
           <Text style={styles.attemptsLabel}>Attempts</Text>
-          {Array.from({ length: MAX_ATTEMPTS }, (_, i) => (
+          {Array.from({ length: maxAttempts }, (_, i) => (
             <MaterialCommunityIcons
               key={i}
               name={i < attemptCount ? 'circle' : 'circle-outline'}
