@@ -191,11 +191,7 @@ export default function EditLocationScreen() {
           />
 
           {isPuzzleMode && (
-            <PuzzleEditor
-              puzzle={puzzle}
-              onChange={setPuzzle}
-              isRequired={isPuzzleMode}
-            />
+            <PuzzleEditor puzzle={puzzle} onChange={setPuzzle} isRequired={isPuzzleMode} />
           )}
 
           <WritingTips />

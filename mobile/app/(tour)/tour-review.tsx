@@ -66,21 +66,30 @@ async function withRetry<T>(operation: () => Promise<T>, maxRetries: number): Pr
 }
 
 async function runWithConcurrency(
-  tasks: Array<() => Promise<void>>,
+  tasks: (() => Promise<void>)[],
   concurrency: number
 ): Promise<void> {
   let nextIndex = 0;
+  let firstError: unknown = null;
 
   const worker = async () => {
-    while (nextIndex < tasks.length) {
+    while (nextIndex < tasks.length && !firstError) {
       const currentIndex = nextIndex;
       nextIndex += 1;
-      await tasks[currentIndex]();
+      try {
+        await tasks[currentIndex]();
+      } catch (error) {
+        firstError = error;
+      }
     }
   };
 
   const workerCount = Math.max(1, Math.min(concurrency, tasks.length));
   await Promise.all(Array.from({ length: workerCount }, () => worker()));
+
+  if (firstError) {
+    throw firstError;
+  }
 }
 
 export default function TourReviewScreen() {
@@ -158,111 +167,109 @@ export default function TourReviewScreen() {
             console.log('Tour created:', createdTourId);
             const submittingTourId = createdTourId;
 
-            const stepTasks = tourData.locations.map(
-              (loc, index) => async () => {
-                const createdStep = await withRetry(
-                  () =>
-                    createTourStep(submittingTourId, {
-                      title: sanitizeSingleLineText(loc.title).trim() || `Stop ${index + 1}`,
-                      description: sanitizeMultiLineText(loc.story),
-                      latitude: Number(loc.latitude).toFixed(8),
-                      longitude: Number(loc.longitude).toFixed(8),
-                      order: loc.order,
-                      image: loc.image,
-                    }),
-                  STEP_UPLOAD_MAX_RETRIES
-                );
+            const stepTasks = tourData.locations.map((loc, index) => async () => {
+              const createdStep = await withRetry(
+                () =>
+                  createTourStep(submittingTourId, {
+                    title: sanitizeSingleLineText(loc.title).trim() || `Stop ${index + 1}`,
+                    description: sanitizeMultiLineText(loc.story),
+                    latitude: Number(loc.latitude).toFixed(8),
+                    longitude: Number(loc.longitude).toFixed(8),
+                    order: loc.order,
+                    image: loc.image,
+                  }),
+                STEP_UPLOAD_MAX_RETRIES
+              );
 
-                if (!loc.puzzle) {
-                  setSubmitProgress((prev) => {
-                    if (!prev) return prev;
-                    return { ...prev, completed: Math.min(prev.total, prev.completed + 1) };
-                  });
-                  return;
-                }
-                const puzzle = loc.puzzle;
-
-                const basePayload = {
-                  question: sanitizeMultiLineText(puzzle.question).trim(),
-                  hint: sanitizeMultiLineText(puzzle.hint),
-                };
-
-                if (puzzle.puzzle_type === 'TRIVIA') {
-                  await withRetry(
-                    () =>
-                      setStepTriviaPuzzle(submittingTourId, createdStep.id, {
-                        ...basePayload,
-                        options: puzzle.options.map((opt) => sanitizeSingleLineText(opt)),
-                        correct_answer: sanitizeSingleLineText(puzzle.correctAnswer),
-                      }),
-                    STEP_UPLOAD_MAX_RETRIES
-                  );
-                } else if (puzzle.puzzle_type === 'PICTURE_COMPARE') {
-                  const referenceImageUri = puzzle.referenceImage;
-                  if (!referenceImageUri || !referenceImageUri.startsWith('file://')) {
-                    throw new Error('PICTURE_COMPARE puzzles require a local reference image.');
-                  }
-
-                  await withRetry(
-                    () =>
-                      setStepPictureComparePuzzle(submittingTourId, createdStep.id, {
-                        ...basePayload,
-                        referenceImageUri,
-                      }),
-                    STEP_UPLOAD_MAX_RETRIES
-                  );
-                } else if (puzzle.puzzle_type === 'AR') {
-                  const arConfig = puzzle.arConfig;
-                  if (!arConfig) {
-                    throw new Error('AR puzzles require a selected model, code, and anchor.');
-                  }
-
-                  await withRetry(
-                    () =>
-                      setStepArPuzzle(submittingTourId, createdStep.id, {
-                        ...basePayload,
-                        scene_asset_url: arConfig.sceneAssetUrl,
-                        metadata: {
-                          version: 1,
-                          model_id: arConfig.modelId,
-                          anchor_id: arConfig.anchorId,
-                          placement_mode: arConfig.placementMode,
-                          secret_code: arConfig.secretCode,
-                          model_scale_meters: arConfig.modelScaleMeters,
-                          anchor_position: {
-                            x: arConfig.anchorPosition.x,
-                            y: arConfig.anchorPosition.y,
-                            z: arConfig.anchorPosition.z,
-                          },
-                        },
-                      }),
-                    STEP_UPLOAD_MAX_RETRIES
-                  );
-                } else if (puzzle.puzzle_type === 'COMPASS') {
-                  const targetHeadingDegrees = puzzle.targetHeadingDegrees;
-                  if (
-                    typeof targetHeadingDegrees !== 'number' ||
-                    !Number.isInteger(targetHeadingDegrees)
-                  ) {
-                    throw new Error('COMPASS puzzles require a valid integer target heading.');
-                  }
-
-                  await withRetry(
-                    () =>
-                      setStepCompassPuzzle(submittingTourId, createdStep.id, {
-                        ...basePayload,
-                        target_heading_degrees: ((targetHeadingDegrees % 360) + 360) % 360,
-                      }),
-                    STEP_UPLOAD_MAX_RETRIES
-                  );
-                }
-
+              if (!loc.puzzle) {
                 setSubmitProgress((prev) => {
                   if (!prev) return prev;
                   return { ...prev, completed: Math.min(prev.total, prev.completed + 1) };
                 });
+                return;
               }
-            );
+              const puzzle = loc.puzzle;
+
+              const basePayload = {
+                question: sanitizeMultiLineText(puzzle.question).trim(),
+                hint: sanitizeMultiLineText(puzzle.hint),
+              };
+
+              if (puzzle.puzzle_type === 'TRIVIA') {
+                await withRetry(
+                  () =>
+                    setStepTriviaPuzzle(submittingTourId, createdStep.id, {
+                      ...basePayload,
+                      options: puzzle.options.map((opt) => sanitizeSingleLineText(opt)),
+                      correct_answer: sanitizeSingleLineText(puzzle.correctAnswer),
+                    }),
+                  STEP_UPLOAD_MAX_RETRIES
+                );
+              } else if (puzzle.puzzle_type === 'PICTURE_COMPARE') {
+                const referenceImageUri = puzzle.referenceImage;
+                if (!referenceImageUri || !referenceImageUri.startsWith('file://')) {
+                  throw new Error('PICTURE_COMPARE puzzles require a local reference image.');
+                }
+
+                await withRetry(
+                  () =>
+                    setStepPictureComparePuzzle(submittingTourId, createdStep.id, {
+                      ...basePayload,
+                      referenceImageUri,
+                    }),
+                  STEP_UPLOAD_MAX_RETRIES
+                );
+              } else if (puzzle.puzzle_type === 'AR') {
+                const arConfig = puzzle.arConfig;
+                if (!arConfig) {
+                  throw new Error('AR puzzles require a selected model, code, and anchor.');
+                }
+
+                await withRetry(
+                  () =>
+                    setStepArPuzzle(submittingTourId, createdStep.id, {
+                      ...basePayload,
+                      scene_asset_url: arConfig.sceneAssetUrl,
+                      metadata: {
+                        version: 1,
+                        model_id: arConfig.modelId,
+                        anchor_id: arConfig.anchorId,
+                        placement_mode: arConfig.placementMode,
+                        secret_code: arConfig.secretCode,
+                        model_scale_meters: arConfig.modelScaleMeters,
+                        anchor_position: {
+                          x: arConfig.anchorPosition.x,
+                          y: arConfig.anchorPosition.y,
+                          z: arConfig.anchorPosition.z,
+                        },
+                      },
+                    }),
+                  STEP_UPLOAD_MAX_RETRIES
+                );
+              } else if (puzzle.puzzle_type === 'COMPASS') {
+                const targetHeadingDegrees = puzzle.targetHeadingDegrees;
+                if (
+                  typeof targetHeadingDegrees !== 'number' ||
+                  !Number.isInteger(targetHeadingDegrees)
+                ) {
+                  throw new Error('COMPASS puzzles require a valid integer target heading.');
+                }
+
+                await withRetry(
+                  () =>
+                    setStepCompassPuzzle(submittingTourId, createdStep.id, {
+                      ...basePayload,
+                      target_heading_degrees: ((targetHeadingDegrees % 360) + 360) % 360,
+                    }),
+                  STEP_UPLOAD_MAX_RETRIES
+                );
+              }
+
+              setSubmitProgress((prev) => {
+                if (!prev) return prev;
+                return { ...prev, completed: Math.min(prev.total, prev.completed + 1) };
+              });
+            });
 
             await runWithConcurrency(stepTasks, STEP_UPLOAD_CONCURRENCY);
 

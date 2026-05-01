@@ -14,4 +14,3 @@ export const sanitizeUsernameInput = (value: string): string =>
   value.replace(CONTROL_CHAR_REGEX, '').replace(/\s+/g, '');
 
 export const isUsernameValid = (value: string): boolean => USERNAME_ALLOWED_CHAR_REGEX.test(value);
-

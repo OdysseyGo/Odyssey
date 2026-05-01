@@ -4,7 +4,9 @@
     "cancel": "İptal",
     "submit": "Gönder",
     "submitting": "Gönderiliyor...",
-    "ok": "Tamam"
+    "ok": "Tamam",
+    "error": "Hata",
+    "syncError": "İlerleme sunucuyla senkronize edilemedi."
   },
   "auth": {
     "welcomeTitle": "Hoş geldin, kaşif!",
@@ -400,7 +402,9 @@
       "cancel": "İptal",
       "delete": "Sil",
       "tourStops": "Tur Durakları",
-      "locationsCount": "{{count}} konum"
+      "locationsCount": "{{count}} konum",
+      "maxStepsReachedTitle": "Adım limitine ulaşıldı",
+      "maxStepsReachedMessage": "Bir tur en fazla {{max}} durak içerebilir."
     },
     "review": {
       "tourStopsTitle": "Tur Durakları ({{count}})",
@@ -558,12 +562,6 @@
     "answerConfirmTitle": "Bu cevabı kilitle?",
     "answerConfirmMessage": "Emin misiniz? Yanlış cevaplar rozet ilerlemenizi azaltabilir.",
     "answerConfirmAction": "Cevapla"
-  },
-  "common": {
-    "cancel": "İptal",
-    "ok": "Tamam",
-    "error": "Hata",
-    "syncError": "İlerleme sunucuyla senkronize edilemedi."
   },
   "map": {
     "noActiveTour": {

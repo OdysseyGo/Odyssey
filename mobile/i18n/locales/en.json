@@ -4,7 +4,9 @@
     "cancel": "Cancel",
     "submit": "Submit",
     "submitting": "Submitting...",
-    "ok": "OK"
+    "ok": "OK",
+    "error": "Error",
+    "syncError": "Could not sync progress with server."
   },
   "auth": {
     "welcomeTitle": "Welcome, adventurer!",
@@ -400,7 +402,9 @@
       "cancel": "Cancel",
       "delete": "Delete",
       "tourStops": "Tour Stops",
-      "locationsCount": "{{count}} locations"
+      "locationsCount": "{{count}} locations",
+      "maxStepsReachedTitle": "Step limit reached",
+      "maxStepsReachedMessage": "A tour can include at most {{max}} stops."
     },
     "review": {
       "tourStopsTitle": "Tour Stops ({{count}})",
@@ -558,12 +562,6 @@
     "answerConfirmTitle": "Lock this answer?",
     "answerConfirmMessage": "Are you sure? Wrong answers can reduce your badge progress.",
     "answerConfirmAction": "Answer"
-  },
-  "common": {
-    "cancel": "Cancel",
-    "ok": "OK",
-    "error": "Error",
-    "syncError": "Could not sync progress with server."
   },
   "map": {
     "noActiveTour": {
