@@ -763,6 +763,7 @@ class ReportViewSetTests(APITestCase):
             {
                 "content_type": "TOUR",
                 "content_id": self.tour.id,
+                "category": Report.INAPPROPRIATE,
                 "reason": "Offensive content",
             },
             format="json",
@@ -771,7 +772,98 @@ class ReportViewSetTests(APITestCase):
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.first()
         self.assertEqual(report.reporter, self.user)
+        self.assertEqual(report.category, Report.INAPPROPRIATE)
         self.assertEqual(report.status, Report.PENDING)
+
+    def test_submit_report_allows_category_without_reason_unless_other(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "/api/reports/",
+            {
+                "content_type": "TOUR",
+                "content_id": self.tour.id,
+                "category": Report.SPAM,
+                "reason": "",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        report = Report.objects.first()
+        self.assertEqual(report.category, Report.SPAM)
+        self.assertEqual(report.reason, "")
+
+    def test_submit_report_allows_open_ended_other_category(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "/api/reports/",
+            {
+                "content_type": "TOUR",
+                "content_id": self.tour.id,
+                "category": Report.OTHER,
+                "reason": "The route asks people to enter a locked private garden.",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        report = Report.objects.first()
+        self.assertEqual(report.category, Report.OTHER)
+        self.assertIn("private garden", report.reason)
+
+    def test_submit_review_report_as_user(self):
+        review = Review.objects.create(
+            tour=self.tour,
+            user=self.offender,
+            rating=1,
+            comment="Spammy review",
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "/api/reports/",
+            {
+                "content_type": "REVIEW",
+                "content_id": review.id,
+                "category": Report.SPAM,
+                "reason": "",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        report = Report.objects.first()
+        self.assertEqual(report.content_type, Report.REVIEW)
+        self.assertEqual(report.content_id, review.id)
+        self.assertEqual(report.category, Report.SPAM)
+
+    def test_submit_user_report_as_user(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "/api/reports/",
+            {
+                "content_type": "USER",
+                "content_id": self.offender.id,
+                "category": Report.HATE_OR_HARASSMENT,
+                "reason": "",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        report = Report.objects.first()
+        self.assertEqual(report.content_type, Report.USER)
+        self.assertEqual(report.content_id, self.offender.id)
+        self.assertEqual(report.category, Report.HATE_OR_HARASSMENT)
+
+    def test_submit_report_requires_reason_for_other_category(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "/api/reports/",
+            {
+                "content_type": "TOUR",
+                "content_id": self.tour.id,
+                "category": Report.OTHER,
+                "reason": "",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_submit_report_validates_content_exists(self):
         self.client.force_authenticate(user=self.user)

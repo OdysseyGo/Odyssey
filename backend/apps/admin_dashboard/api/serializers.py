@@ -955,6 +955,7 @@ class ReportSerializer(serializers.ModelSerializer):
             "reporter_username",
             "content_type",
             "content_id",
+            "category",
             "reason",
             "status",
             "admin_notes",
@@ -968,11 +969,21 @@ class ReportSerializer(serializers.ModelSerializer):
 class ReportCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
-        fields = ["content_type", "content_id", "reason"]
+        fields = ["content_type", "content_id", "category", "reason"]
+        extra_kwargs = {
+            "reason": {"required": False, "allow_blank": True},
+        }
 
     def validate(self, data):
         content_type = data["content_type"]
         content_id = data["content_id"]
+        category = data.get("category", Report.OTHER)
+        reason = data.get("reason", "")
+
+        if category == Report.OTHER and not reason.strip():
+            raise serializers.ValidationError(
+                {"reason": "Please describe the issue when selecting Other."}
+            )
 
         model_map = {
             Report.TOUR: Tour,
@@ -1003,6 +1014,7 @@ class ReportActionSerializer(serializers.Serializer):
     action = serializers.ChoiceField(choices=ACTION_CHOICES)
     admin_notes = serializers.CharField(required=False, default="")
     ban_reason = serializers.CharField(required=False, default="Violation of terms")
+    ban_expires_at = serializers.DateTimeField(required=False, allow_null=True)
 
 
 class BanRecordSerializer(serializers.ModelSerializer):

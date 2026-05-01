@@ -728,6 +728,7 @@ class ReportViewSet(ModelViewSet):
             user=target_user,
             banned_by=admin_user,
             reason=data.get("ban_reason", "Violation of terms"),
+            expires_at=data.get("ban_expires_at"),
         )
         target_user.is_banned = True
         target_user.save(update_fields=["is_banned"])

@@ -440,28 +440,30 @@ export default function ProfileHeaderComp({
           </TouchableOpacity>
         ) : null}
 
-        <OptionalCopilot
-          disable={disableCopilot}
-          text={t('tutorial.profile.step7text')}
-          order={7}
-          name="settingsStep"
-          style={[
-            styles.settingsButton,
-            {
-              top: insets.top + Spacing.md,
-              right: Spacing.lg,
-            },
-          ]}
-        >
-          <TouchableOpacity
-            onPress={onSettingsPress}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel={settingsAccessibilityLabel}
+        {onSettingsPress ? (
+          <OptionalCopilot
+            disable={disableCopilot}
+            text={t('tutorial.profile.step7text')}
+            order={7}
+            name="settingsStep"
+            style={[
+              styles.settingsButton,
+              {
+                top: insets.top + Spacing.md,
+                right: Spacing.lg,
+              },
+            ]}
           >
-            <Ionicons name="settings-outline" size={Spacing.lg} color={color.primary} />
-          </TouchableOpacity>
-        </OptionalCopilot>
+            <TouchableOpacity
+              onPress={onSettingsPress}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={settingsAccessibilityLabel}
+            >
+              <Ionicons name="settings-outline" size={Spacing.lg} color={color.primary} />
+            </TouchableOpacity>
+          </OptionalCopilot>
+        ) : null}
 
         <Animated.View
           style={{
