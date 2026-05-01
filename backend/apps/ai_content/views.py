@@ -34,6 +34,9 @@ class GenerateTourView(APIView):
                 language=serializer.validated_data["language"],
                 custom_prompt=serializer.validated_data.get("additional_details", ""),
                 include_ar=serializer.validated_data.get("include_ar", False),
+                include_compass=serializer.validated_data.get(
+                    "include_compass", False
+                ),
                 creator=request.user,
                 request=request,
             )
