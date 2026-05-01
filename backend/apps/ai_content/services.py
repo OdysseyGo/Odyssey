@@ -66,6 +66,7 @@ class GeminiService:
         country: str = "",
         country_code: str = "",
         include_ar: bool = False,
+        include_compass: bool = False,
         request=None,
     ) -> Tour:
         """
@@ -113,6 +114,7 @@ class GeminiService:
             candidate_places,
             num_steps,
             ar_models,
+            include_compass=include_compass,
         )
 
         # ---- Step 3: Generate creative content via Gemini (with retries) ----
@@ -260,6 +262,7 @@ class GeminiService:
                         step_data=step_data,
                         puzzle_data=puzzle_data,
                         candidate_places=candidate_places,
+                        include_compass=include_compass,
                     )
                 if not puzzle_created and mode in ("PUZZLE", "HYBRID"):
                     puzzle = Puzzle.objects.create(
@@ -485,6 +488,7 @@ class GeminiService:
         step_data: dict,
         puzzle_data: dict,
         candidate_places: list[dict],
+        include_compass: bool = False,
     ) -> bool:
         """
         Persist a Puzzle (and its type-specific detail) from an AI payload.
@@ -495,6 +499,10 @@ class GeminiService:
         puzzle_type = (puzzle_data.get("type") or "TRIVIA").upper()
         if puzzle_type not in self.SUPPORTED_AI_PUZZLE_TYPES:
             puzzle_type = Puzzle.TRIVIA
+        if puzzle_type == Puzzle.COMPASS and not include_compass:
+            # Compass puzzles weren't requested — degrade to trivia and let the
+            # caller's fallback logic produce a valid puzzle if needed.
+            return False
 
         question = puzzle_data.get("question")
         if not question:
@@ -685,22 +693,30 @@ class GeminiService:
         candidate_places: list[dict],
         num_steps: int,
         ar_models: list[ARModel] | None = None,
+        include_compass: bool = False,
     ) -> str:
         """
         Build a RAG prompt that constrains Gemini to select from verified
         Google Maps places.
         """
+        puzzle_kinds = ["trivia question"]
+        if ar_models:
+            puzzle_kinds.append("AR")
+        if include_compass:
+            puzzle_kinds.append("compass")
+        kinds_phrase = (
+            puzzle_kinds[0]
+            if len(puzzle_kinds) == 1
+            else ", ".join(puzzle_kinds[:-1]) + ", or " + puzzle_kinds[-1]
+        )
+
         mode_instructions = {
             "STORY": "Focus on rich narrative storytelling. Each step should have detailed historical or thematic descriptions that immerse the user in the story. No puzzles needed.",
-            "PUZZLE": "Focus on interactive challenges. Each step MUST have a puzzle (trivia question, AR, or compass). Keep descriptions brief. Some trivia questions should be formatted as a riddle, others should be normal trivia questions. Make the options challenging.",
+            "PUZZLE": f"Focus on interactive challenges. Each step MUST have a puzzle ({kinds_phrase}). Keep descriptions brief. Some trivia questions should be formatted as a riddle, others should be normal trivia questions. Make the options challenging.",
             "HYBRID": "Balance storytelling with puzzles. Each step should have both a narrative description AND a puzzle challenge.",
         }
 
-        puzzle_schema = """
-        Each puzzle is one of two types: TRIVIA or COMPASS. Pick whichever fits
-        the location best; mix the two across the tour so it does not feel
-        repetitive (aim for at least one COMPASS puzzle when there are 3+ steps).
-
+        trivia_schema = """
         TRIVIA — multiple-choice question grounded in the location's history,
         architecture, or culture:
         "puzzle": {
@@ -710,8 +726,9 @@ class GeminiService:
             "answer": "1875",
             "hint": "It was built during the Victorian era",
             "xp": 25
-        }
+        }"""
 
+        compass_schema = """
         COMPASS — asks the user to physically face a direction. The phone
         vibrates as they rotate toward the target heading. STRONGLY PREFER
         specifying "target_landmark" with the EXACT name of another stop from
@@ -726,6 +743,19 @@ class GeminiService:
             "hint": "Its silhouette is visible across the square.",
             "xp": 25
         }"""
+
+        if include_compass:
+            puzzle_schema = (
+                "\n        Each puzzle is one of two types: TRIVIA or COMPASS. "
+                "Pick whichever fits the location best; mix the two across the "
+                "tour so it does not feel repetitive (aim for at least one "
+                "COMPASS puzzle when there are 3+ steps).\n"
+                + trivia_schema
+                + "\n"
+                + compass_schema
+            )
+        else:
+            puzzle_schema = trivia_schema
 
         puzzle_field = '"puzzle": {...}' if mode in ["PUZZLE", "HYBRID"] else ""
         puzzle_instruction = (
