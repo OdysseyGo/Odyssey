@@ -28,35 +28,55 @@ export default function TourMap({
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const mapRef = useRef<MapView>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      mapRef.current = null;
+    };
+  }, []);
 
   // Get user location on mount (but don't animate if there's an active tour)
   useEffect(() => {
+    let cancelled = false;
+
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        return;
-      }
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (cancelled || !mountedRef.current || status !== 'granted') return;
 
-      let currentLocation = await Location.getCurrentPositionAsync({});
+        let currentLocation = await Location.getCurrentPositionAsync({});
+        if (cancelled || !mountedRef.current) return;
 
-      const userRegion = {
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      };
+        const userRegion = {
+          latitude: currentLocation.coords.latitude,
+          longitude: currentLocation.coords.longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        };
 
-      onUserLocationReady?.(userRegion);
+        onUserLocationReady?.(userRegion);
 
-      if (mapRef.current && !tour) {
-        mapRef.current.animateToRegion(userRegion, 1000);
+        if (mapRef.current && !tour) {
+          mapRef.current.animateToRegion(userRegion, 1000);
+        }
+      } catch (error) {
+        if (!cancelled && mountedRef.current) {
+          console.warn('Unable to read current location for map', error);
+        }
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [onUserLocationReady, tour]);
 
   // Animate to current step when it changes (for active tours)
   useEffect(() => {
-    if (mapRef.current && tour && currentStepIndex !== undefined) {
+    if (mountedRef.current && mapRef.current && tour && currentStepIndex !== undefined) {
       const currentStep = tour.steps[currentStepIndex];
       if (currentStep) {
         mapRef.current.animateToRegion(

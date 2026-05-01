@@ -327,6 +327,7 @@ function TourDisplayContent() {
         if (signal?.aborted) return;
         setError(err.message || 'Failed to load tours');
       } finally {
+        if (signal?.aborted) return;
         setLoading(false);
         setRefreshing(false);
       }

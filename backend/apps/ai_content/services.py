@@ -134,7 +134,7 @@ class GeminiService:
             ar_models,
         )
 
-        _emit("Weaving your story together…")
+        _emit(f"Weaving your next adventure in {city} together…")
         max_retries = 3
         last_error = None
 
