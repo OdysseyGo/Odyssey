@@ -42,6 +42,17 @@ export const userProfileStyles = (theme: ThemeName) => {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    reportButtonOverlay: {
+      position: 'absolute',
+      right: Spacing.md,
+      zIndex: 20,
+    },
+    reportButton: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
     // ── Follow button ─────────────────────────────────────────────────
     followButton: {

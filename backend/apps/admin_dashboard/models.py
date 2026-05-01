@@ -25,6 +25,24 @@ class Report(models.Model):
         (DISMISSED, "Dismissed"),
     ]
 
+    INAPPROPRIATE = "INAPPROPRIATE"
+    HATE_OR_HARASSMENT = "HATE_OR_HARASSMENT"
+    SPAM = "SPAM"
+    MISLEADING = "MISLEADING"
+    SAFETY = "SAFETY"
+    PRIVACY = "PRIVACY"
+    OTHER = "OTHER"
+
+    CATEGORY_CHOICES = [
+        (INAPPROPRIATE, "Inappropriate content"),
+        (HATE_OR_HARASSMENT, "Hate or harassment"),
+        (SPAM, "Spam"),
+        (MISLEADING, "Misleading information"),
+        (SAFETY, "Safety concern"),
+        (PRIVACY, "Privacy concern"),
+        (OTHER, "Other"),
+    ]
+
     reporter = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -32,6 +50,7 @@ class Report(models.Model):
     )
     content_type = models.CharField(max_length=20, choices=CONTENT_TYPE_CHOICES)
     content_id = models.PositiveBigIntegerField()
+    category = models.CharField(max_length=40, choices=CATEGORY_CHOICES, default=OTHER)
     reason = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
     admin_notes = models.TextField(blank=True)

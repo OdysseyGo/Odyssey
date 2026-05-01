@@ -19,8 +19,7 @@ export const banUser = (
   expiresAt?: string | null,
 ) => api.post(`/admin/users/${id}/ban/`, { reason, expires_at: expiresAt });
 
-export const unbanUser = (id: number) =>
-  api.post(`/admin/users/${id}/unban/`);
+export const unbanUser = (id: number) => api.post(`/admin/users/${id}/unban/`);
 
 export const bulkUserAction = (data: {
   user_ids: number[];
@@ -50,8 +49,7 @@ export const getTourAnalytics = (id: number) =>
   api.get(`/admin/tours/${id}/analytics/`);
 
 // Analytics
-export const getAnalyticsSummary = () =>
-  api.get("/admin/analytics/summary/");
+export const getAnalyticsSummary = () => api.get("/admin/analytics/summary/");
 
 export const getUserGrowth = (params?: Record<string, string | number>) =>
   api.get("/admin/analytics/user-growth/", { params });
@@ -108,7 +106,7 @@ export const takeReportAction = (
   id: number,
   data: {
     action: string;
-    notes?: string;
+    admin_notes?: string;
     ban_reason?: string;
     ban_expires_at?: string;
   },
