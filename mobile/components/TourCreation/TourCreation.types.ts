@@ -74,9 +74,9 @@ export interface TourCreationData {
   tourType: 'STORY' | 'PUZZLE' | 'HYBRID';
   estimatedDuration: number; // in minutes
   locations: TourLocation[];
-  country?: string;
-  countryCode?: string;
-  state?: string;
+  country: string;
+  countryCode: string;
+  state: string;
   stateLatitude?: number;
   stateLongitude?: number;
 }
