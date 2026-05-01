@@ -93,7 +93,6 @@ export default function TourReviewScreen() {
               country_code: tourData.countryCode,
               city_latitude: tourData.stateLatitude,
               city_longitude: tourData.stateLongitude,
-              status: 'DRAFT',
               is_premium: false,
             });
 
@@ -188,14 +187,13 @@ export default function TourReviewScreen() {
               }
             }
 
-            // 3. Publish after all steps are created so backend city/step validation runs once.
+            // 3. Finalize tour metadata after all steps are created.
             await updateTour(tour.id, {
               city: tourData.state,
               country: tourData.country,
               country_code: tourData.countryCode,
               city_latitude: tourData.stateLatitude,
               city_longitude: tourData.stateLongitude,
-              status: 'DRAFT',
             });
 
             setShowUnderReviewNotice(true);
