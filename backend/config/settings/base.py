@@ -51,7 +51,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'django_q',
     # Third-party
     "rest_framework",
     "rest_framework.authtoken",
@@ -306,19 +305,6 @@ LOGGING = {
             "propagate": False,
         },
     },
-}
-
-# Django Q2 Configuration
-Q_CLUSTER = {
-    'name': 'odyssey',
-    'workers': 4, #kaç tane worker olduğu, değiştirirz belki arkada çalışçak sonuçta
-    'timeout': 500,
-    'retry': 600,
-    'queue_limit': 50,
-    'bulk': 10,
-    'orm': 'default',
-    # For development, use synchronous mode
-    'sync': os.getenv('DEBUG', '1') == '1',
 }
 
 # Apple Push Notification Settings

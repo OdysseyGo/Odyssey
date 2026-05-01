@@ -1,7 +1,6 @@
 from django.contrib import admin
 from .models import DeviceToken, Notification
 
-
 @admin.register(DeviceToken)
 class DeviceTokenAdmin(admin.ModelAdmin):
     list_display = ['user', 'platform', 'is_active', 'created_at', 'updated_at']
@@ -21,18 +20,28 @@ class DeviceTokenAdmin(admin.ModelAdmin):
         }),
     )
 
-
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ['user', 'title', 'sent_count', 'created_at']
-    list_filter = ['created_at', 'sent_count']
+    list_display = ['user', 'title', 'is_sent', 'scheduled_at', 'sent_at', 'sent_count']
+    list_filter = ['is_sent', 'created_at', 'scheduled_at']
     search_fields = ['user__username', 'title', 'body']
-    readonly_fields = ['created_at', 'user']
+    readonly_fields = ['created_at', 'sent_at']
+    
     fieldsets = (
         ('Notification Content', {
             'fields': ('user', 'title', 'body', 'data')
+        }),
+        ('Scheduling & Status', {
+            'fields': ('is_sent', 'scheduled_at', 'sent_at'),
+            'description': 'When the notification will be sent, and was sent at.'
         }),
         ('Delivery Info', {
             'fields': ('sent_count', 'created_at')
         }),
     )
+
+    actions = ['mark_as_pending']
+
+    @admin.action(description="Make choosen notifications to be sent again.")
+    def mark_as_pending(self, request, queryset):
+        queryset.update(is_sent=False, sent_at=None, sent_count=0)

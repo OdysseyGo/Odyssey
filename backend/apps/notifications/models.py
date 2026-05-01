@@ -26,17 +26,17 @@ class DeviceToken(models.Model):
 
 
 class Notification(models.Model):
-    """Log of sent notifications"""
-    
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     title = models.CharField(max_length=255)
     body = models.TextField()
     data = models.JSONField(default=dict, blank=True)
     sent_count = models.IntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
     
+    is_sent = models.BooleanField(default=False)
+    scheduled_at = models.DateTimeField(default=timezone.now) 
+    sent_at = models.DateTimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         ordering = ['-created_at']
-    
-    def __str__(self):
-        return f"{self.user.username} - {self.title}"
