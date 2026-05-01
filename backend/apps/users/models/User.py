@@ -29,6 +29,9 @@ class User(AbstractUser):
     tour_count = models.IntegerField(default=0)
     rating = models.FloatField(default=0.0)
     total_walked_km = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+    current_login_streak = models.PositiveIntegerField(default=0)
+    max_login_streak = models.PositiveIntegerField(default=0)
+    last_login_streak_date = models.DateField(blank=True, null=True)
     avatar_url = models.URLField(
         max_length=500,
         blank=True,

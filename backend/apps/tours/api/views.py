@@ -9,6 +9,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from apps.gamification.models import TourProgress
+from apps.gamification.services import BadgeService
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
@@ -105,7 +106,14 @@ class TourViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user, status=Tour.PENDING)
+        # Default to production-safe behavior when ENV_MODE is unset.
+        env_mode = os.getenv("ENV_MODE", "production")
+        if env_mode != "development":
+            status = Tour.PENDING
+        else:
+            status = Tour.PUBLISHED
+        tour = serializer.save(creator=self.request.user, status=status)
+        BadgeService.evaluate_user_badges(tour.creator)
 
     @action(
         detail=False,
@@ -688,6 +696,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You cannot review your own tour.")
 
         serializer.save(user=self.request.user, tour=tour)
+        BadgeService.evaluate_user_badges(self.request.user)
+        BadgeService.evaluate_user_badges(tour.creator)
 
     def perform_update(self, serializer):
         if serializer.instance.tour.creator_id == self.request.user.id:

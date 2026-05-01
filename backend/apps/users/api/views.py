@@ -17,6 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken  # login token
 
 from apps.gamification.api.serializers import UserBadgeSerializer
 from apps.gamification.models import TourProgress, UserBadge
+from apps.gamification.services import BadgeService
 from apps.tours.api.serializers import TourSerializer
 from apps.tours.models import Tour
 from apps.users.models import Follow, PasswordResetOTP, SearchHistory, User
@@ -71,6 +72,8 @@ class UserViewSet(ModelViewSet):
             return Response({"detail": "Invalid credentials"}, status=400)
 
         refresh = RefreshToken.for_user(user)
+        BadgeService.sync_login_streak(user)
+        BadgeService.evaluate_user_badges(user)
 
         return Response(
             {
@@ -372,6 +375,10 @@ class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
         User.objects.filter(id=follow.follower_id).update(
             following_count=F("following_count") + 1
         )
+        follow.follower.refresh_from_db(fields=["follower_count", "following_count"])
+        follow.following.refresh_from_db(fields=["follower_count", "following_count"])
+        BadgeService.evaluate_user_badges(follow.follower)
+        BadgeService.evaluate_user_badges(follow.following)
 
     def perform_destroy(self, instance):
         # decrement counters safely on unfollow
@@ -382,4 +389,10 @@ class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
             following_count=F("following_count") - 1
         )
 
+        follower = instance.follower
+        following = instance.following
         instance.delete()
+        follower.refresh_from_db(fields=["follower_count", "following_count"])
+        following.refresh_from_db(fields=["follower_count", "following_count"])
+        BadgeService.evaluate_user_badges(follower)
+        BadgeService.evaluate_user_badges(following)
