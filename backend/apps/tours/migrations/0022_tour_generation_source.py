@@ -5,6 +5,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("tours", "0021_remove_gyroscope_support"),
+        ("tours", "0022_merge_20260501_1256"),
     ]
 
     operations = [
