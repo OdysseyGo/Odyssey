@@ -27,13 +27,23 @@ class AdminTourFilter(filters.FilterSet):
     tour_type = filters.ChoiceFilter(choices=Tour.TOUR_TYPE_CHOICES)
     difficulty = filters.ChoiceFilter(choices=Tour.DIFFICULTY_CHOICES)
     city = filters.CharFilter(lookup_expr="icontains")
+    country = filters.CharFilter(lookup_expr="icontains")
+    country_code = filters.CharFilter(lookup_expr="iexact")
     creator = filters.NumberFilter(field_name="creator_id")
     created_after = filters.DateTimeFilter(field_name="created_at", lookup_expr="gte")
     created_before = filters.DateTimeFilter(field_name="created_at", lookup_expr="lte")
 
     class Meta:
         model = Tour
-        fields = ["status", "tour_type", "difficulty", "city", "creator"]
+        fields = [
+            "status",
+            "tour_type",
+            "difficulty",
+            "city",
+            "country",
+            "country_code",
+            "creator",
+        ]
 
 
 class ReportFilter(filters.FilterSet):

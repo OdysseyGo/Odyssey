@@ -8,6 +8,8 @@ import {
   LogOut,
   Compass,
   SlidersHorizontal,
+  Boxes,
+  BadgeCheck,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -18,6 +20,8 @@ const navItems = [
   { to: "/tours", icon: Map, label: "Tours" },
   { to: "/reports", icon: Flag, label: "Reports" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
+  { to: "/ar-models", icon: Boxes, label: "AR Models" },
+  { to: "/badges", icon: BadgeCheck, label: "Badges" },
   {
     to: "/picture-compare-tuning",
     icon: SlidersHorizontal,

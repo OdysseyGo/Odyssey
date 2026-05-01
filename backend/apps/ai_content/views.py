@@ -26,12 +26,16 @@ class GenerateTourView(APIView):
             service = GeminiService()
             tour = service.generate_tour(
                 city=serializer.validated_data["city"],
+                country=serializer.validated_data.get("country", ""),
+                country_code=serializer.validated_data.get("country_code", ""),
                 theme=serializer.validated_data["theme"],
                 mode=serializer.validated_data["mode"],
                 duration=serializer.validated_data["duration"],
                 language=serializer.validated_data["language"],
-                custom_prompt=serializer.validated_data.get("custom_prompt", ""),
+                custom_prompt=serializer.validated_data.get("additional_details", ""),
+                include_ar=serializer.validated_data.get("include_ar", False),
                 creator=request.user,
+                request=request,
             )
 
             return Response(

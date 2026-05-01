@@ -17,6 +17,7 @@
     "password": "Şifre",
     "firstName": "Ad",
     "lastName": "Soyad",
+    "name": "Ad Soyad",
     "email": "E-posta",
     "confirmPassword": "Şifre Tekrar",
     "newPassword": "Yeni Şifre",
@@ -49,6 +50,12 @@
     "continue": "Devam Et",
     "back": "Geri",
     "resetTagline": "Şifreni sıfırla",
+    "successTitle": "Başarılı",
+    "confirmRegistrationTitle": "Bu hesap oluşturulsun mu?",
+    "confirmRegistrationSubtitle": "Odyssey hesabını oluşturmadan önce bilgileri kontrol et.",
+    "confirmRegistrationMessage": "\"{{username}}\" kullanıcı adı, {{firstName}} {{lastName}} için {{email}} e-postasıyla oluşturulacak. Emin misiniz?",
+    "accountCreatedTitle": "Hesap oluşturuldu",
+    "accountCreatedSubtitle": "\"{{username}}\" hazır. Keşfe başlamak için giriş yap.",
     "errors": {
       "usernameRequired": "Kullanıcı adı gereklidir",
       "passwordRequired": "Şifre gereklidir",
@@ -72,6 +79,7 @@
     "notLoggedIn": "Profilini görüntülemek için giriş yapman gerekiyor.",
     "loginButton": "Giriş yapmak istiyorum!",
     "logout": "Çıkış Yap",
+    "km": "km",
     "xp": "XP",
     "tours": "Turlar",
     "badges": "Rozetler",
@@ -85,7 +93,9 @@
     "tabs": {
       "published": "Yayınlandı",
       "drafts": "Taslaklar",
-      "archived": "Arşivlendi"
+      "archived": "Arşivlendi",
+      "settings": "Ayarlar",
+      "tutorials": "Rehberler"
     },
     "emptyPublished": "Henüz yayınlanmış tur yok. Topluluğa katılmak için bir tur yayınla!",
     "emptyDraft": "Taslak tur yok. Yeni bir tur oluşturmaya başla!",
@@ -133,6 +143,11 @@
     "feedModalCancel": "İptal",
     "userProfileFollow": "Takip Et",
     "userProfileUnfollow": "Takibi Bırak",
+    "loginToFollow": "Takip Etmek İçin Giriş Yap",
+    "loginToFollowTitle": "Giriş Gerekli",
+    "loginToFollowMessage": "Bu kullanıcıyı takip etmek için giriş yapman gerekiyor.",
+    "socialLoginRequiredTitle": "Giriş Gerekli",
+    "socialLoginRequiredMessage": "Takipçi ve takip edilenleri görüntülemek için giriş yapman gerekiyor.",
     "userProfileError": "Bu profil yüklenemedi",
     "chooseAvatar": "Avatarını Seç",
     "avatarStyle": "Stil",
@@ -163,16 +178,35 @@
   },
   "search": {
     "placeholder": "Tur, destinasyon ara...",
+    "userPlaceholder": "Kullanıcı adı veya isim ara...",
+    "toursTab": "Turlar",
+    "usersTab": "Kullanıcılar",
     "unknownAuthor": "Bilinmiyor",
     "unknownLocation": "Bilinmeyen konum",
     "notAvailable": "Yok",
     "noToursFound": "Tur bulunamadı",
+    "noToursFoundFor": "\"{{query}}\" için tur bulunamadı",
     "noToursFoundSub": "Farklı bir destinasyon, tur adı veya rehber aramayı deneyin",
+    "noUsersFound": "Kullanıcı bulunamadı",
+    "noUsersFoundFor": "\"{{query}}\" için kullanıcı bulunamadı",
+    "noUsersFoundSub": "Farklı bir kullanıcı adı veya isim deneyin",
     "searchFailed": "Arama başarısız",
     "searching": "Turlar aranıyor...",
+    "searchingUsers": "Kullanıcılar aranıyor...",
     "results": "Arama Sonuçları",
     "toursCount": "{{count}} tur",
+    "usersCount": "{{count}} kullanıcı",
+    "userMeta": "{{followers}} takipçi · {{tours}} tur",
     "recentSearch": "Son Aramalar",
+    "recentTourSearches": "Son tur aramaları",
+    "recentUserSearches": "Son kullanıcı aramaları",
+    "discoverTours": "Sonraki rotanı bul",
+    "discoverToursSub": "Şehir, tema, kategori veya tur adıyla ara.",
+    "discoverUsers": "Gezginleri ve üreticileri bul",
+    "discoverUsersSub": "Profil açmak için kullanıcı adı veya gerçek isimle ara.",
+    "keepTypingTitle": "En az {{count}} karakter yaz",
+    "keepTypingTours": "Biraz daha detay daha iyi tur eşleşmeleri bulmaya yardımcı olur.",
+    "keepTypingUsers": "Kullanıcıları kullanıcı adı, ad veya soyad ile ara.",
     "clearAll": "Hepsini Temizle"
   },
   "tourDetail": {
@@ -181,10 +215,15 @@
     "startTour": "Tura Başla",
     "duration": "Süre",
     "distance": "Mesafe",
+    "distanceUnknown": "Mesafe",
     "difficulty": "Zorluk",
+    "loop": "Döngü turu",
+    "transport": "Ulaşım gerekli",
+    "estimated": "Tahmini değerler",
     "notFound": "Tur bulunamadı",
     "reviews": "Yorumlar",
     "noReviews": "Bu tur hakkında yorum bulunamadı.",
+    "loginToViewReviews": "Yorumları görmek için giriş yap.",
     "aboutThisTour": "Bu tur hakkında",
     "createdBy": "Oluşturan",
     "following": "Takip Ediliyor",
@@ -194,7 +233,9 @@
     "medium": "Orta",
     "hard": "Zor",
     "readMore": "Daha fazla oku",
-    "readLess": "Daha az göster"
+    "readLess": "Daha az göster",
+    "lockedStopTitle": "Gizli durak",
+    "lockedStopMessage": "Bu durağı açmak için tura başla ve bulmacayı çöz."
   },
   "tabs": {
     "settings": "Ayarlar",
@@ -219,6 +260,10 @@
         "label": "Bildirimler",
         "description": "Bildirim tercihlerini yönet"
       },
+      "logout": {
+        "label": "Çıkış Yap",
+        "description": "Hesabından çıkış yap"
+      },
       "privacy": {
         "label": "Gizlilik",
         "description": "Gizlilik ayarlarını yönet"
@@ -233,6 +278,7 @@
       }
     },
     "languages": {
+      "system": "Sistem Varsayılanı",
       "en": "İngilizce",
       "tr": "Türkçe",
       "es": "İspanyolca"
@@ -278,7 +324,10 @@
     "min": "dk",
     "stops": "durak",
     "tourInProgressTitle": "Turun devam etmekte",
-    "tourInProgressMessage": "Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et."
+    "tourInProgressMessage": "Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et.",
+    "locationRequiredTitle": "Konum izni gerekli",
+    "locationRequiredMessage": "Bu tura başlamak için Odyssey'nin konumuna erişmesi gerekiyor. Lütfen cihaz ayarlarından konum iznini açıp tekrar dene.",
+    "locationUnavailableMessage": "Mevcut konumunu alamadık. Lütfen konum servislerini açıp tekrar dene."
   },
   "creation": {
     "loginRequired": "Giriş Gerekli",
@@ -297,6 +346,9 @@
     "ok": "Tamam",
     "errorTitle": "Hata",
     "errorMessage": "Tur gönderilemedi. Lütfen tekrar deneyin.",
+    "cityStopsMismatch": "En az bir tur durağı seçilen şehir içinde olmalıdır.",
+    "incompletePuzzleTitle": "Zorunlu bulmacaları tamamla",
+    "incompletePuzzleMessage": "Bulmaca turunda göndermeden önce her konumda geçerli bir bulmaca olmalı.",
     "method": {
       "title": "Turunuzu Oluşturun",
       "subtitle": "Tur deneyiminizi nasıl oluşturmak istediğinizi seçin",
@@ -314,8 +366,14 @@
       "tourTitlePlaceholder": "ör. Eski Şehrin Gizli Mücevherleri",
       "description": "Açıklama",
       "descriptionPlaceholder": "Turunuzu özel kılan nedir?...",
-      "city": "Şehir",
-      "cityPlaceholder": "ör. İstanbul, Tokyo, Paris",
+      "country": "Ülke",
+      "countryPlaceholder": "Ülke ara...",
+      "state": "Şehir",
+      "statePlaceholder": "Şehir ara...",
+      "stateDisabledPlaceholder": "Önce ülke seçin",
+      "countryOnlyError": "Lütfen bir ülke seçin.",
+      "stateOnlyError": "Lütfen bir şehir seçin.",
+      "stateCountryMismatch": "Seçilen şehir seçilen ülkede değil.",
       "category": "Kategori",
       "difficulty": "Zorluk",
       "tourType": "Tur Türü",
@@ -392,7 +450,7 @@
       "difficulty": "Zorluk"
     },
     "story": {
-      "coverImage": "Kapak Görseli (İsteğe Bağlı)",
+      "coverImage": "Kapak Görseli",
       "imagePickerTitle": "Görsel Seçici",
       "imagePickerMessage": "Görsel seçici işlevi expo-image-picker kurulumunu gerektirir.",
       "ok": "Tamam",
@@ -440,8 +498,8 @@
     }
   },
   "aiTour": {
-    "city": "Şehir",
-    "cityPlaceholder": "ör. İstanbul, Paris, Tokyo",
+    "state": "Şehir",
+    "statePlaceholder": "ör. California, Texas, New York",
     "theme": "Tur Teması",
     "themePlaceholder": "ör. Korkunç Tarih, Gizli Mücevherler",
     "mode": "Tur Modu",
@@ -477,15 +535,24 @@
       "puzzleDesc": "Her konumda etkileşimli meydan okumalar ve bilgi soruları",
       "hybrid": "Hibrit Mod",
       "hybridDesc": "Her ikisinin en iyisi - ilgi çekici hikayeler ve eğlenceli bulmacalar"
+    },
+    "includeAr": {
+      "title": "AR Bulmacalarını Dahil Et",
+      "subtitle": "Yapay zekanın uygun olan duraklara artırılmış gerçeklik bulmacaları eklemesine izin verin"
     }
   },
   "tourStep": {
     "tourProgress": "Tur İlerlemesi",
     "back": "Geri",
     "next": "İleri",
-    "finish": "Bitir"
+    "finish": "Bitir",
+    "answerConfirmTitle": "Bu cevabı kilitle?",
+    "answerConfirmMessage": "Emin misiniz? Yanlış cevaplar rozet ilerlemenizi azaltabilir.",
+    "answerConfirmAction": "Cevapla"
   },
   "common": {
+    "cancel": "İptal",
+    "ok": "Tamam",
     "error": "Hata",
     "syncError": "İlerleme sunucuyla senkronize edilemedi."
   },
@@ -518,7 +585,23 @@
     "activeTour": {
       "stepOf": "Adım {{current}} / {{total}}",
       "end": "Bitir",
-      "skip": "ATLA"
+      "skip": "ATLA",
+      "skipConfirmTitle": "Bu adımı atla?",
+      "skipConfirmMessage": "Bu adım için XP kazanmayacaksınız. Bu işlem geri alınamaz.",
+      "skipConfirmAction": "Adımı atla",
+      "skipBadgeReduction": "Atlamak bu turdaki rozet ilerlemenizi azaltabilir.",
+      "badgeCurrentLabel": "MEVCUT ROZET",
+      "badgeStatusGold": "Altın",
+      "badgeStatusSilver": "Gümüş",
+      "badgeStatusBronze": "Bronz",
+      "badgeStatusLoss": "Rozet Yok",
+      "route": "Yol tarifi al",
+      "directions": "Yol Tarifi",
+      "openIn": "Bu durağı burada aç",
+      "appleMaps": "Apple Maps",
+      "googleMaps": "Google Maps",
+      "yandexMaps": "Yandex Maps",
+      "directionsUnavailableMessage": "Yol tarifi şu anda açılamadı. Lütfen tekrar deneyin."
     },
     "nearby": {
       "title_one": "{{count}} yakın tur",
@@ -535,6 +618,7 @@
     },
     "searchMode": {
       "searchHere": "Burada ara",
+      "stopDragging": "Aramak için sürüklemeyi bırak",
       "zoomIn": "Aramak için yakınlaştır"
     }
   },
@@ -548,5 +632,32 @@
   },
   "badges": {
     "noBadges": "Henüz rozet yok"
+  },
+  "tutorial": {
+    "title": "Yardım ve Rehberler",
+    "section": "Mevcut Rehberler",
+    "skip": "Geç",
+    "previous": "Önceki",
+    "finish": "Bitir",
+    "next": "İleri",
+    "profile": {
+      "label": "Profil Rehberi",
+      "desc": "İstatistiklerini nasıl kontrol edeceğini, geçmiş turları nasıl inceleyeceğini, arkadaşlarını ve avatarını nasıl yöneteceğini öğren.",
+      "step1text": "Profil rehberine hoş geldin!",
+      "step2text": "Bu senin avatarın! Değiştirmek için avatarına dokun.",
+      "step3text": "Odyssey XP'ni takip et, tamamlanan turları puanla ve takipçilerini kontrol et!",
+      "step4text": "Diğer gezginleri takip et ve gezilerini paylaş!",
+      "step5text": "Kazandığın rozetlere göz at!",
+      "step6text": "Oluşturduğun (yayınlanmış, taslak ve arşivlenmiş) turları bu sekmeden kontrol et.",
+      "step7text": "Hesap ayarlarını veya uygulama tercihlerini ayarlar sekmesinden değiştirebilirsin."
+    },
+    "tours": {
+      "label": "Turlar Rehberi",
+      "desc": "Turlar arasında nasıl gezineceğini ve etkileşimde bulunacağını öğren.",
+      "step1text": "Turlar eğitimine hoş geldiniz!",
+      "step2text": "Turları buradan arayabilirsiniz.",
+      "step3text": "Öne çıkan en iyi turları burada görebilirsiniz!",
+      "step4text": "Yapay zeka üretimi turlar oluşturmak için buraya dokunun!"
+    }
   }
 }

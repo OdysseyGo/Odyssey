@@ -1,12 +1,38 @@
 from rest_framework import serializers
 
+AI_TOUR_CATEGORIES = (
+    "History",
+    "Nature",
+    "Art",
+    "Food",
+    "Architecture",
+    "Adventure",
+    "Culture",
+    "Religious",
+    "Shopping",
+    "Nightlife",
+)
+
 
 class GenerateTourRequestSerializer(serializers.Serializer):
     """Serializer for AI tour generation request."""
 
     city = serializers.CharField(max_length=100, help_text="City name (e.g., Paris)")
-    theme = serializers.CharField(
-        max_length=100, help_text="Tour theme (e.g., Haunted History)"
+    country = serializers.CharField(
+        max_length=100,
+        required=False,
+        allow_blank=True,
+        help_text="Country name (e.g., France)",
+    )
+    country_code = serializers.CharField(
+        max_length=2,
+        required=False,
+        allow_blank=True,
+        help_text="ISO 3166-1 alpha-2 country code (e.g., FR)",
+    )
+    theme = serializers.ChoiceField(
+        choices=[(category, category) for category in AI_TOUR_CATEGORIES],
+        help_text="Tour category (must match manual tour categories)",
     )
     mode = serializers.ChoiceField(
         choices=[
@@ -27,6 +53,14 @@ class GenerateTourRequestSerializer(serializers.Serializer):
         required=False,
         allow_blank=True,
         help_text="Additional details for tour generation",
+    )
+    include_ar = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text=(
+            "When true, the AI may add AR puzzles on steps it judges thematically "
+            "appropriate, drawn from the active ARModel catalog."
+        ),
     )
 
 

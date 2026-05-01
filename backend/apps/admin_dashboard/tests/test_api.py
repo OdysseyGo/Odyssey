@@ -1,4 +1,7 @@
+import os
+import tempfile
 from io import BytesIO
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -7,8 +10,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.admin_dashboard.models import BanRecord, Report
-from apps.gamification.models import PictureCompareConfig
-from apps.tours.models import Review, Tour, TourStep
+from apps.gamification.models import Badge, PictureCompareConfig
+from apps.gamification.visuals import BadgeVisualFileRepository
+from apps.tours.models import ARModel, Review, Tour, TourStep
 
 User = get_user_model()
 
@@ -19,6 +23,14 @@ def image_file(name="image.jpg", color=(30, 80, 120)):
     image.save(buffer, format="JPEG")
     buffer.seek(0)
     return SimpleUploadedFile(name, buffer.read(), content_type="image/jpeg")
+
+
+def glb_file(name="model.glb"):
+    return SimpleUploadedFile(
+        name,
+        b"glTF\x02\x00\x00\x00admin-dashboard-model",
+        content_type="model/gltf-binary",
+    )
 
 
 class AdminUserViewSetTests(APITestCase):
@@ -167,6 +179,8 @@ class AdminTourViewSetTests(APITestCase):
             difficulty=Tour.EASY,
             duration_minutes=60,
             city="Istanbul",
+            country="Turkey",
+            country_code="TR",
             status=Tour.DRAFT,
         )
         self.step = TourStep.objects.create(
@@ -200,7 +214,15 @@ class AdminTourViewSetTests(APITestCase):
         self.assertEqual(len(response.data["steps"]), 1)
 
     def test_approve_tour(self):
-        response = self.client.post(f"/api/admin/tours/{self.tour.id}/approve/")
+        with patch(
+            "apps.admin_dashboard.api.views.GoogleMapsFacade.tour_has_step_in_city",
+            return_value=True,
+        ):
+            response = self.client.post(
+                f"/api/admin/tours/{self.tour.id}/approve/",
+                {"city_latitude": 41.0082, "city_longitude": 28.9784},
+                format="json",
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.tour.refresh_from_db()
         self.assertEqual(self.tour.status, Tour.PUBLISHED)
@@ -231,6 +253,142 @@ class AdminTourViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("avg_rating", response.data)
         self.assertIn("completion_count", response.data)
+
+
+class AdminARModelViewSetTests(APITestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username="admin",
+            email="admin@example.com",
+            password="adminpass123",
+            is_staff=True,
+        )
+        self.client.force_authenticate(user=self.admin)
+        self.model = ARModel.objects.create(
+            slug="bronze-statue",
+            name="Bronze Statue",
+            preview_image=image_file("bronze-preview.jpg"),
+            scene_asset_file=glb_file("bronze.glb"),
+            anchors=[
+                {
+                    "id": "anchor-1",
+                    "label": "Anchor 1",
+                    "position": {"x": 0.1, "y": 0.2, "z": 0.3},
+                    "order": 0,
+                }
+            ],
+            is_active=True,
+            sort_order=10,
+        )
+
+    def test_list_ar_models(self):
+        response = self.client.get("/api/admin/ar-models/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["anchor_count"], 1)
+        self.assertTrue(response.data["results"][0]["scene_asset_url"].endswith(".glb"))
+
+    def test_create_ar_model(self):
+        response = self.client.post(
+            "/api/admin/ar-models/",
+            {
+                "name": "Lion Statue",
+                "slug": "lion-statue",
+                "scene_asset_file": glb_file("lion.glb"),
+                "preview_image": image_file("lion-preview.jpg"),
+                "anchors": (
+                    '[{"id":"anchor-1","label":"Anchor 1","position":'
+                    '{"x":1,"y":2,"z":3},"order":0}]'
+                ),
+                "is_active": "true",
+                "sort_order": "2",
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        created = ARModel.objects.get(slug="lion-statue")
+        self.assertTrue(bool(created.scene_asset_file))
+        self.assertTrue(bool(created.preview_image))
+        self.assertEqual(created.anchors[0]["id"], "anchor-1")
+        self.assertTrue(response.data["preview_image_url"].endswith(".jpg"))
+
+    def test_create_rejects_missing_preview(self):
+        response = self.client.post(
+            "/api/admin/ar-models/",
+            {
+                "name": "Invalid Model",
+                "slug": "invalid-model",
+                "scene_asset_file": glb_file("invalid.glb"),
+                "anchors": '[{"id":"anchor-1","label":"A","position":{"x":0,"y":0,"z":0},"order":0}]',
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("preview_image", response.data)
+
+    def test_create_rejects_duplicate_anchor_ids(self):
+        response = self.client.post(
+            "/api/admin/ar-models/",
+            {
+                "name": "Invalid Model",
+                "slug": "invalid-model-duplicate-anchors",
+                "scene_asset_file": glb_file("invalid.glb"),
+                "preview_image": image_file("invalid-preview.jpg"),
+                "anchors": (
+                    '[{"id":"dup","label":"A","position":{"x":0,"y":0,"z":0},"order":0},'
+                    '{"id":"dup","label":"B","position":{"x":1,"y":1,"z":1},"order":1}]'
+                ),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("anchors", response.data)
+
+    def test_patch_metadata_only(self):
+        response = self.client.patch(
+            f"/api/admin/ar-models/{self.model.id}/",
+            {"name": "Renamed Statue", "sort_order": 99},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.model.refresh_from_db()
+        self.assertEqual(self.model.name, "Renamed Statue")
+        self.assertEqual(self.model.sort_order, 99)
+
+    def test_patch_anchors_only(self):
+        response = self.client.patch(
+            f"/api/admin/ar-models/{self.model.id}/",
+            {
+                "anchors": [
+                    {
+                        "id": "anchor-2",
+                        "label": "Anchor 2",
+                        "position": {"x": 9, "y": 8, "z": 7},
+                        "order": 0,
+                    }
+                ]
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.model.refresh_from_db()
+        self.assertEqual(self.model.anchors[0]["id"], "anchor-2")
+
+    def test_patch_replacement_model_file(self):
+        response = self.client.patch(
+            f"/api/admin/ar-models/{self.model.id}/",
+            {"scene_asset_file": glb_file("replacement.glb")},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.model.refresh_from_db()
+        self.assertTrue(self.model.scene_asset_file.name.endswith(".glb"))
 
 
 class PictureCompareTuningViewSetTests(APITestCase):
@@ -309,6 +467,109 @@ class PictureCompareTuningViewSetTests(APITestCase):
     def test_picture_compare_config_requires_staff(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get("/api/admin/picture-compare-config/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class BadgeVisualViewSetTests(APITestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username="admin",
+            email="admin@example.com",
+            password="adminpass123",
+            is_staff=True,
+        )
+        self.user = User.objects.create_user(
+            username="user",
+            email="user@example.com",
+            password="userpass123",
+        )
+        self.badge = Badge.objects.create(
+            code="CITY_GOLD",
+            name="City Gold",
+            description="Badge",
+            criteria={"kind": "city_first_completion"},
+        )
+        self._badge_visuals_tmpdir = tempfile.TemporaryDirectory()
+        self._original_badge_visual_path = os.environ.get("BADGE_VISUAL_CONFIG_PATH")
+        os.environ["BADGE_VISUAL_CONFIG_PATH"] = os.path.join(
+            self._badge_visuals_tmpdir.name,
+            "badge_visuals.json",
+        )
+        BadgeVisualFileRepository.write(
+            {"template": {}, "overrides": [], "meta": {"version": 1}}
+        )
+        self.client.force_authenticate(user=self.admin)
+
+    def tearDown(self):
+        if self._original_badge_visual_path is None:
+            os.environ.pop("BADGE_VISUAL_CONFIG_PATH", None)
+        else:
+            os.environ["BADGE_VISUAL_CONFIG_PATH"] = self._original_badge_visual_path
+        self._badge_visuals_tmpdir.cleanup()
+
+    def test_list_bundle(self):
+        response = self.client.get("/api/admin/badge-visuals/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("template", response.data)
+        self.assertIn("overrides", response.data)
+        self.assertIn("badges", response.data)
+
+    def test_update_template(self):
+        response = self.client.post(
+            "/api/admin/badge-visuals/template/",
+            {"config": {"flag": {"x": 0.2, "width": 0.7}}},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["config"]["flag"]["x"], 0.2)
+        self.assertEqual(response.data["config"]["flag"]["width"], 0.7)
+
+    def test_upsert_override(self):
+        response = self.client.post(
+            "/api/admin/badge-visuals/overrides/",
+            {
+                "badge": self.badge.id,
+                "country_code": "FR",
+                "config": {"text": {"x": 0.6, "rotation_deg": 60}},
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["country_code"], "FR")
+        self.assertEqual(response.data["badge"], self.badge.id)
+        payload = BadgeVisualFileRepository.read()
+        self.assertEqual(len(payload["overrides"]), 1)
+        self.assertEqual(payload["overrides"][0]["badge_code"], "CITY_GOLD")
+
+    def test_delete_override(self):
+        upsert_response = self.client.post(
+            "/api/admin/badge-visuals/overrides/",
+            {
+                "badge": self.badge.id,
+                "country_code": "TR",
+                "config": {"flag": {"x": 0.12}},
+            },
+            format="json",
+        )
+        override_id = upsert_response.data["id"]
+        response = self.client.delete(
+            f"/api/admin/badge-visuals/overrides/{override_id}/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        payload = BadgeVisualFileRepository.read()
+        self.assertEqual(payload["overrides"], [])
+
+    def test_export_config(self):
+        response = self.client.get("/api/admin/badge-visuals/export/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertIn(
+            'attachment; filename="badge_visuals.json"', response["Content-Disposition"]
+        )
+
+    def test_requires_staff(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get("/api/admin/badge-visuals/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 

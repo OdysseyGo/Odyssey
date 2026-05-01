@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { User, Bell, Globe, Palette, Check } from 'lucide-react-native';
+import { User, Bell, Globe, Palette, Check, LogOut } from 'lucide-react-native';
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -26,11 +26,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
-
-const SUPPORTED_LANGUAGES = [
-  { code: 'en', labelKey: 'settings.languages.en' },
-  { code: 'tr', labelKey: 'settings.languages.tr' },
-];
+import { SUPPORTED_LANGUAGE_OPTIONS } from '@/i18n/languageConfig';
 
 type SettingsGroup = {
   title: string;
@@ -46,10 +42,16 @@ type EditProfileForm = {
 
 type PopupView = 'settings' | 'edit-profile';
 
-export default function SettingsScreen({ onClose }: { onClose?: () => void }) {
+export default function SettingsScreen({
+  onClose,
+  onLogout,
+}: {
+  onClose?: () => void;
+  onLogout?: () => void;
+}) {
   const { t } = useTranslation();
-  const { language, setLanguage } = useLanguage();
-  const { theme, themePreference, setThemePreference } = useTheme();
+  const { language, languagePreference, setLanguage } = useLanguage();
+  const { themePreference, setThemePreference } = useTheme();
   const colorTheme = useColorTheme();
   const colors = Colors[colorTheme];
   const editProfileSurfaceColor = colors.background;
@@ -89,6 +91,18 @@ export default function SettingsScreen({ onClose }: { onClose?: () => void }) {
           description: t('settings.items.notifications.description'),
           descriptionKey: 'settings.items.notifications.description',
         },
+        {
+          key: 'logout',
+          icon: LogOut,
+          label: t('settings.items.logout.label', { defaultValue: 'Logout' }),
+          labelKey: 'settings.items.logout.label',
+          description: t('settings.items.logout.description', {
+            defaultValue: 'Sign out of your account',
+          }),
+          descriptionKey: 'settings.items.logout.description',
+          showChevron: false,
+          destructive: true,
+        },
       ],
     },
     {
@@ -99,8 +113,14 @@ export default function SettingsScreen({ onClose }: { onClose?: () => void }) {
           icon: Globe,
           label: t('settings.language'),
           labelKey: 'settings.language',
-          description: t(`settings.languages.${language}`),
-          descriptionKey: `settings.languages.${language}`,
+          description:
+            languagePreference === 'system'
+              ? `${t('settings.languages.system')} (${t(`settings.languages.${language}`)})`
+              : t(`settings.languages.${language}`),
+          descriptionKey:
+            languagePreference === 'system'
+              ? 'settings.languages.system'
+              : `settings.languages.${language}`,
         },
         {
           key: 'appearance',
@@ -236,6 +256,12 @@ export default function SettingsScreen({ onClose }: { onClose?: () => void }) {
 
     if (item.key === 'appearance') {
       setShowAppearanceModal(true);
+      return;
+    }
+
+    if (item.key === 'logout') {
+      onClose?.();
+      setTimeout(() => onLogout?.(), 0);
     }
   };
 
@@ -460,7 +486,7 @@ export default function SettingsScreen({ onClose }: { onClose?: () => void }) {
               {t('settings.selectLanguage')}
             </Text>
 
-            {SUPPORTED_LANGUAGES.map((lang) => (
+            {SUPPORTED_LANGUAGE_OPTIONS.map((lang) => (
               <Pressable
                 key={lang.code}
                 style={({ pressed }) => [
@@ -476,7 +502,7 @@ export default function SettingsScreen({ onClose }: { onClose?: () => void }) {
                 <Text style={[styles.languageLabel, { color: colors.text }]}>
                   {t(lang.labelKey)}
                 </Text>
-                {language === lang.code && <Check size={18} color={colors.primary} />}
+                {languagePreference === lang.code && <Check size={18} color={colors.primary} />}
               </Pressable>
             ))}
           </RNView>

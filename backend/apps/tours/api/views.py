@@ -9,7 +9,9 @@ from rest_framework.response import Response
 
 from apps.gamification.models import TourProgress
 from apps.tours.models import (
+    ARModel,
     ArPuzzleDetail,
+    CompassPuzzleDetail,
     GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
     Puzzle,
@@ -20,11 +22,14 @@ from apps.tours.models import (
 )
 
 from ..permissions import IsCreatorOrReadOnly
+from ..utils import recalculate_tour_metrics
 from .filters import TourFilter
 from .pagination import TourPagination
 from .serializers import (
     DEFAULT_PICTURE_COMPARE_THRESHOLD,
+    ARModelSerializer,
     ArPuzzleUpsertSerializer,
+    CompassPuzzleUpsertSerializer,
     GyroscopePuzzleUpsertSerializer,
     PictureComparePuzzleUpsertSerializer,
     PuzzleSerializer,
@@ -36,7 +41,7 @@ from .serializers import (
 
 
 @api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.AllowAny])
 def google_maps_api_key(request):
     return Response({"key": os.getenv("GOOGLE_MAPS_API_KEY", "")})
 
@@ -56,7 +61,7 @@ class TourViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter,
     ]
     filterset_class = TourFilter
-    search_fields = ["title", "description", "category", "city"]
+    search_fields = ["title", "description", "category", "city", "country"]
     ordering_fields = [
         "created_at",
         "average_rating",
@@ -66,10 +71,32 @@ class TourViewSet(viewsets.ModelViewSet):
     ]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        first_lat = Subquery(
+            TourStep.objects.filter(tour=OuterRef("pk"))
+            .order_by("order")
+            .values("latitude")[:1]
+        )
+        first_lng = Subquery(
+            TourStep.objects.filter(tour=OuterRef("pk"))
+            .order_by("order")
+            .values("longitude")[:1]
+        )
+
+        queryset = (
+            super()
+            .get_queryset()
+            .annotate(
+                first_lat=first_lat,
+                first_lng=first_lng,
+            )
+        )
         status = self.request.query_params.get("status")
         if status:
             queryset = queryset.filter(status=status)
+
+        creator = self.request.query_params.get("creator")
+        if creator:
+            queryset = queryset.filter(creator_id=creator)
 
         # If not creator/staff, only show published tours
         if self.action == "list" and not self.request.user.is_staff:
@@ -79,6 +106,21 @@ class TourViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="ar-models",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def ar_models(self, request):
+        queryset = ARModel.objects.filter(is_active=True).order_by("sort_order", "id")
+        serializer = ARModelSerializer(
+            queryset,
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data)
 
     @action(
         detail=False,
@@ -163,9 +205,11 @@ class TourViewSet(viewsets.ModelViewSet):
     def my_completed_tours(self, request):
         """Return tours that the current user has completed."""
 
-        # Get tour IDs that the user has completed
+        # Use has_completed_once instead of only status=COMPLETED. Replaying a
+        # completed tour resets the same progress row to IN_PROGRESS, but the
+        # user should still be allowed to reveal completed-tour content.
         completed_tour_ids = TourProgress.objects.filter(
-            user=request.user, status=TourProgress.COMPLETED
+            user=request.user, has_completed_once=True
         ).values_list("tour_id", flat=True)
 
         queryset = Tour.objects.filter(id__in=completed_tour_ids)
@@ -196,19 +240,30 @@ class TourStepViewSet(viewsets.ModelViewSet):
         return TourStep.objects.filter(tour_id=self.kwargs["tour_pk"]).order_by("order")
 
     def perform_create(self, serializer):
-        serializer.save(tour_id=self.kwargs["tour_pk"])
+        step = serializer.save(tour_id=self.kwargs["tour_pk"])
+        recalculate_tour_metrics(step.tour)
+
+    def perform_update(self, serializer):
+        step = serializer.save()
+        recalculate_tour_metrics(step.tour)
+
+    def perform_destroy(self, instance):
+        tour = instance.tour
+        instance.delete()
+        recalculate_tour_metrics(tour)
 
     def _user_can_edit_step_puzzle(self, request, step):
         return step.tour.creator_id == request.user.id or request.user.is_staff
 
     def _upsert_base_puzzle(self, *, step, puzzle_type, data):
+        fixed_xp_reward = Puzzle.fixed_xp_reward_for_type(puzzle_type)
         puzzle, created = Puzzle.objects.get_or_create(
             step=step,
             defaults={
                 "puzzle_type": puzzle_type,
                 "question": data["question"],
                 "hint": data.get("hint", ""),
-                "xp_reward": data.get("xp_reward", 10),
+                "xp_reward": fixed_xp_reward,
                 "correct_answer": "",
             },
         )
@@ -217,7 +272,7 @@ class TourStepViewSet(viewsets.ModelViewSet):
             puzzle.puzzle_type = puzzle_type
             puzzle.question = data["question"]
             puzzle.hint = data.get("hint", "")
-            puzzle.xp_reward = data.get("xp_reward", puzzle.xp_reward)
+            puzzle.xp_reward = fixed_xp_reward
             puzzle.save(
                 update_fields=[
                     "puzzle_type",
@@ -251,6 +306,11 @@ class TourStepViewSet(viewsets.ModelViewSet):
             gyro_detail = getattr(puzzle, "gyroscope_detail", None)
             if gyro_detail is not None:
                 gyro_detail.delete()
+
+        if keep_type != Puzzle.COMPASS:
+            compass_detail = getattr(puzzle, "compass_detail", None)
+            if compass_detail is not None:
+                compass_detail.delete()
 
     @action(detail=True, methods=["get"], url_path="puzzle")
     def get_puzzle(self, request, tour_pk=None, pk=None):
@@ -425,7 +485,10 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        payload = ArPuzzleUpsertSerializer(data=request.data)
+        payload = ArPuzzleUpsertSerializer(
+            data=request.data,
+            context={"request": request},
+        )
         payload.is_valid(raise_exception=True)
         data = payload.validated_data
 
@@ -494,6 +557,50 @@ class TourStepViewSet(viewsets.ModelViewSet):
                 "target_roll": data.get("target_roll", 0.0),
                 "target_yaw": data.get("target_yaw", 0.0),
                 "tolerance_degrees": data.get("tolerance_degrees", 15.0),
+            },
+        )
+
+        serializer = PuzzleSerializer(puzzle, context={"request": request})
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="set-compass-puzzle",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def set_compass_puzzle(self, request, tour_pk=None, pk=None):
+        step = self.get_object()
+        if not self._user_can_edit_step_puzzle(request, step):
+            return Response(
+                {"error": "Only the tour creator can configure puzzles."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        payload = CompassPuzzleUpsertSerializer(data=request.data)
+        payload.is_valid(raise_exception=True)
+        data = payload.validated_data
+
+        puzzle, created = self._upsert_base_puzzle(
+            step=step,
+            puzzle_type=Puzzle.COMPASS,
+            data=data,
+        )
+        puzzle.options = None
+        puzzle.correct_answer = ""
+        puzzle.reference_image = None
+        puzzle.save(
+            update_fields=["options", "correct_answer", "reference_image", "updated_at"]
+        )
+
+        self._clear_other_puzzle_details(puzzle, Puzzle.COMPASS)
+        CompassPuzzleDetail.objects.update_or_create(
+            puzzle=puzzle,
+            defaults={
+                "target_heading_degrees": data["target_heading_degrees"],
             },
         )
 

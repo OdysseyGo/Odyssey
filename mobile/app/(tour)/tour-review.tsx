@@ -5,18 +5,29 @@ import {
   createTour,
   createTourStep,
   setStepArPuzzle,
+  setStepCompassPuzzle,
   setStepGyroscopePuzzle,
   setStepPictureComparePuzzle,
   setStepTriviaPuzzle,
+  updateTour,
 } from '@/api/tours';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { useTourCreation } from '@/contexts/TourCreationContext';
+import { doesLocationMeetTourRequirements } from '@/components/TourCreation';
 import { TourReviewStep } from '@/components/TourCreation/steps';
 import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
+import { ApiError } from '@/api/APIClient';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
+
+function getSubmitErrorMessage(error: unknown, fallbackMessage: string) {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+  return fallbackMessage;
+}
 
 export default function TourReviewScreen() {
   const theme = useColorTheme();
@@ -24,8 +35,38 @@ export default function TourReviewScreen() {
   const { tourData, resetTourData } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { t } = useTranslation();
+  const isReadyToSubmit =
+    !!tourData.coverImage &&
+    tourData.locations.every((location) =>
+      doesLocationMeetTourRequirements(location, tourData.tourType)
+    );
+  const hasValidSelectedLocation =
+    tourData.country.trim().length > 0 &&
+    tourData.countryCode.trim().length > 0 &&
+    tourData.state.trim().length > 0 &&
+    Number.isFinite(tourData.stateLatitude) &&
+    Number.isFinite(tourData.stateLongitude);
 
   const handleSubmitTour = async () => {
+    if (!isReadyToSubmit) {
+      Alert.alert(
+        t('creation.incompletePuzzleTitle', { defaultValue: 'Complete required puzzles' }),
+        t('creation.incompletePuzzleMessage', {
+          defaultValue: 'Puzzle tours need a valid puzzle at every location before submission.',
+        })
+      );
+      return;
+    }
+    if (!hasValidSelectedLocation) {
+      Alert.alert(
+        t('creation.incompleteLocationTitle', { defaultValue: 'Complete location details' }),
+        t('creation.incompleteLocationMessage', {
+          defaultValue: 'Please select country and state from the dropdown lists.',
+        })
+      );
+      return;
+    }
+
     Alert.alert(t('creation.submitTitle'), t('creation.submitMessage'), [
       { text: t('creation.cancel'), style: 'cancel' },
       {
@@ -36,16 +77,19 @@ export default function TourReviewScreen() {
             const tour = await createTour({
               title: tourData.title || 'Untitled Tour',
               description: tourData.description || 'No description provided.',
+              cover_image: tourData.coverImage,
               tour_type: tourData.tourType,
               category: tourData.category || 'General',
               difficulty: tourData.difficulty,
               duration_minutes: tourData.estimatedDuration,
-              city: tourData.city || 'Unknown City',
-              status: 'PUBLISHED',
+              city: tourData.state,
+              country: tourData.country,
+              country_code: tourData.countryCode,
+              city_latitude: tourData.stateLatitude,
+              city_longitude: tourData.stateLongitude,
+              status: 'DRAFT',
               is_premium: false,
             });
-
-            console.log('Tour created:', tour.id);
 
             // 2. Create steps and configure step puzzles using type-specific endpoints.
             for (const [index, loc] of tourData.locations.entries()) {
@@ -65,7 +109,6 @@ export default function TourReviewScreen() {
               const basePayload = {
                 question: loc.puzzle.question,
                 hint: loc.puzzle.hint,
-                xp_reward: loc.puzzle.xp_reward,
               };
 
               if (loc.puzzle.puzzle_type === 'TRIVIA') {
@@ -93,14 +136,59 @@ export default function TourReviewScreen() {
               }
 
               if (loc.puzzle.puzzle_type === 'AR') {
-                await setStepArPuzzle(tour.id, createdStep.id, basePayload);
+                if (!loc.puzzle.arConfig) {
+                  throw new Error('AR puzzles require a selected model, code, and anchor.');
+                }
+
+                await setStepArPuzzle(tour.id, createdStep.id, {
+                  ...basePayload,
+                  scene_asset_url: loc.puzzle.arConfig.sceneAssetUrl,
+                  metadata: {
+                    version: 1,
+                    model_id: loc.puzzle.arConfig.modelId,
+                    anchor_id: loc.puzzle.arConfig.anchorId,
+                    placement_mode: loc.puzzle.arConfig.placementMode,
+                    secret_code: loc.puzzle.arConfig.secretCode,
+                    model_scale_meters: loc.puzzle.arConfig.modelScaleMeters,
+                    anchor_position: {
+                      x: loc.puzzle.arConfig.anchorPosition.x,
+                      y: loc.puzzle.arConfig.anchorPosition.y,
+                      z: loc.puzzle.arConfig.anchorPosition.z,
+                    },
+                  },
+                });
                 continue;
               }
 
               if (loc.puzzle.puzzle_type === 'GYROSCOPE') {
                 await setStepGyroscopePuzzle(tour.id, createdStep.id, basePayload);
+                continue;
+              }
+
+              if (loc.puzzle.puzzle_type === 'COMPASS') {
+                if (
+                  typeof loc.puzzle.targetHeadingDegrees !== 'number' ||
+                  !Number.isInteger(loc.puzzle.targetHeadingDegrees)
+                ) {
+                  throw new Error('COMPASS puzzles require a valid integer target heading.');
+                }
+
+                await setStepCompassPuzzle(tour.id, createdStep.id, {
+                  ...basePayload,
+                  target_heading_degrees: ((loc.puzzle.targetHeadingDegrees % 360) + 360) % 360,
+                });
               }
             }
+
+            // 3. Publish after all steps are created so backend city/step validation runs once.
+            await updateTour(tour.id, {
+              city: tourData.state,
+              country: tourData.country,
+              country_code: tourData.countryCode,
+              city_latitude: tourData.stateLatitude,
+              city_longitude: tourData.stateLongitude,
+              status: 'PUBLISHED',
+            });
 
             Alert.alert(t('creation.successTitle'), t('creation.successMessage'), [
               {
@@ -112,8 +200,10 @@ export default function TourReviewScreen() {
               },
             ]);
           } catch (error) {
-            console.error('Failed to create tour:', error);
-            Alert.alert(t('creation.errorTitle'), t('creation.errorMessage'));
+            Alert.alert(
+              t('creation.errorTitle'),
+              getSubmitErrorMessage(error, t('creation.errorMessage'))
+            );
           } finally {
             setIsSubmitting(false);
           }
@@ -130,7 +220,7 @@ export default function TourReviewScreen() {
       <CreationFooter
         buttonText={isSubmitting ? t('creation.submitting') : t('creation.submit')}
         onPress={handleSubmitTour}
-        disabled={isSubmitting}
+        disabled={isSubmitting || !isReadyToSubmit || !hasValidSelectedLocation}
       />
     </View>
   );

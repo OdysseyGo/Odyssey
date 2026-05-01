@@ -54,9 +54,9 @@ export const profileBadgesContainerStyles = (theme: ThemeName) => {
 
     // Badge item
     badgeCard: {
-      width: 100,
+      width: 118,
       alignItems: 'center',
-      paddingVertical: Spacing.md,
+      paddingVertical: Spacing.sm,
       paddingHorizontal: Spacing.sm,
       backgroundColor: color.cardSurface,
       borderRadius: 16,
@@ -75,13 +75,9 @@ export const profileBadgesContainerStyles = (theme: ThemeName) => {
         : {}),
     },
     badgeCardUnlocked: {
-      borderWidth: 1.5,
+      borderWidth: 1,
       borderColor: isLight ? color.primary : color.primary,
       backgroundColor: isLight ? `${color.primary}06` : color.cardSurface,
-    },
-    badgeIcon: {
-      fontSize: 36,
-      marginBottom: Spacing.sm,
     },
     badgeName: {
       fontSize: 11,
@@ -89,6 +85,14 @@ export const profileBadgesContainerStyles = (theme: ThemeName) => {
       color: color.text,
       textAlign: 'center',
       lineHeight: 15,
+      marginTop: 6,
+    },
+    badgeMetaText: {
+      marginTop: 2,
+      fontSize: 9,
+      fontWeight: '500',
+      color: color.subText,
+      textAlign: 'center',
     },
 
     // View all

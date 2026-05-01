@@ -22,7 +22,7 @@ export const locationsListReviewStyles = (theme: ThemeName) => {
     },
     locationHeader: {
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       marginBottom: Spacing.xs,
     },
     locationOrder: {
@@ -36,6 +36,7 @@ export const locationsListReviewStyles = (theme: ThemeName) => {
       fontWeight: '600',
       color: color.text,
       flex: 1,
+      flexShrink: 1,
     },
     locationStory: {
       fontSize: 13,

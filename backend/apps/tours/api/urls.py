@@ -1,7 +1,12 @@
 from django.urls import include, path
 from rest_framework_nested import routers
 
-from .views import ReviewViewSet, TourStepViewSet, TourViewSet, google_maps_api_key
+from .views import (
+    ReviewViewSet,
+    TourStepViewSet,
+    TourViewSet,
+    google_maps_api_key,
+)
 
 # Main router for tours
 router = routers.DefaultRouter()

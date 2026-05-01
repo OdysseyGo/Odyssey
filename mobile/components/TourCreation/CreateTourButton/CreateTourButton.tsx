@@ -1,18 +1,22 @@
-import React, { useRef, useEffect } from 'react';
-import { TouchableOpacity, Animated, View, Alert } from 'react-native';
+import React from 'react';
+import { TouchableOpacity, View, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { createTourButtonStyles } from './CreateTourButton.styles';
 import Colors from '@/constants/Colors';
 import { isLoggedIn } from '@/api/auth';
 import { useTranslation } from 'react-i18next';
+import { Spacing } from '@/constants/Spacing';
+import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
 
 export default function CreateTourButton() {
   const theme = useColorTheme();
   const styles = createTourButtonStyles(theme);
   const color = Colors[theme];
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   const handlePress = async () => {
     const loggedIn = await isLoggedIn();
@@ -30,7 +34,7 @@ export default function CreateTourButton() {
     <View
       style={{
         position: 'absolute',
-        bottom: 24,
+        bottom: Math.max(insets.bottom, Spacing.sm) + ODYSSEY_TAB_BAR_FLOATING_HEIGHT + 16,
         right: 24,
         alignItems: 'center',
         justifyContent: 'center',

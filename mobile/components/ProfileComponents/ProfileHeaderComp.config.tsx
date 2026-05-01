@@ -7,7 +7,16 @@ export type ProfileHeaderProps = {
   onAvatarPress?: () => void;
   onSettingsPress?: () => void;
   settingsAccessibilityLabel?: string;
+  onTutorialsPress?: () => void;
+  tutorialsAccessibilityLabel?: string;
   scrollY?: Animated.Value;
+  level?: number;
+  levelTitle?: string;
+  xpProgressPercent?: number;
+  currentXp?: number;
+  xpForCurrentLevel?: number;
+  xpForNextLevel?: number;
+  disableCopilot?: boolean;
 };
 
 export const exampleProfileHeader: ProfileHeaderProps = {

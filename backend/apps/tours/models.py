@@ -11,6 +11,16 @@ def puzzle_reference_image_upload_to(instance, filename):
     return f"puzzle_reference_images/{uuid.uuid4().hex}{ext}"
 
 
+def ar_model_preview_upload_to(instance, filename):
+    ext = os.path.splitext(filename or "")[1].lower() or ".png"
+    return f"ar_models/previews/{uuid.uuid4().hex}{ext}"
+
+
+def ar_model_scene_asset_upload_to(instance, filename):
+    ext = os.path.splitext(filename or "")[1].lower() or ".glb"
+    return f"ar_models/scenes/{uuid.uuid4().hex}{ext}"
+
+
 class Tour(models.Model):
     STORY = "STORY"
     PUZZLE = "PUZZLE"
@@ -59,7 +69,17 @@ class Tour(models.Model):
     city = models.CharField(
         max_length=100, blank=True, help_text="City where the tour is located"
     )
+    country = models.CharField(
+        max_length=100, blank=True, help_text="Country where the tour is located"
+    )
+    country_code = models.CharField(
+        max_length=2,
+        blank=True,
+        help_text="ISO 3166-1 alpha-2 country code for the tour country",
+    )
     cover_image = models.ImageField(upload_to="tour_covers/", blank=True, null=True)
+    cover_image_attribution = models.TextField(blank=True, null=True)
+    is_ai_generated = models.BooleanField(default=False)
 
     # Advanced Metrics
     total_distance = models.FloatField(
@@ -124,17 +144,72 @@ class TourStep(models.Model):
         return f"{self.tour.title} - Step {self.order}"
 
 
+class ARModel(models.Model):
+    slug = models.SlugField(max_length=100, unique=True)
+    name = models.CharField(max_length=255)
+    preview_image_url = models.URLField(blank=True)
+    scene_asset_url = models.URLField(blank=True)
+    preview_image = models.ImageField(
+        upload_to=ar_model_preview_upload_to,
+        blank=True,
+        null=True,
+    )
+    scene_asset_file = models.FileField(
+        upload_to=ar_model_scene_asset_upload_to,
+        blank=True,
+        null=True,
+    )
+    anchors = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Anchor definitions with stable ids and xyz coordinates.",
+    )
+    is_active = models.BooleanField(default=True)
+    sort_order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return self.name
+
+    @staticmethod
+    def _absolute_media_url(url, request=None):
+        if not url:
+            return ""
+        if request and not url.startswith(("http://", "https://")):
+            normalized = url if url.startswith("/") else f"/{url.lstrip('/')}"
+            return request.build_absolute_uri(normalized)
+        return url
+
+    def get_preview_image_url(self, request=None):
+        if self.preview_image:
+            return self._absolute_media_url(self.preview_image.url, request=request)
+        return self._absolute_media_url(self.preview_image_url, request=request)
+
+    def get_scene_asset_url(self, request=None):
+        if self.scene_asset_file:
+            return self._absolute_media_url(self.scene_asset_file.url, request=request)
+        return self._absolute_media_url(self.scene_asset_url, request=request)
+
+
 class Puzzle(models.Model):
     TRIVIA = "TRIVIA"
     AR = "AR"
     GYROSCOPE = "GYROSCOPE"
     PICTURE_COMPARE = "PICTURE_COMPARE"
+    TRIVIA_XP_REWARD = 25
+    NON_TRIVIA_XP_REWARD = 50
+    COMPASS = "COMPASS"
 
     PUZZLE_TYPE_CHOICES = [
         (TRIVIA, "Trivia"),
         (AR, "Augmented Reality"),
         (GYROSCOPE, "Gyroscope"),
         (PICTURE_COMPARE, "Picture Compare"),
+        (COMPASS, "Compass"),
     ]
 
     step = models.OneToOneField(
@@ -147,7 +222,7 @@ class Puzzle(models.Model):
     )
     correct_answer = models.CharField(max_length=255)
     hint = models.TextField(blank=True)
-    xp_reward = models.PositiveIntegerField(default=10)
+    xp_reward = models.PositiveIntegerField(default=25)
     reference_image = models.ImageField(
         upload_to=puzzle_reference_image_upload_to, blank=True, null=True
     )
@@ -156,6 +231,12 @@ class Puzzle(models.Model):
 
     def __str__(self):
         return f"Puzzle for {self.step}"
+
+    @classmethod
+    def fixed_xp_reward_for_type(cls, puzzle_type: str) -> int:
+        if puzzle_type == cls.TRIVIA:
+            return cls.TRIVIA_XP_REWARD
+        return cls.NON_TRIVIA_XP_REWARD
 
 
 class TriviaPuzzleDetail(models.Model):
@@ -245,6 +326,38 @@ class GyroscopePuzzleDetail(models.Model):
 
     def __str__(self):
         return f"Gyroscope detail for puzzle {self.puzzle.pk}"
+
+
+class CompassPuzzleDetail(models.Model):
+    puzzle = models.OneToOneField(
+        Puzzle,
+        on_delete=models.CASCADE,
+        related_name="compass_detail",
+    )
+    target_heading_degrees = models.PositiveSmallIntegerField(default=0)
+
+    def clean(self):
+        if self.puzzle.puzzle_type != Puzzle.COMPASS:
+            raise ValidationError(
+                {
+                    "puzzle": (
+                        "CompassPuzzleDetail can only be attached to "
+                        "COMPASS puzzles."
+                    )
+                }
+            )
+
+        if not 0 <= self.target_heading_degrees <= 359:
+            raise ValidationError(
+                {
+                    "target_heading_degrees": (
+                        "target_heading_degrees must be between 0 and 359."
+                    )
+                }
+            )
+
+    def __str__(self):
+        return f"Compass detail for puzzle {self.puzzle.pk}"
 
 
 class Review(models.Model):

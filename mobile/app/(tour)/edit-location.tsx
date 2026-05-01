@@ -11,7 +11,11 @@ import WritingTips from '@/components/TourCreation/StoryEditor/WritingTips';
 import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditorFooter';
 import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
 import { CreationHeader } from '@/components/TourCreation/common';
-import { Puzzle } from '@/components/TourCreation';
+import {
+  Puzzle,
+  TOUR_TEXT_FIELD_MAX_LENGTH,
+  doesLocationMeetTourRequirements,
+} from '@/components/TourCreation';
 import { useTranslation } from 'react-i18next';
 
 export default function EditLocationScreen() {
@@ -106,6 +110,23 @@ export default function EditLocationScreen() {
       return !!currentPuzzle.referenceImage;
     }
 
+    if (currentPuzzle.puzzle_type === 'AR') {
+      return !!currentPuzzle.arConfig;
+    }
+
+    if (currentPuzzle.puzzle_type === 'GYROSCOPE') {
+      return true;
+    }
+
+    if (currentPuzzle.puzzle_type === 'COMPASS') {
+      return (
+        typeof currentPuzzle.targetHeadingDegrees === 'number' &&
+        Number.isInteger(currentPuzzle.targetHeadingDegrees) &&
+        currentPuzzle.targetHeadingDegrees >= 0 &&
+        currentPuzzle.targetHeadingDegrees <= 359
+      );
+    }
+
     const options = currentPuzzle.options;
     if (!currentPuzzle.correctAnswer || !options || options.length < 2) {
       return false;
@@ -137,7 +158,12 @@ export default function EditLocationScreen() {
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContainer}>
+        <ScrollView
+          style={styles.scrollContent}
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
           <LocationBadge
             currentStop={selectedLocation.order}
             totalStops={tourData.locations.length}
@@ -148,6 +174,7 @@ export default function EditLocationScreen() {
             value={title}
             onChangeText={setTitle}
             placeholder={t('creation.editLocation.titlePlaceholder')}
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <StoryInputField
@@ -155,6 +182,7 @@ export default function EditLocationScreen() {
             value={address}
             onChangeText={setAddress}
             placeholder={t('creation.editLocation.addressPlaceholder')}
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           <ImageUploadSection image={image} onImageChange={setImage} />
@@ -167,6 +195,7 @@ export default function EditLocationScreen() {
             hint={t('creation.editLocation.storyHint')}
             multiline
             showCharacterCount
+            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
           />
 
           {isPuzzleMode && (

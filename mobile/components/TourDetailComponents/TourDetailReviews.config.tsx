@@ -8,4 +8,5 @@ export interface TourDetailReviewsState {
   reviews: Review[];
   loading: boolean;
   error: string | null;
+  requiresLogin: boolean;
 }
