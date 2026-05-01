@@ -610,6 +610,7 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
   const [answerInput, setAnswerInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [feedbackTone, setFeedbackTone] = useState<'neutral' | 'success' | 'error'>('neutral');
   const [maxAttempts, setMaxAttempts] = useState(MAX_ATTEMPTS);
   const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
   const isExhausted = attemptCount >= maxAttempts;
@@ -625,30 +626,35 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
     const trimmedAnswer = answerInput.trim();
     if (!trimmedAnswer) {
       setFeedback('Enter an answer first.');
+      setFeedbackTone('error');
       return;
     }
 
     setIsSubmitting(true);
     setFeedback('Checking answer...');
+    setFeedbackTone('neutral');
     try {
       const response = await submitOpenEndedAnswer(progressId, trimmedAnswer);
       if (typeof response.max_attempts === 'number') {
         setMaxAttempts(response.max_attempts);
       }
       if (response.accepted) {
-        setFeedback('Answer verified.');
+        setFeedback('That matches. This step is unlocked.');
+        setFeedbackTone('success');
         onSolve();
       } else {
         if (stepId) recordAttempt(stepId);
         const newCount = response.attempt_count ?? attemptCount + 1;
         if (newCount >= maxAttempts) {
           setFeedback('Answer is not close enough. No attempts remaining.');
+          setFeedbackTone('error');
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
             `Answer is not close enough. ${maxAttempts - newCount} attempt${maxAttempts - newCount === 1 ? '' : 's'} remaining.`
           );
+          setFeedbackTone('error');
         }
       }
     } catch (error: any) {
@@ -667,6 +673,7 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
       setFeedback(
         error?.response?.data?.error || 'Could not verify answer right now. Please try again.'
       );
+      setFeedbackTone('error');
     } finally {
       setIsSubmitting(false);
     }
@@ -717,7 +724,33 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
         )}
       </Pressable>
 
-      {feedback ? <Text style={styles.feedbackText}>{feedback}</Text> : null}
+      {feedback ? (
+        <View
+          style={[
+            styles.feedbackCard,
+            feedbackTone === 'success' && styles.feedbackCardSuccess,
+            feedbackTone === 'error' && styles.feedbackCardError,
+          ]}
+        >
+          {feedbackTone === 'success' ? (
+            <MaterialCommunityIcons
+              name="check-circle"
+              size={16}
+              color={Colors[theme].easy}
+              style={styles.feedbackIcon}
+            />
+          ) : null}
+          <Text
+            style={[
+              styles.feedbackText,
+              feedbackTone === 'success' && styles.feedbackTextSuccess,
+              feedbackTone === 'error' && styles.feedbackTextError,
+            ]}
+          >
+            {feedback}
+          </Text>
+        </View>
+      ) : null}
 
       {isExhausted && !isSolved && (
         <Text style={styles.exhaustedHint}>No attempts remaining. You can skip this step.</Text>
