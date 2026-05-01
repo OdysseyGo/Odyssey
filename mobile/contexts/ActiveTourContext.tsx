@@ -82,7 +82,7 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
           type: 'puzzle' as const,
           puzzle,
           description,
-          requiresLocationConfirmation: true, // All puzzle steps require location confirmation
+          requiresLocationConfirmation: true,
         } as PuzzleStep;
       }
     }
@@ -93,6 +93,7 @@ function mapApiTourToInternalTour(apiTour: ApiTour): Tour {
       type: 'story' as const,
       description: apiStep.description,
       images: apiStep.image ? [apiStep.image] : undefined,
+      requiresLocationConfirmation: true,
     } as StoryStep;
   });
 
