@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import DeviceToken
 from .serializers import DeviceTokenSerializer
+from .services import APNsService
 
 class DeviceTokenViewSet(viewsets.ModelViewSet):
     serializer_class = DeviceTokenSerializer
@@ -37,7 +38,7 @@ class DeviceTokenViewSet(viewsets.ModelViewSet):
     def test_push(self, request, pk=None):
         """Trigger a test push notification to a specific saved token"""
         device_token_obj = self.get_object()
-        
+
         apns = APNsService()
         alert = {
             "title": "Test Push",

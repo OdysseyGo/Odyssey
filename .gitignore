@@ -50,4 +50,4 @@ logs/
 
 vscode/
 
-AuthKey_L8PGP38W54.p8
+backend/apps/notifications/services/keys/*.p8

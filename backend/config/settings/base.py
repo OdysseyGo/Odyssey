@@ -324,6 +324,5 @@ Q_CLUSTER = {
 # Apple Push Notification Settings
 APPLE_TEAM_ID = os.getenv('APPLE_TEAM_ID')
 APPLE_KEY_ID = os.getenv('APPLE_KEY_ID')
-APPLE_CERTIFICATE_PATH = os.getenv('APPLE_CERTIFICATE_PATH')
-APNS_BUNDLE_ID = os.getenv('APNS_BUNDLE_ID', 'com.yourcompany.odyssey')
+APNS_BUNDLE_ID = os.getenv('APNS_BUNDLE_ID', 'com.app.odyssey.bilkent')
 APNS_USE_SANDBOX = os.getenv('APNS_USE_SANDBOX', 'True') == 'True'

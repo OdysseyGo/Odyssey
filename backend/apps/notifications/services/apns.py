@@ -1,4 +1,6 @@
 import json
+import os
+from pathlib import Path
 import logging
 from datetime import datetime, timedelta, timezone
 import jwt
@@ -16,8 +18,8 @@ class APNsService:
         self.bundle_id = settings.APNS_BUNDLE_ID
         self.use_sandbox = settings.APNS_USE_SANDBOX
         
-        # Load certificate (or use JWT for modern APNs)
-        self.certificate_path = settings.APPLE_CERTIFICATE_PATH
+        current_dir = Path(__file__).parent.resolve()
+        self.certificate_path = current_dir / "keys/AuthKey_RDHGT44P65.p8"
         
         # APNs server URLs
         self.sandbox_url = "https://api.sandbox.push.apple.com"

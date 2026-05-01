@@ -220,3 +220,12 @@ Follow the steps below to configure S3 for your environment:
    ```
 
    The `boto3` and `django-storages` packages (listed in `backend/requirements/base.txt`) will be installed automatically during the Docker build. Once running, any image uploaded through the API (e.g., tour cover images) will be stored in your S3 bucket and served via `https://<bucket>.s3.amazonaws.com/`.
+
+
+## 7. Notifications
+
+Need to have a .p8 key from APN services for sending notifications. Also backend needs another run with 
+
+   ```bash
+   python manageçpy qcluster
+   ```
