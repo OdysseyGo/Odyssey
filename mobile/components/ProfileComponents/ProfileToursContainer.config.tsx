@@ -4,13 +4,15 @@ export interface ProfileToursContainerProps {
   userId?: number;
 }
 
+export type ProfileTourTabKey = TourStatus | 'AI';
+
 export type TourTab = {
-  key: TourStatus;
+  key: ProfileTourTabKey;
   label: string;
 };
 
 export const TOUR_TABS: TourTab[] = [
   { key: 'PUBLISHED', label: 'profile.tabs.published' },
   { key: 'DRAFT', label: 'profile.tabs.drafts' },
-  { key: 'ARCHIVED', label: 'profile.tabs.archived' },
+  { key: 'AI', label: 'profile.tabs.aiTours' },
 ];

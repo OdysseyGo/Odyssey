@@ -98,12 +98,14 @@
     "tabs": {
       "published": "Yayınlandı",
       "drafts": "Taslaklar",
+      "aiTours": "AI Turları",
       "archived": "Arşivlendi",
       "settings": "Ayarlar",
       "tutorials": "Rehberler"
     },
     "emptyPublished": "Henüz yayınlanmış tur yok. Topluluğa katılmak için bir tur yayınla!",
     "emptyDraft": "Taslak tur yok. Yeni bir tur oluşturmaya başla!",
+    "emptyAiTours": "Henüz AI ile oluşturulmuş tur yok. Vitrinini başlatmak için bir tane oluştur!",
     "emptyArchived": "Arşivlenmiş tur yok.",
     "emptyDefault": "Tur bulunamadı.",
     "followersTitle": "Takipçiler",
