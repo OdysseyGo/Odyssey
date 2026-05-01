@@ -1,6 +1,5 @@
-from rest_framework import serializers
-
 from django.db.models import Count
+from rest_framework import serializers
 
 from apps.gamification.models import Badge, TourProgress, UserBadge, UserBadgeHistory
 from apps.gamification.visuals import BadgeVisualService

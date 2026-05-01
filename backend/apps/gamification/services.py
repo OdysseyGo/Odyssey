@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.db.models import Avg, Count
 from django.utils import timezone
 
-from apps.tours.models import Puzzle, PuzzleAttempt, Review, Tour
+from apps.tours.models import Puzzle, PuzzleAttempt, Review, Tour, TourStep
 
 from .level_service import LevelService
 from .models import Badge, TourProgress, UserBadge, UserBadgeHistory
