@@ -176,7 +176,7 @@ class TestGenerateTour(TestCase):
         )
 
         assert tour.title == "Historic Istanbul Walking Tour"
-        assert tour.is_ai_generated is True
+        assert tour.generation_source == Tour.AI
         assert tour.steps.count() == 2
         assert Puzzle.objects.filter(step__tour=tour).count() == 2
 

@@ -8,7 +8,6 @@ import {
   deleteTour,
   setStepArPuzzle,
   setStepCompassPuzzle,
-  setStepGyroscopePuzzle,
   setStepPictureComparePuzzle,
   setStepTriviaPuzzle,
   updateTour,
@@ -164,11 +163,6 @@ export default function TourReviewScreen() {
                     },
                   },
                 });
-                continue;
-              }
-
-              if (loc.puzzle.puzzle_type === 'GYROSCOPE') {
-                await setStepGyroscopePuzzle(tour.id, createdStep.id, basePayload);
                 continue;
               }
 

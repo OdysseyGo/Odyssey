@@ -22,6 +22,7 @@ import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/Odyssey
 
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { completeStep, skipStep } from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
+import type { UserBadge } from '@/api/profile';
 
 const BOTTOM_SHEET_ANIMATION_DURATION = Animations.bottomSheet.animationDuration;
 const COLLAPSED_VISIBLE_HEIGHT = 110;
@@ -30,7 +31,9 @@ const TAB_BAR_GAP = Spacing.md;
 export default function BottomSlider({
   onEndTour,
   onTourComplete,
-}: BottomSliderProps & { onTourComplete?: (awardedXP: number) => Promise<void> | void }) {
+}: BottomSliderProps & {
+  onTourComplete?: (awardedXP: number, awardedBadges?: UserBadge[]) => Promise<void> | void;
+}) {
   const { t } = useTranslation();
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -110,7 +113,7 @@ export default function BottomSlider({
       }
 
       if (response.is_tour_complete) {
-        await onTourComplete?.(response.awarded_xp ?? 0);
+        await onTourComplete?.(response.awarded_xp ?? 0, response.awarded_badges);
       } else if (response.new_step_id) {
         const nextStepIndex = tour.steps.findIndex(
           (s) => s.id === response.new_step_id?.toString()
@@ -166,7 +169,7 @@ export default function BottomSlider({
       recordSkip(skipCountsAsMistake(currentStep.id));
 
       if (response.is_tour_complete) {
-        await onTourComplete?.(response.awarded_xp ?? 0);
+        await onTourComplete?.(response.awarded_xp ?? 0, response.awarded_badges);
       } else if (response.new_step_id) {
         const nextStepIndex = tour.steps.findIndex(
           (s) => s.id === response.new_step_id?.toString()

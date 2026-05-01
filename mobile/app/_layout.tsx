@@ -23,8 +23,7 @@ export {
 } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: 'disclaimer',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -123,6 +122,10 @@ function RootLayoutNavigator() {
                 },
               }}
             >
+              <Stack.Screen
+                name="disclaimer"
+                options={{ headerShown: false, gestureEnabled: false }}
+              />
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
               <Stack.Screen name="login" options={{ headerShown: false }} />

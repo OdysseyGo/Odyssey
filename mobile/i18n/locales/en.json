@@ -49,6 +49,10 @@
     "registerTagline": "Create your account",
     "continue": "Continue",
     "back": "Back",
+    "termsPrefix": "I agree to the",
+    "terms": "Terms of Use",
+    "termsAnd": "and",
+    "privacy": "Privacy Policy",
     "resetTagline": "Reset your password",
     "successTitle": "Success",
     "confirmRegistrationTitle": "Create this account?",
@@ -71,7 +75,8 @@
       "usernameEmailMismatch": "Username and email do not match",
       "somethingWentWrong": "Something went wrong",
       "bothFieldsRequired": "Both fields are required",
-      "couldNotUpdate": "Could not update password"
+      "couldNotUpdate": "Could not update password",
+      "termsRequired": "You must agree to the Terms of Use and Privacy Policy"
     },
     "userCreated": "User has been created!"
   },
@@ -659,5 +664,16 @@
       "step3text": "You can see the top featured tours here!",
       "step4text": "To create tours, press here. You can generate Personal or AI-generated tours!"
     }
+  },
+  "disclaimer": {
+    "title": "Adventure Safely",
+    "body": "Every great journey starts with awareness. While exploring with Odyssey, keep your eyes up and stay alert to the world around you.",
+    "legalPrefix": "By embarking on this adventure you agree to our",
+    "terms": "Terms of Use",
+    "legalAnd": "and",
+    "privacy": "Privacy Policy",
+    "legalSuffix": ". Please read and accept to begin your quest.",
+    "mascot": "Babazilla is watching — keep your eyes up, adventurer!",
+    "cta": "I Accept"
   }
 }

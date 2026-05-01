@@ -45,6 +45,50 @@ class UserBadge(models.Model):
         return f"{self.user} earned {self.badge}"
 
 
+class UserBadgeHistory(models.Model):
+    EARNED = "EARNED"
+    UPGRADED = "UPGRADED"
+
+    EVENT_TYPE_CHOICES = [
+        (EARNED, "Earned"),
+        (UPGRADED, "Upgraded"),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="badge_history",
+    )
+    badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
+    user_badge = models.ForeignKey(
+        UserBadge,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="history",
+    )
+    source_tour = models.ForeignKey(
+        "tours.Tour",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="badge_award_history",
+    )
+    city = models.CharField(max_length=100, blank=True, default="")
+    country_code = models.CharField(max_length=2, blank=True, default="ZZ")
+    mistake_count = models.PositiveIntegerField(null=True, blank=True)
+    event_type = models.CharField(
+        max_length=20, choices=EVENT_TYPE_CHOICES, default=EARNED
+    )
+    earned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-earned_at"]
+
+    def __str__(self):
+        return f"{self.user} {self.event_type.lower()} {self.badge}"
+
+
 class TourProgress(models.Model):
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
