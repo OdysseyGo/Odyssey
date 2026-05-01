@@ -161,7 +161,6 @@ export const isPuzzleValid = (puzzle?: Puzzle): boolean => {
     return puzzle.correctAnswer.trim().length > 0;
   }
 
-
   if (puzzle.puzzle_type === 'COMPASS') {
     return (
       typeof puzzle.targetHeadingDegrees === 'number' &&
