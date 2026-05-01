@@ -16,7 +16,7 @@ from apps.gamification.models import (
     UserBadge,
     UserBadgeHistory,
 )
-from apps.gamification.visuals import BadgeVisualFileRepository
+from apps.gamification.visuals import FlagBadgeVisualFileRepository
 from apps.tours.models import ARModel, Review, Tour, TourStep
 
 User = get_user_model()
@@ -549,7 +549,7 @@ class BadgeVisualViewSetTests(APITestCase):
             self._badge_visuals_tmpdir.name,
             "badge_visuals_game.json",
         )
-        BadgeVisualFileRepository.write(
+        FlagBadgeVisualFileRepository.write(
             {"template": {}, "overrides": [], "meta": {"version": 1}}
         )
         self.client.force_authenticate(user=self.admin)
@@ -609,7 +609,7 @@ class BadgeVisualViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["country_code"], "FR")
         self.assertEqual(response.data["badge"], self.badge.id)
-        payload = BadgeVisualFileRepository.read()
+        payload = FlagBadgeVisualFileRepository.read()
         self.assertEqual(len(payload["overrides"]), 1)
         self.assertEqual(payload["overrides"][0]["badge_code"], "CITY_GOLD")
 
@@ -628,7 +628,7 @@ class BadgeVisualViewSetTests(APITestCase):
             f"/api/admin/badge-visuals/overrides/{override_id}/"
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        payload = BadgeVisualFileRepository.read()
+        payload = FlagBadgeVisualFileRepository.read()
         self.assertEqual(payload["overrides"], [])
 
     def test_export_config(self):

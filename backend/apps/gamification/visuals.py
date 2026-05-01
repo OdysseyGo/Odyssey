@@ -368,7 +368,9 @@ class FlagBadgeVisualFileRepository:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         normalized = {
-            "template": _merge_dict(_empty_like_default(), payload.get("template") or {}),
+            "template": _merge_dict(
+                _empty_like_default(), payload.get("template") or {}
+            ),
             "overrides": payload.get("overrides") or [],
             "meta": payload.get("meta") or {"version": 1},
         }

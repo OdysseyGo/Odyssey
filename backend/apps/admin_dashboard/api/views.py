@@ -35,11 +35,11 @@ from apps.admin_dashboard.api.serializers import (
     BadgeVisualBundleSerializer,
     BadgeVisualOverrideSerializer,
     BadgeVisualTemplateSerializer,
-    GameBadgeVisualTypeSerializer,
     BanRecordSerializer,
     BanUserSerializer,
     BulkUserActionSerializer,
     DashboardSummarySerializer,
+    GameBadgeVisualTypeSerializer,
     PictureCompareConfigSerializer,
     PictureCompareTuningSerializer,
     ReportActionSerializer,
@@ -436,16 +436,21 @@ class BadgeVisualViewSet(ViewSet):
         BadgeService.ensure_default_badges()
         payload = FlagBadgeVisualService.read_payload()
         city_codes = list(
-            Badge.objects.filter(code__startswith="CITY_").values_list("code", flat=True)
+            Badge.objects.filter(code__startswith="CITY_").values_list(
+                "code", flat=True
+            )
         )
         payload = {
-            "template": payload.get("template") or FlagBadgeVisualService.load_template(),
+            "template": payload.get("template")
+            or FlagBadgeVisualService.load_template(),
             "overrides": [
                 self._serialize_override(item)
                 for item in (payload.get("overrides") or [])
             ],
         }
-        serializer = BadgeVisualBundleSerializer(payload, context={"badge_codes": city_codes})
+        serializer = BadgeVisualBundleSerializer(
+            payload, context={"badge_codes": city_codes}
+        )
         return Response(serializer.data)
 
     @action(detail=False, methods=["post"], url_path="template")
@@ -461,7 +466,8 @@ class BadgeVisualViewSet(ViewSet):
         )
         return Response(
             {
-                "config": saved.get("template") or FlagBadgeVisualService.load_template(),
+                "config": saved.get("template")
+                or FlagBadgeVisualService.load_template(),
                 "updated_at": timezone.now().isoformat(),
             }
         )
@@ -496,7 +502,9 @@ class BadgeVisualViewSet(ViewSet):
         return self.delete_flag_override(request, override_id=override_id)
 
     @action(
-        detail=False, methods=["delete"], url_path=r"flag/overrides/(?P<override_id>\d+)"
+        detail=False,
+        methods=["delete"],
+        url_path=r"flag/overrides/(?P<override_id>\d+)",
     )
     def delete_flag_override(self, request, override_id=None):
         deleted = FlagBadgeVisualService.delete_override(int(override_id))
@@ -603,7 +611,9 @@ class BadgeVisualViewSet(ViewSet):
             json.dumps(body, indent=2, sort_keys=True) + "\n",
             content_type="application/json",
         )
-        response["Content-Disposition"] = 'attachment; filename="badge_visuals_game.json"'
+        response["Content-Disposition"] = (
+            'attachment; filename="badge_visuals_game.json"'
+        )
         return response
 
 

@@ -320,12 +320,8 @@ class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
         User.objects.filter(id=follow.follower_id).update(
             following_count=F("following_count") + 1
         )
-        follow.follower.refresh_from_db(
-            fields=["follower_count", "following_count"]
-        )
-        follow.following.refresh_from_db(
-            fields=["follower_count", "following_count"]
-        )
+        follow.follower.refresh_from_db(fields=["follower_count", "following_count"])
+        follow.following.refresh_from_db(fields=["follower_count", "following_count"])
         BadgeService.evaluate_user_badges(follow.follower)
         BadgeService.evaluate_user_badges(follow.following)
 

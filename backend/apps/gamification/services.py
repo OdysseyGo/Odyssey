@@ -167,7 +167,9 @@ class BadgeService:
         for family_key, definition in cls.PROGRESSIVE_FAMILIES.items():
             for index, threshold in enumerate(definition["thresholds"], start=1):
                 code = f"{definition['code_prefix']}_{index}"
-                visual_tier = cls.VISUAL_TIERS[min(index - 1, len(cls.VISUAL_TIERS) - 1)]
+                visual_tier = cls.VISUAL_TIERS[
+                    min(index - 1, len(cls.VISUAL_TIERS) - 1)
+                ]
                 cls._ensure_badge(
                     code,
                     name=f"{definition['label']} {index}",
@@ -329,7 +331,11 @@ class BadgeService:
         best_existing = None
         best_rank = -1
         for row in existing:
-            rank = family_codes.index(row.badge.code) + 1 if row.badge.code in family_codes else 0
+            rank = (
+                family_codes.index(row.badge.code) + 1
+                if row.badge.code in family_codes
+                else 0
+            )
             if rank > best_rank:
                 best_rank = rank
                 best_existing = row
@@ -500,12 +506,16 @@ class BadgeService:
     @classmethod
     def _award_progressive_metric_badges(cls, user, completed_progress=None):
         earned = []
-        source_tour = completed_progress.tour if completed_progress is not None else None
+        source_tour = (
+            completed_progress.tour if completed_progress is not None else None
+        )
         family_keys = [
             key for key in cls.PROGRESSIVE_FAMILIES.keys() if key != "badge_collector"
         ] + ["badge_collector"]
         for family_key in family_keys:
-            metric_value = cls._metric_value_for_family(family_key=family_key, user=user)
+            metric_value = cls._metric_value_for_family(
+                family_key=family_key, user=user
+            )
             earned.extend(
                 cls._award_or_upgrade_progressive_badge(
                     user=user,
@@ -527,9 +537,7 @@ class BadgeService:
             newly_earned.extend(
                 cls._award_or_upgrade_city_badge(user, completed_progress)
             )
-        newly_earned.extend(
-            cls._award_xp_milestone_badges(user, completed_progress)
-        )
+        newly_earned.extend(cls._award_xp_milestone_badges(user, completed_progress))
         newly_earned.extend(
             cls._award_progressive_metric_badges(user, completed_progress)
         )
