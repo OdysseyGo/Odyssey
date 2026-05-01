@@ -5,6 +5,7 @@ import * as Location from 'expo-location';
 import getStyles from './TourMap.styles';
 import { TourMapProps } from './TourMap.config';
 import { useColorTheme } from '@/utils/useColorTheme';
+import Colors from '@/constants/Colors';
 import MapMarker from './MapMarker';
 
 const defaultRegion = {
@@ -27,6 +28,7 @@ export default function TourMap({
 }: TourMapProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const colors = Colors[theme];
   const mapRef = useRef<MapView>(null);
 
   // Get user location on mount (but don't animate if there's an active tour)
@@ -109,7 +111,9 @@ export default function TourMap({
         />
       ))}
 
-      {route.length >= 2 && <Polyline coordinates={route} strokeWidth={4} />}
+      {route.length >= 2 && (
+        <Polyline coordinates={route} strokeWidth={4} strokeColor={colors.primary} />
+      )}
     </MapView>
   );
 }

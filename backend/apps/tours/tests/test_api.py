@@ -5,7 +5,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.tours.models import Tour
+from apps.gamification.models import TourProgress
+from apps.tours.models import Tour, TourStep
 from apps.tours.utils import normalize_tour_country
 
 User = get_user_model()
@@ -92,6 +93,8 @@ class TourCreationApiTests(APITestCase):
         # 4. Verify Data
         tour = Tour.objects.get(pk=tour_id)
         self.assertEqual(tour.status, Tour.PUBLISHED)
+        self.assertFalse(tour.is_ai_generated)
+        self.assertFalse(response.data["is_ai_generated"])
         self.assertEqual(tour.steps.count(), 2)
         step1 = tour.steps.get(order=0)
         self.assertEqual(step1.title, "Eiffel Tower")
@@ -171,3 +174,63 @@ class TourCreationApiTests(APITestCase):
         tour.refresh_from_db()
         self.assertEqual(tour.country, canonical_country)
         self.assertEqual(tour.country_code, canonical_country_code)
+
+
+class TourCompletionVisibilityApiTests(APITestCase):
+    def setUp(self):
+        self.creator = User.objects.create_user(
+            username="creator",
+            email="creator@example.com",
+            password="password123",
+        )
+        self.other_user = User.objects.create_user(
+            username="other",
+            email="other@example.com",
+            password="password123",
+        )
+        self.tour = Tour.objects.create(
+            title="AI Tour",
+            description="AI generated tour",
+            creator=self.creator,
+            tour_type=Tour.PUZZLE,
+            category="Mystery",
+            difficulty=Tour.EASY,
+            duration_minutes=20,
+            is_ai_generated=True,
+        )
+        self.first_step = TourStep.objects.create(
+            tour=self.tour,
+            order=0,
+            title="First",
+            description="",
+            latitude="1.0",
+            longitude="1.0",
+        )
+
+    def test_user_has_completed_once_is_scoped_to_authenticated_user(self):
+        TourProgress.objects.create(
+            user=self.creator,
+            tour=self.tour,
+            current_step=None,
+            status=TourProgress.IN_PROGRESS,
+            has_completed_once=True,
+        )
+
+        self.client.force_authenticate(user=self.creator)
+        response = self.client.get(f"/api/tours/{self.tour.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["is_ai_generated"])
+        self.assertTrue(response.data["user_has_completed_once"])
+
+        self.client.force_authenticate(user=self.other_user)
+        response = self.client.get(f"/api/tours/{self.tour.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["user_has_completed_once"])
+
+        self.client.force_authenticate(user=None)
+        response = self.client.get(f"/api/tours/{self.tour.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["user_has_completed_once"])

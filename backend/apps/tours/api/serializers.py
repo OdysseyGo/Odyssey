@@ -2,6 +2,7 @@ import re
 
 from rest_framework import serializers
 
+from apps.gamification.models import TourProgress
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
@@ -333,8 +334,21 @@ class TourSerializer(serializers.ModelSerializer):
     steps = TourStepSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
     average_rating = serializers.FloatField(read_only=True)
+    user_has_completed_once = serializers.SerializerMethodField()
     city_latitude = serializers.FloatField(write_only=True, required=False)
     city_longitude = serializers.FloatField(write_only=True, required=False)
+
+    def get_user_has_completed_once(self, obj):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return False
+
+        return TourProgress.objects.filter(
+            tour=obj,
+            user=user,
+            has_completed_once=True,
+        ).exists()
 
     class Meta:
         model = Tour
@@ -363,6 +377,8 @@ class TourSerializer(serializers.ModelSerializer):
             "city_longitude",
             "cover_image",
             "cover_image_attribution",
+            "is_ai_generated",
+            "user_has_completed_once",
             "status",
             "created_at",
             "updated_at",
@@ -372,6 +388,8 @@ class TourSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "creator",
+            "is_ai_generated",
+            "user_has_completed_once",
             "created_at",
             "updated_at",
             "average_rating",

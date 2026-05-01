@@ -16,7 +16,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { BlurView } from 'expo-blur';
 
 import ProfileTourCard from '@/components/ProfileComponents/ProfileTourCard';
@@ -256,6 +256,12 @@ export default function MyCompletedToursScreen() {
               <View style={[styles.tourItem, { backgroundColor: theme.cardSurface }]}>
                 <ProfileTourCard
                   tour={item}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/tour/[id]',
+                      params: { id: item.id.toString(), reveal: 'completed' },
+                    })
+                  }
                   containerStyle={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
                 />
                 {item.status === 'PUBLISHED' ? (
