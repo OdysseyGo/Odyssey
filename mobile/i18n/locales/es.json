@@ -513,6 +513,10 @@
       "puzzleDesc": "Desafíos interactivos y curiosidades en cada ubicación",
       "hybrid": "Modo Híbrido",
       "hybridDesc": "Lo mejor de ambos: historias atractivas con puzzles divertidos"
+    },
+    "includeAr": {
+      "title": "Incluir Puzzles AR",
+      "subtitle": "Deja que la IA añada puzzles de realidad aumentada en las paradas donde encajen"
     }
   },
   "tourStep": {

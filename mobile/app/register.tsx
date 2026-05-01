@@ -12,7 +12,6 @@ import {
   Dimensions,
   TextInput,
   BackHandler,
-  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -60,9 +59,9 @@ export default function RegisterScreen() {
     general?: string;
   }>({});
   const [loading, setLoading] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const isNavigatingAway = useRef(false);
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Entrance animations
@@ -83,6 +82,12 @@ export default function RegisterScreen() {
         useNativeDriver: true,
       }),
     ]).start();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) clearTimeout(redirectTimeoutRef.current);
+    };
   }, []);
 
   const resetScrollPosition = useCallback(() => {
@@ -152,7 +157,6 @@ export default function RegisterScreen() {
   };
 
   const submitRegistration = async () => {
-    setShowConfirmModal(false);
     setLoading(true);
     try {
       const user: CreateUserPayload = {
@@ -164,7 +168,10 @@ export default function RegisterScreen() {
       };
       await createUser(user);
       isNavigatingAway.current = true;
-      setShowSuccessModal(true);
+      setShowSuccessBanner(true);
+      redirectTimeoutRef.current = setTimeout(() => {
+        router.dismissTo('/login');
+      }, 1400);
     } catch (e) {
       console.error(e);
       setErrors({ general: t('auth.errors.registrationFailed') });
@@ -176,7 +183,7 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     if (!validateStep2()) return;
 
-    setShowConfirmModal(true);
+    await submitRegistration();
   };
 
   return (
@@ -390,10 +397,32 @@ export default function RegisterScreen() {
                       onSubmitEditing={handleRegister}
                       error={errors.confirmPassword}
                     />
+                    {showSuccessBanner ? (
+                      <View
+                        style={[
+                          styles.successBanner,
+                          { backgroundColor: `${theme.correctOptionBackground}14` },
+                        ]}
+                      >
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={16}
+                          color={theme.correctOptionBackground}
+                        />
+                        <Text
+                          style={[
+                            styles.successBannerText,
+                            { color: theme.correctOptionBackground },
+                          ]}
+                        >
+                          {t('auth.accountCreatedSubtitle', { username })}
+                        </Text>
+                      </View>
+                    ) : null}
                     <AuthButton
                       title={t('auth.createAccount')}
                       onPress={handleRegister}
-                      loading={loading}
+                      loading={loading || showSuccessBanner}
                     />
                     <View style={styles.footerRow}>
                       <TouchableOpacity onPress={() => setStep(1)} disabled={loading}>
@@ -410,109 +439,6 @@ export default function RegisterScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <Modal
-        visible={showConfirmModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowConfirmModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: theme.background }]}>
-            <View style={[styles.modalIcon, { backgroundColor: `${theme.primary}18` }]}>
-              <Ionicons name="person-add-outline" size={24} color={theme.primary} />
-            </View>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>
-              {t('auth.confirmRegistrationTitle')}
-            </Text>
-            <Text style={[styles.modalSubtitle, { color: theme.subText }]}>
-              {t('auth.confirmRegistrationSubtitle')}
-            </Text>
-
-            <View style={[styles.accountPreview, { backgroundColor: theme.foreground }]}>
-              <View style={styles.accountPreviewRow}>
-                <Text style={[styles.accountPreviewLabel, { color: theme.subText }]}>
-                  {t('auth.username')}
-                </Text>
-                <Text style={[styles.accountPreviewValue, { color: theme.text }]} numberOfLines={1}>
-                  {username}
-                </Text>
-              </View>
-              <View style={styles.accountPreviewRow}>
-                <Text style={[styles.accountPreviewLabel, { color: theme.subText }]}>
-                  {t('auth.email')}
-                </Text>
-                <Text style={[styles.accountPreviewValue, { color: theme.text }]} numberOfLines={1}>
-                  {email}
-                </Text>
-              </View>
-              <View style={styles.accountPreviewRow}>
-                <Text style={[styles.accountPreviewLabel, { color: theme.subText }]}>
-                  {t('auth.name')}
-                </Text>
-                <Text style={[styles.accountPreviewValue, { color: theme.text }]} numberOfLines={1}>
-                  {`${firstName} ${lastName}`.trim()}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonSecondary]}
-                onPress={() => setShowConfirmModal(false)}
-                disabled={loading}
-              >
-                <Text style={[styles.modalButtonSecondaryText, { color: theme.subText }]}>
-                  {t('auth.cancel')}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: theme.primary }]}
-                onPress={submitRegistration}
-                disabled={loading}
-              >
-                <Text style={[styles.modalButtonPrimaryText, { color: theme.white }]}>
-                  {t('auth.createAccount')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal
-        visible={showSuccessModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => router.dismissTo('/login')}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: theme.background }]}>
-            <View
-              style={[styles.modalIcon, { backgroundColor: `${theme.correctOptionBackground}18` }]}
-            >
-              <Ionicons
-                name="checkmark-circle-outline"
-                size={26}
-                color={theme.correctOptionBackground}
-              />
-            </View>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>
-              {t('auth.accountCreatedTitle')}
-            </Text>
-            <Text style={[styles.modalSubtitle, { color: theme.subText }]}>
-              {t('auth.accountCreatedSubtitle', { username })}
-            </Text>
-            <TouchableOpacity
-              style={[styles.successButton, { backgroundColor: theme.primary }]}
-              onPress={() => router.dismissTo('/login')}
-            >
-              <Text style={[styles.modalButtonPrimaryText, { color: theme.white }]}>
-                {t('auth.login')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </>
   );
 }
@@ -603,6 +529,21 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: 18,
   },
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderRadius: Spacing.borderRadius,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  successBannerText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
+  },
 
   // ── Inputs
   inputs: {
@@ -623,91 +564,5 @@ const styles = StyleSheet.create({
   footerLink: {
     fontSize: 14,
     fontWeight: '700',
-  },
-  modalOverlay: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: Spacing.xl,
-    backgroundColor: 'rgba(15, 23, 42, 0.55)',
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 380,
-    borderRadius: Spacing.borderRadius,
-    padding: Spacing.xl,
-  },
-  modalIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.lg,
-  },
-  modalTitle: {
-    fontSize: 21,
-    fontWeight: '800',
-    lineHeight: 26,
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: Spacing.xs,
-  },
-  accountPreview: {
-    borderRadius: Spacing.borderRadius,
-    padding: Spacing.md,
-    gap: Spacing.sm,
-    marginTop: Spacing.lg,
-  },
-  accountPreviewRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.md,
-  },
-  accountPreviewLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  accountPreviewValue: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '700',
-    textAlign: 'right',
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: Spacing.xl,
-  },
-  modalButton: {
-    flex: 1,
-    minHeight: 46,
-    borderRadius: Spacing.borderRadius,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.md,
-  },
-  modalButtonSecondary: {
-    backgroundColor: 'rgba(148, 163, 184, 0.14)',
-  },
-  modalButtonSecondaryText: {
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  modalButtonPrimaryText: {
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  successButton: {
-    minHeight: 46,
-    borderRadius: Spacing.borderRadius,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.md,
-    marginTop: Spacing.xl,
   },
 });
