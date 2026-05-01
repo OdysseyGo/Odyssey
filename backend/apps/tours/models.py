@@ -328,8 +328,7 @@ class CompassPuzzleDetail(models.Model):
             raise ValidationError(
                 {
                     "puzzle": (
-                        "CompassPuzzleDetail can only be attached to "
-                        "COMPASS puzzles."
+                        "CompassPuzzleDetail can only be attached to COMPASS puzzles."
                     )
                 }
             )
