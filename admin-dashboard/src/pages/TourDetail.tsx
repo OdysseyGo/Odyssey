@@ -574,13 +574,37 @@ export default function TourDetail() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={handleApprove} disabled={actionLoading}>
+            <Button
+              variant="outline"
+              onClick={handleApprove}
+              disabled={actionLoading || tour.status === "PUBLISHED"}
+              title={tour.status === "PUBLISHED" ? "Already published" : "Approve and publish"}
+              className={tour.status === "PUBLISHED" ? "opacity-40 cursor-not-allowed" : ""}
+            >
               <CheckCircle className="h-4 w-4" /> Approve
             </Button>
-            <Button variant="outline" onClick={() => setRejectModalOpen(true)} disabled={actionLoading}>
+            <Button
+              variant="outline"
+              onClick={() => setRejectModalOpen(true)}
+              disabled={actionLoading || tour.status === "DRAFT" || tour.status === "ARCHIVED"}
+              title={
+                tour.status === "DRAFT"
+                  ? "Already in draft"
+                  : tour.status === "ARCHIVED"
+                    ? "Tour is archived"
+                    : "Reject and move to draft"
+              }
+              className={tour.status !== "PUBLISHED" ? "opacity-40 cursor-not-allowed" : ""}
+            >
               <XCircle className="h-4 w-4" /> Reject
             </Button>
-            <Button variant="outline" onClick={handleArchive} disabled={actionLoading}>
+            <Button
+              variant="outline"
+              onClick={handleArchive}
+              disabled={actionLoading || tour.status === "ARCHIVED"}
+              title={tour.status === "ARCHIVED" ? "Already archived" : "Archive this tour"}
+              className={tour.status === "ARCHIVED" ? "opacity-40 cursor-not-allowed" : ""}
+            >
               <Archive className="h-4 w-4" /> Archive
             </Button>
             <Button variant="destructive" onClick={() => setDeleteModalOpen(true)} disabled={actionLoading}>
@@ -588,6 +612,25 @@ export default function TourDetail() {
             </Button>
           </div>
         </div>
+
+        {tour.status === "DRAFT" && (
+          <div className="flex items-center gap-2 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning">
+            <XCircle className="h-4 w-4 shrink-0" />
+            <span>This tour is in <strong>draft</strong> — it's either pending submission or was previously rejected. You can approve it to publish, or archive it.</span>
+          </div>
+        )}
+        {tour.status === "PUBLISHED" && (
+          <div className="flex items-center gap-2 rounded-lg border border-green-500/40 bg-green-500/10 px-4 py-3 text-sm text-green-700 dark:text-green-400">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <span>This tour is <strong>live</strong> and visible to explorers. You can reject it to move it back to draft.</span>
+          </div>
+        )}
+        {tour.status === "ARCHIVED" && (
+          <div className="flex items-center gap-2 rounded-lg border border-muted-foreground/30 bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+            <Archive className="h-4 w-4 shrink-0" />
+            <span>This tour is <strong>archived</strong> and hidden from explorers. You can approve it to make it live again.</span>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Card>

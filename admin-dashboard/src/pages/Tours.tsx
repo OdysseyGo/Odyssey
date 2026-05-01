@@ -95,6 +95,23 @@ export default function Tours() {
         <p className="text-muted-foreground">Manage and moderate tours</p>
       </div>
 
+      {/* Status tabs */}
+      <div className="flex gap-1 rounded-lg border border-border bg-muted/40 p-1 w-fit">
+        {(["", "DRAFT", "PUBLISHED", "ARCHIVED"] as const).map((s) => (
+          <button
+            key={s}
+            onClick={() => updateFilter("status", s)}
+            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+              filters.status === s
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {s === "" ? "All" : s === "DRAFT" ? "Draft / Pending" : s.charAt(0) + s.slice(1).toLowerCase()}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -113,7 +130,7 @@ export default function Tours() {
           >
             <option value="">All Status</option>
             <option value="PUBLISHED">Published</option>
-            <option value="DRAFT">Draft</option>
+            <option value="DRAFT">Draft / Pending</option>
             <option value="ARCHIVED">Archived</option>
           </Select>
           <Select
