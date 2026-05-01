@@ -52,7 +52,9 @@ class ReviewPermissionTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Review.objects.filter(tour=self.tour, user=self.reviewer).count(), 1)
+        self.assertEqual(
+            Review.objects.filter(tour=self.tour, user=self.reviewer).count(), 1
+        )
 
     def test_creator_cannot_update_review_on_own_tour(self):
         review = Review.objects.create(

@@ -269,7 +269,9 @@ export default function MyCompletedToursScreen() {
                   <TouchableOpacity
                     style={[
                       styles.reviewButton,
-                      { backgroundColor: canReviewTour ? theme.primary : theme.foregroundSecondary },
+                      {
+                        backgroundColor: canReviewTour ? theme.primary : theme.foregroundSecondary,
+                      },
                     ]}
                     activeOpacity={0.8}
                     disabled={!canReviewTour}
