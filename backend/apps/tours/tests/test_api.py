@@ -48,6 +48,7 @@ class TourCreationApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         tour_id = response.data["id"]
         self.assertEqual(response.data["creator"]["id"], self.user.id)
+        self.assertEqual(response.data["generation_source"], Tour.USER)
 
         # 2. Create Tour Steps
         step1_data = {
@@ -93,8 +94,7 @@ class TourCreationApiTests(APITestCase):
         # 4. Verify Data
         tour = Tour.objects.get(pk=tour_id)
         self.assertEqual(tour.status, Tour.PUBLISHED)
-        self.assertFalse(tour.is_ai_generated)
-        self.assertFalse(response.data["is_ai_generated"])
+        self.assertEqual(tour.generation_source, Tour.USER)
         self.assertEqual(tour.steps.count(), 2)
         step1 = tour.steps.get(order=0)
         self.assertEqual(step1.title, "Eiffel Tower")

@@ -9,7 +9,6 @@ from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
     CompassPuzzleDetail,
-    GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
     Puzzle,
     Review,
@@ -614,12 +613,6 @@ class ArPuzzleDetailSerializer(serializers.ModelSerializer):
         fields = ["scene_asset_url", "metadata"]
 
 
-class GyroscopePuzzleDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GyroscopePuzzleDetail
-        fields = ["target_pitch", "target_roll", "target_yaw", "tolerance_degrees"]
-
-
 class CompassPuzzleDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompassPuzzleDetail
@@ -643,6 +636,7 @@ class AdminTourListSerializer(serializers.ModelSerializer):
             "tour_type",
             "difficulty",
             "status",
+            "generation_source",
             "city",
             "country",
             "country_code",
@@ -660,7 +654,6 @@ class AdminPuzzleSerializer(serializers.ModelSerializer):
     trivia_detail = TriviaPuzzleDetailSerializer(read_only=True)
     picture_compare_detail = PictureComparePuzzleDetailSerializer(read_only=True)
     ar_detail = ArPuzzleDetailSerializer(read_only=True)
-    gyroscope_detail = GyroscopePuzzleDetailSerializer(read_only=True)
     compass_detail = CompassPuzzleDetailSerializer(read_only=True)
 
     class Meta:
@@ -677,7 +670,6 @@ class AdminPuzzleSerializer(serializers.ModelSerializer):
             "trivia_detail",
             "picture_compare_detail",
             "ar_detail",
-            "gyroscope_detail",
             "compass_detail",
         ]
 
@@ -743,6 +735,7 @@ class AdminTourDetailSerializer(serializers.ModelSerializer):
             "metrics_calculated",
             "accessibility_rating",
             "status",
+            "generation_source",
             "created_at",
             "updated_at",
             "steps",

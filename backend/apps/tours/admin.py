@@ -4,7 +4,6 @@ from .models import (
     ARModel,
     ArPuzzleDetail,
     CompassPuzzleDetail,
-    GyroscopePuzzleDetail,
     PictureComparePuzzleDetail,
     Puzzle,
     Review,
@@ -59,17 +58,6 @@ class PictureComparePuzzleDetailAdmin(admin.ModelAdmin):
 @admin.register(ArPuzzleDetail)
 class ArPuzzleDetailAdmin(admin.ModelAdmin):
     list_display = ("puzzle", "scene_asset_url")
-
-
-@admin.register(GyroscopePuzzleDetail)
-class GyroscopePuzzleDetailAdmin(admin.ModelAdmin):
-    list_display = (
-        "puzzle",
-        "target_pitch",
-        "target_roll",
-        "target_yaw",
-        "tolerance_degrees",
-    )
 
 
 @admin.register(CompassPuzzleDetail)
