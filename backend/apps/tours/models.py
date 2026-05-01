@@ -43,11 +43,13 @@ class Tour(models.Model):
     ]
 
     DRAFT = "DRAFT"
+    PENDING = "PENDING"
     PUBLISHED = "PUBLISHED"
     ARCHIVED = "ARCHIVED"
 
     STATUS_CHOICES = [
         (DRAFT, "Draft"),
+        (PENDING, "Pending Review"),
         (PUBLISHED, "Published"),
         (ARCHIVED, "Archived"),
     ]

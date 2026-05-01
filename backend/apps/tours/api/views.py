@@ -111,7 +111,7 @@ class TourViewSet(viewsets.ModelViewSet):
         # Default to production-safe behavior when ENV_MODE is unset.
         env_mode = os.getenv("ENV_MODE", "production")
         if env_mode != "development":
-            status = Tour.DRAFT
+            status = Tour.PENDING
         else:
             status = Tour.PUBLISHED
         tour = serializer.save(creator=self.request.user, status=status)

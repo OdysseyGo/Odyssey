@@ -38,6 +38,12 @@
     "remembered": "Ooh, I remembered!",
     "alreadyHaveAccount": "Already have an account? Log In",
     "verify": "Verify",
+    "sendCode": "Send Code",
+    "enterCode": "Enter Reset Code",
+    "otpCode": "Reset Code",
+    "otpCodePlaceholder": "6-digit code",
+    "codeSentSubtitle": "We sent a 6-digit code to {{email}}. Enter it below to reset your password.",
+    "codeSentBanner": "Code sent! Check your inbox (and spam folder).",
     "resetPassword": "Reset Password",
     "updatePassword": "Update Password",
     "cancel": "Cancel",
@@ -81,7 +87,9 @@
       "somethingWentWrong": "Something went wrong",
       "bothFieldsRequired": "Both fields are required",
       "couldNotUpdate": "Could not update password",
-      "termsRequired": "You must agree to the Terms of Use and Privacy Policy"
+      "termsRequired": "You must agree to the Terms of Use and Privacy Policy",
+      "codeRequired": "Please enter the reset code",
+      "invalidCode": "Invalid or expired code. Please try again."
     },
     "userCreated": "User has been created!"
   },
@@ -102,6 +110,7 @@
     "cancel": "Cancel",
     "tabs": {
       "published": "Published",
+      "pending": "Under Review",
       "drafts": "Drafts",
       "aiTours": "AI Tours",
       "archived": "Archived",
@@ -109,6 +118,7 @@
       "tutorials": "Tutorials"
     },
     "emptyPublished": "No published tours yet. Publish a tour to share it with the community!",
+    "emptyPending": "No tours under review. Submit a draft tour and we'll review it soon!",
     "emptyDraft": "No draft tours. Start creating a new tour!",
     "emptyAiTours": "No AI-generated tours yet. Create one to start your showcase!",
     "emptyArchived": "No archived tours.",
