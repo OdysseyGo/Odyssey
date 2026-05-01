@@ -240,7 +240,7 @@ export async function getTour(tourId: number, signal?: AbortSignal): Promise<Tou
   return apiRequest<Tour>({
     method: 'GET',
     url: `/api/tours/${tourId}/`,
-    auth: false, // Public endpoint
+    auth: true, // Sends a token when present so owners can view private AI tours.
     signal,
   });
 }
@@ -349,7 +349,7 @@ export async function getTourSteps(tourId: number, signal?: AbortSignal): Promis
   return apiRequest<TourStep[]>({
     method: 'GET',
     url: `/api/tours/${tourId}/steps/`,
-    auth: false,
+    auth: true,
     signal,
   });
 }
