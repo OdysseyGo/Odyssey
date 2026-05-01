@@ -127,6 +127,15 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
             defaultValue: 'Search countries...',
           })}
           types="(regions)"
+          onClearSelection={() =>
+            onUpdate({
+              country: '',
+              countryCode: '',
+              state: '',
+              stateLatitude: undefined,
+              stateLongitude: undefined,
+            })
+          }
           onSelect={(selectedCountry) =>
             onUpdate({
               country: selectedCountry.value,
@@ -153,6 +162,13 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
           types="(states)"
           countryCode={tourData.countryCode}
           countryName={tourData.country}
+          onClearSelection={() =>
+            onUpdate({
+              state: '',
+              stateLatitude: undefined,
+              stateLongitude: undefined,
+            })
+          }
           onSelect={(selectedState) =>
             onUpdate({
               state: selectedState.value,

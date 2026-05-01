@@ -86,6 +86,7 @@ class Tour(models.Model):
     )
     cover_image = models.ImageField(upload_to="tour_covers/", blank=True, null=True)
     cover_image_attribution = models.TextField(blank=True, null=True)
+    is_ai_generated = models.BooleanField(default=False)
 
     # Advanced Metrics
     total_distance = models.FloatField(

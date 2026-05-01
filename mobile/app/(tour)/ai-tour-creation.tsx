@@ -81,7 +81,12 @@ export default function AITourCreation() {
   };
 
   const isFormValid =
-    formData.country.trim() !== '' && formData.state.trim() !== '' && formData.theme.trim() !== '';
+    formData.country.trim() !== '' &&
+    formData.countryCode.trim() !== '' &&
+    formData.state.trim() !== '' &&
+    Number.isFinite(formData.stateLatitude) &&
+    Number.isFinite(formData.stateLongitude) &&
+    formData.theme.trim() !== '';
 
   const handleGenerate = async () => {
     if (!isFormValid) {
@@ -147,6 +152,15 @@ export default function AITourCreation() {
                 defaultValue: 'Search countries...',
               })}
               types="(regions)"
+              onClearSelection={() =>
+                updateFormData({
+                  country: '',
+                  countryCode: '',
+                  state: '',
+                  stateLatitude: undefined,
+                  stateLongitude: undefined,
+                })
+              }
               onSelect={(selectedCountry) =>
                 updateFormData({
                   country: selectedCountry.value,
