@@ -292,11 +292,11 @@ export default function TourNavigation({
     ]).start(() => setTierPopup(null));
   }, [currentTier]);
 
-  const handleSolve = () => {
+  const handleSolve = useCallback(() => {
     onStepSolved(currentStep.id);
-  };
+  }, [currentStep.id, onStepSolved]);
 
-  const handleLocationConfirm = async () => {
+  const handleLocationConfirm = useCallback(async () => {
     if (!requiresLocation || isLocationConfirmed) return;
 
     try {
@@ -305,7 +305,7 @@ export default function TourNavigation({
     } catch (error) {
       console.error('Failed to get location:', error);
     }
-  };
+  }, [currentStep.id, isLocationConfirmed, onLocationConfirm, requiresLocation]);
 
   const handleOpenDirections = useCallback(
     async (provider: ExternalMapsProvider) => {
