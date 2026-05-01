@@ -240,9 +240,7 @@ export default function AITourCreation() {
               <View style={styles.arToggleRow}>
                 <View style={styles.arToggleLabels}>
                   <Text style={styles.sectionTitle}>{t('aiTour.includeCompass.title')}</Text>
-                  <Text style={styles.sectionSubtitle}>
-                    {t('aiTour.includeCompass.subtitle')}
-                  </Text>
+                  <Text style={styles.sectionSubtitle}>{t('aiTour.includeCompass.subtitle')}</Text>
                 </View>
                 <Switch
                   value={formData.includeCompass}
