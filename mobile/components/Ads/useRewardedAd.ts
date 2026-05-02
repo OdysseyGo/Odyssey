@@ -12,10 +12,19 @@ export function useRewardedAd(placementKey: string) {
   const [status, setStatus] = useState<Status>('idle');
   const rewardedRef = useRef(false);
   const closeResolverRef = useRef<((earned: boolean) => void) | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   const placement = getPlacement(placementKey);
 
+  const cleanupCurrentAd = useCallback(() => {
+    cleanupRef.current?.();
+    cleanupRef.current = null;
+    adRef.current = null;
+  }, []);
+
   const load = useCallback(() => {
+    cleanupCurrentAd();
+
     if (!isReady || !placement || placement.ad_format !== 'REWARDED' || !user) return;
 
     const ad = RewardedAd.createForAdRequest(resolveAdUnitId(placement), {
@@ -47,18 +56,18 @@ export function useRewardedAd(placementKey: string) {
 
     ad.load();
 
-    return () => {
+    cleanupRef.current = () => {
       loadedSub();
       earnedSub();
       closedSub();
       errorSub();
     };
-  }, [isReady, placement, user]);
+  }, [cleanupCurrentAd, isReady, placement, user]);
 
   useEffect(() => {
-    const cleanup = load();
-    return () => cleanup?.();
-  }, [load]);
+    load();
+    return () => cleanupCurrentAd();
+  }, [cleanupCurrentAd, load]);
 
   const show = useCallback(async (): Promise<boolean> => {
     if (!adRef.current || status !== 'loaded') return false;

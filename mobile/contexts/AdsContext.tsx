@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import { usePathname } from 'expo-router';
 import {
   requestTrackingPermissionsAsync,
   getTrackingPermissionsAsync,
@@ -23,14 +24,23 @@ interface AdsContextType extends AdsState {
 const AdsContext = createContext<AdsContextType | undefined>(undefined);
 
 export function AdsProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const [state, setState] = useState<AdsState>({
     isReady: false,
     placements: new Map(),
     user: null,
   });
+  const tokenRef = useRef<string | null>(null);
+  const adsInitializedRef = useRef(false);
+  const isReadyRef = useRef(false);
 
-  const refresh = async () => {
-    const token = await SecureStore.getItemAsync('userToken');
+  useEffect(() => {
+    isReadyRef.current = state.isReady;
+  }, [state.isReady]);
+
+  const refresh = useCallback(async (tokenOverride?: string | null) => {
+    const token =
+      tokenOverride !== undefined ? tokenOverride : await SecureStore.getItemAsync('userToken');
     if (!token) {
       setState({ isReady: true, placements: new Map(), user: null });
       return;
@@ -44,7 +54,36 @@ export function AdsProvider({ children }: { children: ReactNode }) {
       console.warn('AdsContext: failed to fetch config', err);
       setState((s) => ({ ...s, isReady: true }));
     }
-  };
+  }, []);
+
+  const initializeAdsSdk = useCallback(async () => {
+    if (adsInitializedRef.current) return;
+    try {
+      await mobileAds().setRequestConfiguration({
+        maxAdContentRating: MaxAdContentRating.PG,
+        tagForChildDirectedTreatment: false,
+        tagForUnderAgeOfConsent: false,
+      });
+      await mobileAds().initialize();
+      adsInitializedRef.current = true;
+    } catch (err) {
+      console.warn('AdMob init failed', err);
+    }
+  }, []);
+
+  const syncAuthState = useCallback(async () => {
+    const token = await SecureStore.getItemAsync('userToken');
+    if (token === tokenRef.current && isReadyRef.current) return;
+
+    tokenRef.current = token;
+    await refresh(token);
+
+    if (!token) {
+      adsInitializedRef.current = false;
+      return;
+    }
+    await initializeAdsSdk();
+  }, [initializeAdsSdk, refresh]);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,29 +96,19 @@ export function AdsProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      await refresh();
+      await syncAuthState();
       if (cancelled) return;
-
-      const token = await SecureStore.getItemAsync('userToken');
-      if (!token) return;
-
-      try {
-        await mobileAds().setRequestConfiguration({
-          maxAdContentRating: MaxAdContentRating.PG,
-          tagForChildDirectedTreatment: false,
-          tagForUnderAgeOfConsent: false,
-        });
-        await mobileAds().initialize();
-      } catch (err) {
-        console.warn('AdMob init failed', err);
-      }
     };
 
     init();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [syncAuthState]);
+
+  useEffect(() => {
+    syncAuthState();
+  }, [pathname, syncAuthState]);
 
   return (
     <AdsContext.Provider
