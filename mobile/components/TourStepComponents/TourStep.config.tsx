@@ -31,6 +31,7 @@ export interface PictureComparePuzzle {
 export interface OpenEndedPuzzle {
   type: 'open-ended';
   question: string;
+  hint?: string;
 }
 
 export interface ArCodePuzzle {

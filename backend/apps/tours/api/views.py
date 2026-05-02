@@ -204,9 +204,9 @@ class TourViewSet(viewsets.ModelViewSet):
         """Return tours created by the current user, optionally filtered by status."""
         queryset = Tour.objects.filter(creator=request.user)
 
-        status = request.query_params.get("status")
-        if status:
-            queryset = queryset.filter(status=status)
+        tour_status = request.query_params.get("status")
+        if tour_status:
+            queryset = queryset.filter(status=tour_status)
 
         generation_source = request.query_params.get("generation_source")
         if generation_source:
@@ -265,9 +265,9 @@ class TourViewSet(viewsets.ModelViewSet):
         queryset = Tour.objects.filter(id__in=completed_tour_ids)
 
         # Optional status filter (PUBLISHED or ARCHIVED)
-        status = request.query_params.get("status")
-        if status:
-            queryset = queryset.filter(status=status)
+        tour_status = request.query_params.get("status")
+        if tour_status:
+            queryset = queryset.filter(status=tour_status)
 
         queryset = queryset.annotate(average_rating=Avg("reviews__rating")).order_by(
             "-updated_at"

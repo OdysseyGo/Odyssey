@@ -30,7 +30,7 @@ export function useInterstitial(placementKey: string) {
     const loadedSub = ad.addAdEventListener(AdEventType.LOADED, () => {
       loadedRef.current = true;
     });
-    const errorSub = ad.addAdEventListener(AdEventType.ERROR, (err) => {
+    const errorSub = ad.addAdEventListener(AdEventType.ERROR, (err: unknown) => {
       console.warn('Interstitial error', err);
     });
 
@@ -81,7 +81,7 @@ export function useInterstitial(placementKey: string) {
 
         ad.show()
           .then(() => reportImpression(placementKey, uuid()).catch(() => {}))
-          .catch((err) => {
+          .catch((err: unknown) => {
             console.warn('Interstitial show failed', err);
             cleanup();
             loadedRef.current = false;

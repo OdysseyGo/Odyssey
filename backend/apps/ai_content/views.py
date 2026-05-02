@@ -40,13 +40,11 @@ def _run_generation(job_id, payload, user_id):
         user = User.objects.get(pk=user_id)
         job.status = GenerationJob.RUNNING
         job.save(update_fields=["status", "updated_at"])
-        close_old_connections()
 
         def _progress(label):
             GenerationJob.objects.filter(
                 pk=job_id, status=GenerationJob.RUNNING
             ).update(progress_label=label, updated_at=timezone.now())
-            close_old_connections()
 
         service = GeminiService()
         tour = service.generate_tour(
@@ -59,14 +57,18 @@ def _run_generation(job_id, payload, user_id):
             language=payload["language"],
             custom_prompt=payload.get("additional_details", ""),
             include_ar=payload.get("include_ar", False),
+            include_compass=payload.get("include_compass", False),
             creator=user,
             progress_callback=_progress,
         )
+        tour_id = getattr(tour, "pk", None)
+        if tour_id is None:
+            raise ValueError("AI generation did not return a persisted tour.")
         updated = GenerationJob.objects.filter(
             pk=job_id, status=GenerationJob.RUNNING
         ).update(
             status=GenerationJob.SUCCESS,
-            tour=tour,
+            tour_id=tour_id,
             progress_label="",
             updated_at=timezone.now(),
         )
@@ -79,8 +81,8 @@ def _run_generation(job_id, payload, user_id):
             )
     except Exception as e:
         logger.exception("AI generation job %s failed", job_id)
-        GenerationJob.objects.filter(pk=job_id).exclude(
-            status=GenerationJob.CANCELLED
+        GenerationJob.objects.filter(
+            pk=job_id, status__in=[GenerationJob.PENDING, GenerationJob.RUNNING]
         ).update(
             status=GenerationJob.FAILED,
             error=get_generation_error_message(e),
@@ -123,6 +125,8 @@ class GenerateTourView(APIView):
         description="Start an AI tour generation job. Poll /api/ai/jobs/<id>/ for status.",
     )
     def post(self, request):
+        from django.contrib.auth import get_user_model
+
         serializer = GenerateTourRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -148,7 +152,26 @@ class GenerateTourView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
+        User = get_user_model()
         with transaction.atomic():
+            # Serialize generation starts per user to enforce max-active-jobs
+            # consistently under concurrent requests.
+            User.objects.select_for_update().get(pk=request.user.pk)
+            active_job_count = GenerationJob.objects.filter(
+                creator=request.user,
+                status__in=[GenerationJob.PENDING, GenerationJob.RUNNING],
+            ).count()
+            if active_job_count >= max_active_jobs:
+                return Response(
+                    {
+                        "error": (
+                            "You already have a tour generation in progress. "
+                            "Please wait for it to finish before starting another."
+                        )
+                    },
+                    status=status.HTTP_409_CONFLICT,
+                )
+
             if not _consume_ai_slot_grant(request.user):
                 return Response(
                     {
