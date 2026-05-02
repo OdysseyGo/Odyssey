@@ -703,16 +703,16 @@ class TourRewardService:
         awarded_xp = 0
 
         if not progress.xp_awarded:
+            old_level = user.level
             if reward_eligible:
-                old_level = user.level
                 user.xp += progress.total_xp
                 user.level = LevelService.get_level(user.xp)
                 user.tour_count += 1
             if user.level > old_level:
-                for follower in user.followers.all():
+                for follow_obj in user.followers.all():
                     create_notification(
-                        user=follower,
-                        title="Your Friend Leveled Up! 🚀",
+                        user=follow_obj.follower,
+                        title="Your Friend Leveled Up!",
                         body=f"{user.username} just leveled up and reached level {user.level}!",
                         data={
                             "user_id": user.id,

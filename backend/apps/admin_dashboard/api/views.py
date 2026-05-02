@@ -284,9 +284,9 @@ class AdminTourViewSet(ModelViewSet):
             data={"tour_id": tour.id, "type": "tour_approved"},
         )
 
-        for follower in tour.creator.followers.all():
+        for follow_obj in tour.creator.followers.select_related("follower").all():
             create_notification(
-                user=follower,
+                user=follow_obj.follower,
                 title="New Adventure!",
                 body=f"One of your followed user '{tour.creator.username}' published a new tour in {tour.state}.",
                 data={"tour_id": tour.id, "type": "new_tour"},
