@@ -29,13 +29,13 @@ export const REVIEW_STATUS_PILL_COLORS: Record<
   { bg: string; border: string; text: string }
 > = {
   IN_REVIEW: {
-    bg: '#FEF3C7',
-    border: '#F59E0B',
-    text: '#92400E',
+    bg: '#FDE047',
+    border: '#EAB308',
+    text: '#713F12',
   },
   REJECTED: {
-    bg: '#FEE2E2',
+    bg: '#F87171',
     border: '#EF4444',
-    text: '#B91C1C',
+    text: '#7F1D1D',
   },
 };

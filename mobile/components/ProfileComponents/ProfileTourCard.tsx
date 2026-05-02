@@ -26,13 +26,9 @@ export default function ProfileTourCard({ tour, onPress, containerStyle }: Profi
 
   const statusStyle = STATUS_COLORS[tour.status];
   const pendingPillLabel =
-    tour.status === 'PENDING'
-      ? REVIEW_STATUS_PILL_LABELS[tour.review_status ?? 'IN_REVIEW']
-      : null;
+    tour.status === 'PENDING' ? REVIEW_STATUS_PILL_LABELS[tour.review_status ?? 'IN_REVIEW'] : null;
   const pendingPillColors =
-    tour.status === 'PENDING'
-      ? REVIEW_STATUS_PILL_COLORS[tour.review_status ?? 'IN_REVIEW']
-      : null;
+    tour.status === 'PENDING' ? REVIEW_STATUS_PILL_COLORS[tour.review_status ?? 'IN_REVIEW'] : null;
 
   const handlePress = () => {
     if (onPress) {
