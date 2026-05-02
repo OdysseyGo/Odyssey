@@ -127,6 +127,7 @@ function mapApiPuzzleToInternal(apiPuzzle: ApiTour['steps'][0]['puzzle']): Puzzl
     return {
       type: 'multiple-choice',
       question: apiPuzzle.question,
+      hint: apiPuzzle.hint,
       options: triviaOptions.map((option: string, idx: number) => ({
         id: String.fromCharCode(97 + idx), // a, b, c, d
         text: option,
@@ -139,6 +140,7 @@ function mapApiPuzzleToInternal(apiPuzzle: ApiTour['steps'][0]['puzzle']): Puzzl
     return {
       type: 'picture-compare',
       question: apiPuzzle.question,
+      hint: apiPuzzle.hint,
       referenceImageUri: pictureReference,
     };
   }
@@ -156,6 +158,7 @@ function mapApiPuzzleToInternal(apiPuzzle: ApiTour['steps'][0]['puzzle']): Puzzl
     return {
       type: 'ar-code',
       question: apiPuzzle.question,
+      hint: apiPuzzle.hint,
       sceneAssetUrl: apiPuzzle.ar.scene_asset_url,
       secretCode: metadata.secret_code ? String(metadata.secret_code) : undefined,
       anchorPosition:

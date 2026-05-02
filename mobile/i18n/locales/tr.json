@@ -238,6 +238,7 @@
     "duration": "Süre",
     "distance": "Mesafe",
     "distanceUnknown": "Mesafe",
+    "calculatingMetrics": "Hesaplanıyor",
     "difficulty": "Zorluk",
     "loop": "Döngü turu",
     "transport": "Ulaşım gerekli",
@@ -600,18 +601,22 @@
     "missingInfoTitle": "Eksik Bilgi",
     "missingInfoMessage": "Lütfen turunuz için hem bir şehir hem de bir tema girin.",
     "successTitle": "Tur Oluşturuldu! 🎉",
+    "successMessage": "Turunuz keşfedilmeye hazır.",
     "viewTour": "Turu Görüntüle",
     "createAnother": "Başka Bir Tane Oluştur",
     "failedTitle": "Oluşturma Başarısız",
     "failedMessage": "Turunuz oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
+    "cancelledTitle": "Oluşturma İptal Edildi",
+    "cancelledMessage": "Tur oluşturma iptal edildi.",
     "generateButton": "Tur Oluştur",
     "header": {
       "title": "Yapay Zeka ile Oluştur",
       "subtitle": "Hayalinizdeki tur hakkında bize bilgi verin, yapay zeka gerçek konumlar, ilgi çekici hikayeler ve etkileşimli içeriklerle benzersiz bir deneyim tasarlasın."
     },
     "loading": {
-      "title": "Turunuz Oluşturuluyor...",
-      "subtitle": "Yapay zeka sizin için en iyi konumları buluyor ve ilgi çekici içerikler hazırlıyor"
+      "title": "Maceranız Hazırlanıyor...",
+      "subtitle": "Bu genellikle 20–30 saniye sürer",
+      "cancel": "Oluşturmayı iptal et"
     },
     "languageSelector": {
       "title": "İçerik Dili",

@@ -284,3 +284,62 @@ class TourCompletionVisibilityApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("generation_source", response.data["error"])
+
+
+class TourVisibilityApiTests(APITestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            username="owner", email="owner@example.com", password="testpassword123"
+        )
+        self.other_user = User.objects.create_user(
+            username="other", email="other@example.com", password="testpassword123"
+        )
+        self.private_tour = Tour.objects.create(
+            title="Private AI Tour",
+            description="Generated for one user",
+            creator=self.owner,
+            tour_type=Tour.STORY,
+            category="History",
+            difficulty=Tour.EASY,
+            duration_minutes=60,
+            city="Ankara",
+            country="Turkey",
+            country_code="TR",
+            status=Tour.ARCHIVED,
+        )
+
+    def test_owner_can_retrieve_archived_tour(self):
+        self.client.force_authenticate(user=self.owner)
+
+        response = self.client.get(f"/api/tours/{self.private_tour.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], self.private_tour.id)
+
+    def test_anonymous_user_cannot_retrieve_archived_tour(self):
+        response = self.client.get(f"/api/tours/{self.private_tour.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_other_user_cannot_retrieve_archived_tour(self):
+        self.client.force_authenticate(user=self.other_user)
+
+        response = self.client.get(f"/api/tours/{self.private_tour.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_owner_private_tour_is_not_in_public_list(self):
+        self.client.force_authenticate(user=self.owner)
+
+        response = self.client.get("/api/tours/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["results"], [])
+
+    def test_owner_private_tour_is_in_my_tours(self):
+        self.client.force_authenticate(user=self.owner)
+
+        response = self.client.get("/api/tours/my-tours/?status=ARCHIVED")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["results"][0]["id"], self.private_tour.id)

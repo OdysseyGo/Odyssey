@@ -23,6 +23,7 @@ import type { Region } from './TourMap.config';
 import type { UserBadge } from '@/api/profile';
 
 import { deleteTourProgress } from '@/api/tourProgress';
+import { useInterstitial } from '@/components/Ads/useInterstitial';
 
 export default function MapScreen() {
   const theme = useColorTheme();
@@ -47,6 +48,8 @@ export default function MapScreen() {
   const [showEndConfirmModal, setShowEndConfirmModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [finalXP, setFinalXP] = useState<number>(0);
+  const { show: showTourCompleteInterstitial } = useInterstitial('tour_complete_interstitial');
+  const completingTourRef = useRef(false);
   const [completionBadges, setCompletionBadges] = useState<UserBadge[]>([]);
 
   // Area search state
@@ -159,12 +162,19 @@ export default function MapScreen() {
   }, [tour, highestStepIndex, showCompleteModal]);
 
   // Active tour handlers
-  const handleTourComplete = useCallback(async (awardedXP: number, awardedBadges?: UserBadge[]) => {
-    // Backend is source of truth: replay completions return awarded_xp=0.
-    setFinalXP(Math.max(0, awardedXP ?? 0));
-    setCompletionBadges(awardedBadges ?? []);
-    setShowCompleteModal(true);
-  }, []);
+  const handleTourComplete = useCallback(
+    async (awardedXP: number, awardedBadges?: UserBadge[]) => {
+      if (completingTourRef.current) return;
+      completingTourRef.current = true;
+
+      await showTourCompleteInterstitial();
+      // Backend is source of truth: replay completions return awarded_xp=0.
+      setFinalXP(Math.max(0, awardedXP ?? 0));
+      setCompletionBadges(awardedBadges ?? []);
+      setShowCompleteModal(true);
+    },
+    [showTourCompleteInterstitial]
+  );
 
   const handleEndTourPress = useCallback(() => setShowEndConfirmModal(true), []);
 
@@ -183,6 +193,7 @@ export default function MapScreen() {
 
   const handleCloseCompleteModal = useCallback(() => {
     setShowCompleteModal(false);
+    completingTourRef.current = false;
     endTour();
   }, [endTour]);
 

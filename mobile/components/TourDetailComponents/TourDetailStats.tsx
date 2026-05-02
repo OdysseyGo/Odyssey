@@ -33,6 +33,12 @@ export default function TourDetailStats({
 
   const difficultyColor = getDifficultyColor(difficulty, theme);
   const distanceUnknown = distance === '—';
+  const isCalculatingMetrics = metricsCalculated === false && distanceUnknown;
+  const distanceLabel = isCalculatingMetrics
+    ? t('tourDetail.calculatingMetrics')
+    : distanceUnknown
+      ? t('tourDetail.distanceUnknown')
+      : t('tourDetail.distance');
 
   const badges: Badge[] = [];
   if (isCircular) {
@@ -87,11 +93,9 @@ export default function TourDetailStats({
             style={styles.statIcon}
           />
           <Text style={[styles.statValue, distanceUnknown && { color: colors.subText }]}>
-            {distance}
+            {isCalculatingMetrics ? '...' : distance}
           </Text>
-          <Text style={styles.statLabel}>
-            {distanceUnknown ? t('tourDetail.distanceUnknown') : t('tourDetail.distance')}
-          </Text>
+          <Text style={styles.statLabel}>{distanceLabel}</Text>
         </View>
 
         <View

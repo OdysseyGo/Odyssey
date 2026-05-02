@@ -28,6 +28,8 @@ export default {
         NSCameraUsageDescription: 'Odyssey needs camera access for AR exploration.',
         NSLocationWhenInUseUsageDescription: 'Odyssey uses location to persist AR objects.',
         NSPhotoLibraryUsageDescription: 'Allow saving AR captures.',
+        NSUserTrackingUsageDescription:
+          'Odyssey uses tracking to show ads relevant to your interests. You can decline and still use the app.',
       },
     },
     android: {
@@ -49,6 +51,23 @@ export default {
           newArchEnabled: true,
           photosPermission: 'Allow access to photos to save AR captures.',
           cameraPermission: 'Allow access to the camera for the AR experience.',
+        },
+      ],
+      [
+        'react-native-google-mobile-ads',
+        {
+          androidAppId:
+            process.env.ADMOB_APP_ID_ANDROID || 'ca-app-pub-3940256099942544~3347511713',
+          iosAppId: process.env.ADMOB_APP_ID_IOS || 'ca-app-pub-3940256099942544~1458002511',
+          userTrackingUsageDescription:
+            'Odyssey uses tracking to show ads relevant to your interests.',
+        },
+      ],
+      [
+        'expo-tracking-transparency',
+        {
+          userTrackingPermissionText:
+            'Odyssey uses tracking to show ads relevant to your interests.',
         },
       ],
     ],

@@ -44,6 +44,7 @@ import {
 } from '@/api/tourProgress';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import SquareCameraOverlayCapture from '@/components/common/SquareCameraOverlayCapture';
+import RewardedHintReveal from '@/components/Ads/RewardedHintReveal';
 import {
   circularDeltaDegrees,
   headingFromSensors,
@@ -1499,6 +1500,10 @@ function PuzzleStepView({ step, isSolved, isFinished, onSolve, onAnswered }: Puz
           stepId={step.id}
         />
       )}
+
+      {!isSolved && step.puzzle.hint ? (
+        <RewardedHintReveal hint={step.puzzle.hint} stepId={step.id} />
+      ) : null}
     </ScrollView>
   );
 }

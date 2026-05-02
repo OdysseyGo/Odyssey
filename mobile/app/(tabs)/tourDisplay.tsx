@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TourScrollerComp from '@/components/TourComponents/TourScrollerComp';
 import FeaturedTourCarousel from '@/components/TourComponents/FeaturedTourCarousel';
@@ -26,6 +27,7 @@ import Colors from '@/constants/Colors';
 import CreateTourButton from '@/components/TourCreation/CreateTourButton';
 import { useTranslation } from 'react-i18next';
 import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
+import { TOUR_LIST_REFRESH_REQUESTED_KEY } from '@/constants/StorageKeys';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -325,6 +327,7 @@ function TourDisplayContent() {
         if (signal?.aborted) return;
         setError(err.message || 'Failed to load tours');
       } finally {
+        if (signal?.aborted) return;
         setLoading(false);
         setRefreshing(false);
       }
@@ -335,7 +338,19 @@ function TourDisplayContent() {
   useFocusEffect(
     useCallback(() => {
       const controller = new AbortController();
-      fetchTours(false, controller.signal);
+      const refreshOnFocus = async () => {
+        let refreshRequested = false;
+        try {
+          refreshRequested = Boolean(await AsyncStorage.getItem(TOUR_LIST_REFRESH_REQUESTED_KEY));
+          if (refreshRequested) {
+            await AsyncStorage.removeItem(TOUR_LIST_REFRESH_REQUESTED_KEY);
+          }
+        } catch {
+          refreshRequested = false;
+        }
+        fetchTours(refreshRequested, controller.signal);
+      };
+      refreshOnFocus();
       return () => controller.abort();
     }, [fetchTours])
   );

@@ -238,6 +238,7 @@
     "duration": "Duration",
     "distance": "Distance",
     "distanceUnknown": "Distance",
+    "calculatingMetrics": "Calculating",
     "difficulty": "Difficulty",
     "loop": "Loop tour",
     "transport": "Transport needed",
@@ -600,18 +601,22 @@
     "missingInfoTitle": "Missing Information",
     "missingInfoMessage": "Please provide both a state and a theme for your tour.",
     "successTitle": "Tour Created! 🎉",
+    "successMessage": "Your tour is ready to explore.",
     "viewTour": "View Tour",
     "createAnother": "Create Another",
     "failedTitle": "Generation Failed",
     "failedMessage": "Something went wrong while generating your tour. Please try again.",
+    "cancelledTitle": "Generation Cancelled",
+    "cancelledMessage": "Tour generation was cancelled.",
     "generateButton": "Generate Tour",
     "header": {
       "title": "Create with AI",
       "subtitle": "Tell us about your dream tour and let AI craft a unique experience with real locations, engaging stories, and interactive content."
     },
     "loading": {
-      "title": "Creating Your Tour...",
-      "subtitle": "AI is finding the best locations and crafting engaging content for you"
+      "title": "Crafting Your Adventure...",
+      "subtitle": "This usually takes about 20–30 seconds",
+      "cancel": "Cancel generation"
     },
     "languageSelector": {
       "title": "Content Language",

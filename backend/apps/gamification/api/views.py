@@ -493,6 +493,21 @@ class TourProgressViewSet(
         if progress.status == TourProgress.COMPLETED:
             return Response({"error": "Tour is already completed"}, status=400)
 
+        used_ad_skip = False
+        if request.data.get("use_ad_skip"):
+            used_ad_skip = self._consume_hint_grant(request.user)
+            if not used_ad_skip:
+                return Response(
+                    {
+                        "error": (
+                            "No unconsumed HINT reward available. "
+                            "Watch a rewarded ad first or wait a few seconds for "
+                            "verification."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         result = self._advance_progress(
             progress=progress,
             user=request.user,
@@ -505,6 +520,24 @@ class TourProgressViewSet(
         if result.get("status_code"):
             return Response({"error": result["error"]}, status=result["status_code"])
         return Response(result)
+
+    @staticmethod
+    def _consume_hint_grant(user):
+        from apps.ads.models import RewardedAdGrant
+        from apps.ads.services import reward_service
+
+        grant = (
+            RewardedAdGrant.objects.filter(
+                user=user,
+                reward_type=RewardedAdGrant.HINT,
+                consumed_at__isnull=True,
+            )
+            .order_by("-granted_at")
+            .first()
+        )
+        if grant is None:
+            return False
+        return reward_service.consume(grant, context={"source": "skip_step"})
 
     @action(detail=True, methods=["post"], url_path="submit-picture-compare")
     def submit_picture_compare(self, request, pk=None):

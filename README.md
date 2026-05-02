@@ -220,3 +220,45 @@ Follow the steps below to configure S3 for your environment:
    ```
 
    The `boto3` and `django-storages` packages (listed in `backend/requirements/base.txt`) will be installed automatically during the Docker build. Once running, any image uploaded through the API (e.g., tour cover images) will be stored in your S3 bucket and served via `https://<bucket>.s3.amazonaws.com/`.
+
+#### Advertisements (Google AdMob)
+
+Odyssey shows banner, interstitial, and rewarded ads via Google AdMob. Rewarded ads are verified server-to-server with AdMob Server-Side Verification (SSV) and grant **credits**, **free AI tour slots**, **puzzle hints/skips**, or **tour revives** (the revive flow is reserved for a future feature; the backend ledger is ready).
+
+Backend lives in `backend/apps/ads/` (mounted at `/api/ads/`). Mobile lives in `mobile/contexts/AdsContext.tsx` and `mobile/components/Ads/`.
+
+1. **Add AdMob app IDs to `.env`** (use Google's published test IDs for dev — they're already wired as fallbacks):
+
+   ```dotenv
+   ADMOB_APP_ID_IOS=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
+   ADMOB_APP_ID_ANDROID=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
+   ```
+
+2. **Seed `AdPlacement` rows** via Django admin (`http://localhost:8000/admin/` → Ads → Ad placements). At minimum:
+
+   | key | ad_format | reward_type | reward_amount |
+   |---|---|---|---|
+   | `profile_banner` | BANNER | NONE | 0 |
+   | `tour_start_interstitial` | INTERSTITIAL | NONE | 0 |
+   | `tour_complete_interstitial` | INTERSTITIAL | NONE | 0 |
+   | `rewarded_credits` | REWARDED | CREDITS | 50 |
+   | `rewarded_ai_slot` | REWARDED | AI_SLOT | 1 |
+   | `rewarded_hint` | REWARDED | HINT | 1 |
+   | `rewarded_hint_reveal` | REWARDED | HINT | 1 |
+
+   Leave `ad_unit_id_ios`/`ad_unit_id_android` blank in development — the mobile app falls back to AdMob's test ad unit IDs whenever `__DEV__` is true. Set real ad unit IDs only for the production build.
+
+3. **Configure SSV in AdMob.** In the AdMob console, under each rewarded ad unit's settings, set the SSV callback URL to:
+
+   ```
+   https://<your-backend-host>/api/ads/rewards/ssv/
+   ```
+
+   No shared secret is needed — the endpoint validates Google's ECDSA signature against `https://www.gstatic.com/admob/reward/verifier-keys.json`.
+
+4. **EAS Build is required for testing on device.** Expo Go cannot host the AdMob native module. Use `npx eas-cli build --profile development --platform ios` (or `--platform android`) and install the build on a device.
+
+5. **App Store compliance notes:**
+   - The ATT (App Tracking Transparency) prompt is shown on first iOS launch via `expo-tracking-transparency`. The `NSUserTrackingUsageDescription` string is set in `mobile/app.config.js`.
+   - Ads are deliberately **not** shown during active walking navigation (a known Apple rejection vector).
+   - Before submission, declare AdMob's data collection (Identifiers, Usage Data, Diagnostics) in App Store Connect's privacy nutrition labels.

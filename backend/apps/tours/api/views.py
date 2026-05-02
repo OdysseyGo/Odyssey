@@ -1,7 +1,7 @@
 import os
 
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db.models import Avg, OuterRef, Subquery
+from django.db.models import Avg, OuterRef, Q, Subquery
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -41,6 +41,15 @@ from .serializers import (
 )
 
 MAX_TOUR_STEPS = 150
+
+
+def visible_tours_for_user(user):
+    queryset = Tour.objects.all()
+    if getattr(user, "is_staff", False):
+        return queryset
+    if getattr(user, "is_authenticated", False):
+        return queryset.filter(Q(status=Tour.PUBLISHED) | Q(creator=user))
+    return queryset.filter(status=Tour.PUBLISHED)
 
 
 @api_view(["GET"])
@@ -101,7 +110,12 @@ class TourViewSet(viewsets.ModelViewSet):
         if creator:
             queryset = queryset.filter(creator_id=creator)
 
-        # If not creator/staff, only show published tours
+        if self.action == "retrieve":
+            queryset = queryset.filter(
+                pk__in=visible_tours_for_user(self.request.user).values("pk")
+            )
+
+        # Public lists stay public-only; owner private tours are available via my-tours.
         if self.action == "list" and not self.request.user.is_staff:
             queryset = queryset.filter(status=Tour.PUBLISHED)
 
@@ -190,9 +204,9 @@ class TourViewSet(viewsets.ModelViewSet):
         """Return tours created by the current user, optionally filtered by status."""
         queryset = Tour.objects.filter(creator=request.user)
 
-        status = request.query_params.get("status")
-        if status:
-            queryset = queryset.filter(status=status)
+        tour_status = request.query_params.get("status")
+        if tour_status:
+            queryset = queryset.filter(status=tour_status)
 
         generation_source = request.query_params.get("generation_source")
         if generation_source:
@@ -251,9 +265,9 @@ class TourViewSet(viewsets.ModelViewSet):
         queryset = Tour.objects.filter(id__in=completed_tour_ids)
 
         # Optional status filter (PUBLISHED or ARCHIVED)
-        status = request.query_params.get("status")
-        if status:
-            queryset = queryset.filter(status=status)
+        tour_status = request.query_params.get("status")
+        if tour_status:
+            queryset = queryset.filter(status=tour_status)
 
         queryset = queryset.annotate(average_rating=Avg("reviews__rating")).order_by(
             "-updated_at"
@@ -273,7 +287,10 @@ class TourStepViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        return TourStep.objects.filter(tour_id=self.kwargs["tour_pk"]).order_by("order")
+        visible_tour_ids = visible_tours_for_user(self.request.user).values("pk")
+        return TourStep.objects.filter(
+            tour_id=self.kwargs["tour_pk"], tour_id__in=visible_tour_ids
+        ).order_by("order")
 
     def perform_create(self, serializer):
         tour_id = self.kwargs["tour_pk"]

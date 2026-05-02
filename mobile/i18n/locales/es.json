@@ -228,6 +228,7 @@
     "duration": "Duración",
     "distance": "Distancia",
     "distanceUnknown": "Distancia",
+    "calculatingMetrics": "Calculando",
     "difficulty": "Dificultad",
     "loop": "Tour circular",
     "transport": "Transporte necesario",
@@ -590,18 +591,22 @@
     "missingInfoTitle": "Falta Información",
     "missingInfoMessage": "Por favor, proporciona tanto un estado como un tema para tu tour.",
     "successTitle": "¡Tour Creado! 🎉",
+    "successMessage": "Tu tour está listo para explorar.",
     "viewTour": "Ver Tour",
     "createAnother": "Crear Otro",
     "failedTitle": "Error de Generación",
     "failedMessage": "Algo salió mal al generar tu tour. Por favor, inténtalo de nuevo.",
+    "cancelledTitle": "Generación Cancelada",
+    "cancelledMessage": "La generación del tour fue cancelada.",
     "generateButton": "Generar Tour",
     "header": {
       "title": "Crear con IA",
       "subtitle": "Cuéntanos sobre tu tour soñado y deja que la IA cree una experiencia única con ubicaciones reales, historias atractivas y contenido interactivo."
     },
     "loading": {
-      "title": "Creando tu Tour...",
-      "subtitle": "La IA está buscando las mejores ubicaciones y elaborando contenido atractivo para ti"
+      "title": "Creando tu Aventura...",
+      "subtitle": "Esto suele tardar unos 20–30 segundos",
+      "cancel": "Cancelar generación"
     },
     "languageSelector": {
       "title": "Idioma del Contenido",

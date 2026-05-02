@@ -404,6 +404,9 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
   });
 
   const refreshProfile = useCallback(async () => {
+    setLoading(true);
+    setFetchError(false);
+
     const token = await getAccessToken();
 
     if (!token) {
@@ -414,7 +417,6 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
     }
 
     setHasToken(true);
-    setFetchError(false);
     try {
       const [user, badgesResponse, levelData] = await Promise.all([
         getMe(),
@@ -449,7 +451,7 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
       const hasData = lastRefreshed.current > 0;
       const isStale = now - lastRefreshed.current > 30_000;
       const forceRefresh = consumeProfileNeedsRefresh();
-      if (!hasData) setLoading(true);
+      if (hasData) setFetchError(false);
       if (!hasData || isStale || forceRefresh) refreshProfile();
     }, [retryKey])
   );
@@ -491,7 +493,7 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
 
   // ─── Error ────────────────────────────────────────────
 
-  if (fetchError || !curUser) {
+  if (!curUser) {
     return (
       <View
         style={[errorStyles.root, { backgroundColor: theme.background, paddingTop: insets.top }]}

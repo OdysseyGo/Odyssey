@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from .models import GenerationJob
+
 AI_TOUR_CATEGORIES = (
     "History",
     "Nature",
@@ -70,11 +72,34 @@ class GenerateTourRequestSerializer(serializers.Serializer):
             "asking the user to face a real landmark or cardinal direction fits."
         ),
     )
+    use_ad_slot = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text=(
+            "If true, consume the user's most recent unconsumed AI_SLOT "
+            "rewarded-ad grant instead of charging credits."
+        ),
+    )
 
 
-class GenerateTourResponseSerializer(serializers.Serializer):
-    """Serializer for AI tour generation response."""
+class GenerationJobAcceptedSerializer(serializers.Serializer):
+    job_id = serializers.UUIDField()
+    status = serializers.CharField()
 
-    tour_id = serializers.IntegerField()
-    title = serializers.CharField()
-    message = serializers.CharField()
+
+class GenerationJobSerializer(serializers.ModelSerializer):
+    job_id = serializers.UUIDField(source="id", read_only=True)
+    tour_id = serializers.IntegerField(read_only=True, allow_null=True)
+
+    class Meta:
+        model = GenerationJob
+        fields = [
+            "job_id",
+            "status",
+            "progress_label",
+            "tour_id",
+            "error",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields

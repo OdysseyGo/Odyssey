@@ -433,7 +433,7 @@ export async function getTourSteps(tourId: number, signal?: AbortSignal): Promis
   return apiRequest<TourStep[]>({
     method: 'GET',
     url: `/api/tours/${tourId}/steps/`,
-    auth: false,
+    auth: true,
     signal,
   });
 }
