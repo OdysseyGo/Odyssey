@@ -268,3 +268,19 @@ class TourCompletionVisibilityApiTests(APITestCase):
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["id"], self.tour.id)
         self.assertEqual(response.data["results"][0]["generation_source"], Tour.AI)
+
+    def test_my_tours_rejects_invalid_is_ai_generated_filter(self):
+        self.client.force_authenticate(user=self.creator)
+        response = self.client.get("/api/tours/my-tours/", {"is_ai_generated": "maybe"})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("is_ai_generated", response.data["error"])
+
+    def test_my_tours_rejects_invalid_generation_source_filter(self):
+        self.client.force_authenticate(user=self.creator)
+        response = self.client.get(
+            "/api/tours/my-tours/", {"generation_source": "LEGACY"}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("generation_source", response.data["error"])

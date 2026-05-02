@@ -62,6 +62,14 @@ class GenerateTourRequestSerializer(serializers.Serializer):
             "appropriate, drawn from the active ARModel catalog."
         ),
     )
+    include_compass = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text=(
+            "When true, the AI may add COMPASS (haptic) puzzles on steps where "
+            "asking the user to face a real landmark or cardinal direction fits."
+        ),
+    )
 
 
 class GenerateTourResponseSerializer(serializers.Serializer):
