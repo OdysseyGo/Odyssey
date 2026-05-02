@@ -1,6 +1,9 @@
+import { sanitizeMultiLineText, sanitizeSingleLineText } from '@/utils/inputSanitizers';
+
 export type PuzzleType = 'TRIVIA' | 'OPEN_ENDED' | 'AR' | 'PICTURE_COMPARE' | 'COMPASS';
 
 export const TOUR_TEXT_FIELD_MAX_LENGTH = 255;
+export const TOUR_STEPS_MAX_COUNT = 150;
 
 export type ARAnchorPosition = {
   x: number;
@@ -137,7 +140,8 @@ export const createNewLocation = (
 });
 
 export const isPuzzleValid = (puzzle?: Puzzle): boolean => {
-  if (!puzzle?.question.trim()) {
+  const normalizedQuestion = sanitizeMultiLineText(puzzle?.question ?? '').trim();
+  if (!puzzle || !normalizedQuestion) {
     return false;
   }
 
@@ -146,8 +150,11 @@ export const isPuzzleValid = (puzzle?: Puzzle): boolean => {
   }
 
   if (puzzle.puzzle_type === 'TRIVIA') {
-    const options = puzzle.options.map((option) => option.trim()).filter(Boolean);
-    return options.length >= 2 && options.includes(puzzle.correctAnswer.trim());
+    const options = puzzle.options
+      .map((option) => sanitizeSingleLineText(option).trim())
+      .filter(Boolean);
+    const normalizedCorrectAnswer = sanitizeSingleLineText(puzzle.correctAnswer).trim();
+    return options.length >= 2 && options.includes(normalizedCorrectAnswer);
   }
 
   if (puzzle.puzzle_type === 'OPEN_ENDED') {
@@ -170,7 +177,9 @@ export const doesLocationMeetTourRequirements = (
   location: Pick<TourLocation, 'title' | 'story' | 'puzzle'>,
   tourType: TourCreationData['tourType']
 ): boolean => {
-  const hasCoreContent = location.title.trim().length > 0 && location.story.trim().length > 0;
+  const hasCoreContent =
+    sanitizeSingleLineText(location.title).trim().length > 0 &&
+    sanitizeMultiLineText(location.story).trim().length > 0;
 
   if (!hasCoreContent) {
     return false;

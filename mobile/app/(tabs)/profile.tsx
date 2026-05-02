@@ -554,6 +554,8 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
     name: userBadge.badge.name,
     code: userBadge.badge.code,
     description: userBadge.badge.description,
+    icon: userBadge.badge.icon,
+    criteria: userBadge.badge.criteria,
     unlocked: true,
     city: userBadge.city,
     countryCode: userBadge.country_code,

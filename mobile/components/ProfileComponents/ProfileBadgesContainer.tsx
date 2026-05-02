@@ -21,6 +21,8 @@ const TIER_GRADIENTS: Record<BadgeTier, readonly [string, string, string]> = {
   xp1: ['#eaf2ff', '#93c5fd', '#2563eb'],
   xp2: ['#e8fff0', '#86efac', '#16a34a'],
   xp3: ['#f2edff', '#c4b5fd', '#7c3aed'],
+  platinum: ['#effbff', '#7dd3fc', '#0369a1'],
+  diamond: ['#ecfeff', '#67e8f9', '#0e7490'],
   neutral: ['#f8fafc', '#e2e8f0', '#94a3b8'],
 };
 
@@ -52,7 +54,7 @@ export default function ProfileBadgesContainer({
   const { t } = useTranslation();
   const [selectedBadge, setSelectedBadge] = useState<BadgeType | null>(null);
 
-  const selectedBadgeTier = getBadgeTier(selectedBadge?.code);
+  const selectedBadgeTier = getBadgeTier(selectedBadge?.code, selectedBadge?.criteria);
   const selectedTierPalette = BADGE_TIER_PALETTE[selectedBadgeTier];
   const selectedTierGradients = TIER_GRADIENTS[selectedBadgeTier];
   const selectedAccentTextColor = selectedTierPalette.text;
@@ -114,6 +116,8 @@ export default function ProfileBadgesContainer({
           >
             <HexBadge
               code={badge.code}
+              badgeCriteria={badge.criteria}
+              iconUrl={badge.icon}
               city={badge.city}
               countryCode={badge.countryCode}
               fallbackLabel={badge.name}
@@ -172,6 +176,8 @@ export default function ProfileBadgesContainer({
                 <View style={styles.detailsBadgeShell}>
                   <HexBadge
                     code={selectedBadge.code}
+                    badgeCriteria={selectedBadge.criteria}
+                    iconUrl={selectedBadge.icon}
                     city={selectedBadge.city}
                     countryCode={selectedBadge.countryCode}
                     fallbackLabel={selectedBadge.name}

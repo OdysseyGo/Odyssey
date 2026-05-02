@@ -13,6 +13,7 @@ export type TourTab = {
 
 export const TOUR_TABS: TourTab[] = [
   { key: 'PUBLISHED', label: 'profile.tabs.published' },
+  { key: 'PENDING', label: 'profile.tabs.pending' },
   { key: 'DRAFT', label: 'profile.tabs.drafts' },
   { key: 'AI', label: 'profile.tabs.aiTours' },
 ];

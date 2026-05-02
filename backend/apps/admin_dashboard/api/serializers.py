@@ -48,7 +48,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
 class AdminBadgeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Badge
-        fields = ["id", "code", "name", "description"]
+        fields = ["id", "code", "name", "description", "icon", "criteria"]
 
 
 class AdminUserBadgeSerializer(serializers.ModelSerializer):
@@ -349,8 +349,43 @@ class BadgeVisualBundleSerializer(serializers.Serializer):
     badges = serializers.SerializerMethodField()
 
     def get_badges(self, _obj):
-        badges = Badge.objects.order_by("id").values("id", "code", "name")
-        return list(badges)
+        badge_codes = self.context.get("badge_codes")
+        badges = Badge.objects.order_by("id")
+        if badge_codes is not None:
+            badges = badges.filter(code__in=badge_codes)
+        return [
+            {
+                "id": badge.id,
+                "code": badge.code,
+                "name": badge.name,
+                "criteria": badge.criteria or {},
+                "icon": badge.icon.url if badge.icon else "",
+            }
+            for badge in badges
+        ]
+
+
+class GameBadgeVisualTypeSerializer(serializers.Serializer):
+    type_key = serializers.CharField()
+    layout = serializers.JSONField(required=True)
+    tiers = serializers.JSONField(required=True)
+
+    def validate_type_key(self, value):
+        normalized = (value or "").strip().upper()
+        if not normalized:
+            raise serializers.ValidationError("type_key is required.")
+        return normalized
+
+    def validate_layout(self, value):
+        return _validate_game_badge_layout_config(value)
+
+    def validate_tiers(self, value):
+        return _validate_game_badge_tiers(value)
+
+
+class GameBadgeVisualBundleSerializer(serializers.Serializer):
+    items = serializers.JSONField()
+    badges = serializers.JSONField()
 
 
 def _validate_badge_visual_config(config, *, partial=False):
@@ -381,6 +416,20 @@ def _validate_badge_visual_config(config, *, partial=False):
             _validate_number(
                 "flag.rotation_deg", config["flag"]["rotation_deg"], -180, 180
             )
+
+    if "image" in config and isinstance(config["image"], dict):
+        if "source" in config["image"]:
+            source = config["image"]["source"]
+            if source not in {"flag", "png"}:
+                raise serializers.ValidationError(
+                    {"image.source": "must be either 'flag' or 'png'"}
+                )
+        if "asset_url" in config["image"]:
+            asset_url = config["image"]["asset_url"]
+            if not isinstance(asset_url, str):
+                raise serializers.ValidationError(
+                    {"image.asset_url": "must be a string"}
+                )
 
     if "text" in config and isinstance(config["text"], dict):
         if "x" in config["text"]:
@@ -498,6 +547,58 @@ def _validate_badge_visual_config(config, *, partial=False):
             )
 
     return config
+
+
+def _validate_game_badge_layout_config(config):
+    if not isinstance(config, dict):
+        raise serializers.ValidationError("layout must be an object.")
+    allowed_top = {"hex", "flag", "image", "text", "text_plate"}
+    invalid_keys = set(config.keys()) - allowed_top
+    if invalid_keys:
+        raise serializers.ValidationError(
+            f"Unsupported layout keys: {sorted(invalid_keys)}"
+        )
+    _validate_badge_visual_config(config, partial=True)
+    return config
+
+
+def _validate_game_badge_tiers(tiers):
+    if not isinstance(tiers, dict):
+        raise serializers.ValidationError("tiers must be an object.")
+    allowed_keys = {"tier1", "tier2", "tier3", "tier4", "tier5"}
+    invalid_keys = set(tiers.keys()) - allowed_keys
+    if invalid_keys:
+        raise serializers.ValidationError(
+            f"Unsupported tier keys: {sorted(invalid_keys)}"
+        )
+    allowed_colors = {
+        "outer_fill",
+        "inner_fill",
+        "border",
+        "text",
+        "border_color",
+        "inner_border_color",
+        "frame_fill_top",
+        "frame_fill_bottom",
+        "fill_top",
+        "fill_bottom",
+        "frame_fill_opacity",
+        "fill_opacity",
+        "text_plate_fill",
+        "text_plate_fill_opacity",
+        "text_plate_stroke",
+        "text_plate_stroke_opacity",
+        "text_plate_stroke_width",
+    }
+    for tier, palette in tiers.items():
+        if not isinstance(palette, dict):
+            raise serializers.ValidationError({tier: "must be an object."})
+        unknown = set(palette.keys()) - allowed_colors
+        if unknown:
+            raise serializers.ValidationError(
+                {tier: f"Unsupported keys: {sorted(unknown)}"}
+            )
+    return tiers
 
 
 class AdminARModelSerializer(serializers.ModelSerializer):
@@ -854,6 +955,7 @@ class ReportSerializer(serializers.ModelSerializer):
             "reporter_username",
             "content_type",
             "content_id",
+            "category",
             "reason",
             "status",
             "admin_notes",
@@ -867,11 +969,21 @@ class ReportSerializer(serializers.ModelSerializer):
 class ReportCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
-        fields = ["content_type", "content_id", "reason"]
+        fields = ["content_type", "content_id", "category", "reason"]
+        extra_kwargs = {
+            "reason": {"required": False, "allow_blank": True},
+        }
 
     def validate(self, data):
         content_type = data["content_type"]
         content_id = data["content_id"]
+        category = data.get("category", Report.OTHER)
+        reason = data.get("reason", "")
+
+        if category == Report.OTHER and not reason.strip():
+            raise serializers.ValidationError(
+                {"reason": "Please describe the issue when selecting Other."}
+            )
 
         model_map = {
             Report.TOUR: Tour,
@@ -902,6 +1014,7 @@ class ReportActionSerializer(serializers.Serializer):
     action = serializers.ChoiceField(choices=ACTION_CHOICES)
     admin_notes = serializers.CharField(required=False, default="")
     ban_reason = serializers.CharField(required=False, default="Violation of terms")
+    ban_expires_at = serializers.DateTimeField(required=False, allow_null=True)
 
 
 class BanRecordSerializer(serializers.ModelSerializer):

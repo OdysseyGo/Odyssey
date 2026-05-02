@@ -51,6 +51,8 @@ export default function ProfileToursContainer(_props: ProfileToursContainerProps
     switch (activeTab) {
       case 'PUBLISHED':
         return t('profile.emptyPublished');
+      case 'PENDING':
+        return t('profile.emptyPending');
       case 'DRAFT':
         return t('profile.emptyDraft');
       case 'AI':

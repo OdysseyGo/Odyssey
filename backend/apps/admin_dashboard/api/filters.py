@@ -49,8 +49,9 @@ class AdminTourFilter(filters.FilterSet):
 class ReportFilter(filters.FilterSet):
     status = filters.ChoiceFilter(choices=Report.STATUS_CHOICES)
     content_type = filters.ChoiceFilter(choices=Report.CONTENT_TYPE_CHOICES)
+    category = filters.ChoiceFilter(choices=Report.CATEGORY_CHOICES)
     created_after = filters.DateTimeFilter(field_name="created_at", lookup_expr="gte")
 
     class Meta:
         model = Report
-        fields = ["status", "content_type"]
+        fields = ["status", "content_type", "category"]
