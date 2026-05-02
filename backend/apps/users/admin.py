@@ -57,10 +57,15 @@ class CustomUserAdmin(UserAdmin):
         "is_staff",
     )
     list_filter = ("user_type", "is_staff", "is_superuser", "groups")
+    readonly_fields = ("terms_accepted_at", "terms_version")
     fieldsets = UserAdmin.fieldsets + (
         (
             "Extra Fields",
             {"fields": ("user_type", "xp", "level", "country", "tour_count", "rating")},
+        ),
+        (
+            "Legal",
+            {"fields": ("terms_accepted_at", "terms_version")},
         ),
     )
     inlines = (UserBadgeInline, UserBadgeHistoryInline)

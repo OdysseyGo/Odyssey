@@ -42,14 +42,20 @@ class Tour(models.Model):
         (HARD, "Hard"),
     ]
 
-    DRAFT = "DRAFT"
+    PENDING = "PENDING"
     PUBLISHED = "PUBLISHED"
     ARCHIVED = "ARCHIVED"
 
     STATUS_CHOICES = [
-        (DRAFT, "Draft"),
+        (PENDING, "Pending"),
         (PUBLISHED, "Published"),
         (ARCHIVED, "Archived"),
+    ]
+    IN_REVIEW = "IN_REVIEW"
+    REJECTED = "REJECTED"
+    REVIEW_STATUS_CHOICES = [
+        (IN_REVIEW, "In Review"),
+        (REJECTED, "Rejected"),
     ]
 
     USER = "USER"
@@ -124,7 +130,13 @@ class Tour(models.Model):
         help_text="1-10 rating. 10=Most Accessible (Flat, Short). 1=Least (Steep, Long, Complex)",
     )
 
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=DRAFT)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    review_status = models.CharField(
+        max_length=20,
+        choices=REVIEW_STATUS_CHOICES,
+        null=True,
+        blank=True,
+    )
     generation_source = models.CharField(
         max_length=10,
         choices=GENERATION_SOURCE_CHOICES,
@@ -210,6 +222,7 @@ class ARModel(models.Model):
 
 class Puzzle(models.Model):
     TRIVIA = "TRIVIA"
+    OPEN_ENDED = "OPEN_ENDED"
     AR = "AR"
     PICTURE_COMPARE = "PICTURE_COMPARE"
     TRIVIA_XP_REWARD = 25
@@ -218,6 +231,7 @@ class Puzzle(models.Model):
 
     PUZZLE_TYPE_CHOICES = [
         (TRIVIA, "Trivia"),
+        (OPEN_ENDED, "Open Ended"),
         (AR, "Augmented Reality"),
         (PICTURE_COMPARE, "Picture Compare"),
         (COMPASS, "Compass"),
@@ -245,7 +259,7 @@ class Puzzle(models.Model):
 
     @classmethod
     def fixed_xp_reward_for_type(cls, puzzle_type: str) -> int:
-        if puzzle_type == cls.TRIVIA:
+        if puzzle_type in (cls.TRIVIA, cls.OPEN_ENDED):
             return cls.TRIVIA_XP_REWARD
         return cls.NON_TRIVIA_XP_REWARD
 
@@ -326,8 +340,7 @@ class CompassPuzzleDetail(models.Model):
             raise ValidationError(
                 {
                     "puzzle": (
-                        "CompassPuzzleDetail can only be attached to "
-                        "COMPASS puzzles."
+                        "CompassPuzzleDetail can only be attached to COMPASS puzzles."
                     )
                 }
             )

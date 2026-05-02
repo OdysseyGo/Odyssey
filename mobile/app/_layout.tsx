@@ -12,6 +12,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { ActiveTourProvider } from '@/contexts/ActiveTourContext';
 import { TutorialProvider } from '@/contexts/TutorialContext';
+import { AdsProvider } from '@/contexts/AdsContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ThemeProvider as AppThemeProvider } from '@/contexts/ThemeContext';
 import '@/i18n/i18n';
@@ -22,7 +23,7 @@ export {
 } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: 'disclaimer',
+  initialRouteName: 'index',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -50,12 +51,6 @@ export default function RootLayout() {
     if (error) throw error;
   }, [error]);
 
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
   if (!loaded) {
     return null;
   }
@@ -106,39 +101,46 @@ function RootLayoutNavigator() {
   return (
     <TutorialProvider>
       <LanguageProvider>
-        <ActiveTourProvider>
-          <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
-            <Stack
-              screenOptions={{
-                headerTitle: '',
-                headerShadowVisible: false,
-                headerStyle: {
-                  backgroundColor: Colors[themeKey].primary,
-                },
-              }}
-            >
-              <Stack.Screen
-                name="disclaimer"
-                options={{ headerShown: false, gestureEnabled: false }}
-              />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="login" options={{ headerShown: false }} />
-              <Stack.Screen name="register" options={{ headerShown: false }} />
-              <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
-              <Stack.Screen name="(tour)" options={{ headerShown: false }} />
-              <Stack.Screen name="tour/[id]" options={{ headerShown: false }} />
-              <Stack.Screen name="profile" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="search"
-                options={{
-                  headerShown: false,
-                  presentation: 'modal',
+        <AdsProvider>
+          <ActiveTourProvider>
+            <ThemeProvider value={themeKey === 'dark' ? DarkTheme : DefaultTheme}>
+              <Stack
+                screenOptions={{
+                  headerTitle: '',
+                  headerShadowVisible: false,
+                  headerStyle: {
+                    backgroundColor: Colors[themeKey].primary,
+                  },
                 }}
-              />
-            </Stack>
-          </ThemeProvider>
-        </ActiveTourProvider>
+              >
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="disclaimer"
+                  options={{ headerShown: false, gestureEnabled: false }}
+                />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="login" options={{ headerShown: false }} />
+                <Stack.Screen name="register" options={{ headerShown: false }} />
+                <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="terms-update"
+                  options={{ headerShown: false, gestureEnabled: false }}
+                />
+                <Stack.Screen name="(tour)" options={{ headerShown: false }} />
+                <Stack.Screen name="tour/[id]" options={{ headerShown: false }} />
+                <Stack.Screen name="profile" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="search"
+                  options={{
+                    headerShown: false,
+                    presentation: 'modal',
+                  }}
+                />
+              </Stack>
+            </ThemeProvider>
+          </ActiveTourProvider>
+        </AdsProvider>
       </LanguageProvider>
     </TutorialProvider>
   );

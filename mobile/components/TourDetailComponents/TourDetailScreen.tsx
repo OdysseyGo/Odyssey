@@ -1,22 +1,27 @@
 import {
   View,
-  ScrollView,
   Text,
   Animated,
   TouchableOpacity,
   Platform,
   Dimensions,
+  Alert,
+  StyleProp,
+  ViewStyle,
 } from 'react-native';
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import BackButton from '@/components/common/BackButton';
 import { Spacing } from '@/constants/Spacing';
 import { getTour } from '@/api/tours';
-import { getCurrentUser } from '@/api/auth';
+import { ReportCategory, submitReport } from '@/api/reports';
+import { getCurrentUser, isLoggedIn } from '@/api/auth';
+import ReportContentModal from '@/components/common/ReportContentModal';
 import { TourDetail } from './TourDetail.config';
 import { TourDetailScreenProps, mapApiTourToDetail } from './TourDetailScreen.config';
 import { tourDetailScreenStyles } from './TourDetailScreen.styles';
@@ -249,9 +254,36 @@ function AnimatedSection({ delay, children }: { delay: number; children: React.R
   return <Animated.View style={{ opacity, transform: [{ translateY }] }}>{children}</Animated.View>;
 }
 
-const COVER_HEIGHT = 460;
 const FADE_START = 300;
 const FADE_END = 420;
+
+type HeaderIconButtonProps = {
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  onPress: () => void;
+  accessibilityLabel: string;
+  style: StyleProp<ViewStyle>;
+};
+
+function HeaderIconButton({
+  icon,
+  color,
+  onPress,
+  accessibilityLabel,
+  style,
+}: HeaderIconButtonProps) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      style={style}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+    >
+      <Ionicons name={icon} size={22} color={color} />
+    </TouchableOpacity>
+  );
+}
 
 export function TourDetailScreenContent({
   tour,
@@ -263,6 +295,11 @@ export function TourDetailScreenContent({
   const styles = useMemo(() => tourDetailScreenStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
   const scrollY = useRef(new Animated.Value(0)).current;
+  const { t } = useTranslation();
+  const [reportVisible, setReportVisible] = useState(false);
+  const [reportCategory, setReportCategory] = useState<ReportCategory>('INAPPROPRIATE');
+  const [reportReason, setReportReason] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
 
   const headerBgOpacity = scrollY.interpolate({
     inputRange: [FADE_START, FADE_END],
@@ -288,6 +325,62 @@ export function TourDetailScreenContent({
     outputRange: [0, 1],
     extrapolate: 'clamp',
   });
+
+  const handleSubmitReport = async () => {
+    const reason = reportReason.trim();
+    if (reportSubmitting || (reportCategory === 'OTHER' && reason.length < 3)) return;
+
+    try {
+      setReportSubmitting(true);
+      await submitReport({
+        content_type: 'TOUR',
+        content_id: Number(tour.id),
+        category: reportCategory,
+        reason,
+      });
+      setReportVisible(false);
+      setReportCategory('INAPPROPRIATE');
+      setReportReason('');
+      Alert.alert(
+        t('tourDetail.reportSuccessTitle', { defaultValue: 'Report submitted' }),
+        t('tourDetail.reportSuccessMessage', {
+          defaultValue: 'Thanks for helping keep Odyssey safe. Our team will review it.',
+        })
+      );
+    } catch (err: any) {
+      Alert.alert(
+        t('tourDetail.reportErrorTitle', { defaultValue: 'Could not submit report' }),
+        err?.message ||
+          t('tourDetail.reportErrorMessage', {
+            defaultValue: 'Please check your connection and try again.',
+          })
+      );
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
+
+  const handleOpenReport = async () => {
+    const loggedIn = await isLoggedIn();
+    if (!loggedIn) {
+      Alert.alert(
+        t('tourDetail.reportLoginRequiredTitle', { defaultValue: 'Log in to report' }),
+        t('tourDetail.reportLoginRequiredMessage', {
+          defaultValue: 'You need to log in before reporting a tour.',
+        }),
+        [
+          { text: t('tourDetail.reportCancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+          {
+            text: t('tourDetail.reportLoginButton', { defaultValue: 'Log in' }),
+            onPress: () => router.push('/login'),
+          },
+        ]
+      );
+      return;
+    }
+
+    setReportVisible(true);
+  };
 
   return (
     <>
@@ -365,9 +458,45 @@ export function TourDetailScreenContent({
           <Animated.Text style={[styles.overlayTitle, { opacity: titleOpacity }]} numberOfLines={1}>
             {tour.title}
           </Animated.Text>
-          <View style={styles.overlaySpacer} />
+          <View style={styles.overlaySpacer}>
+            <Animated.View style={[styles.overlayAbsoluteFill, { opacity: whiteButtonOpacity }]}>
+              <HeaderIconButton
+                icon="flag-outline"
+                color={Colors[theme].white}
+                onPress={handleOpenReport}
+                accessibilityLabel={t('tourDetail.reportButton', { defaultValue: 'Report tour' })}
+                style={styles.headerIconButton}
+              />
+            </Animated.View>
+            <Animated.View style={[styles.overlayAbsoluteFill, { opacity: themedButtonOpacity }]}>
+              <HeaderIconButton
+                icon="flag-outline"
+                color={Colors[theme].text}
+                onPress={handleOpenReport}
+                accessibilityLabel={t('tourDetail.reportButton', { defaultValue: 'Report tour' })}
+                style={styles.headerIconButton}
+              />
+            </Animated.View>
+          </View>
         </View>
       </View>
+
+      <ReportContentModal
+        visible={reportVisible}
+        title={t('report.tourTitle', { defaultValue: 'Report tour' })}
+        subtitle={t('report.subtitle', {
+          defaultValue: 'Choose the closest reason, then add details so our team can review it.',
+        })}
+        category={reportCategory}
+        reason={reportReason}
+        submitting={reportSubmitting}
+        onChangeCategory={setReportCategory}
+        onChangeReason={setReportReason}
+        onClose={() => {
+          if (!reportSubmitting) setReportVisible(false);
+        }}
+        onSubmit={handleSubmitReport}
+      />
 
       <TourDetailBottomBar onStartTour={onStartTour} starting={starting} />
     </>

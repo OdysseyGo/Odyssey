@@ -98,7 +98,7 @@ export default function EditLocationScreen() {
   );
 
   const isPuzzleValid = (currentPuzzle?: Puzzle) => {
-    if (!currentPuzzle?.question) {
+    if (!currentPuzzle?.question.trim()) {
       return false;
     }
 
@@ -119,8 +119,12 @@ export default function EditLocationScreen() {
       );
     }
 
+    if (currentPuzzle.puzzle_type === 'OPEN_ENDED') {
+      return currentPuzzle.correctAnswer.trim().length > 0;
+    }
+
     const options = currentPuzzle.options;
-    if (!currentPuzzle.correctAnswer || !options || options.length < 2) {
+    if (!currentPuzzle.correctAnswer.trim() || !options || options.length < 2) {
       return false;
     }
 
@@ -191,11 +195,7 @@ export default function EditLocationScreen() {
           />
 
           {isPuzzleMode && (
-            <PuzzleEditor
-              puzzle={puzzle}
-              onChange={setPuzzle}
-              isRequired={tourData.tourType === 'PUZZLE'}
-            />
+            <PuzzleEditor puzzle={puzzle} onChange={setPuzzle} isRequired={isPuzzleMode} />
           )}
 
           <WritingTips />

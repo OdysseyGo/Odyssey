@@ -4,7 +4,8 @@ import { User } from './users';
 // Types
 export type TourType = 'STORY' | 'PUZZLE' | 'HYBRID';
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
-export type TourStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+export type TourStatus = 'PENDING' | 'PUBLISHED' | 'ARCHIVED';
+export type TourReviewStatus = 'IN_REVIEW' | 'REJECTED';
 export type TourGenerationSource = 'USER' | 'AI';
 
 export type TriviaPuzzleDetail = {
@@ -56,14 +57,19 @@ export type CompassPuzzleDetail = {
   target_heading_degrees: number;
 };
 
+export type OpenEndedPuzzleDetail = {
+  answer_type: 'text' | string;
+};
+
 export type Puzzle = {
   id?: number;
-  puzzle_type: 'TRIVIA' | 'AR' | 'PICTURE_COMPARE' | 'COMPASS';
+  puzzle_type: 'TRIVIA' | 'OPEN_ENDED' | 'AR' | 'PICTURE_COMPARE' | 'COMPASS';
   question: string;
   hint: string;
   xp_reward: number;
   // Normalized detail payloads from backend
   trivia?: TriviaPuzzleDetail;
+  open_ended?: OpenEndedPuzzleDetail;
   picture_compare?: PictureComparePuzzleDetail;
   ar?: ArPuzzleDetail;
   compass?: CompassPuzzleDetail;
@@ -80,6 +86,10 @@ export type PuzzleBaseUpsertPayload = {
 
 export type TriviaPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
   options: string[];
+  correct_answer: string;
+};
+
+export type OpenEndedPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
   correct_answer: string;
 };
 
@@ -145,6 +155,7 @@ export type Tour = {
   city_latitude?: number;
   city_longitude?: number;
   status: TourStatus;
+  review_status?: TourReviewStatus | null;
   generation_source: TourGenerationSource;
   created_at: string;
   updated_at: string;
@@ -162,6 +173,12 @@ export type ToursResponse = {
   next: string | null;
   previous: string | null;
   results: Tour[];
+};
+
+export type MyToursFilters = {
+  status?: TourStatus;
+  generation_source?: TourGenerationSource;
+  is_ai_generated?: boolean;
 };
 
 export type TourFilters = {
@@ -469,14 +486,19 @@ export async function updateTourReview(
 
 /**
  * Fetch the current user's tours (requires authentication)
- * @param status - Optional filter by tour status (DRAFT, PUBLISHED, ARCHIVED)
+ * @param filtersOrStatus - Optional filters, or a legacy status value
  */
 export async function getMyTours(
-  status?: TourStatus,
+  filtersOrStatus?: TourStatus | MyToursFilters,
   signal?: AbortSignal
 ): Promise<ToursResponse> {
   const params: Record<string, any> = {};
-  if (status) params.status = status;
+  const filters =
+    typeof filtersOrStatus === 'string' ? { status: filtersOrStatus } : filtersOrStatus;
+
+  if (filters?.status) params.status = filters.status;
+  if (filters?.generation_source) params.generation_source = filters.generation_source;
+  if (filters?.is_ai_generated !== undefined) params.is_ai_generated = filters.is_ai_generated;
 
   return apiRequest<ToursResponse>({
     method: 'GET',
@@ -631,6 +653,21 @@ export async function setStepPictureComparePuzzle(
     method: 'POST',
     url: `/api/tours/${tourId}/steps/${stepId}/set-picture-compare-puzzle/`,
     data: formData,
+    auth: true,
+    signal,
+  });
+}
+
+export async function setStepOpenEndedPuzzle(
+  tourId: number,
+  stepId: number,
+  payload: OpenEndedPuzzleUpsertPayload,
+  signal?: AbortSignal
+): Promise<Puzzle> {
+  return apiRequest<Puzzle, OpenEndedPuzzleUpsertPayload>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/steps/${stepId}/set-open-ended-puzzle/`,
+    data: payload,
     auth: true,
     signal,
   });

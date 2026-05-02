@@ -32,6 +32,7 @@ urlpatterns = [
     path("api/", include("apps.tours.api.urls")),
     path("api/", include("apps.gamification.api.urls")),
     path("api/ai/", include("apps.ai_content.urls")),
+    path("api/ads/", include("apps.ads.api.urls")),
     path("api/admin/", include("apps.admin_dashboard.api.urls")),
     path(
         "api/reports/",

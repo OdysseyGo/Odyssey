@@ -71,7 +71,7 @@ interface CompassDetail {
 
 interface PuzzleData {
   id: number;
-  puzzle_type: "TRIVIA" | "AR" | "GYROSCOPE" | "COMPASS" | "PICTURE_COMPARE";
+  puzzle_type: "TRIVIA" | "OPEN_ENDED" | "AR" | "GYROSCOPE" | "COMPASS" | "PICTURE_COMPARE";
   question: string;
   hint: string;
   xp_reward: number;
@@ -113,6 +113,7 @@ interface TourData {
   country?: string;
   country_code?: string;
   status: string;
+  review_status?: "IN_REVIEW" | "REJECTED" | null;
   tour_type: string;
   difficulty: string;
   creator: number;
@@ -160,7 +161,7 @@ interface ArPreviewState {
 
 const STATUS_VARIANT: Record<string, "success" | "warning" | "secondary"> = {
   PUBLISHED: "success",
-  DRAFT: "warning",
+  PENDING: "warning",
   ARCHIVED: "secondary",
 };
 
@@ -419,6 +420,20 @@ export default function TourDetail() {
         );
       }
 
+      case "OPEN_ENDED": {
+        return (
+          <div className="mt-2 space-y-2 text-sm">
+            <div className="flex items-center gap-1 font-medium text-muted-foreground">
+              <HelpCircle className="h-4 w-4" /> Open Ended Answer:
+            </div>
+            <div className="rounded border border-border bg-muted/50 p-2">
+              <span className="font-medium">Expected answer:</span>{" "}
+              {puzzle.correct_answer || "Not provided"}
+            </div>
+          </div>
+        );
+      }
+
       case "PICTURE_COMPARE": {
         const picRef = puzzle.picture_compare_detail?.reference_image || puzzle.reference_image;
         const threshold = puzzle.picture_compare_detail?.similarity_threshold;
@@ -551,6 +566,15 @@ export default function TourDetail() {
     );
   }
 
+  const isPendingRejected =
+    tour.status === "PENDING" && tour.review_status === "REJECTED";
+  const pendingSubLabel =
+    tour.status === "PENDING" && tour.review_status
+      ? tour.review_status === "REJECTED"
+        ? "rejected"
+        : "review"
+      : null;
+
   return (
     <div className="space-y-6">
       <button
@@ -566,6 +590,7 @@ export default function TourDetail() {
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold">{tour.title}</h1>
               <Badge variant={STATUS_VARIANT[tour.status] ?? "secondary"}>{tour.status}</Badge>
+              {pendingSubLabel ? <Badge variant="secondary">({pendingSubLabel})</Badge> : null}
             </div>
             <p className="text-muted-foreground">
               {tour.city}
@@ -574,13 +599,37 @@ export default function TourDetail() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={handleApprove} disabled={actionLoading}>
+            <Button
+              variant="outline"
+              onClick={handleApprove}
+              disabled={actionLoading || tour.status === "PUBLISHED"}
+              title={tour.status === "PUBLISHED" ? "Already published" : "Approve and publish"}
+              className={tour.status === "PUBLISHED" ? "opacity-40 cursor-not-allowed" : ""}
+            >
               <CheckCircle className="h-4 w-4" /> Approve
             </Button>
-            <Button variant="outline" onClick={() => setRejectModalOpen(true)} disabled={actionLoading}>
+            <Button
+              variant="outline"
+              onClick={() => setRejectModalOpen(true)}
+              disabled={actionLoading || isPendingRejected || tour.status === "ARCHIVED"}
+              title={
+                isPendingRejected
+                  ? "Already pending (rejected)"
+                  : tour.status === "ARCHIVED"
+                    ? "Tour is archived"
+                    : "Reject and keep pending"
+              }
+              className={isPendingRejected || tour.status === "ARCHIVED" ? "opacity-40 cursor-not-allowed" : ""}
+            >
               <XCircle className="h-4 w-4" /> Reject
             </Button>
-            <Button variant="outline" onClick={handleArchive} disabled={actionLoading}>
+            <Button
+              variant="outline"
+              onClick={handleArchive}
+              disabled={actionLoading || tour.status === "ARCHIVED"}
+              title={tour.status === "ARCHIVED" ? "Already archived" : "Archive this tour"}
+              className={tour.status === "ARCHIVED" ? "opacity-40 cursor-not-allowed" : ""}
+            >
               <Archive className="h-4 w-4" /> Archive
             </Button>
             <Button variant="destructive" onClick={() => setDeleteModalOpen(true)} disabled={actionLoading}>
@@ -588,6 +637,29 @@ export default function TourDetail() {
             </Button>
           </div>
         </div>
+
+        {tour.status === "PENDING" && (
+          <div className="flex items-center gap-2 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            {tour.review_status === "REJECTED" ? (
+              <span>This tour is <strong>pending (rejected)</strong>. The creator needs to update it before it goes back to review.</span>
+            ) : (
+              <span>This tour is <strong>pending review</strong>. Approve to publish or reject to mark it as pending (rejected).</span>
+            )}
+          </div>
+        )}
+        {tour.status === "PUBLISHED" && (
+          <div className="flex items-center gap-2 rounded-lg border border-green-500/40 bg-green-500/10 px-4 py-3 text-sm text-green-700 dark:text-green-400">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <span>This tour is <strong>live</strong> and visible to explorers. You can reject it to mark it as pending (rejected).</span>
+          </div>
+        )}
+        {tour.status === "ARCHIVED" && (
+          <div className="flex items-center gap-2 rounded-lg border border-muted-foreground/30 bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+            <Archive className="h-4 w-4 shrink-0" />
+            <span>This tour is <strong>archived</strong> and hidden from explorers. You can approve it to make it live again.</span>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Card>

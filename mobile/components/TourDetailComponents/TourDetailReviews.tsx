@@ -1,4 +1,4 @@
-import { View, Text, Image, Animated } from 'react-native';
+import { Alert, View, Text, Image, Animated, TouchableOpacity } from 'react-native';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,8 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { isLoggedIn } from '@/api/auth';
 import { getTourReviews } from '@/api/tours';
+import { ReportCategory, submitReport } from '@/api/reports';
+import ReportContentModal from '@/components/common/ReportContentModal';
 import { TourDetailReviewsProps, TourDetailReviewsState } from './TourDetailReviews.config';
 import { tourDetailReviewsStyles } from './TourDetailReviews.styles';
 
@@ -106,6 +108,50 @@ export default function TourDetailReviews({ tourId }: TourDetailReviewsProps) {
     error: null,
     requiresLogin: false,
   });
+  const [reportReviewId, setReportReviewId] = useState<number | null>(null);
+  const [reportCategory, setReportCategory] = useState<ReportCategory>('INAPPROPRIATE');
+  const [reportReason, setReportReason] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+
+  const handleCloseReport = () => {
+    if (reportSubmitting) return;
+    setReportReviewId(null);
+  };
+
+  const handleSubmitReport = async () => {
+    if (!reportReviewId || reportSubmitting) return;
+    const reason = reportReason.trim();
+    if (reportCategory === 'OTHER' && reason.length < 3) return;
+
+    try {
+      setReportSubmitting(true);
+      await submitReport({
+        content_type: 'REVIEW',
+        content_id: reportReviewId,
+        category: reportCategory,
+        reason,
+      });
+      setReportReviewId(null);
+      setReportCategory('INAPPROPRIATE');
+      setReportReason('');
+      Alert.alert(
+        t('report.successTitle', { defaultValue: 'Report submitted' }),
+        t('report.successMessage', {
+          defaultValue: 'Thanks for helping keep Odyssey safe. Our team will review it.',
+        })
+      );
+    } catch (err: any) {
+      Alert.alert(
+        t('report.errorTitle', { defaultValue: 'Could not submit report' }),
+        err?.message ||
+          t('report.errorMessage', {
+            defaultValue: 'Please check your connection and try again.',
+          })
+      );
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -238,6 +284,15 @@ export default function TourDetailReviews({ tourId }: TourDetailReviewsProps) {
               </View>
               <View style={styles.ratingContainer}>
                 <StarRating rating={review.rating} color={colors.primary} />
+                <TouchableOpacity
+                  onPress={() => setReportReviewId(review.id)}
+                  style={styles.reportReviewButton}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('report.reviewButton', { defaultValue: 'Report review' })}
+                >
+                  <Ionicons name="flag-outline" size={16} color={colors.subText} />
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -245,6 +300,21 @@ export default function TourDetailReviews({ tourId }: TourDetailReviewsProps) {
           </View>
         ))}
       </View>
+
+      <ReportContentModal
+        visible={reportReviewId !== null}
+        title={t('report.reviewTitle', { defaultValue: 'Report review' })}
+        subtitle={t('report.subtitle', {
+          defaultValue: 'Choose the closest reason, then add details so our team can review it.',
+        })}
+        category={reportCategory}
+        reason={reportReason}
+        submitting={reportSubmitting}
+        onChangeCategory={setReportCategory}
+        onChangeReason={setReportReason}
+        onClose={handleCloseReport}
+        onSubmit={handleSubmitReport}
+      />
     </View>
   );
 }

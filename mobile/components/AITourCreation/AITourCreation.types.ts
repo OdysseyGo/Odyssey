@@ -43,6 +43,7 @@ export type AITourFormData = {
   language: string;
   additionalDetails: string;
   includeAr: boolean;
+  includeCompass: boolean;
 };
 
 export const createEmptyFormData = (): AITourFormData => ({
@@ -57,4 +58,5 @@ export const createEmptyFormData = (): AITourFormData => ({
   language: 'en',
   additionalDetails: '',
   includeAr: false,
+  includeCompass: false,
 });

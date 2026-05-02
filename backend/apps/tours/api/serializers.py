@@ -235,8 +235,24 @@ class CompassPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
     target_heading_degrees = serializers.IntegerField(min_value=0, max_value=359)
 
 
+class OpenEndedPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
+    correct_answer = serializers.CharField()
+
+    def validate(self, attrs):
+        correct_answer = str(attrs.get("correct_answer", "")).strip()
+        if not correct_answer:
+            raise serializers.ValidationError(
+                {
+                    "correct_answer": "OPEN_ENDED puzzles require a non-empty correct_answer."
+                }
+            )
+        attrs["correct_answer"] = correct_answer
+        return attrs
+
+
 class PuzzleSerializer(serializers.ModelSerializer):
     trivia = serializers.SerializerMethodField()
+    open_ended = serializers.SerializerMethodField()
     picture_compare = serializers.SerializerMethodField()
     ar = serializers.SerializerMethodField()
     compass = serializers.SerializerMethodField()
@@ -252,6 +268,12 @@ class PuzzleSerializer(serializers.ModelSerializer):
         if detail is None or obj.puzzle_type != Puzzle.PICTURE_COMPARE:
             return None
         return PictureComparePuzzleDetailSerializer(detail, context=self.context).data
+
+    @staticmethod
+    def get_open_ended(obj):
+        if obj.puzzle_type != Puzzle.OPEN_ENDED:
+            return None
+        return {"answer_type": "text"}
 
     def get_ar(self, obj):
         detail = getattr(obj, "ar_detail", None)
@@ -274,6 +296,7 @@ class PuzzleSerializer(serializers.ModelSerializer):
             "hint",
             "xp_reward",
             "trivia",
+            "open_ended",
             "picture_compare",
             "ar",
             "compass",
@@ -358,6 +381,7 @@ class TourSerializer(serializers.ModelSerializer):
             "is_ai_generated",
             "user_has_completed_once",
             "status",
+            "review_status",
             "generation_source",
             "created_at",
             "updated_at",
@@ -382,11 +406,14 @@ class TourSerializer(serializers.ModelSerializer):
             "accessibility_rating",
             "metrics_calculated",
             "generation_source",
+            "review_status",
         ]
 
     def validate(self, attrs):
         instance = self.instance
-        current_status = getattr(instance, "status", Tour.DRAFT)
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        current_status = getattr(instance, "status", Tour.PENDING)
         status_value = attrs.get("status", current_status)
         current_cover_image = getattr(instance, "cover_image", None)
         cover_image = attrs.get("cover_image", current_cover_image)
@@ -405,6 +432,15 @@ class TourSerializer(serializers.ModelSerializer):
                 "country_code",
             )
         )
+
+        if (
+            status_value == Tour.PUBLISHED
+            and current_status != Tour.PUBLISHED
+            and (not user or not user.is_staff)
+        ):
+            raise serializers.ValidationError(
+                {"status": "Only admins can publish tours."}
+            )
 
         if status_value == Tour.PUBLISHED and (is_publishing or is_location_update):
             if not has_cover:
@@ -462,6 +498,19 @@ class TourSerializer(serializers.ModelSerializer):
         validated_data.pop("city_latitude", None)
         validated_data.pop("city_longitude", None)
         self._canonicalize_country_fields(validated_data)
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        has_creator_changes = any(
+            key not in {"status", "review_status"} for key in validated_data
+        )
+        if (
+            instance.status == Tour.PENDING
+            and instance.review_status == Tour.REJECTED
+            and user
+            and not user.is_staff
+            and has_creator_changes
+        ):
+            validated_data["review_status"] = Tour.IN_REVIEW
         return super().update(instance, validated_data)
 
     def _canonicalize_country_fields(self, validated_data):

@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { rememberDisclaimerAccepted } from '@/lib/disclaimer';
+import { getCurrentUser } from '@/api/auth';
 
 export default function DisclaimerScreen() {
   const colorScheme = useColorTheme();
@@ -20,8 +22,10 @@ export default function DisclaimerScreen() {
     Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
   }, []);
 
-  function handleAccept() {
-    router.replace('/(tabs)/map');
+  async function handleAccept() {
+    await rememberDisclaimerAccepted();
+    const user = await getCurrentUser();
+    router.replace(user?.terms_update_required ? '/terms-update' : '/(tabs)/map');
   }
 
   return (

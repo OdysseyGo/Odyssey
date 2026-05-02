@@ -18,4 +18,6 @@ uvicorn[standard]>=0.29.0
 whitenoise>=6.6.0
 pydantic>=2.0.0
 httpx[http2]==0.27.0
+requests>=2.31.0
+cryptography>=42.0.0
 pycountry>=22.3.5

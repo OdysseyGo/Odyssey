@@ -4,7 +4,9 @@
     "cancel": "Cancel",
     "submit": "Submit",
     "submitting": "Submitting...",
-    "ok": "OK"
+    "ok": "OK",
+    "error": "Error",
+    "syncError": "Could not sync progress with server."
   },
   "auth": {
     "welcomeTitle": "Welcome, adventurer!",
@@ -36,6 +38,12 @@
     "remembered": "Ooh, I remembered!",
     "alreadyHaveAccount": "Already have an account? Log In",
     "verify": "Verify",
+    "sendCode": "Send Code",
+    "enterCode": "Enter Reset Code",
+    "otpCode": "Reset Code",
+    "otpCodePlaceholder": "6-digit code",
+    "codeSentSubtitle": "We sent a 6-digit code to {{email}}. Enter it below to reset your password.",
+    "codeSentBanner": "Code sent! Check your inbox (and spam folder).",
     "resetPassword": "Reset Password",
     "updatePassword": "Update Password",
     "cancel": "Cancel",
@@ -62,9 +70,12 @@
     "accountCreatedSubtitle": "\"{{username}}\" is ready. Log in to start exploring.",
     "errors": {
       "usernameRequired": "Username is required",
+      "usernameInvalidCharacters": "Use only letters, numbers, and @/./+/-/_ in your username.",
       "passwordRequired": "Password is required",
       "firstNameRequired": "First name is required",
+      "firstNameInvalidCharacters": "First name contains invalid characters.",
       "lastNameRequired": "Last name is required",
+      "lastNameInvalidCharacters": "Last name contains invalid characters.",
       "emailRequired": "Email is required",
       "emailFormat": "Email format is wrong. TLD should be at least 2 chars long (.com, .tr etc)",
       "confirmPasswordRequired": "Confirm password is required",
@@ -76,9 +87,17 @@
       "somethingWentWrong": "Something went wrong",
       "bothFieldsRequired": "Both fields are required",
       "couldNotUpdate": "Could not update password",
-      "termsRequired": "You must agree to the Terms of Use and Privacy Policy"
+      "termsRequired": "You must agree to the Terms of Use and Privacy Policy",
+      "codeRequired": "Please enter the reset code",
+      "invalidCode": "Invalid or expired code. Please try again."
     },
-    "userCreated": "User has been created!"
+    "userCreated": "User has been created!",
+    "termsUpdateTitle": "Terms Updated",
+    "termsUpdateSubtitle": "We've updated our Terms of Use and Privacy Policy. Please review and accept the new terms to continue using Odyssey.",
+    "termsUpdatePrefix": "I have read and agree to the updated",
+    "termsUpdateAnd": "and",
+    "termsUpdateAccept": "Accept & Continue",
+    "termsUpdateLogout": "Log out"
   },
   "profile": {
     "notLoggedIn": "You need to be logged in to view your profile.",
@@ -97,13 +116,15 @@
     "cancel": "Cancel",
     "tabs": {
       "published": "Published",
-      "drafts": "Drafts",
+      "pending": "Pending",
+      "aiTours": "AI Tours",
       "archived": "Archived",
       "settings": "Settings",
       "tutorials": "Tutorials"
     },
     "emptyPublished": "No published tours yet. Publish a tour to share it with the community!",
-    "emptyDraft": "No draft tours. Start creating a new tour!",
+    "emptyPending": "No pending tours yet.",
+    "emptyAiTours": "No AI-generated tours yet. Create one to start your showcase!",
     "emptyArchived": "No archived tours.",
     "emptyDefault": "No tours found.",
     "followersTitle": "Followers",
@@ -240,7 +261,68 @@
     "readMore": "Read more",
     "readLess": "Read less",
     "lockedStopTitle": "Hidden stop",
-    "lockedStopMessage": "Start the tour and solve the puzzle to reveal this stop."
+    "lockedStopMessage": "Start the tour and solve the puzzle to reveal this stop.",
+    "reportButton": "Report tour",
+    "reportClose": "Close report form",
+    "reportTitle": "Report tour",
+    "reportSubtitle": "Choose the closest reason, then add details so our team can review it.",
+    "reportCategoryLabel": "Category",
+    "reportDetailsLabel": "Details",
+    "reportDetailsLabelOptional": "Details optional",
+    "reportDetailsLabelRequired": "Details required for Other",
+    "reportReasonPlaceholder": "Describe the problem...",
+    "reportReasonPlaceholderOptional": "Add any details that would help...",
+    "reportCancel": "Cancel",
+    "reportSubmit": "Submit report",
+    "reportSuccessTitle": "Report submitted",
+    "reportSuccessMessage": "Thanks for helping keep Odyssey safe. Our team will review it.",
+    "reportErrorTitle": "Could not submit report",
+    "reportErrorMessage": "Please check your connection and try again.",
+    "reportLoginRequiredTitle": "Log in to report",
+    "reportLoginRequiredMessage": "You need to log in before reporting a tour.",
+    "reportLoginButton": "Log in",
+    "reportCategories": {
+      "INAPPROPRIATE": "Inappropriate content",
+      "HATE_OR_HARASSMENT": "Hate or harassment",
+      "SPAM": "Spam",
+      "MISLEADING": "Misleading information",
+      "SAFETY": "Safety concern",
+      "PRIVACY": "Privacy concern",
+      "OTHER": "Other"
+    }
+  },
+  "report": {
+    "tourButton": "Report tour",
+    "reviewButton": "Report review",
+    "userButton": "Report user",
+    "tourTitle": "Report tour",
+    "reviewTitle": "Report review",
+    "userTitle": "Report user",
+    "subtitle": "Choose the closest reason, then add details so our team can review it.",
+    "close": "Close report form",
+    "categoryLabel": "Category",
+    "detailsLabelOptional": "Details optional",
+    "detailsLabelRequired": "Details required for Other",
+    "reasonPlaceholder": "Describe the problem...",
+    "reasonPlaceholderOptional": "Add any details that would help...",
+    "cancel": "Cancel",
+    "submit": "Submit report",
+    "successTitle": "Report submitted",
+    "successMessage": "Thanks for helping keep Odyssey safe. Our team will review it.",
+    "errorTitle": "Could not submit report",
+    "errorMessage": "Please check your connection and try again.",
+    "loginRequiredTitle": "Log in to report",
+    "loginRequiredMessage": "You need to log in before reporting content.",
+    "loginButton": "Log in",
+    "categories": {
+      "INAPPROPRIATE": "Inappropriate content",
+      "HATE_OR_HARASSMENT": "Hate or harassment",
+      "SPAM": "Spam",
+      "MISLEADING": "Misleading information",
+      "SAFETY": "Safety concern",
+      "PRIVACY": "Privacy concern",
+      "OTHER": "Other"
+    }
   },
   "tabs": {
     "settings": "Settings",
@@ -342,6 +424,7 @@
     "continueWithCount": "Continue ({{count}} locations)",
     "submit": "Submit Tour",
     "submitting": "Submitting...",
+    "uploadingProgress": "Uploading step {{current}}/{{total}}",
     "submitTitle": "Submit Tour",
     "submitMessage": "Are you ready to submit your tour for review?",
     "cancel": "Cancel",
@@ -396,7 +479,9 @@
       "cancel": "Cancel",
       "delete": "Delete",
       "tourStops": "Tour Stops",
-      "locationsCount": "{{count}} locations"
+      "locationsCount": "{{count}} locations",
+      "maxStepsReachedTitle": "Step limit reached",
+      "maxStepsReachedMessage": "A tour can include at most {{max}} stops."
     },
     "review": {
       "tourStopsTitle": "Tour Stops ({{count}})",
@@ -487,6 +572,9 @@
       "optionsRequired": "Options (Mark the correct answer) *",
       "optionPlaceholder": "Option {{number}}",
       "addOption": "Add Option",
+      "correctAnswer": "Correct Answer",
+      "correctAnswerPlaceholder": "e.g., byzantine empire",
+      "correctAnswerHint": "Users pass if their typed answer closely matches this.",
       "hintLabel": "Hint (Optional)",
       "hintPlaceholder": "e.g., Look at the plaque above the door.",
       "hintText": "A helpful clue if the user gets stuck."
@@ -516,6 +604,7 @@
     "missingInfoTitle": "Missing Information",
     "missingInfoMessage": "Please provide both a state and a theme for your tour.",
     "successTitle": "Tour Created! 🎉",
+    "successMessage": "Your tour is ready to explore.",
     "viewTour": "View Tour",
     "createAnother": "Create Another",
     "failedTitle": "Generation Failed",
@@ -526,8 +615,8 @@
       "subtitle": "Tell us about your dream tour and let AI craft a unique experience with real locations, engaging stories, and interactive content."
     },
     "loading": {
-      "title": "Creating Your Tour...",
-      "subtitle": "AI is finding the best locations and crafting engaging content for you"
+      "title": "Crafting Your Adventure...",
+      "subtitle": "This usually takes about 20–30 seconds"
     },
     "languageSelector": {
       "title": "Content Language",
@@ -544,6 +633,10 @@
     "includeAr": {
       "title": "Include AR Puzzles",
       "subtitle": "Let the AI add augmented-reality puzzles on stops where they fit"
+    },
+    "includeCompass": {
+      "title": "Include Compass Puzzles",
+      "subtitle": "Let the AI add compass-heading puzzles on stops where they fit"
     }
   },
   "tourStep": {
@@ -554,12 +647,6 @@
     "answerConfirmTitle": "Lock this answer?",
     "answerConfirmMessage": "Are you sure? Wrong answers can reduce your badge progress.",
     "answerConfirmAction": "Answer"
-  },
-  "common": {
-    "cancel": "Cancel",
-    "ok": "OK",
-    "error": "Error",
-    "syncError": "Could not sync progress with server."
   },
   "map": {
     "noActiveTour": {
@@ -653,7 +740,7 @@
       "step3text": "Track your Odyssey XP and check your followers!",
       "step4text": "Find other travelers to join on your journey!",
       "step5text": "Check out the badges you earned!",
-      "step6text": "Check your created (published, draft and archived) tours on this tab! You can also rate your tour with the completed tours button.",
+      "step6text": "Check your created (published, pending and archived) tours on this tab! You can also rate your tour with the completed tours button.",
       "step7text": "You can change your account settings or your app preferences in the settings tab."
     },
     "tours": {
@@ -673,7 +760,7 @@
     "legalAnd": "and",
     "privacy": "Privacy Policy",
     "legalSuffix": ". Please read and accept to begin your quest.",
-    "mascot": "Babazilla is watching — keep your eyes up, adventurer!",
+    "mascot": "Ody is watching — keep your eyes up, adventurer!",
     "cta": "I Accept"
   }
 }
