@@ -13,6 +13,9 @@ export interface MapMarkerProps {
   circleSize: number;
   circleColor: string;
   opacity?: number;
+  coverImage?: string;
+  onPress?: () => void;
+  selected?: boolean;
 }
 
 export const exampleMapMarkers: MapMarkerProps[] = [

@@ -1,6 +1,7 @@
 import {
   View,
   Text,
+  Image,
   Pressable,
   ActivityIndicator,
   Animated,
@@ -48,13 +49,13 @@ export default function NearbyToursSlider({ tours, loading, onTourPress }: Nearb
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = useWindowDimensions();
-  // clearance so the slider header sits above the tab bar
-  const bottomClearance = ODYSSEY_TAB_BAR_FLOATING_HEIGHT + Math.max(insets.bottom, Spacing.sm);
+  const tabBarTotal = ODYSSEY_TAB_BAR_FLOATING_HEIGHT + Math.max(insets.bottom, Spacing.sm);
 
+  // Container sits directly above the tab bar; snap points are relative to container height
   const MAX_HEIGHT = screenHeight * 0.82;
-  const EXPANDED = -bottomClearance;
-  const HALF = MAX_HEIGHT * 0.45 - bottomClearance;
-  const PEEK = MAX_HEIGHT - (96 + bottomClearance);
+  const EXPANDED = 0;
+  const HALF = MAX_HEIGHT * 0.45;
+  const PEEK = MAX_HEIGHT - 96;
 
   const snapPoints = useMemo(() => [EXPANDED, HALF, PEEK], [EXPANDED, HALF, PEEK]);
 
@@ -119,98 +120,101 @@ export default function NearbyToursSlider({ tours, loading, onTourPress }: Nearb
 
   return (
     <Animated.View
-      style={[styles.container, { height: MAX_HEIGHT, transform: [{ translateY }] }]}
+      style={[styles.container, { height: MAX_HEIGHT, bottom: tabBarTotal, transform: [{ translateY }] }]}
       pointerEvents="box-none"
     >
-      <View style={styles.sheet}>
-        {/* Draggable header */}
-        <View {...panResponder.panHandlers}>
-          <Pressable onPress={toggle} style={styles.headerPressable}>
-            <View style={styles.handleBar} />
-            <View style={styles.headerRow}>
-              <View style={styles.headerIconBox}>
-                <MaterialCommunityIcons name="map-search" size={18} color={colors.primary} />
+      <View style={styles.sheetShadow}>
+        <View style={styles.bottomPanel}>
+          {/* Draggable header */}
+          <View {...panResponder.panHandlers}>
+            <Pressable onPress={toggle} style={styles.grabberPressable}>
+              <View style={styles.handleBar} />
+              <View style={styles.sheetHeaderContent}>
+                <View style={styles.headerIconBox}>
+                  <MaterialCommunityIcons name="map-search" size={18} color={colors.primary} />
+                </View>
+                <View style={styles.sheetHeaderText}>
+                  <Text style={styles.sheetEyebrow}>{t('map.nearby.areaSubtitle')}</Text>
+                  <Text style={styles.sheetTitle}>
+                    {t('map.nearby.areaTitle', { count: tours.length })}
+                  </Text>
+                </View>
+                {loading ? (
+                  <ActivityIndicator size="small" color={colors.subText} />
+                ) : (
+                  <MaterialCommunityIcons name="chevron-up" size={22} color={colors.subText} />
+                )}
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.headerTitle}>
-                  {t('map.nearby.areaTitle', { count: tours.length })}
-                </Text>
-                <Text style={styles.headerSubtitle}>{t('map.nearby.areaSubtitle')}</Text>
-              </View>
-              {loading ? (
-                <ActivityIndicator size="small" color={colors.subText} />
-              ) : (
-                <MaterialCommunityIcons name="chevron-up" size={22} color={colors.subText} />
-              )}
-            </View>
-          </Pressable>
-        </View>
-
-        <View style={styles.divider} />
-
-        {/* List */}
-        {tours.length === 0 && !loading ? (
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconBox}>
-              <MaterialCommunityIcons name="map-marker-off" size={30} color={colors.primary} />
-            </View>
-            <Text style={styles.emptyTitle}>{t('map.nearby.emptyTitle')}</Text>
-            <Text style={styles.emptySubtitle}>{t('map.nearby.emptySubtitle')}</Text>
+            </Pressable>
           </View>
-        ) : (
-          <ScrollView
-            style={styles.list}
-            contentContainerStyle={{ paddingBottom: 32 }}
-            showsVerticalScrollIndicator={false}
-          >
-            {tours.map((tour) => {
-              const iconBg = difficultyColor(tour.difficulty, colors);
-              return (
-                <Pressable
-                  key={tour.id}
-                  style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-                  onPress={() => onTourPress(tour.id)}
-                >
-                  <View style={[styles.iconBox, { backgroundColor: iconBg + '22' }]}>
-                    <MaterialCommunityIcons
-                      name={tourTypeIcon(tour.tour_type)}
-                      size={26}
-                      color={iconBg}
-                    />
-                  </View>
-                  <View style={styles.cardContent}>
-                    <Text style={styles.cardTitle} numberOfLines={1}>
-                      {tour.title}
-                    </Text>
-                    <View style={styles.tagsRow}>
-                      <View style={[styles.tag, { backgroundColor: iconBg }]}>
-                        <Text style={[styles.tagText, styles.difficultyTagText]}>
-                          {t(`tourDetail.${tour.difficulty.toLowerCase()}` as any)}
-                        </Text>
-                      </View>
-                      <View style={styles.tag}>
+
+          <View style={styles.divider} />
+
+          {/* List */}
+          {tours.length === 0 && !loading ? (
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconBox}>
+                <MaterialCommunityIcons name="map-marker-off" size={30} color={colors.primary} />
+              </View>
+              <Text style={styles.emptyTitle}>{t('map.nearby.emptyTitle')}</Text>
+              <Text style={styles.emptySubtitle}>{t('map.nearby.emptySubtitle')}</Text>
+            </View>
+          ) : (
+            <ScrollView
+              style={styles.list}
+              contentContainerStyle={{ paddingBottom: 32 }}
+              showsVerticalScrollIndicator={false}
+            >
+              {tours.map((tour) => {
+                const iconBg = difficultyColor(tour.difficulty, colors);
+                return (
+                  <Pressable
+                    key={tour.id}
+                    style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+                    onPress={() => onTourPress(tour.id)}
+                  >
+                    {tour.cover_image ? (
+                      <Image
+                        source={{ uri: tour.cover_image }}
+                        style={styles.cardThumbnail}
+                      />
+                    ) : (
+                      <View style={[styles.iconBox, { backgroundColor: iconBg + '22' }]}>
                         <MaterialCommunityIcons
-                          name="clock-outline"
-                          size={11}
-                          color={colors.subText}
+                          name={tourTypeIcon(tour.tour_type)}
+                          size={24}
+                          color={iconBg}
                         />
-                        <Text style={styles.tagText}>
-                          {t('map.nearby.duration', { count: tour.duration_minutes })}
-                        </Text>
+                      </View>
+                    )}
+                    <View style={styles.cardContent}>
+                      <Text style={styles.cardTitle} numberOfLines={1}>
+                        {tour.title}
+                      </Text>
+                      <View style={styles.tagsRow}>
+                        <View style={[styles.tag, { backgroundColor: iconBg }]}>
+                          <Text style={[styles.tagText, styles.difficultyTagText]}>
+                            {t(`tourDetail.${tour.difficulty.toLowerCase()}` as any)}
+                          </Text>
+                        </View>
+                        <View style={styles.tag}>
+                          <MaterialCommunityIcons
+                            name="clock-outline"
+                            size={11}
+                            color={colors.subText}
+                          />
+                          <Text style={styles.tagText}>
+                            {t('map.nearby.duration', { count: tour.duration_minutes })}
+                          </Text>
+                        </View>
                       </View>
                     </View>
-                  </View>
-                  <MaterialCommunityIcons
-                    name="chevron-right"
-                    size={20}
-                    color={colors.icon}
-                    style={styles.chevron}
-                  />
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        )}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
+        </View>
       </View>
     </Animated.View>
   );

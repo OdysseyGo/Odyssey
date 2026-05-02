@@ -7,6 +7,7 @@ import { TourMapProps } from './TourMap.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import MapMarker from './MapMarker';
+import ClusterMarker from './ClusterMarker';
 
 const defaultRegion = {
   latitude: 41.0082,
@@ -25,6 +26,8 @@ export default function TourMap({
   onRegionChangeComplete,
   onUserLocationReady,
   nearbyMarkers,
+  clusterMarkers,
+  animateToRegion,
 }: TourMapProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -55,6 +58,12 @@ export default function TourMap({
       }
     })();
   }, [onUserLocationReady, tour]);
+
+  useEffect(() => {
+    if (mapRef.current && animateToRegion) {
+      mapRef.current.animateToRegion(animateToRegion, 400);
+    }
+  }, [animateToRegion]);
 
   // Animate to current step when it changes (for active tours)
   useEffect(() => {
@@ -100,7 +109,7 @@ export default function TourMap({
 
       {nearbyMarkers?.map((marker) => (
         <MapMarker
-          key={marker.id}
+          key={`${marker.id}-${marker.coverImage ?? 'none'}`}
           id={marker.id}
           coordinate={marker.coordinate}
           title={marker.title}
@@ -108,6 +117,19 @@ export default function TourMap({
           circleSize={marker.circleSize}
           circleColor={marker.circleColor}
           opacity={marker.opacity}
+          coverImage={marker.coverImage}
+          onPress={marker.onPress}
+          selected={marker.selected}
+        />
+      ))}
+
+      {clusterMarkers?.map((cluster) => (
+        <ClusterMarker
+          key={cluster.id}
+          id={cluster.id}
+          coordinate={cluster.coordinate}
+          count={cluster.count}
+          onPress={cluster.onPress}
         />
       ))}
 
