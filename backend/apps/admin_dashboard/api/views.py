@@ -243,6 +243,13 @@ class AdminTourViewSet(ModelViewSet):
 
         return Response({"detail": "Tour approved and published."})
     
+        create_notification(
+                user=tour.creator,
+                title="Your tour has been approved!",
+                body=f"Congratulations, your tour named '{tour.title}' was published .",
+                data={"tour_id": tour.id, "type": "tour_approved"}
+            )
+    
         for follower in tour.creator.followers.all():
             create_notification(
                 user=follower,

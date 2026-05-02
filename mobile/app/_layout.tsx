@@ -78,13 +78,24 @@ function RootLayoutNavigator() {
 
   useEffect(() => {
     const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-      const data = response.notification.request.content.data;
+      const data = response.notification.request.content.data as {
+        type?: string;
+        tour_id?: string | number;
+        follower_id?: string | number;
+        user_id?: string | number;
+      };
 
-      if (data?.type === 'new_tour' && data?.tour_id) {
+      if (data?.type && ['new_tour', 'tour_approved', 'new_review'].includes(data.type) && data?.tour_id ) {
         router.push(`/tour/${data.tour_id}`);
       } 
       else if (data?.type === 'new_follower' && data?.follower_id) {
         router.push(`/profile?userId=${data.follower_id}`);
+      }
+      else if (data?.type === 'friend_level_up' && data?.user_id) {
+        router.push({
+          pathname: '/profile/[userId]',
+          params: { userId: data.user_id.toString() },
+        });
       }
     });
     return () => {

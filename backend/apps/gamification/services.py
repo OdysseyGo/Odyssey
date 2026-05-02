@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from apps.notifications.utils import create_notification
 from apps.tours.models import Puzzle, PuzzleAttempt
 
 from .level_service import LevelService
@@ -386,9 +387,18 @@ class TourRewardService:
 
         if not progress.xp_awarded:
             if reward_eligible:
+                old_level = user.level
                 user.xp += progress.total_xp
                 user.level = LevelService.get_level(user.xp)
                 user.tour_count += 1
+            if user.level > old_level:
+                for follower in user.followers.all():
+                    create_notification(
+                        user=follower,
+                        title="Your Friend Leveled Up! 🚀",
+                        body=f"{user.username} just leveled up and reached level {user.level}!",
+                        data={"user_id": user.id, "new_level": user.level, "type": "friend_level_up"}
+                    )
             progress.xp_awarded = True
             progress.save(update_fields=["xp_awarded"])
             if reward_eligible:
