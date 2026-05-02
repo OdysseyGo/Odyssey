@@ -44,12 +44,12 @@ class UserSerializer(serializers.ModelSerializer):
             "terms_accepted",
             "terms_update_required",
         ]
-
-    def get_terms_update_required(self, obj):
-        return obj.terms_version != settings.CURRENT_TERMS_VERSION
         extra_kwargs = {
             "password": {"write_only": True},
         }
+
+    def get_terms_update_required(self, obj):
+        return obj.terms_version != settings.CURRENT_TERMS_VERSION
 
     def validate_terms_accepted(self, value):
         if not value:

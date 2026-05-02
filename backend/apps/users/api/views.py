@@ -79,7 +79,8 @@ class UserViewSet(ModelViewSet):
             {
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
-                "terms_update_required": user.terms_version != settings.CURRENT_TERMS_VERSION,
+                "terms_update_required": user.terms_version
+                != settings.CURRENT_TERMS_VERSION,
             }
         )
 
