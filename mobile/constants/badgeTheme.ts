@@ -1,4 +1,13 @@
-export type BadgeTier = 'gold' | 'silver' | 'bronze' | 'xp1' | 'xp2' | 'xp3' | 'neutral';
+export type BadgeTier =
+  | 'gold'
+  | 'silver'
+  | 'bronze'
+  | 'xp1'
+  | 'xp2'
+  | 'xp3'
+  | 'platinum'
+  | 'diamond'
+  | 'neutral';
 
 export type BadgeTierPalette = {
   outerFill: string;
@@ -65,6 +74,20 @@ export const BADGE_TIER_PALETTE: Record<BadgeTier, BadgeTierPalette> = {
     border: '#6d28d9',
     text: '#4c1d95',
     mutedText: '#5b21b6',
+  },
+  platinum: {
+    outerFill: '#e0f2fe',
+    innerFill: '#7dd3fc',
+    border: '#0369a1',
+    text: '#082f49',
+    mutedText: '#0c4a6e',
+  },
+  diamond: {
+    outerFill: '#ecfeff',
+    innerFill: '#67e8f9',
+    border: '#0e7490',
+    text: '#083344',
+    mutedText: '#155e75',
   },
   neutral: {
     outerFill: '#e2e8f0',

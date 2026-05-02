@@ -11,11 +11,7 @@ import WritingTips from '@/components/TourCreation/StoryEditor/WritingTips';
 import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditorFooter';
 import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
 import { CreationHeader } from '@/components/TourCreation/common';
-import {
-  Puzzle,
-  TOUR_TEXT_FIELD_MAX_LENGTH,
-  doesLocationMeetTourRequirements,
-} from '@/components/TourCreation';
+import { Puzzle, TOUR_TEXT_FIELD_MAX_LENGTH } from '@/components/TourCreation';
 import { useTranslation } from 'react-i18next';
 
 export default function EditLocationScreen() {
@@ -102,7 +98,7 @@ export default function EditLocationScreen() {
   );
 
   const isPuzzleValid = (currentPuzzle?: Puzzle) => {
-    if (!currentPuzzle?.question) {
+    if (!currentPuzzle?.question.trim()) {
       return false;
     }
 
@@ -114,10 +110,6 @@ export default function EditLocationScreen() {
       return !!currentPuzzle.arConfig;
     }
 
-    if (currentPuzzle.puzzle_type === 'GYROSCOPE') {
-      return true;
-    }
-
     if (currentPuzzle.puzzle_type === 'COMPASS') {
       return (
         typeof currentPuzzle.targetHeadingDegrees === 'number' &&
@@ -127,8 +119,12 @@ export default function EditLocationScreen() {
       );
     }
 
+    if (currentPuzzle.puzzle_type === 'OPEN_ENDED') {
+      return currentPuzzle.correctAnswer.trim().length > 0;
+    }
+
     const options = currentPuzzle.options;
-    if (!currentPuzzle.correctAnswer || !options || options.length < 2) {
+    if (!currentPuzzle.correctAnswer.trim() || !options || options.length < 2) {
       return false;
     }
 
@@ -199,11 +195,7 @@ export default function EditLocationScreen() {
           />
 
           {isPuzzleMode && (
-            <PuzzleEditor
-              puzzle={puzzle}
-              onChange={setPuzzle}
-              isRequired={tourData.tourType === 'PUZZLE'}
-            />
+            <PuzzleEditor puzzle={puzzle} onChange={setPuzzle} isRequired={isPuzzleMode} />
           )}
 
           <WritingTips />

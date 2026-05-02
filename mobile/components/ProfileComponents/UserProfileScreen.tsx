@@ -24,6 +24,7 @@ import {
   User,
 } from '@/api/users';
 import { getCurrentUser } from '@/api/auth';
+import { ReportCategory, submitReport } from '@/api/reports';
 import { Tour } from '@/api/tours';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -33,6 +34,9 @@ import { userProfileStyles } from './UserProfileScreen.styles';
 import ProfileHeaderComp from './ProfileHeaderComp';
 import ProfileStatsComp from './ProfileStatsComp';
 import ProfileTourCard from './ProfileTourCard';
+import ProfileBadgesContainer from './ProfileBadgesContainer';
+import { getUserBadges, UserBadge } from '@/api/profile';
+import ReportContentModal from '@/components/common/ReportContentModal';
 
 const HEADER_HEIGHT = 240;
 
@@ -116,7 +120,16 @@ function SkeletonLoading({ theme }: { theme: (typeof Colors)['light'] }) {
 }
 
 // ─────────────────────────────────────────────────────────
-const profileCache = new Map<string, { user: User; isFollowing: boolean; currentUserId: number }>();
+const profileCache = new Map<
+  string,
+  {
+    user: User;
+    isFollowing: boolean;
+    currentUserId: number;
+    badges: UserBadge[];
+    badgesCount: number;
+  }
+>();
 
 export default function UserProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
@@ -139,6 +152,12 @@ export default function UserProfileScreen() {
   const [isGuest, setIsGuest] = useState(true);
   const [tours, setTours] = useState<Tour[]>([]);
   const [toursLoading, setToursLoading] = useState(false);
+  const [badges, setBadges] = useState<UserBadge[]>(cached?.badges ?? []);
+  const [badgesCount, setBadgesCount] = useState(cached?.badgesCount ?? 0);
+  const [reportVisible, setReportVisible] = useState(false);
+  const [reportCategory, setReportCategory] = useState<ReportCategory>('INAPPROPRIATE');
+  const [reportReason, setReportReason] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
 
   const stickyOpacity = scrollY.interpolate({
     inputRange: [HEADER_HEIGHT * 0.5, HEADER_HEIGHT * 0.7],
@@ -168,6 +187,8 @@ export default function UserProfileScreen() {
     setCurrentUserId(null);
     setIsFollowing(false);
     setIsGuest(true);
+    setBadges([]);
+    setBadgesCount(0);
 
     try {
       let meId: number | null = null;
@@ -186,7 +207,11 @@ export default function UserProfileScreen() {
 
       const fetchFollowings =
         meId !== null ? getUserFollowings(meId.toString()) : Promise.resolve([]);
-      const [targetUser, followings] = await Promise.all([getUserById(userId), fetchFollowings]);
+      const [targetUser, followings, badgesResponse] = await Promise.all([
+        getUserById(userId),
+        fetchFollowings,
+        getUserBadges(userId),
+      ]);
 
       const following = meId !== null && followings.some((f) => f.id === parseInt(userId, 10));
       if (meId !== null) {
@@ -194,10 +219,14 @@ export default function UserProfileScreen() {
           user: targetUser,
           isFollowing: following,
           currentUserId: meId,
+          badges: badgesResponse.results,
+          badgesCount: badgesResponse.count,
         });
       }
       setUser(targetUser);
       setIsFollowing(following);
+      setBadges(badgesResponse.results);
+      setBadgesCount(badgesResponse.count);
       loadTours();
     } catch {
       setLoadError(true);
@@ -250,6 +279,63 @@ export default function UserProfileScreen() {
     }
   };
 
+  const handleOpenReport = () => {
+    if (!user) return;
+    if (isGuest) {
+      Alert.alert(
+        t('report.loginRequiredTitle', { defaultValue: 'Log in to report' }),
+        t('report.loginRequiredMessage', {
+          defaultValue: 'You need to log in before reporting content.',
+        }),
+        [
+          { text: t('report.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+          {
+            text: t('report.loginButton', { defaultValue: 'Log in' }),
+            onPress: () => router.push('/login'),
+          },
+        ]
+      );
+      return;
+    }
+
+    setReportVisible(true);
+  };
+
+  const handleSubmitReport = async () => {
+    if (!user || reportSubmitting) return;
+    const reason = reportReason.trim();
+    if (reportCategory === 'OTHER' && reason.length < 3) return;
+
+    try {
+      setReportSubmitting(true);
+      await submitReport({
+        content_type: 'USER',
+        content_id: user.id,
+        category: reportCategory,
+        reason,
+      });
+      setReportVisible(false);
+      setReportCategory('INAPPROPRIATE');
+      setReportReason('');
+      Alert.alert(
+        t('report.successTitle', { defaultValue: 'Report submitted' }),
+        t('report.successMessage', {
+          defaultValue: 'Thanks for helping keep Odyssey safe. Our team will review it.',
+        })
+      );
+    } catch (err: any) {
+      Alert.alert(
+        t('report.errorTitle', { defaultValue: 'Could not submit report' }),
+        err?.message ||
+          t('report.errorMessage', {
+            defaultValue: 'Please check your connection and try again.',
+          })
+      );
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
+
   // ── Loading ────────────────────────────────────────────
 
   if (loading) return <SkeletonLoading theme={color} />;
@@ -298,6 +384,22 @@ export default function UserProfileScreen() {
   const isSelf = currentUserId === user.id;
   const levelInfo = computeLevelInfo(user.xp);
   const stickyGradientColors = getLevelTier(levelInfo.level).gradient;
+  const formattedBadges = badges.map((userBadge) => ({
+    id: userBadge.id.toString(),
+    name: userBadge.badge.name,
+    code: userBadge.badge.code,
+    description: userBadge.badge.description,
+    icon: userBadge.badge.icon,
+    criteria: userBadge.badge.criteria,
+    unlocked: true,
+    city: userBadge.city,
+    countryCode: userBadge.country_code,
+    mistakeCount: userBadge.mistake_count,
+    earnedDate: userBadge.earned_at,
+    sourceTourId: userBadge.source_tour_detail?.id,
+    sourceTourTitle: userBadge.source_tour_detail?.title,
+    visualConfig: userBadge.visual_config,
+  }));
 
   return (
     <View style={styles.root}>
@@ -307,6 +409,20 @@ export default function UserProfileScreen() {
           <Ionicons name="chevron-back" size={26} color={color.white} />
         </TouchableOpacity>
       </View>
+
+      {!isSelf && (
+        <View style={[styles.reportButtonOverlay, { top: insets.top + 8 }]}>
+          <TouchableOpacity
+            onPress={handleOpenReport}
+            style={styles.reportButton}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('report.userButton', { defaultValue: 'Report user' })}
+          >
+            <Ionicons name="flag-outline" size={22} color={color.white} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Sticky username bar — fades in on scroll */}
       <Animated.View
@@ -357,6 +473,7 @@ export default function UserProfileScreen() {
         <ProfileStatsComp
           km={Number(user.total_walked_km ?? 0)}
           tours={user.tour_count}
+          badges={badgesCount}
           followers={user.follower_count}
           following={user.following_count}
           onFollowersPress={
@@ -434,6 +551,9 @@ export default function UserProfileScreen() {
             </TouchableOpacity>
           ))}
 
+        {/* Badges */}
+        <ProfileBadgesContainer badges={formattedBadges} title={t('profile.badges')} />
+
         {/* Published tours */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -454,6 +574,23 @@ export default function UserProfileScreen() {
           )}
         </View>
       </Animated.ScrollView>
+
+      <ReportContentModal
+        visible={reportVisible}
+        title={t('report.userTitle', { defaultValue: 'Report user' })}
+        subtitle={t('report.subtitle', {
+          defaultValue: 'Choose the closest reason, then add details so our team can review it.',
+        })}
+        category={reportCategory}
+        reason={reportReason}
+        submitting={reportSubmitting}
+        onChangeCategory={setReportCategory}
+        onChangeReason={setReportReason}
+        onClose={() => {
+          if (!reportSubmitting) setReportVisible(false);
+        }}
+        onSubmit={handleSubmitReport}
+      />
     </View>
   );
 }

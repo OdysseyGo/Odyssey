@@ -3,9 +3,24 @@ import json
 from rest_framework import serializers
 
 from apps.admin_dashboard.models import BanRecord, Report
-from apps.gamification.models import Badge, PictureCompareConfig
+from apps.gamification.models import (
+    Badge,
+    PictureCompareConfig,
+    UserBadge,
+    UserBadgeHistory,
+)
 from apps.gamification.visuals import DEFAULT_BADGE_VISUAL_CONFIG
-from apps.tours.models import ARModel, Puzzle, Review, Tour, TourStep
+from apps.tours.models import (
+    ARModel,
+    ArPuzzleDetail,
+    CompassPuzzleDetail,
+    PictureComparePuzzleDetail,
+    Puzzle,
+    Review,
+    Tour,
+    TourStep,
+    TriviaPuzzleDetail,
+)
 from apps.users.models import User
 
 # ── User Management ──────────────────────────────────────────────────
@@ -30,12 +45,82 @@ class AdminUserListSerializer(serializers.ModelSerializer):
         ]
 
 
+class AdminBadgeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Badge
+        fields = ["id", "code", "name", "description", "icon", "criteria"]
+
+
+class AdminUserBadgeSerializer(serializers.ModelSerializer):
+    badge = AdminBadgeSerializer(read_only=True)
+    source_tour_detail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserBadge
+        fields = [
+            "id",
+            "badge",
+            "city",
+            "country_code",
+            "mistake_count",
+            "source_tour",
+            "source_tour_detail",
+            "earned_at",
+        ]
+
+    def get_source_tour_detail(self, obj):
+        tour = obj.source_tour
+        if tour is None:
+            return None
+        return {
+            "id": tour.id,
+            "title": tour.title,
+            "city": tour.city,
+            "country": tour.country,
+            "country_code": tour.country_code,
+        }
+
+
+class AdminUserBadgeHistorySerializer(serializers.ModelSerializer):
+    badge = AdminBadgeSerializer(read_only=True)
+    source_tour_detail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserBadgeHistory
+        fields = [
+            "id",
+            "badge",
+            "user_badge",
+            "city",
+            "country_code",
+            "mistake_count",
+            "event_type",
+            "source_tour",
+            "source_tour_detail",
+            "earned_at",
+        ]
+
+    def get_source_tour_detail(self, obj):
+        tour = obj.source_tour
+        if tour is None:
+            return None
+        return {
+            "id": tour.id,
+            "title": tour.title,
+            "city": tour.city,
+            "country": tour.country,
+            "country_code": tour.country_code,
+        }
+
+
 class AdminUserDetailSerializer(serializers.ModelSerializer):
     badges_earned_count = serializers.IntegerField(read_only=True)
     tours_created_count = serializers.IntegerField(read_only=True)
     tours_completed_count = serializers.IntegerField(read_only=True)
     reviews_count = serializers.IntegerField(read_only=True)
     ban_records = serializers.SerializerMethodField()
+    badges = serializers.SerializerMethodField()
+    badge_history = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -63,11 +148,25 @@ class AdminUserDetailSerializer(serializers.ModelSerializer):
             "tours_completed_count",
             "reviews_count",
             "ban_records",
+            "badges",
+            "badge_history",
         ]
 
     def get_ban_records(self, obj):
         records = obj.ban_records.all()[:5]
         return BanRecordSerializer(records, many=True).data
+
+    def get_badges(self, obj):
+        badges = obj.badges.select_related("badge", "source_tour").order_by(
+            "-earned_at"
+        )
+        return AdminUserBadgeSerializer(badges, many=True).data
+
+    def get_badge_history(self, obj):
+        history = obj.badge_history.select_related("badge", "source_tour").order_by(
+            "-earned_at"
+        )[:20]
+        return AdminUserBadgeHistorySerializer(history, many=True).data
 
 
 class AdminUserUpdateSerializer(serializers.ModelSerializer):
@@ -250,8 +349,43 @@ class BadgeVisualBundleSerializer(serializers.Serializer):
     badges = serializers.SerializerMethodField()
 
     def get_badges(self, _obj):
-        badges = Badge.objects.order_by("id").values("id", "code", "name")
-        return list(badges)
+        badge_codes = self.context.get("badge_codes")
+        badges = Badge.objects.order_by("id")
+        if badge_codes is not None:
+            badges = badges.filter(code__in=badge_codes)
+        return [
+            {
+                "id": badge.id,
+                "code": badge.code,
+                "name": badge.name,
+                "criteria": badge.criteria or {},
+                "icon": badge.icon.url if badge.icon else "",
+            }
+            for badge in badges
+        ]
+
+
+class GameBadgeVisualTypeSerializer(serializers.Serializer):
+    type_key = serializers.CharField()
+    layout = serializers.JSONField(required=True)
+    tiers = serializers.JSONField(required=True)
+
+    def validate_type_key(self, value):
+        normalized = (value or "").strip().upper()
+        if not normalized:
+            raise serializers.ValidationError("type_key is required.")
+        return normalized
+
+    def validate_layout(self, value):
+        return _validate_game_badge_layout_config(value)
+
+    def validate_tiers(self, value):
+        return _validate_game_badge_tiers(value)
+
+
+class GameBadgeVisualBundleSerializer(serializers.Serializer):
+    items = serializers.JSONField()
+    badges = serializers.JSONField()
 
 
 def _validate_badge_visual_config(config, *, partial=False):
@@ -282,6 +416,20 @@ def _validate_badge_visual_config(config, *, partial=False):
             _validate_number(
                 "flag.rotation_deg", config["flag"]["rotation_deg"], -180, 180
             )
+
+    if "image" in config and isinstance(config["image"], dict):
+        if "source" in config["image"]:
+            source = config["image"]["source"]
+            if source not in {"flag", "png"}:
+                raise serializers.ValidationError(
+                    {"image.source": "must be either 'flag' or 'png'"}
+                )
+        if "asset_url" in config["image"]:
+            asset_url = config["image"]["asset_url"]
+            if not isinstance(asset_url, str):
+                raise serializers.ValidationError(
+                    {"image.asset_url": "must be a string"}
+                )
 
     if "text" in config and isinstance(config["text"], dict):
         if "x" in config["text"]:
@@ -399,6 +547,58 @@ def _validate_badge_visual_config(config, *, partial=False):
             )
 
     return config
+
+
+def _validate_game_badge_layout_config(config):
+    if not isinstance(config, dict):
+        raise serializers.ValidationError("layout must be an object.")
+    allowed_top = {"hex", "flag", "image", "text", "text_plate"}
+    invalid_keys = set(config.keys()) - allowed_top
+    if invalid_keys:
+        raise serializers.ValidationError(
+            f"Unsupported layout keys: {sorted(invalid_keys)}"
+        )
+    _validate_badge_visual_config(config, partial=True)
+    return config
+
+
+def _validate_game_badge_tiers(tiers):
+    if not isinstance(tiers, dict):
+        raise serializers.ValidationError("tiers must be an object.")
+    allowed_keys = {"tier1", "tier2", "tier3", "tier4", "tier5"}
+    invalid_keys = set(tiers.keys()) - allowed_keys
+    if invalid_keys:
+        raise serializers.ValidationError(
+            f"Unsupported tier keys: {sorted(invalid_keys)}"
+        )
+    allowed_colors = {
+        "outer_fill",
+        "inner_fill",
+        "border",
+        "text",
+        "border_color",
+        "inner_border_color",
+        "frame_fill_top",
+        "frame_fill_bottom",
+        "fill_top",
+        "fill_bottom",
+        "frame_fill_opacity",
+        "fill_opacity",
+        "text_plate_fill",
+        "text_plate_fill_opacity",
+        "text_plate_stroke",
+        "text_plate_stroke_opacity",
+        "text_plate_stroke_width",
+    }
+    for tier, palette in tiers.items():
+        if not isinstance(palette, dict):
+            raise serializers.ValidationError({tier: "must be an object."})
+        unknown = set(palette.keys()) - allowed_colors
+        if unknown:
+            raise serializers.ValidationError(
+                {tier: f"Unsupported keys: {sorted(unknown)}"}
+            )
+    return tiers
 
 
 class AdminARModelSerializer(serializers.ModelSerializer):
@@ -582,6 +782,33 @@ class AdminTourStepSerializer(serializers.ModelSerializer):
         return hasattr(obj, "puzzle")
 
 
+# ── Puzzle Detail Serializers  ---------------──────────────────────
+
+
+class TriviaPuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TriviaPuzzleDetail
+        fields = ["options", "correct_answer"]
+
+
+class PictureComparePuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PictureComparePuzzleDetail
+        fields = ["reference_image", "similarity_threshold"]
+
+
+class ArPuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArPuzzleDetail
+        fields = ["scene_asset_url", "metadata"]
+
+
+class CompassPuzzleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompassPuzzleDetail
+        fields = ["target_heading_degrees"]
+
+
 class AdminTourListSerializer(serializers.ModelSerializer):
     creator_username = serializers.CharField(source="creator.username", read_only=True)
     avg_rating = serializers.FloatField(read_only=True)
@@ -599,6 +826,7 @@ class AdminTourListSerializer(serializers.ModelSerializer):
             "tour_type",
             "difficulty",
             "status",
+            "generation_source",
             "city",
             "country",
             "country_code",
@@ -613,6 +841,11 @@ class AdminTourListSerializer(serializers.ModelSerializer):
 
 
 class AdminPuzzleSerializer(serializers.ModelSerializer):
+    trivia_detail = TriviaPuzzleDetailSerializer(read_only=True)
+    picture_compare_detail = PictureComparePuzzleDetailSerializer(read_only=True)
+    ar_detail = ArPuzzleDetailSerializer(read_only=True)
+    compass_detail = CompassPuzzleDetailSerializer(read_only=True)
+
     class Meta:
         model = Puzzle
         fields = [
@@ -624,6 +857,10 @@ class AdminPuzzleSerializer(serializers.ModelSerializer):
             "hint",
             "xp_reward",
             "reference_image",
+            "trivia_detail",
+            "picture_compare_detail",
+            "ar_detail",
+            "compass_detail",
         ]
 
 
@@ -677,6 +914,7 @@ class AdminTourDetailSerializer(serializers.ModelSerializer):
             "city",
             "country",
             "country_code",
+            "cover_image",
             "total_distance",
             "walking_distance",
             "transport_distance",
@@ -684,8 +922,10 @@ class AdminTourDetailSerializer(serializers.ModelSerializer):
             "max_leg_distance",
             "requires_transport",
             "is_circular",
+            "metrics_calculated",
             "accessibility_rating",
             "status",
+            "generation_source",
             "created_at",
             "updated_at",
             "steps",
@@ -715,6 +955,7 @@ class ReportSerializer(serializers.ModelSerializer):
             "reporter_username",
             "content_type",
             "content_id",
+            "category",
             "reason",
             "status",
             "admin_notes",
@@ -728,11 +969,21 @@ class ReportSerializer(serializers.ModelSerializer):
 class ReportCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
-        fields = ["content_type", "content_id", "reason"]
+        fields = ["content_type", "content_id", "category", "reason"]
+        extra_kwargs = {
+            "reason": {"required": False, "allow_blank": True},
+        }
 
     def validate(self, data):
         content_type = data["content_type"]
         content_id = data["content_id"]
+        category = data.get("category", Report.OTHER)
+        reason = data.get("reason", "")
+
+        if category == Report.OTHER and not reason.strip():
+            raise serializers.ValidationError(
+                {"reason": "Please describe the issue when selecting Other."}
+            )
 
         model_map = {
             Report.TOUR: Tour,
@@ -763,6 +1014,7 @@ class ReportActionSerializer(serializers.Serializer):
     action = serializers.ChoiceField(choices=ACTION_CHOICES)
     admin_notes = serializers.CharField(required=False, default="")
     ban_reason = serializers.CharField(required=False, default="Violation of terms")
+    ban_expires_at = serializers.DateTimeField(required=False, allow_null=True)
 
 
 class BanRecordSerializer(serializers.ModelSerializer):

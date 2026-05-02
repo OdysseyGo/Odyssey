@@ -1,6 +1,28 @@
 import { BADGE_TIER_BY_CODE, BadgeTier, XP_LABEL_BY_CODE } from '@/constants/badgeTheme';
 
-export function getBadgeTier(code?: string | null): BadgeTier {
+const ALL_TIERS: BadgeTier[] = [
+  'gold',
+  'silver',
+  'bronze',
+  'xp1',
+  'xp2',
+  'xp3',
+  'platinum',
+  'diamond',
+  'neutral',
+];
+
+export function getBadgeTier(
+  code?: string | null,
+  criteria?: Record<string, unknown> | null
+): BadgeTier {
+  const rawVisualTier = criteria?.visual_tier;
+  if (typeof rawVisualTier === 'string') {
+    const normalized = rawVisualTier.toLowerCase() as BadgeTier;
+    if (ALL_TIERS.includes(normalized)) {
+      return normalized;
+    }
+  }
   if (!code) {
     return 'neutral';
   }

@@ -15,7 +15,16 @@ import { BADGE_TIER_PALETTE } from '@/constants/badgeTheme';
 import { normalizeCountryCode } from '@/lib/flags';
 import { getBadgeTier, getXpLabel, isCityBadge, isXpBadge } from '@/lib/badgeVisuals';
 
-type BadgeTier = 'gold' | 'silver' | 'bronze' | 'xp1' | 'xp2' | 'xp3' | 'neutral';
+type BadgeTier =
+  | 'gold'
+  | 'silver'
+  | 'bronze'
+  | 'xp1'
+  | 'xp2'
+  | 'xp3'
+  | 'platinum'
+  | 'diamond'
+  | 'neutral';
 type TierPalette = {
   outer_fill: string;
   inner_fill: string;
@@ -51,6 +60,10 @@ type BadgeVisualConfig = {
     rotation_deg?: number;
     clip_points?: string;
   };
+  image?: {
+    source?: 'flag' | 'png';
+    asset_url?: string;
+  };
   text?: {
     x?: number;
     y?: number;
@@ -76,15 +89,28 @@ type BadgeVisualConfig = {
 
 type Props = {
   code?: string | null;
+  badgeCriteria?: Record<string, unknown> | null;
+  iconUrl?: string | null;
   city?: string;
   countryCode?: string;
   fallbackLabel: string;
   visualConfig?: BadgeVisualConfig | null;
+  scale?: number;
 };
 
 const WIDTH = 100;
 const HEIGHT = 104;
-const ALL_TIERS: BadgeTier[] = ['gold', 'silver', 'bronze', 'xp1', 'xp2', 'xp3', 'neutral'];
+const ALL_TIERS: BadgeTier[] = [
+  'gold',
+  'silver',
+  'bronze',
+  'xp1',
+  'xp2',
+  'xp3',
+  'platinum',
+  'diamond',
+  'neutral',
+];
 const DEFAULT_VISUAL_PALETTE: Record<BadgeTier, TierPalette> = {
   gold: {
     outer_fill: BADGE_TIER_PALETTE.gold.outerFill,
@@ -200,6 +226,44 @@ const DEFAULT_VISUAL_PALETTE: Record<BadgeTier, TierPalette> = {
     text_plate_stroke_opacity: 0.7,
     text_plate_stroke_width: 1,
   },
+  platinum: {
+    outer_fill: BADGE_TIER_PALETTE.platinum.outerFill,
+    inner_fill: BADGE_TIER_PALETTE.platinum.innerFill,
+    border: BADGE_TIER_PALETTE.platinum.border,
+    text: BADGE_TIER_PALETTE.platinum.text,
+    border_color: BADGE_TIER_PALETTE.platinum.border,
+    inner_border_color: BADGE_TIER_PALETTE.platinum.border,
+    frame_fill_top: '#ffffff',
+    frame_fill_bottom: '#dbe4f4',
+    frame_fill_opacity: 0.98,
+    fill_top: '#f8fafc',
+    fill_bottom: '#e2e8f0',
+    fill_opacity: 0.24,
+    text_plate_fill: '#ffffff',
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: BADGE_TIER_PALETTE.platinum.border,
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
+  },
+  diamond: {
+    outer_fill: BADGE_TIER_PALETTE.diamond.outerFill,
+    inner_fill: BADGE_TIER_PALETTE.diamond.innerFill,
+    border: BADGE_TIER_PALETTE.diamond.border,
+    text: BADGE_TIER_PALETTE.diamond.text,
+    border_color: BADGE_TIER_PALETTE.diamond.border,
+    inner_border_color: BADGE_TIER_PALETTE.diamond.border,
+    frame_fill_top: '#ffffff',
+    frame_fill_bottom: '#dbe4f4',
+    frame_fill_opacity: 0.98,
+    fill_top: '#f8fafc',
+    fill_bottom: '#e2e8f0',
+    fill_opacity: 0.24,
+    text_plate_fill: '#ffffff',
+    text_plate_fill_opacity: 0.78,
+    text_plate_stroke: BADGE_TIER_PALETTE.diamond.border,
+    text_plate_stroke_opacity: 0.7,
+    text_plate_stroke_width: 1,
+  },
   neutral: {
     outer_fill: BADGE_TIER_PALETTE.neutral.outerFill,
     inner_fill: BADGE_TIER_PALETTE.neutral.innerFill,
@@ -235,6 +299,10 @@ const DEFAULT_CONFIG: Required<BadgeVisualConfig> = {
     height: 1.4,
     rotation_deg: -60,
     clip_points: '50,12 84.64,32 84.64,72 50,92 15.36,72 15.36,32',
+  },
+  image: {
+    source: 'flag',
+    asset_url: '',
   },
   text: {
     x: 0.56,
@@ -272,6 +340,7 @@ function mergeVisualConfig(config?: BadgeVisualConfig | null): Required<BadgeVis
   return {
     hex: { ...DEFAULT_CONFIG.hex, ...(config?.hex || {}) },
     flag: { ...DEFAULT_CONFIG.flag, ...(config?.flag || {}) },
+    image: { ...DEFAULT_CONFIG.image, ...(config?.image || {}) },
     text: { ...DEFAULT_CONFIG.text, ...(config?.text || {}) },
     text_plate: { ...DEFAULT_CONFIG.text_plate, ...(config?.text_plate || {}) },
     palette: mergedPalette,
@@ -347,13 +416,27 @@ function pivotTransform(
   return `translate(${x}, ${y}) rotate(${rotation}) scale(${scaleX}, ${scaleY}) translate(${-x}, ${-y})`;
 }
 
-export default function HexBadge({ code, city, countryCode, fallbackLabel, visualConfig }: Props) {
-  const tier = getBadgeTier(code);
+export default function HexBadge({
+  code,
+  badgeCriteria,
+  iconUrl,
+  city,
+  countryCode,
+  fallbackLabel,
+  visualConfig,
+  scale = 1,
+}: Props) {
+  const tier = getBadgeTier(code, badgeCriteria);
   const config = mergeVisualConfig(visualConfig);
   const palette = config.palette[tier] || DEFAULT_VISUAL_PALETTE[tier];
 
   const normalizedCountryCode = normalizeCountryCode(countryCode);
-  const flagUrl = buildFlagUrl(normalizedCountryCode);
+  const usesFlag = isCityBadge(code);
+  const imageUrl = usesFlag
+    ? buildFlagUrl(normalizedCountryCode)
+    : config.image.source === 'png'
+      ? config.image.asset_url || iconUrl || null
+      : null;
   const cityText = (city || 'Unknown').trim() || 'Unknown';
   const xpLabel = getXpLabel(code);
   const primaryLabel = isCityBadge(code)
@@ -372,10 +455,17 @@ export default function HexBadge({ code, city, countryCode, fallbackLabel, visua
 
   const textX = WIDTH * (config.text.x ?? 0.56);
   const textY = HEIGHT * (config.text.y ?? 0.79);
+  const scaledWidth = WIDTH * scale;
+  const scaledHeight = HEIGHT * scale;
 
   return (
-    <View style={[styles.wrap, { shadowColor: palette.border }]}>
-      <Svg width={WIDTH} height={HEIGHT}>
+    <View
+      style={[
+        styles.wrap,
+        { width: scaledWidth, height: scaledHeight, shadowColor: palette.border },
+      ]}
+    >
+      <Svg width={scaledWidth} height={scaledHeight} viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
         <Defs>
           <LinearGradient id="hexBackground" x1="0%" y1="0%" x2="0%" y2="100%">
             <Stop
@@ -418,13 +508,13 @@ export default function HexBadge({ code, city, countryCode, fallbackLabel, visua
 
         <G clipPath="url(#badgeClip)">
           <G clipPath="url(#flagClip)">
-            {flagUrl ? (
+            {imageUrl ? (
               <SvgImage
                 x={flagX}
                 y={flagY}
                 width={flagWidth}
                 height={flagHeight}
-                href={{ uri: flagUrl }}
+                href={{ uri: imageUrl }}
                 preserveAspectRatio="xMidYMid slice"
                 transform={`rotate(${config.flag.rotation_deg ?? -60}, ${flagCenterX}, ${flagCenterY})`}
               />

@@ -17,7 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TourScrollerComp from '@/components/TourComponents/TourScrollerComp';
 import FeaturedTourCarousel from '@/components/TourComponents/FeaturedTourCarousel';
-import { getTours, Tour, TourFilters } from '@/api/tours';
+import { getTourImageUri, getTours, Tour, TourFilters } from '@/api/tours';
 import { TourDisplayProps } from '@/components/TourComponents/TourDisplayComp.config';
 import { useFocusEffect, router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -59,7 +59,7 @@ function mapTourToDisplayProps(
 ): TourDisplayProps {
   return {
     id: tour.id.toString(),
-    image: tour.steps?.[0]?.image || '',
+    image: getTourImageUri(tour),
     title: tour.title,
     author: tour.creator?.username || 'Unknown',
     duration: `${tour.duration_minutes} ${t('tourId.min')}`,

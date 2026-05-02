@@ -1,8 +1,10 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.tours.models import Tour
+from apps.tours.models import Tour, TourStep
 
 User = get_user_model()
 
@@ -25,6 +27,78 @@ class TourValidationTests(APITestCase):
         response = self.client.post("/api/tours/", tour_data, format="json")
         print("\nEmpty Category Response:", response.data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("category", response.data)
+
+    def test_publish_tour_requires_cover_image(self):
+        tour = Tour.objects.create(
+            title="Draft Tour",
+            description="D",
+            creator=self.user,
+            tour_type="STORY",
+            category="History",
+            difficulty="EASY",
+            duration_minutes=60,
+            city="Paris",
+            country="France",
+            country_code="FR",
+            status=Tour.DRAFT,
+        )
+
+        response = self.client.patch(
+            f"/api/tours/{tour.id}/",
+            {
+                "status": Tour.PUBLISHED,
+                "city_latitude": 48.8566,
+                "city_longitude": 2.3522,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("cover_image", response.data)
+
+    def test_publish_tour_requires_cover_image_file(self):
+        tour = Tour.objects.create(
+            title="AI Draft Tour",
+            description="D",
+            creator=self.user,
+            tour_type="STORY",
+            category="History",
+            difficulty="EASY",
+            duration_minutes=60,
+            city="Paris",
+            country="France",
+            country_code="FR",
+            status=Tour.DRAFT,
+        )
+        self.client.post(
+            f"/api/tours/{tour.id}/steps/",
+            {
+                "title": "Stop 1",
+                "description": "",
+                "latitude": "48.8584",
+                "longitude": "2.2945",
+                "order": 0,
+            },
+            format="json",
+        )
+
+        with patch(
+            "apps.tours.api.serializers.GoogleMapsFacade.tour_has_step_in_city",
+            return_value=True,
+        ):
+            response = self.client.patch(
+                f"/api/tours/{tour.id}/",
+                {
+                    "status": Tour.PUBLISHED,
+                    "city_latitude": 48.8566,
+                    "city_longitude": 2.3522,
+                },
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("cover_image", response.data)
 
     def test_create_step_almost_empty_fields(self):
         # Create valid tour first
@@ -78,3 +152,43 @@ class TourValidationTests(APITestCase):
             f"/api/tours/{tour.id}/steps/", step_data, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_step_rejects_when_step_limit_reached(self):
+        tour = Tour.objects.create(
+            title="Step Limit Tour",
+            description="D",
+            creator=self.user,
+            tour_type="STORY",
+            category="History",
+            difficulty="EASY",
+            duration_minutes=60,
+        )
+
+        TourStep.objects.bulk_create(
+            [
+                TourStep(
+                    tour=tour,
+                    order=i,
+                    title=f"Stop {i + 1}",
+                    description="",
+                    latitude="1.0",
+                    longitude="1.0",
+                )
+                for i in range(150)
+            ]
+        )
+
+        response = self.client.post(
+            f"/api/tours/{tour.id}/steps/",
+            {
+                "title": "Overflow Stop",
+                "description": "",
+                "latitude": "1.0",
+                "longitude": "1.0",
+                "order": 150,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("steps", response.data)

@@ -1,12 +1,19 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { Accelerometer, Magnetometer } from 'expo-sensors';
-import { Puzzle, PuzzleType, PUZZLE_TYPE_OPTIONS, createEmptyPuzzle } from '../TourCreation.types';
+import {
+  Puzzle,
+  PuzzleType,
+  PUZZLE_TYPE_OPTIONS,
+  TOUR_TEXT_FIELD_MAX_LENGTH,
+  createEmptyPuzzle,
+} from '../TourCreation.types';
 import PuzzleQuestion from './PuzzleQuestion';
 import PuzzleOptions from './PuzzleOptions';
 import PuzzleHint from './PuzzleHint';
 import ImageUploadSection from './ImageUploadSection';
 import ARPuzzleConfigurator from './ARPuzzleConfigurator';
+import StoryInputField from './StoryInputField';
 import { puzzleEditorStyles } from './PuzzleEditor.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -46,8 +53,8 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
   const gravityRef = React.useRef<{ x: number; y: number; z: number } | null>(null);
   const filteredHeadingRef = React.useRef<number | null>(null);
   const isPictureCompare = currentPuzzle.puzzle_type === 'PICTURE_COMPARE';
+  const isOpenEnded = currentPuzzle.puzzle_type === 'OPEN_ENDED';
   const isArChallenge = currentPuzzle.puzzle_type === 'AR';
-  const isGyroscope = currentPuzzle.puzzle_type === 'GYROSCOPE';
   const isCompass = currentPuzzle.puzzle_type === 'COMPASS';
   const options = currentPuzzle.options;
   const correctAnswer = currentPuzzle.correctAnswer;
@@ -114,7 +121,17 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
       return;
     }
 
-    if (nextType === 'AR' || nextType === 'GYROSCOPE') {
+    if (nextType === 'OPEN_ENDED') {
+      onChange({
+        ...currentPuzzle,
+        puzzle_type: nextType,
+        options: [],
+        correctAnswer: '',
+      });
+      return;
+    }
+
+    if (nextType === 'AR') {
       onChange({
         ...currentPuzzle,
         puzzle_type: nextType,
@@ -277,7 +294,16 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
             toleranceDegrees={COMPASS_CREATION_TOLERANCE_DEGREES}
           />
         </View>
-      ) : isGyroscope ? null : (
+      ) : isOpenEnded ? (
+        <StoryInputField
+          label={`${t('creation.puzzle.correctAnswer')}${isRequired ? ' *' : ''}`}
+          value={currentPuzzle.correctAnswer}
+          onChangeText={(text: string) => handleChange('correctAnswer', text)}
+          placeholder={t('creation.puzzle.correctAnswerPlaceholder')}
+          hint={t('creation.puzzle.correctAnswerHint')}
+          maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
+        />
+      ) : (
         <PuzzleOptions
           options={options}
           correctAnswer={correctAnswer}

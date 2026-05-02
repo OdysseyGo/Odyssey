@@ -24,6 +24,7 @@ type FormLocationSelectProps = {
   countryCode?: string;
   countryName?: string;
   onSelect: (value: LocationSelectValue) => void;
+  onClearSelection?: () => void;
 };
 
 type PlaceSuggestion = {
@@ -46,11 +47,12 @@ export default function FormLocationSelect({
   countryCode,
   countryName,
   onSelect,
+  onClearSelection,
 }: FormLocationSelectProps) {
   const theme = useColorTheme();
   const color = Colors[theme];
   const styles = formLocationSelectStyles(theme);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const isEffectivelyDisabled = disabled;
   const [query, setQuery] = useState(value);
@@ -84,7 +86,7 @@ export default function FormLocationSelect({
         let mapped: PlaceSuggestion[] = [];
 
         if (types === '(regions)') {
-          const countries = await fetchCountrySuggestions(trimmedQuery);
+          const countries = await fetchCountrySuggestions(trimmedQuery, i18n.language);
           mapped = countries.slice(0, 10).map((country) => ({
             id: `country:${country.country_code || country.name}`,
             label: country.name,
@@ -95,12 +97,22 @@ export default function FormLocationSelect({
             longitude: undefined,
           }));
         } else {
-          const states = await fetchStateSuggestions(trimmedQuery, countryCode, countryName);
+          const states = await fetchStateSuggestions(
+            trimmedQuery,
+            countryCode,
+            countryName,
+            i18n.language
+          );
           mapped = states.slice(0, 10).map((state) => ({
-            id: `state:${state.name}:${state.country_code}`,
+            id: `state:${state.state_code || state.name}:${state.country_code}`,
             label: state.name,
             value: state.name,
-            description: state.country_code ? `${state.name}, ${state.country_code}` : state.name,
+            description:
+              state.country_name && state.country_name !== state.country_code
+                ? `${state.name}, ${state.country_name}`
+                : state.country_code
+                  ? `${state.name}, ${state.country_code}`
+                  : state.name,
             countryCode: state.country_code || countryCode || '',
             latitude: state.latitude,
             longitude: state.longitude,
@@ -108,11 +120,8 @@ export default function FormLocationSelect({
         }
 
         if (!cancelled) {
-          const normalizedQuery = trimmedQuery.toLowerCase();
-          const visibleSuggestions = mapped.filter(
-            (item) => item.value.toLowerCase() !== normalizedQuery
-          );
-          setSuggestions(visibleSuggestions.slice(0, 6));
+          // Keep exact matches visible so users can explicitly tap-select them.
+          setSuggestions(mapped.slice(0, 6));
         }
       } catch (error) {
         console.warn('[FormLocationSelect] Location search failed:', error);
@@ -126,7 +135,7 @@ export default function FormLocationSelect({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [canSearch, countryCode, countryName, query, types]);
+  }, [canSearch, countryCode, countryName, i18n.language, query, types]);
 
   const handleSelect = (suggestion: PlaceSuggestion) => {
     if (isSelectingRef.current) return;
@@ -173,10 +182,21 @@ export default function FormLocationSelect({
           onFocus={() => setIsFocused(true)}
           onBlur={() => {
             setTimeout(() => {
-              if (!isSelectingRef.current) setIsFocused(false);
+              if (!isSelectingRef.current) {
+                setIsFocused(false);
+                // Enforce dropdown-only selection: free-typed text is discarded.
+                if (query.trim() !== value.trim()) {
+                  setQuery(value.trim() ? value : '');
+                }
+              }
             }, 250);
           }}
           onChangeText={(text) => {
+            const trimmedText = text.trim();
+            const trimmedValue = value.trim();
+            if (trimmedValue && trimmedText !== trimmedValue) {
+              onClearSelection?.();
+            }
             setQuery(text);
             setSelectionError('');
             setIsFocused(true);

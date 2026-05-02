@@ -1,17 +1,18 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import MapView from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { locationPickerStyles } from './LocationPicker.styles';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
-import { TourLocation, createNewLocation } from '../TourCreation.types';
+import { TOUR_STEPS_MAX_COUNT, TourLocation, createNewLocation } from '../TourCreation.types';
 import MapContainer from './MapContainer';
 import InstructionBanner from './InstructionBanner';
 import LocationsList from './LocationsList';
 import LocationSearchBar from './LocationSearchBar';
 import { DEFAULT_REGION, SEARCH_BAR_HEIGHT } from './LocationPicker.config';
+import { useTranslation } from 'react-i18next';
 
 type LocationPickerProps = {
   locations: TourLocation[];
@@ -29,6 +30,7 @@ export default function LocationPicker({
   const theme = useColorTheme();
   const styles = locationPickerStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
   const mapRef = useRef<MapView>(null);
 
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
@@ -51,6 +53,14 @@ export default function LocationPicker({
 
   const handleLocationAdd = useCallback(
     (latitude: number, longitude: number, name: string) => {
+      if (locations.length >= TOUR_STEPS_MAX_COUNT) {
+        Alert.alert(
+          t('creation.location.maxStepsReachedTitle', { max: TOUR_STEPS_MAX_COUNT }),
+          t('creation.location.maxStepsReachedMessage', { max: TOUR_STEPS_MAX_COUNT })
+        );
+        return;
+      }
+
       const newLocation = createNewLocation(latitude, longitude, locations.length + 1);
       newLocation.title = name;
       onLocationsChange([...locations, newLocation]);
@@ -61,7 +71,7 @@ export default function LocationPicker({
         longitudeDelta: 0.05,
       });
     },
-    [locations, onLocationsChange]
+    [locations, onLocationsChange, t]
   );
 
   const handleLocationPress = useCallback(

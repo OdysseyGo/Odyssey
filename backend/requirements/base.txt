@@ -18,3 +18,5 @@ uvicorn[standard]>=0.29.0
 whitenoise>=6.6.0
 requests>=2.31.0
 cryptography>=42.0.0
+
+pycountry>=22.3.5

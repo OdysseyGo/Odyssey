@@ -1,4 +1,5 @@
 import { apiRequest } from './APIClient';
+import type { UserBadge } from './profile';
 
 export type TourProgressStatus = 'IN_PROGRESS' | 'COMPLETED';
 
@@ -25,22 +26,38 @@ export type StepActionResponse = {
   is_tour_complete: boolean;
   new_step_id: number | null;
   awarded_xp: number;
+  awarded_badges?: UserBadge[];
 };
+
+export const DEFAULT_MAX_FAILED_ATTEMPTS = 3;
 
 export type PictureCompareResponse = StepActionResponse & {
   accepted: boolean;
+  attempt_count?: number;
   similarity_score: number;
   threshold_used: number;
   processing_ms: number;
+  max_attempts?: number;
 };
 
 export type ArCodeResponse = StepActionResponse & {
   accepted: boolean;
+  attempt_count?: number;
+  max_attempts?: number;
 };
 
 export type TriviaAnswerResponse = StepActionResponse & {
   accepted: boolean;
   attempt_count?: number;
+};
+
+export type OpenEndedAnswerResponse = StepActionResponse & {
+  accepted: boolean;
+  attempt_count?: number;
+  similarity_score?: number;
+  threshold_used?: number;
+  max_attempts?: number;
+  revealed_answer?: string;
 };
 
 export type DeleteTourProgressRequest = {
@@ -186,6 +203,23 @@ export async function submitTriviaAnswer(
   return apiRequest<TriviaAnswerResponse, { answer: string }>({
     method: 'POST',
     url: `/api/tour-progress/${id}/submit-trivia-answer/`,
+    data: { answer },
+    auth: true,
+    signal,
+  });
+}
+
+/**
+ * Submit a typed answer for an OPEN_ENDED puzzle on the current step.
+ */
+export async function submitOpenEndedAnswer(
+  id: number,
+  answer: string,
+  signal?: AbortSignal
+): Promise<OpenEndedAnswerResponse> {
+  return apiRequest<OpenEndedAnswerResponse, { answer: string }>({
+    method: 'POST',
+    url: `/api/tour-progress/${id}/submit-open-ended-answer/`,
     data: { answer },
     auth: true,
     signal,

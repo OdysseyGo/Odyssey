@@ -87,12 +87,14 @@ export type FeedTour = {
   title: string;
   description: string;
   category: string;
+  generation_source: 'USER' | 'AI';
   difficulty: string;
   duration_minutes: number;
   city?: string;
   country?: string;
   country_code?: string;
   cover_image?: string;
+  cover_image_attribution?: string;
   created_at: string;
 };
 
@@ -223,9 +225,15 @@ export const getByUsername = (username: string) =>
     auth: false,
   });
 
-export const resetPassword = (
-  payload: { username: string; email: string; new_password: string } //This is only for the demo, it should be changed in the future
-) =>
+export const requestPasswordReset = (email: string) =>
+  apiRequest<void>({
+    method: 'post',
+    url: '/api/users/request-password-reset/',
+    data: { email },
+    auth: false,
+  });
+
+export const resetPassword = (payload: { email: string; code: string; new_password: string }) =>
   apiRequest<void>({
     method: 'post',
     url: '/api/users/reset-password/',

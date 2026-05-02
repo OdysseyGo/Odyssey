@@ -1,5 +1,11 @@
 import json
+import logging
+import os
+import uuid
 
+from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Avg, Count, Q
 from django.http import HttpResponse
@@ -35,6 +41,7 @@ from apps.admin_dashboard.api.serializers import (
     BanUserSerializer,
     BulkUserActionSerializer,
     DashboardSummarySerializer,
+    GameBadgeVisualTypeSerializer,
     PictureCompareConfigSerializer,
     PictureCompareTuningSerializer,
     ReportActionSerializer,
@@ -51,12 +58,24 @@ from apps.gamification.models import (
     TourProgress,
 )
 from apps.gamification.picture_compare import compare_picture_similarity
-from apps.gamification.visuals import BadgeVisualService
+from apps.gamification.services import BadgeService
+from apps.gamification.visuals import (
+    FlagBadgeVisualService,
+    GameBadgeVisualService,
+    derive_game_type_key_from_badge_code,
+)
 from apps.tours.models import ARModel, Review, Tour
 from apps.tours.utils import GoogleMapsFacade
 from apps.users.models import User
 
+logger = logging.getLogger(__name__)
+
 # ── User Management ──────────────────────────────────────────────────
+
+try:
+    from storages.backends.s3boto3 import S3Boto3Storage
+except Exception:  # pragma: no cover - optional import safety
+    S3Boto3Storage = None
 
 
 class AdminUserViewSet(ModelViewSet):
@@ -73,13 +92,14 @@ class AdminUserViewSet(ModelViewSet):
         qs = User.objects.all()
         if self.action == "retrieve":
             qs = qs.annotate(
-                badges_earned_count=Count("badges"),
-                tours_created_count=Count("created_tours"),
+                badges_earned_count=Count("badges", distinct=True),
+                tours_created_count=Count("created_tours", distinct=True),
                 tours_completed_count=Count(
                     "tour_progress",
                     filter=Q(tour_progress__status=TourProgress.COMPLETED),
+                    distinct=True,
                 ),
-                reviews_count=Count("reviews"),
+                reviews_count=Count("reviews", distinct=True),
             )
         return qs
 
@@ -206,49 +226,79 @@ class AdminTourViewSet(ModelViewSet):
     @action(detail=True, methods=["post"], url_path="approve")
     def approve(self, request, pk=None):
         tour = self.get_object()
-        city_latitude = request.data.get("city_latitude")
-        city_longitude = request.data.get("city_longitude")
-        if not tour.city:
+
+        if not tour.city or not tour.country:
             return Response(
-                {"city": "City is required before publishing a tour."},
+                {"location": "City and Country are required before publishing a tour."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if city_latitude is None or city_longitude is None:
-            return Response(
-                {"city": "City coordinates are required before publishing a tour."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        try:
-            city_latitude = float(city_latitude)
-            city_longitude = float(city_longitude)
-        except (TypeError, ValueError):
-            return Response(
-                {"city": "City coordinates are invalid."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+
         if not tour.steps.exists():
             return Response(
                 {"steps": "At least one tour stop is required before publishing."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not GoogleMapsFacade().tour_has_step_in_city(
-            tour,
-            city_latitude=city_latitude,
-            city_longitude=city_longitude,
-        ):
+
+        facade = GoogleMapsFacade()
+
+        city_lat, city_lon = facade.geocode_location(
+            name=tour.city, city=tour.city, fallback_lat=0.0, fallback_lng=0.0
+        )
+
+        has_step_in_city = facade.tour_has_step_in_city(
+            tour, city_latitude=city_lat, city_longitude=city_lon
+        )
+
+        if not has_step_in_city:
             return Response(
                 {"city": "At least one tour stop must be inside the selected city."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
         tour.status = Tour.PUBLISHED
         tour.save(update_fields=["status"])
+
+        try:
+            send_mail(
+                subject=f'Your tour "{tour.title}" has been published! 🎉',
+                message=(
+                    f"Hi {tour.creator.username},\n\n"
+                    f'Great news! Your tour "{tour.title}" has been reviewed and is now live on Odyssey.\n\n'
+                    "Explorers can now discover and start your tour. Thank you for your contribution!\n\n"
+                    "— The Odyssey Team"
+                ),
+                from_email=None,
+                recipient_list=[tour.creator.email],
+            )
+        except Exception as e:
+            logger.error("Failed to send approval email for tour %s: %s", tour.id, e)
+
         return Response({"detail": "Tour approved and published."})
 
     @action(detail=True, methods=["post"], url_path="reject")
     def reject(self, request, pk=None):
         tour = self.get_object()
+        reason = request.data.get("reason", "").strip()
         tour.status = Tour.DRAFT
         tour.save(update_fields=["status"])
+
+        try:
+            reason_block = f'\nReason from our team:\n"{reason}"\n' if reason else ""
+            send_mail(
+                subject=f'Update on your tour "{tour.title}"',
+                message=(
+                    f"Hi {tour.creator.username},\n\n"
+                    f'After review, your tour "{tour.title}" was not approved at this time '
+                    f"and has been moved back to drafts.{reason_block}\n"
+                    "Please make the necessary changes and resubmit when it's ready.\n\n"
+                    "— The Odyssey Team"
+                ),
+                from_email=None,
+                recipient_list=[tour.creator.email],
+            )
+        except Exception as e:
+            logger.error("Failed to send rejection email for tour %s: %s", tour.id, e)
+
         return Response({"detail": "Tour rejected and set to draft."})
 
     @action(detail=True, methods=["post"], url_path="archive")
@@ -377,6 +427,20 @@ class BadgeVisualViewSet(ViewSet):
     permission_classes = [IsStaffUser]
 
     @staticmethod
+    def _s3_configured() -> bool:
+        return bool(
+            getattr(settings, "AWS_STORAGE_BUCKET_NAME", "")
+            and getattr(settings, "AWS_ACCESS_KEY_ID", "")
+            and getattr(settings, "AWS_SECRET_ACCESS_KEY", "")
+        )
+
+    @classmethod
+    def _image_storage(cls):
+        if cls._s3_configured() and S3Boto3Storage is not None:
+            return S3Boto3Storage()
+        return default_storage
+
+    @staticmethod
     def _badge_code_id_maps():
         code_to_id = {}
         id_to_code = {}
@@ -402,33 +466,56 @@ class BadgeVisualViewSet(ViewSet):
         }
 
     def list(self, request):
-        payload = BadgeVisualService.read_payload()
+        # Legacy route behaves as flag bundle for backward compatibility.
+        return self.flag_bundle(request)
+
+    @action(detail=False, methods=["get"], url_path="flag")
+    def flag_bundle(self, request):
+        BadgeService.ensure_default_badges()
+        payload = FlagBadgeVisualService.read_payload()
+        city_codes = list(
+            Badge.objects.filter(code__startswith="CITY_").values_list(
+                "code", flat=True
+            )
+        )
         payload = {
-            "template": payload.get("template") or BadgeVisualService.load_template(),
+            "template": payload.get("template")
+            or FlagBadgeVisualService.load_template(),
             "overrides": [
                 self._serialize_override(item)
                 for item in (payload.get("overrides") or [])
             ],
         }
-        serializer = BadgeVisualBundleSerializer(payload)
+        serializer = BadgeVisualBundleSerializer(
+            payload, context={"badge_codes": city_codes}
+        )
         return Response(serializer.data)
 
     @action(detail=False, methods=["post"], url_path="template")
     def update_template(self, request):
+        return self.update_flag_template(request)
+
+    @action(detail=False, methods=["post"], url_path="flag/template")
+    def update_flag_template(self, request):
         serializer = BadgeVisualTemplateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        saved = BadgeVisualService.save_template(
+        saved = FlagBadgeVisualService.save_template(
             serializer.validated_data.get("config") or {}
         )
         return Response(
             {
-                "config": saved.get("template") or BadgeVisualService.load_template(),
+                "config": saved.get("template")
+                or FlagBadgeVisualService.load_template(),
                 "updated_at": timezone.now().isoformat(),
             }
         )
 
     @action(detail=False, methods=["post"], url_path="overrides")
     def upsert_override(self, request):
+        return self.upsert_flag_override(request)
+
+    @action(detail=False, methods=["post"], url_path="flag/overrides")
+    def upsert_flag_override(self, request):
         serializer = BadgeVisualOverrideSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -439,7 +526,7 @@ class BadgeVisualViewSet(ViewSet):
             or data.get("badge_code")
             or ""
         )
-        _, saved = BadgeVisualService.upsert_override(
+        _, saved = FlagBadgeVisualService.upsert_override(
             badge_code=badge_code,
             country_code=data.get("country_code", ""),
             config=data.get("config", {}),
@@ -450,21 +537,121 @@ class BadgeVisualViewSet(ViewSet):
         detail=False, methods=["delete"], url_path=r"overrides/(?P<override_id>\d+)"
     )
     def delete_override(self, request, override_id=None):
-        deleted = BadgeVisualService.delete_override(int(override_id))
+        return self.delete_flag_override(request, override_id=override_id)
+
+    @action(
+        detail=False,
+        methods=["delete"],
+        url_path=r"flag/overrides/(?P<override_id>\d+)",
+    )
+    def delete_flag_override(self, request, override_id=None):
+        deleted = FlagBadgeVisualService.delete_override(int(override_id))
         if not deleted:
             return Response(
                 {"detail": "Override not found."}, status=status.HTTP_404_NOT_FOUND
             )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=False, methods=["get"], url_path="game")
+    def game_bundle(self, request):
+        BadgeService.ensure_default_badges()
+        badges = list(Badge.objects.exclude(code__startswith="CITY_").order_by("id"))
+
+        grouped = {}
+        for badge in badges:
+            type_key = derive_game_type_key_from_badge_code(badge.code)
+            if not type_key:
+                continue
+            grouped.setdefault(type_key, []).append(
+                {
+                    "id": badge.id,
+                    "code": badge.code,
+                    "name": badge.name,
+                    "criteria": badge.criteria or {},
+                }
+            )
+
+        items = []
+        for type_key, badge_items in grouped.items():
+            config = GameBadgeVisualService.ensure_type_config(type_key=type_key)
+            items.append(
+                {
+                    "type_key": type_key,
+                    "label": type_key.replace("_", " ").title(),
+                    "badges": badge_items,
+                    "config": config,
+                }
+            )
+
+        return Response({"items": items})
+
+    @action(detail=False, methods=["post"], url_path="game/config")
+    def upsert_game_type_config(self, request):
+        serializer = GameBadgeVisualTypeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        saved = GameBadgeVisualService.upsert_type_config(
+            type_key=data["type_key"],
+            layout=data["layout"],
+            tiers=data["tiers"],
+        )
+        return Response(
+            {
+                "type_key": data["type_key"],
+                "config": saved,
+                "updated_at": timezone.now().isoformat(),
+            }
+        )
+
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="upload-image",
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def upload_image(self, request):
+        image = request.FILES.get("image")
+        if image is None:
+            return Response(
+                {"detail": "image file is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not image.name.lower().endswith(".png"):
+            return Response(
+                {"detail": "Only .png files are supported."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ext = os.path.splitext(image.name or "")[1].lower() or ".png"
+        path = f"badge_visual_assets/{uuid.uuid4().hex}{ext}"
+        storage = self._image_storage()
+        saved_path = storage.save(path, image)
+        return Response({"url": storage.url(saved_path)})
+
     @action(detail=False, methods=["get"], url_path="export")
     def export(self, request):
-        body = BadgeVisualService.read_payload()
+        return self.export_flag(request)
+
+    @action(detail=False, methods=["get"], url_path="flag/export")
+    def export_flag(self, request):
+        body = FlagBadgeVisualService.read_payload()
         response = HttpResponse(
             json.dumps(body, indent=2, sort_keys=True) + "\n",
             content_type="application/json",
         )
         response["Content-Disposition"] = 'attachment; filename="badge_visuals.json"'
+        return response
+
+    @action(detail=False, methods=["get"], url_path="game/export")
+    def export_game(self, request):
+        body = GameBadgeVisualService.read_payload()
+        response = HttpResponse(
+            json.dumps(body, indent=2, sort_keys=True) + "\n",
+            content_type="application/json",
+        )
+        response["Content-Disposition"] = (
+            'attachment; filename="badge_visuals_game.json"'
+        )
         return response
 
 
@@ -541,6 +728,7 @@ class ReportViewSet(ModelViewSet):
             user=target_user,
             banned_by=admin_user,
             reason=data.get("ban_reason", "Violation of terms"),
+            expires_at=data.get("ban_expires_at"),
         )
         target_user.is_banned = True
         target_user.save(update_fields=["is_banned"])
