@@ -1,3 +1,4 @@
+import os
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -40,7 +41,7 @@ class TourCreationApiTests(APITestCase):
             "city": "Paris",
             "country": "France",
             "country_code": "FR",
-            "status": "DRAFT",
+            "status": "PENDING",
             "is_premium": False,
             "cover_image": self._image_file(),
         }
@@ -49,6 +50,8 @@ class TourCreationApiTests(APITestCase):
         tour_id = response.data["id"]
         self.assertEqual(response.data["creator"]["id"], self.user.id)
         self.assertEqual(response.data["generation_source"], Tour.USER)
+        self.assertEqual(response.data["status"], Tour.PENDING)
+        self.assertEqual(response.data["review_status"], Tour.IN_REVIEW)
 
         # 2. Create Tour Steps
         step1_data = {
@@ -80,6 +83,13 @@ class TourCreationApiTests(APITestCase):
             "apps.tours.api.serializers.GoogleMapsFacade.tour_has_step_in_city",
             return_value=True,
         ):
+            staff_user = User.objects.create_user(
+                username="staff",
+                email="staff@example.com",
+                password="staffpassword123",
+                is_staff=True,
+            )
+            self.client.force_authenticate(user=staff_user)
             response_publish = self.client.patch(
                 f"/api/tours/{tour_id}/",
                 {
@@ -94,10 +104,35 @@ class TourCreationApiTests(APITestCase):
         # 4. Verify Data
         tour = Tour.objects.get(pk=tour_id)
         self.assertEqual(tour.status, Tour.PUBLISHED)
+        self.assertIsNone(tour.review_status)
         self.assertEqual(tour.generation_source, Tour.USER)
         self.assertEqual(tour.steps.count(), 2)
         step1 = tour.steps.get(order=0)
         self.assertEqual(step1.title, "Eiffel Tower")
+
+    def test_create_tour_publishes_in_development_mode(self):
+        with patch.dict(os.environ, {"ENV_MODE": "development"}):
+            response = self.client.post(
+                "/api/tours/",
+                {
+                    "title": "Dev Auto Publish",
+                    "description": "Dev mode tour",
+                    "tour_type": "STORY",
+                    "category": "History",
+                    "difficulty": "EASY",
+                    "duration_minutes": 60,
+                    "city": "Paris",
+                    "country": "France",
+                    "country_code": "FR",
+                    "is_premium": False,
+                    "cover_image": self._image_file(),
+                },
+                format="multipart",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["status"], Tour.PUBLISHED)
+        self.assertIsNone(response.data["review_status"])
 
     def test_create_tour_requires_cover_image(self):
         response = self.client.post(
@@ -109,7 +144,7 @@ class TourCreationApiTests(APITestCase):
                 "category": "History",
                 "difficulty": "EASY",
                 "duration_minutes": 60,
-                "status": "DRAFT",
+                "status": "PENDING",
                 "is_premium": False,
             },
             format="json",
@@ -135,7 +170,7 @@ class TourCreationApiTests(APITestCase):
                 "city": "Paris",
                 "country": "Fransa",
                 "country_code": "fr",
-                "status": "DRAFT",
+                "status": "PENDING",
                 "is_premium": False,
             },
             format="json",
@@ -147,7 +182,7 @@ class TourCreationApiTests(APITestCase):
 
     def test_update_tour_keeps_country_canonical_when_country_code_exists(self):
         tour = Tour.objects.create(
-            title="Draft Tour",
+            title="Pending Tour",
             description="desc",
             creator=self.user,
             tour_type="STORY",
@@ -157,7 +192,8 @@ class TourCreationApiTests(APITestCase):
             city="Paris",
             country="France",
             country_code="FR",
-            status=Tour.DRAFT,
+            status=Tour.PENDING,
+            review_status=Tour.IN_REVIEW,
             is_premium=False,
         )
         canonical_country, canonical_country_code = normalize_tour_country(

@@ -12,6 +12,11 @@ User = get_user_model()
 class TourValidationTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", password="password")
+        self.staff_user = User.objects.create_user(
+            username="staffuser",
+            password="password",
+            is_staff=True,
+        )
         self.client.force_authenticate(user=self.user)
 
     def test_create_tour_missing_fields(self):
@@ -31,7 +36,7 @@ class TourValidationTests(APITestCase):
 
     def test_publish_tour_requires_cover_image(self):
         tour = Tour.objects.create(
-            title="Draft Tour",
+            title="Pending Tour",
             description="D",
             creator=self.user,
             tour_type="STORY",
@@ -41,9 +46,11 @@ class TourValidationTests(APITestCase):
             city="Paris",
             country="France",
             country_code="FR",
-            status=Tour.DRAFT,
+            status=Tour.PENDING,
+            review_status=Tour.IN_REVIEW,
         )
 
+        self.client.force_authenticate(user=self.staff_user)
         response = self.client.patch(
             f"/api/tours/{tour.id}/",
             {
@@ -59,7 +66,7 @@ class TourValidationTests(APITestCase):
 
     def test_publish_tour_requires_cover_image_file(self):
         tour = Tour.objects.create(
-            title="AI Draft Tour",
+            title="AI Pending Tour",
             description="D",
             creator=self.user,
             tour_type="STORY",
@@ -69,7 +76,8 @@ class TourValidationTests(APITestCase):
             city="Paris",
             country="France",
             country_code="FR",
-            status=Tour.DRAFT,
+            status=Tour.PENDING,
+            review_status=Tour.IN_REVIEW,
         )
         self.client.post(
             f"/api/tours/{tour.id}/steps/",
@@ -87,6 +95,7 @@ class TourValidationTests(APITestCase):
             "apps.tours.api.serializers.GoogleMapsFacade.tour_has_step_in_city",
             return_value=True,
         ):
+            self.client.force_authenticate(user=self.staff_user)
             response = self.client.patch(
                 f"/api/tours/{tour.id}/",
                 {

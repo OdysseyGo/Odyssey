@@ -116,16 +116,14 @@
     "cancel": "İptal",
     "tabs": {
       "published": "Yayınlandı",
-      "pending": "İncelemede",
-      "drafts": "Taslaklar",
+      "pending": "Beklemede",
       "aiTours": "AI Turları",
       "archived": "Arşivlendi",
       "settings": "Ayarlar",
       "tutorials": "Rehberler"
     },
     "emptyPublished": "Henüz yayınlanmış tur yok. Topluluğa katılmak için bir tur yayınla!",
-    "emptyPending": "İncelemede tur yok. Bir taslak turu gönder, en kısa sürede inceleyelim!",
-    "emptyDraft": "Taslak tur yok. Yeni bir tur oluşturmaya başla!",
+    "emptyPending": "Bekleyen tur yok.",
     "emptyAiTours": "Henüz AI ile oluşturulmuş tur yok. Vitrinini başlatmak için bir tane oluştur!",
     "emptyArchived": "Arşivlenmiş tur yok.",
     "emptyDefault": "Tur bulunamadı.",
@@ -741,7 +739,7 @@
       "step3text": "Odyssey XP'ni takip et, tamamlanan turları puanla ve takipçilerini kontrol et!",
       "step4text": "Diğer gezginleri takip et ve gezilerini paylaş!",
       "step5text": "Kazandığın rozetlere göz at!",
-      "step6text": "Oluşturduğun (yayınlanmış, taslak ve arşivlenmiş) turları bu sekmeden kontrol et.",
+      "step6text": "Oluşturduğun (yayınlanmış, beklemede ve arşivlenmiş) turları bu sekmeden kontrol et.",
       "step7text": "Hesap ayarlarını veya uygulama tercihlerini ayarlar sekmesinden değiştirebilirsin."
     },
     "tours": {
