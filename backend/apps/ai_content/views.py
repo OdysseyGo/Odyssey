@@ -51,6 +51,7 @@ def _run_generation(job_id, payload, user_id):
             language=payload["language"],
             custom_prompt=payload.get("additional_details", ""),
             include_ar=payload.get("include_ar", False),
+            include_compass=payload.get("include_compass", False),
             creator=user,
             progress_callback=_progress,
         )

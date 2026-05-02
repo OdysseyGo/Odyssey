@@ -16,6 +16,7 @@ import {
   FormDurationPicker,
   FormLocationSelect,
 } from '../inputs';
+import ImageUploadSection from '../StoryEditor/ImageUploadSection';
 import { useTranslation } from 'react-i18next';
 
 type TourDetailsStepProps = {
@@ -112,6 +113,13 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
         />
       </FormInputGroup>
 
+      <ImageUploadSection
+        image={tourData.coverImage}
+        onImageChange={(coverImage) => onUpdate({ coverImage })}
+        label={t('creation.story.coverImage')}
+        required
+      />
+
       <FormInputGroup label={t('creation.details.country', { defaultValue: 'Country' })} required>
         <FormLocationSelect
           value={tourData.country}
@@ -119,6 +127,15 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
             defaultValue: 'Search countries...',
           })}
           types="(regions)"
+          onClearSelection={() =>
+            onUpdate({
+              country: '',
+              countryCode: '',
+              state: '',
+              stateLatitude: undefined,
+              stateLongitude: undefined,
+            })
+          }
           onSelect={(selectedCountry) =>
             onUpdate({
               country: selectedCountry.value,
@@ -145,6 +162,13 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
           types="(states)"
           countryCode={tourData.countryCode}
           countryName={tourData.country}
+          onClearSelection={() =>
+            onUpdate({
+              state: '',
+              stateLatitude: undefined,
+              stateLongitude: undefined,
+            })
+          }
           onSelect={(selectedState) =>
             onUpdate({
               state: selectedState.value,

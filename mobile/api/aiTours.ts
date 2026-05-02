@@ -11,6 +11,7 @@ export type AITourGenerationRequest = {
   additional_details?: string;
   include_ar?: boolean;
   use_ad_slot?: boolean;
+  include_compass?: boolean;
 };
 
 export type AITourJobAccepted = {

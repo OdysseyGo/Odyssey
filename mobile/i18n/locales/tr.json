@@ -4,7 +4,9 @@
     "cancel": "İptal",
     "submit": "Gönder",
     "submitting": "Gönderiliyor...",
-    "ok": "Tamam"
+    "ok": "Tamam",
+    "error": "Hata",
+    "syncError": "İlerleme sunucuyla senkronize edilemedi."
   },
   "auth": {
     "welcomeTitle": "Hoş geldin, kaşif!",
@@ -36,6 +38,12 @@
     "remembered": "Aah, hatırladım!",
     "alreadyHaveAccount": "Zaten hesabın var mı? Giriş Yap",
     "verify": "Doğrula",
+    "sendCode": "Kod Gönder",
+    "enterCode": "Sıfırlama Kodunu Gir",
+    "otpCode": "Sıfırlama Kodu",
+    "otpCodePlaceholder": "6 haneli kod",
+    "codeSentSubtitle": "{{email}} adresine 6 haneli bir kod gönderdik. Şifreni sıfırlamak için aşağıya gir.",
+    "codeSentBanner": "Kod gönderildi! Gelen kutunu (ve spam klasörünü) kontrol et.",
     "resetPassword": "Şifre Sıfırla",
     "updatePassword": "Şifreyi Güncelle",
     "cancel": "İptal",
@@ -49,6 +57,10 @@
     "registerTagline": "Hesabını oluştur",
     "continue": "Devam Et",
     "back": "Geri",
+    "termsPrefix": "Şunları kabul ediyorum:",
+    "terms": "Kullanım Koşulları",
+    "termsAnd": "ve",
+    "privacy": "Gizlilik Politikası",
     "resetTagline": "Şifreni sıfırla",
     "successTitle": "Başarılı",
     "confirmRegistrationTitle": "Bu hesap oluşturulsun mu?",
@@ -58,9 +70,12 @@
     "accountCreatedSubtitle": "\"{{username}}\" hazır. Keşfe başlamak için giriş yap.",
     "errors": {
       "usernameRequired": "Kullanıcı adı gereklidir",
+      "usernameInvalidCharacters": "Kullanıcı adında yalnızca harf, rakam ve @/./+/-/_ karakterlerini kullanın.",
       "passwordRequired": "Şifre gereklidir",
       "firstNameRequired": "Ad gereklidir",
+      "firstNameInvalidCharacters": "Ad alanında geçersiz karakterler var.",
       "lastNameRequired": "Soyad gereklidir",
+      "lastNameInvalidCharacters": "Soyad alanında geçersiz karakterler var.",
       "emailRequired": "E-posta gereklidir",
       "emailFormat": "E-posta formatı hatalı. Uzantı en az 2 karakter olmalıdır (.com, .tr vb)",
       "confirmPasswordRequired": "Şifre tekrarı gereklidir",
@@ -71,14 +86,24 @@
       "usernameEmailMismatch": "Kullanıcı adı ve e-posta eşleşmiyor",
       "somethingWentWrong": "Bir şeyler ters gitti",
       "bothFieldsRequired": "Her iki alan da gereklidir",
-      "couldNotUpdate": "Şifre güncellenemedi"
+      "couldNotUpdate": "Şifre güncellenemedi",
+      "termsRequired": "Kullanım Koşulları ve Gizlilik Politikası'nı kabul etmelisiniz",
+      "codeRequired": "Lütfen sıfırlama kodunu girin",
+      "invalidCode": "Geçersiz veya süresi dolmuş kod. Lütfen tekrar deneyin."
     },
-    "userCreated": "Kullanıcı oluşturuldu!"
+    "userCreated": "Kullanıcı oluşturuldu!",
+    "termsUpdateTitle": "Koşullar Güncellendi",
+    "termsUpdateSubtitle": "Kullanım Koşullarımızı ve Gizlilik Politikamızı güncelledik. Odyssey'i kullanmaya devam etmek için lütfen yeni koşulları inceleyin ve kabul edin.",
+    "termsUpdatePrefix": "Güncellenen",
+    "termsUpdateAnd": "ve",
+    "termsUpdateAccept": "Kabul Et ve Devam Et",
+    "termsUpdateLogout": "Çıkış yap"
   },
   "profile": {
     "notLoggedIn": "Profilini görüntülemek için giriş yapman gerekiyor.",
     "loginButton": "Giriş yapmak istiyorum!",
     "logout": "Çıkış Yap",
+    "km": "km",
     "xp": "XP",
     "tours": "Turlar",
     "badges": "Rozetler",
@@ -91,13 +116,15 @@
     "cancel": "İptal",
     "tabs": {
       "published": "Yayınlandı",
-      "drafts": "Taslaklar",
+      "pending": "Beklemede",
+      "aiTours": "AI Turları",
       "archived": "Arşivlendi",
       "settings": "Ayarlar",
       "tutorials": "Rehberler"
     },
     "emptyPublished": "Henüz yayınlanmış tur yok. Topluluğa katılmak için bir tur yayınla!",
-    "emptyDraft": "Taslak tur yok. Yeni bir tur oluşturmaya başla!",
+    "emptyPending": "Bekleyen tur yok.",
+    "emptyAiTours": "Henüz AI ile oluşturulmuş tur yok. Vitrinini başlatmak için bir tane oluştur!",
     "emptyArchived": "Arşivlenmiş tur yok.",
     "emptyDefault": "Tur bulunamadı.",
     "followersTitle": "Takipçiler",
@@ -234,7 +261,68 @@
     "readMore": "Daha fazla oku",
     "readLess": "Daha az göster",
     "lockedStopTitle": "Gizli durak",
-    "lockedStopMessage": "Bu durağı açmak için tura başla ve bulmacayı çöz."
+    "lockedStopMessage": "Bu durağı açmak için tura başla ve bulmacayı çöz.",
+    "reportButton": "Turu bildir",
+    "reportClose": "Bildirim formunu kapat",
+    "reportTitle": "Turu bildir",
+    "reportSubtitle": "En yakın nedeni seç, ardından ekibimizin inceleyebilmesi için ayrıntı ekle.",
+    "reportCategoryLabel": "Kategori",
+    "reportDetailsLabel": "Ayrıntılar",
+    "reportDetailsLabelOptional": "Ayrıntılar isteğe bağlı",
+    "reportDetailsLabelRequired": "Diğer için ayrıntı gerekli",
+    "reportReasonPlaceholder": "Sorunu açıklayın...",
+    "reportReasonPlaceholderOptional": "Yardımcı olacak ayrıntıları ekleyebilirsin...",
+    "reportCancel": "İptal",
+    "reportSubmit": "Bildirimi gönder",
+    "reportSuccessTitle": "Bildirim gönderildi",
+    "reportSuccessMessage": "Odyssey'yi güvenli tutmaya yardım ettiğin için teşekkürler. Ekibimiz inceleyecek.",
+    "reportErrorTitle": "Bildirim gönderilemedi",
+    "reportErrorMessage": "Lütfen bağlantını kontrol edip tekrar dene.",
+    "reportLoginRequiredTitle": "Bildirmek için giriş yap",
+    "reportLoginRequiredMessage": "Bir turu bildirmeden önce giriş yapman gerekiyor.",
+    "reportLoginButton": "Giriş yap",
+    "reportCategories": {
+      "INAPPROPRIATE": "Uygunsuz içerik",
+      "HATE_OR_HARASSMENT": "Nefret veya taciz",
+      "SPAM": "Spam",
+      "MISLEADING": "Yanıltıcı bilgi",
+      "SAFETY": "Güvenlik endişesi",
+      "PRIVACY": "Gizlilik endişesi",
+      "OTHER": "Diğer"
+    }
+  },
+  "report": {
+    "tourButton": "Turu bildir",
+    "reviewButton": "Yorumu bildir",
+    "userButton": "Kullanıcıyı bildir",
+    "tourTitle": "Turu bildir",
+    "reviewTitle": "Yorumu bildir",
+    "userTitle": "Kullanıcıyı bildir",
+    "subtitle": "En yakın nedeni seç, ardından ekibimizin inceleyebilmesi için ayrıntı ekle.",
+    "close": "Bildirim formunu kapat",
+    "categoryLabel": "Kategori",
+    "detailsLabelOptional": "Ayrıntılar isteğe bağlı",
+    "detailsLabelRequired": "Diğer için ayrıntı gerekli",
+    "reasonPlaceholder": "Sorunu açıklayın...",
+    "reasonPlaceholderOptional": "Yardımcı olacak ayrıntıları ekleyebilirsin...",
+    "cancel": "İptal",
+    "submit": "Bildirimi gönder",
+    "successTitle": "Bildirim gönderildi",
+    "successMessage": "Odyssey'yi güvenli tutmaya yardım ettiğin için teşekkürler. Ekibimiz inceleyecek.",
+    "errorTitle": "Bildirim gönderilemedi",
+    "errorMessage": "Lütfen bağlantını kontrol edip tekrar dene.",
+    "loginRequiredTitle": "Bildirmek için giriş yap",
+    "loginRequiredMessage": "İçerik bildirmeden önce giriş yapman gerekiyor.",
+    "loginButton": "Giriş yap",
+    "categories": {
+      "INAPPROPRIATE": "Uygunsuz içerik",
+      "HATE_OR_HARASSMENT": "Nefret veya taciz",
+      "SPAM": "Spam",
+      "MISLEADING": "Yanıltıcı bilgi",
+      "SAFETY": "Güvenlik endişesi",
+      "PRIVACY": "Gizlilik endişesi",
+      "OTHER": "Diğer"
+    }
   },
   "tabs": {
     "settings": "Ayarlar",
@@ -336,6 +424,7 @@
     "continueWithCount": "Devam Et ({{count}} konum)",
     "submit": "Turu Gönder",
     "submitting": "Gönderiliyor...",
+    "uploadingProgress": "{{total}} adımın {{current}}. adımı yükleniyor",
     "submitTitle": "Turu Gönder",
     "submitMessage": "Turunuzu inceleme için göndermeye hazır mısınız?",
     "cancel": "İptal",
@@ -390,7 +479,9 @@
       "cancel": "İptal",
       "delete": "Sil",
       "tourStops": "Tur Durakları",
-      "locationsCount": "{{count}} konum"
+      "locationsCount": "{{count}} konum",
+      "maxStepsReachedTitle": "Adım limitine ulaşıldı",
+      "maxStepsReachedMessage": "Bir tur en fazla {{max}} durak içerebilir."
     },
     "review": {
       "tourStopsTitle": "Tur Durakları ({{count}})",
@@ -449,7 +540,7 @@
       "difficulty": "Zorluk"
     },
     "story": {
-      "coverImage": "Kapak Görseli (İsteğe Bağlı)",
+      "coverImage": "Kapak Görseli",
       "imagePickerTitle": "Görsel Seçici",
       "imagePickerMessage": "Görsel seçici işlevi expo-image-picker kurulumunu gerektirir.",
       "ok": "Tamam",
@@ -481,6 +572,9 @@
       "optionsRequired": "Seçenekler (Doğru cevabı işaretleyin) *",
       "optionPlaceholder": "Seçenek {{number}}",
       "addOption": "Seçenek Ekle",
+      "correctAnswer": "Doğru Cevap",
+      "correctAnswerPlaceholder": "örn. bizans imparatorluğu",
+      "correctAnswerHint": "Kullanıcı, yazdığı cevap buna yeterince benzerse geçer.",
       "hintLabel": "İpucu (İsteğe Bağlı)",
       "hintPlaceholder": "ör. Kapının üstündeki levhaya bakın.",
       "hintText": "Kullanıcı takılırsa işe yarayacak bir ipucu."
@@ -539,6 +633,10 @@
     "includeAr": {
       "title": "AR Bulmacalarını Dahil Et",
       "subtitle": "Yapay zekanın uygun olan duraklara artırılmış gerçeklik bulmacaları eklemesine izin verin"
+    },
+    "includeCompass": {
+      "title": "Pusula Bulmacalarını Dahil Et",
+      "subtitle": "Yapay zekanın uygun olan duraklara pusula yönü bulmacaları eklemesine izin verin"
     }
   },
   "tourStep": {
@@ -549,12 +647,6 @@
     "answerConfirmTitle": "Bu cevabı kilitle?",
     "answerConfirmMessage": "Emin misiniz? Yanlış cevaplar rozet ilerlemenizi azaltabilir.",
     "answerConfirmAction": "Cevapla"
-  },
-  "common": {
-    "cancel": "İptal",
-    "ok": "Tamam",
-    "error": "Hata",
-    "syncError": "İlerleme sunucuyla senkronize edilemedi."
   },
   "map": {
     "noActiveTour": {
@@ -648,7 +740,7 @@
       "step3text": "Odyssey XP'ni takip et, tamamlanan turları puanla ve takipçilerini kontrol et!",
       "step4text": "Diğer gezginleri takip et ve gezilerini paylaş!",
       "step5text": "Kazandığın rozetlere göz at!",
-      "step6text": "Oluşturduğun (yayınlanmış, taslak ve arşivlenmiş) turları bu sekmeden kontrol et.",
+      "step6text": "Oluşturduğun (yayınlanmış, beklemede ve arşivlenmiş) turları bu sekmeden kontrol et.",
       "step7text": "Hesap ayarlarını veya uygulama tercihlerini ayarlar sekmesinden değiştirebilirsin."
     },
     "tours": {
@@ -659,5 +751,16 @@
       "step3text": "Öne çıkan en iyi turları burada görebilirsiniz!",
       "step4text": "Yapay zeka üretimi turlar oluşturmak için buraya dokunun!"
     }
+  },
+  "disclaimer": {
+    "title": "Güvenle Keşfet",
+    "body": "Her büyük yolculuk farkındalıkla başlar. Odyssey ile keşfe çıkarken gözlerini açık tut ve çevrene karşı uyanık ol.",
+    "legalPrefix": "Bu maceraya adım atarak",
+    "terms": "Kullanım Koşulları",
+    "legalAnd": "ve",
+    "privacy": "Gizlilik Politikası",
+    "legalSuffix": "'nı kabul etmiş olursunuz. Görevinize başlamak için lütfen okuyun ve kabul edin.",
+    "mascot": "Ody seni izliyor — gözlerini aç, kaşif!",
+    "cta": "Kabul Ediyorum"
   }
 }

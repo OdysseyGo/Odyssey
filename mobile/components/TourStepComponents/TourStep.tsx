@@ -28,13 +28,20 @@ import {
   StoryStep,
   PuzzleStep,
   MultipleChoicePuzzle,
+  OpenEndedPuzzle,
   PictureComparePuzzle,
   ArCodePuzzle,
   CompassBearingPuzzle,
 } from './TourStep.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
-import { submitArCode, submitPictureCompare, submitTriviaAnswer } from '@/api/tourProgress';
+import {
+  DEFAULT_MAX_FAILED_ATTEMPTS,
+  submitArCode,
+  submitOpenEndedAnswer,
+  submitPictureCompare,
+  submitTriviaAnswer,
+} from '@/api/tourProgress';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import SquareCameraOverlayCapture from '@/components/common/SquareCameraOverlayCapture';
 import RewardedHintReveal from '@/components/Ads/RewardedHintReveal';
@@ -61,6 +68,7 @@ const COMPASS_HEADING_SMOOTHING_FAST_DELTA_DEGREES = 12;
 const COMPASS_HEADING_DEADBAND_DEGREES = 0.35;
 const COMPASS_HAPTIC_COOLDOWN_MS_BY_BAND = [120, 170, 240, 340, 480, 700];
 const COMPASS_HEADING_OFFSET_DEGREES = 0;
+const COMPASS_STATE_UPDATE_EPSILON = 0.01;
 const GEM_PARTICLES = [
   { x: 42, y: 98, r: 1.8 },
   { x: 58, y: 176, r: 1.3 },
@@ -197,6 +205,7 @@ function StoryStepView({ step }: StoryStepViewProps) {
 interface MultipleChoiceViewProps {
   puzzle: MultipleChoicePuzzle;
   isSolved: boolean;
+  isFinished?: boolean;
   onSolve: () => void;
   onAnswered?: () => void;
   stepId?: string;
@@ -205,6 +214,7 @@ interface MultipleChoiceViewProps {
 function MultipleChoiceView({
   puzzle,
   isSolved,
+  isFinished = false,
   onSolve,
   onAnswered,
   stepId,
@@ -218,9 +228,10 @@ function MultipleChoiceView({
   const persistedAnswer = stepId ? (stepAnswers.get(stepId) ?? null) : null;
   const persistedWrongAttemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
   const hasPersistedWrongAttempt = persistedWrongAttemptCount > 0 && !persistedAnswer && !isSolved;
+  const shouldRevealAnswer = isSolved || isFinished || hasPersistedWrongAttempt;
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(persistedAnswer);
   const [hasSubmitted, setHasSubmitted] = useState(
-    persistedAnswer !== null || hasPersistedWrongAttempt
+    persistedAnswer !== null || hasPersistedWrongAttempt || isFinished
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -305,7 +316,7 @@ function MultipleChoiceView({
   const getOptionStyle = (optionId: string) => {
     const baseStyle: object[] = [styles.optionButton];
 
-    if (hasSubmitted || isSolved) {
+    if (hasSubmitted || shouldRevealAnswer) {
       const option = puzzle.options.find((opt) => opt.id === optionId);
       if (option?.isCorrect) {
         baseStyle.push(styles.optionButtonCorrect);
@@ -334,7 +345,7 @@ function MultipleChoiceView({
         {puzzle.options.map((option) => {
           const isWrongSelected =
             hasSubmitted && selectedOptionId === option.id && !option.isCorrect;
-          const isCorrectRevealed = (hasSubmitted || isSolved) && option.isCorrect;
+          const isCorrectRevealed = (hasSubmitted || shouldRevealAnswer) && option.isCorrect;
           const animStyle = isWrongSelected
             ? { transform: [{ translateX: shakeAnim }] }
             : isCorrectRevealed
@@ -363,14 +374,18 @@ function MultipleChoiceView({
         })}
       </View>
 
-      {hasPersistedWrongAttempt && !isSolved && (
-        <Text style={styles.exhaustedHint}>You have already answered this question.</Text>
+      {(hasPersistedWrongAttempt || isFinished) && !isSolved && (
+        <Text style={styles.exhaustedHint}>
+          {isFinished
+            ? 'This question is finished. The correct answer is revealed.'
+            : 'You have already answered this question.'}
+        </Text>
       )}
     </View>
   );
 }
 
-const MAX_ATTEMPTS = 3;
+const MAX_ATTEMPTS = DEFAULT_MAX_FAILED_ATTEMPTS;
 
 interface PictureCompareViewProps {
   puzzle: PictureComparePuzzle;
@@ -396,8 +411,9 @@ function PictureCompareView({
   const [isCameraVisible, setIsCameraVisible] = useState(false);
   const [fullscreenImageUri, setFullscreenImageUri] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string>('');
+  const [maxAttempts, setMaxAttempts] = useState(MAX_ATTEMPTS);
   const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
-  const isExhausted = attemptCount >= MAX_ATTEMPTS;
+  const isExhausted = attemptCount >= maxAttempts;
   const referenceImageUri = puzzle.referenceImageUri;
 
   const handleCaptureAndCheck = async () => {
@@ -420,6 +436,9 @@ function PictureCompareView({
 
     try {
       const response = await submitPictureCompare(progressId, photoUri);
+      if (typeof response.max_attempts === 'number') {
+        setMaxAttempts(response.max_attempts);
+      }
       const similarityPercent = Math.round((response.similarity_score || 0) * 100);
 
       if (response.accepted) {
@@ -427,18 +446,29 @@ function PictureCompareView({
         onSolve();
       } else {
         if (stepId) recordAttempt(stepId);
-        const newCount = attemptCount + 1;
-        if (newCount >= MAX_ATTEMPTS) {
+        const newCount = response.attempt_count ?? attemptCount + 1;
+        if (newCount >= maxAttempts) {
           setFeedback(`Not close enough (${similarityPercent}%). No attempts remaining.`);
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
-            `Not close enough (${similarityPercent}%). ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`
+            `Not close enough (${similarityPercent}%). ${maxAttempts - newCount} attempt${maxAttempts - newCount === 1 ? '' : 's'} remaining.`
           );
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      const serverAttemptCount = Number(error?.response?.data?.attempt_count ?? NaN);
+      const serverMaxAttempts = Number(error?.response?.data?.max_attempts ?? NaN);
+      if (!Number.isNaN(serverMaxAttempts)) {
+        setMaxAttempts(serverMaxAttempts);
+      }
+      if (!Number.isNaN(serverAttemptCount) && stepId) {
+        const missingAttempts = Math.max(0, serverAttemptCount - attemptCount);
+        for (let i = 0; i < missingAttempts; i += 1) {
+          recordAttempt(stepId);
+        }
+      }
       console.error('submit picture compare failed', error);
       setFeedback('Could not verify image right now. Please try again.');
     } finally {
@@ -500,7 +530,7 @@ function PictureCompareView({
       {!isSolved && (
         <View style={styles.attemptsRow}>
           <Text style={styles.attemptsLabel}>Attempts</Text>
-          {Array.from({ length: MAX_ATTEMPTS }, (_, i) => (
+          {Array.from({ length: maxAttempts }, (_, i) => (
             <MaterialCommunityIcons
               key={i}
               name={i < attemptCount ? 'circle' : 'circle-outline'}
@@ -565,6 +595,178 @@ function PictureCompareView({
   );
 }
 
+interface OpenEndedViewProps {
+  puzzle: OpenEndedPuzzle;
+  isSolved: boolean;
+  onSolve: () => void;
+  onAnswered?: () => void;
+  stepId?: string;
+}
+
+function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEndedViewProps) {
+  const theme = useColorTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+  const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
+
+  const [answerInput, setAnswerInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const [feedbackTone, setFeedbackTone] = useState<'neutral' | 'success' | 'error'>('neutral');
+  const [maxAttempts, setMaxAttempts] = useState(MAX_ATTEMPTS);
+  const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
+  const isExhausted = attemptCount >= maxAttempts;
+
+  const handleSubmit = async () => {
+    if (isSolved || isSubmitting || isExhausted) return;
+
+    if (!progressId) {
+      Alert.alert('Progress missing', 'Could not verify puzzle without active tour progress.');
+      return;
+    }
+
+    const trimmedAnswer = answerInput.trim();
+    if (!trimmedAnswer) {
+      setFeedback('Enter an answer first.');
+      setFeedbackTone('error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFeedback('Checking answer...');
+    setFeedbackTone('neutral');
+    try {
+      const response = await submitOpenEndedAnswer(progressId, trimmedAnswer);
+      const responseMaxAttempts =
+        typeof response.max_attempts === 'number' ? response.max_attempts : maxAttempts;
+      setMaxAttempts(responseMaxAttempts);
+      if (response.accepted) {
+        setFeedback('That matches. This step is unlocked.');
+        setFeedbackTone('success');
+        onSolve();
+      } else {
+        if (stepId) recordAttempt(stepId);
+        const newCount = response.attempt_count ?? attemptCount + 1;
+        if (newCount >= responseMaxAttempts) {
+          if (response.revealed_answer) {
+            setAnswerInput(response.revealed_answer);
+          }
+          setFeedback('Answer is not close enough. No attempts remaining.');
+          setFeedbackTone('error');
+          recordWrongAnswer();
+          onAnswered?.();
+        } else {
+          setFeedback(
+            `Answer is not close enough. ${responseMaxAttempts - newCount} attempt${responseMaxAttempts - newCount === 1 ? '' : 's'} remaining.`
+          );
+          setFeedbackTone('error');
+        }
+      }
+    } catch (error: any) {
+      const serverAttemptCount = Number(error?.response?.data?.attempt_count ?? NaN);
+      const serverMaxAttempts = Number(error?.response?.data?.max_attempts ?? NaN);
+      if (!Number.isNaN(serverMaxAttempts)) {
+        setMaxAttempts(serverMaxAttempts);
+      }
+      if (!Number.isNaN(serverAttemptCount) && stepId) {
+        const missingAttempts = Math.max(0, serverAttemptCount - attemptCount);
+        for (let i = 0; i < missingAttempts; i += 1) {
+          recordAttempt(stepId);
+        }
+      }
+      const revealedAnswer = error?.response?.data?.revealed_answer;
+      if (typeof revealedAnswer === 'string' && revealedAnswer.trim()) {
+        setAnswerInput(revealedAnswer);
+      }
+      console.error('submit open ended answer failed', error);
+      setFeedback(
+        error?.response?.data?.error || 'Could not verify answer right now. Please try again.'
+      );
+      setFeedbackTone('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <View style={styles.puzzleBody}>
+      <View style={styles.questionCard}>
+        <Text style={styles.questionLabel}>Open ended</Text>
+        <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
+      </View>
+
+      {!isSolved && (
+        <View style={styles.attemptsRow}>
+          <Text style={styles.attemptsLabel}>Attempts</Text>
+          {Array.from({ length: maxAttempts }, (_, i) => (
+            <MaterialCommunityIcons
+              key={i}
+              name={i < attemptCount ? 'circle' : 'circle-outline'}
+              size={10}
+              color={i < attemptCount ? Colors[theme].error : Colors[theme].subText}
+            />
+          ))}
+        </View>
+      )}
+
+      <TextInput
+        style={styles.secretCodeInput}
+        value={answerInput}
+        onChangeText={setAnswerInput}
+        editable={!isSolved && !isSubmitting && !isExhausted}
+        placeholder="Type your answer"
+        autoCapitalize="none"
+      />
+
+      <Pressable
+        style={[
+          styles.captureButton,
+          (isSolved || isSubmitting || isExhausted) && styles.captureButtonDisabled,
+        ]}
+        onPress={handleSubmit}
+        disabled={isSolved || isSubmitting || isExhausted}
+      >
+        {isSubmitting ? (
+          <ActivityIndicator size="small" color={Colors[theme].white} />
+        ) : (
+          <Text style={styles.captureButtonText}>Submit answer</Text>
+        )}
+      </Pressable>
+
+      {feedback ? (
+        <View
+          style={[
+            styles.feedbackCard,
+            feedbackTone === 'success' && styles.feedbackCardSuccess,
+            feedbackTone === 'error' && styles.feedbackCardError,
+          ]}
+        >
+          {feedbackTone === 'success' ? (
+            <MaterialCommunityIcons
+              name="check-circle"
+              size={16}
+              color={Colors[theme].easy}
+              style={styles.feedbackIcon}
+            />
+          ) : null}
+          <Text
+            style={[
+              styles.feedbackText,
+              feedbackTone === 'success' && styles.feedbackTextSuccess,
+              feedbackTone === 'error' && styles.feedbackTextError,
+            ]}
+          >
+            {feedback}
+          </Text>
+        </View>
+      ) : null}
+
+      {isExhausted && !isSolved && (
+        <Text style={styles.exhaustedHint}>No attempts remaining. You can skip this step.</Text>
+      )}
+    </View>
+  );
+}
+
 interface ArCodeViewProps {
   puzzle: ArCodePuzzle;
   isSolved: boolean;
@@ -582,8 +784,10 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPreparingAr, setIsPreparingAr] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [feedbackTone, setFeedbackTone] = useState<'neutral' | 'success' | 'error'>('neutral');
+  const [maxAttempts, setMaxAttempts] = useState(MAX_ATTEMPTS);
   const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
-  const isExhausted = attemptCount >= MAX_ATTEMPTS;
+  const isExhausted = attemptCount >= maxAttempts;
 
   const ensureArPermissions = async () => {
     const locationPerm = await Location.getForegroundPermissionsAsync();
@@ -657,32 +861,52 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
     const trimmedCode = codeInput.trim();
     if (!trimmedCode) {
       setFeedback('Enter the secret code first.');
+      setFeedbackTone('error');
       return;
     }
 
     setIsSubmitting(true);
     setFeedback('Checking code...');
+    setFeedbackTone('neutral');
     try {
       const response = await submitArCode(progressId, trimmedCode);
+      if (typeof response.max_attempts === 'number') {
+        setMaxAttempts(response.max_attempts);
+      }
       if (response.accepted) {
-        setFeedback('Code verified.');
+        setFeedback('Code accepted. This AR challenge is complete.');
+        setFeedbackTone('success');
         onSolve();
       } else {
         if (stepId) recordAttempt(stepId);
-        const newCount = attemptCount + 1;
-        if (newCount >= MAX_ATTEMPTS) {
+        const newCount = response.attempt_count ?? attemptCount + 1;
+        if (newCount >= maxAttempts) {
           setFeedback('Code is not correct. No attempts remaining.');
+          setFeedbackTone('error');
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
-            `Code is not correct. ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? '' : 's'} remaining.`
+            `Code is not correct. ${maxAttempts - newCount} attempt${maxAttempts - newCount === 1 ? '' : 's'} remaining.`
           );
+          setFeedbackTone('error');
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      const serverAttemptCount = Number(error?.response?.data?.attempt_count ?? NaN);
+      const serverMaxAttempts = Number(error?.response?.data?.max_attempts ?? NaN);
+      if (!Number.isNaN(serverMaxAttempts)) {
+        setMaxAttempts(serverMaxAttempts);
+      }
+      if (!Number.isNaN(serverAttemptCount) && stepId) {
+        const missingAttempts = Math.max(0, serverAttemptCount - attemptCount);
+        for (let i = 0; i < missingAttempts; i += 1) {
+          recordAttempt(stepId);
+        }
+      }
       console.error('submit ar code failed', error);
       setFeedback('Could not verify code right now. Please try again.');
+      setFeedbackTone('error');
     } finally {
       setIsSubmitting(false);
     }
@@ -724,7 +948,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
       {!isSolved && (
         <View style={styles.attemptsRow}>
           <Text style={styles.attemptsLabel}>Attempts</Text>
-          {Array.from({ length: MAX_ATTEMPTS }, (_, i) => (
+          {Array.from({ length: maxAttempts }, (_, i) => (
             <MaterialCommunityIcons
               key={i}
               name={i < attemptCount ? 'circle' : 'circle-outline'}
@@ -761,7 +985,31 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
       </Pressable>
 
       {feedback ? (
-        <Text style={[styles.feedbackText, isExhausted && styles.exhaustedText]}>{feedback}</Text>
+        <View
+          style={[
+            styles.feedbackCard,
+            feedbackTone === 'success' && styles.feedbackCardSuccess,
+            feedbackTone === 'error' && styles.feedbackCardError,
+          ]}
+        >
+          {feedbackTone === 'success' ? (
+            <MaterialCommunityIcons
+              name="check-circle"
+              size={16}
+              color={Colors[theme].easy}
+              style={styles.feedbackIcon}
+            />
+          ) : null}
+          <Text
+            style={[
+              styles.feedbackText,
+              feedbackTone === 'success' && styles.feedbackTextSuccess,
+              feedbackTone === 'error' && styles.feedbackTextError,
+            ]}
+          >
+            {feedback}
+          </Text>
+        </View>
       ) : null}
       {isExhausted && !isSolved && (
         <Text style={styles.exhaustedHint}>Confirm your location and press Next to continue.</Text>
@@ -773,6 +1021,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
 interface PuzzleStepViewProps {
   step: PuzzleStep;
   isSolved: boolean;
+  isFinished?: boolean;
   onSolve: () => void;
   onAnswered?: () => void;
 }
@@ -851,7 +1100,13 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
               );
             })();
       filteredHeadingRef.current = nextHeading;
-      setHeading(nextHeading);
+      setHeading((previousHeading) =>
+        previousHeading !== null &&
+        Math.abs(shortestAngleDelta(previousHeading, nextHeading)) <
+          COMPASS_HEADING_DEADBAND_DEGREES
+          ? previousHeading
+          : nextHeading
+      );
     });
 
     const appStateSub = AppState.addEventListener('change', (state) => {
@@ -876,7 +1131,11 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
     const proximityLinear = Math.max(0, 1 - delta / COMPASS_PROXIMITY_RANGE_DEGREES);
     const proximity = Math.pow(proximityLinear, 1.6);
     proximityProgress.value = proximity;
-    setResonanceLevel(proximity);
+    setResonanceLevel((previousResonanceLevel) =>
+      Math.abs(previousResonanceLevel - proximity) < COMPASS_STATE_UPDATE_EPSILON
+        ? previousResonanceLevel
+        : proximity
+    );
 
     const now = Date.now();
     if (delta <= COMPASS_SOLVE_TOLERANCE_DEGREES) {
@@ -887,11 +1146,17 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
 
       const heldFor = now - holdStartedAtMsRef.current;
       const progress = Math.min(1, heldFor / COMPASS_SOLVE_HOLD_MS);
-      setHoldProgress(progress);
+      setHoldProgress((previousHoldProgress) =>
+        Math.abs(previousHoldProgress - progress) < COMPASS_STATE_UPDATE_EPSILON
+          ? previousHoldProgress
+          : progress
+      );
 
       if (heldFor >= COMPASS_SOLVE_HOLD_MS) {
         solvedRef.current = true;
-        setHoldProgress(1);
+        setHoldProgress((previousHoldProgress) =>
+          previousHoldProgress === 1 ? previousHoldProgress : 1
+        );
         solvedShared.value = withTiming(1, { duration: 220 });
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         onSolve();
@@ -903,7 +1168,9 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
       if (!stillWithinGrace) {
         holdStartedAtMsRef.current = null;
         lastInWindowAtMsRef.current = null;
-        setHoldProgress(0);
+        setHoldProgress((previousHoldProgress) =>
+          previousHoldProgress === 0 ? previousHoldProgress : 0
+        );
       }
     }
 
@@ -1150,7 +1417,7 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
   );
 }
 
-function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewProps) {
+function PuzzleStepView({ step, isSolved, isFinished, onSolve, onAnswered }: PuzzleStepViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
 
@@ -1198,6 +1465,16 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
           key={step.id}
           puzzle={step.puzzle}
           isSolved={isSolved}
+          isFinished={isFinished}
+          onSolve={onSolve}
+          onAnswered={onAnswered}
+          stepId={step.id}
+        />
+      ) : step.puzzle.type === 'open-ended' ? (
+        <OpenEndedView
+          key={step.id}
+          puzzle={step.puzzle}
+          isSolved={isSolved}
           onSolve={onSolve}
           onAnswered={onAnswered}
           stepId={step.id}
@@ -1231,7 +1508,13 @@ function PuzzleStepView({ step, isSolved, onSolve, onAnswered }: PuzzleStepViewP
   );
 }
 
-export default function TourStepComponent({ step, isSolved, onSolve, onAnswered }: TourStepProps) {
+export default function TourStepComponent({
+  step,
+  isSolved,
+  isFinished,
+  onSolve,
+  onAnswered,
+}: TourStepProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   return (
@@ -1239,7 +1522,13 @@ export default function TourStepComponent({ step, isSolved, onSolve, onAnswered 
       {step.type === 'story' && <StoryStepView step={step} />}
 
       {step.type === 'puzzle' && (
-        <PuzzleStepView step={step} isSolved={isSolved} onSolve={onSolve} onAnswered={onAnswered} />
+        <PuzzleStepView
+          step={step}
+          isSolved={isSolved}
+          isFinished={isFinished}
+          onSolve={onSolve}
+          onAnswered={onAnswered}
+        />
       )}
     </View>
   );

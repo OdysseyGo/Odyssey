@@ -1,6 +1,9 @@
-export type PuzzleType = 'TRIVIA' | 'AR' | 'GYROSCOPE' | 'PICTURE_COMPARE' | 'COMPASS';
+import { sanitizeMultiLineText, sanitizeSingleLineText } from '@/utils/inputSanitizers';
+
+export type PuzzleType = 'TRIVIA' | 'OPEN_ENDED' | 'AR' | 'PICTURE_COMPARE' | 'COMPASS';
 
 export const TOUR_TEXT_FIELD_MAX_LENGTH = 255;
+export const TOUR_STEPS_MAX_COUNT = 150;
 
 export type ARAnchorPosition = {
   x: number;
@@ -28,7 +31,6 @@ export interface Puzzle {
   options: string[];
   correctAnswer: string;
   hint: string;
-  xp_reward: number;
   referenceImage?: string;
   arConfig?: ARPuzzleConfig;
   targetHeadingDegrees?: number;
@@ -36,8 +38,8 @@ export interface Puzzle {
 
 export const PUZZLE_TYPE_OPTIONS = [
   { value: 'TRIVIA', label: 'Trivia', description: 'Multiple choice question' },
+  { value: 'OPEN_ENDED', label: 'Open Ended', description: 'Type the correct answer' },
   { value: 'AR', label: 'AR Challenge', description: 'Augmented reality experience' },
-  { value: 'GYROSCOPE', label: 'Gyroscope', description: 'Motion-based challenge' },
   { value: 'COMPASS', label: 'Compass', description: 'Find a target heading' },
   {
     value: 'PICTURE_COMPARE',
@@ -52,7 +54,6 @@ export const createEmptyPuzzle = (): Puzzle => ({
   options: ['', ''],
   correctAnswer: '',
   hint: '',
-  xp_reward: 10,
 });
 
 export interface TourLocation {
@@ -70,14 +71,15 @@ export interface TourLocation {
 export interface TourCreationData {
   title: string;
   description: string;
+  coverImage?: string;
   category: string;
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   tourType: 'STORY' | 'PUZZLE' | 'HYBRID';
   estimatedDuration: number; // in minutes
   locations: TourLocation[];
-  country?: string;
-  countryCode?: string;
-  state?: string;
+  country: string;
+  countryCode: string;
+  state: string;
   stateLatitude?: number;
   stateLongitude?: number;
 }
@@ -110,6 +112,7 @@ export const TOUR_TYPE_OPTIONS = [
 export const createEmptyTourData = (): TourCreationData => ({
   title: '',
   description: '',
+  coverImage: undefined,
   category: '',
   difficulty: 'MEDIUM',
   tourType: 'STORY',
@@ -137,7 +140,8 @@ export const createNewLocation = (
 });
 
 export const isPuzzleValid = (puzzle?: Puzzle): boolean => {
-  if (!puzzle?.question.trim()) {
+  const normalizedQuestion = sanitizeMultiLineText(puzzle?.question ?? '').trim();
+  if (!puzzle || !normalizedQuestion) {
     return false;
   }
 
@@ -146,8 +150,15 @@ export const isPuzzleValid = (puzzle?: Puzzle): boolean => {
   }
 
   if (puzzle.puzzle_type === 'TRIVIA') {
-    const options = puzzle.options.map((option) => option.trim()).filter(Boolean);
-    return options.length >= 2 && options.includes(puzzle.correctAnswer.trim());
+    const options = puzzle.options
+      .map((option) => sanitizeSingleLineText(option).trim())
+      .filter(Boolean);
+    const normalizedCorrectAnswer = sanitizeSingleLineText(puzzle.correctAnswer).trim();
+    return options.length >= 2 && options.includes(normalizedCorrectAnswer);
+  }
+
+  if (puzzle.puzzle_type === 'OPEN_ENDED') {
+    return puzzle.correctAnswer.trim().length > 0;
   }
 
   if (puzzle.puzzle_type === 'COMPASS') {
@@ -166,7 +177,9 @@ export const doesLocationMeetTourRequirements = (
   location: Pick<TourLocation, 'title' | 'story' | 'puzzle'>,
   tourType: TourCreationData['tourType']
 ): boolean => {
-  const hasCoreContent = location.title.trim().length > 0 && location.story.trim().length > 0;
+  const hasCoreContent =
+    sanitizeSingleLineText(location.title).trim().length > 0 &&
+    sanitizeMultiLineText(location.story).trim().length > 0;
 
   if (!hasCoreContent) {
     return false;

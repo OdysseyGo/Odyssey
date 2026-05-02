@@ -18,10 +18,10 @@ import Colors from '@/constants/Colors';
 import { isLoggedIn } from '@/api/auth';
 import { getToursInBounds } from '@/api/tours';
 import type { Tour } from '@/api/tours';
+import { deleteTourProgress } from '@/api/tourProgress';
 import type { MapMarkerProps } from './MapMarker.config';
 import type { Region } from './TourMap.config';
-
-import { getTourProgress, deleteTourProgress } from '@/api/tourProgress';
+import type { UserBadge } from '@/api/profile';
 import { useInterstitial } from '@/components/Ads/useInterstitial';
 
 export default function MapScreen() {
@@ -36,6 +36,7 @@ export default function MapScreen() {
     isActive,
     progressId,
     currentStepIndex,
+    highestStepIndex,
     solvedSteps,
     locationConfirmedSteps,
     earnedXP,
@@ -46,6 +47,7 @@ export default function MapScreen() {
   const [showEndConfirmModal, setShowEndConfirmModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [finalXP, setFinalXP] = useState<number>(0);
+  const [completionBadges, setCompletionBadges] = useState<UserBadge[]>([]);
   const { show: showTourCompleteInterstitial } = useInterstitial('tour_complete_interstitial');
   const completingTourRef = useRef(false);
 
@@ -146,25 +148,32 @@ export default function MapScreen() {
     };
   }, [tour, isActive]);
 
-  // Active tour handlers
-  const handleTourComplete = useCallback(async () => {
-    if (completingTourRef.current) return;
-    completingTourRef.current = true;
+  const completedStepsForModal = useMemo(() => {
+    if (!tour || tour.steps.length === 0) return 0;
 
-    let nextFinalXP = earnedXP;
-    if (progressId) {
-      try {
-        const progress = await getTourProgress(progressId);
-        nextFinalXP = progress.total_xp;
-      } catch {
-        nextFinalXP = earnedXP;
-      }
+    if (showCompleteModal) {
+      return tour.steps.length;
     }
 
-    await showTourCompleteInterstitial();
-    setFinalXP(nextFinalXP);
-    setShowCompleteModal(true);
-  }, [progressId, earnedXP, showTourCompleteInterstitial]);
+    // Highest reached index represents the current active step on backend;
+    // completed steps are those before it.
+    return Math.max(0, Math.min(highestStepIndex, tour.steps.length));
+  }, [tour, highestStepIndex, showCompleteModal]);
+
+  // Active tour handlers
+  const handleTourComplete = useCallback(
+    async (awardedXP: number, awardedBadges?: UserBadge[]) => {
+      if (completingTourRef.current) return;
+      completingTourRef.current = true;
+
+      // Backend is source of truth: replay completions return awarded_xp=0.
+      setFinalXP(Math.max(0, awardedXP ?? 0));
+      setCompletionBadges(awardedBadges ?? []);
+      await showTourCompleteInterstitial();
+      setShowCompleteModal(true);
+    },
+    [showTourCompleteInterstitial]
+  );
 
   const handleEndTourPress = useCallback(() => setShowEndConfirmModal(true), []);
 
@@ -183,6 +192,7 @@ export default function MapScreen() {
 
   const handleCloseCompleteModal = useCallback(() => {
     setShowCompleteModal(false);
+    setCompletionBadges([]);
     completingTourRef.current = false;
     endTour();
   }, [endTour]);
@@ -433,7 +443,7 @@ export default function MapScreen() {
       <EndTourConfirmModal
         visible={showEndConfirmModal}
         earnedXP={earnedXP}
-        completedSteps={solvedSteps.size}
+        completedSteps={completedStepsForModal}
         totalSteps={tour.steps.length}
         onConfirm={handleConfirmEndTour}
         onCancel={handleCancelEndTour}
@@ -443,7 +453,8 @@ export default function MapScreen() {
         visible={showCompleteModal}
         tour={tour}
         earnedXP={finalXP}
-        completedSteps={solvedSteps.size}
+        awardedBadges={completionBadges}
+        completedSteps={completedStepsForModal}
         totalSteps={tour.steps.length}
         onClose={handleCloseCompleteModal}
       />

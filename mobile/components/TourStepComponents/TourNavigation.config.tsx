@@ -1,7 +1,6 @@
 import { Tour, TourStep } from './TourStep.config';
 import { MapMarkerProps } from '../MapComponents/MapMarker.config';
 import { markerColors } from '@/constants/Colors';
-import { getFirstPuzzleIndex } from '@/utils/tourStepVisibility';
 
 export interface TourNavigationProps {
   tour: Tour;
@@ -42,17 +41,23 @@ function getActiveTourRevealLimit(
   locationConfirmedSteps: Set<string>
 ): number {
   const lastStepIndex = tour.steps.length - 1;
-  const firstPuzzleIndex = getFirstPuzzleIndex(tour.steps, (step) => step.type === 'puzzle');
-  const firstPuzzleLimit = firstPuzzleIndex === -1 ? lastStepIndex : firstPuzzleIndex;
+
+  if (lastStepIndex < 0 || tour.hasCompletedOnce) {
+    return lastStepIndex;
+  }
+
   const currentIndex = Math.min(currentStepIndex, lastStepIndex);
   const currentStep = tour.steps[currentIndex];
   const canRevealNext =
     currentStep?.type === 'puzzle' &&
     solvedSteps.has(currentStep.id) &&
     locationConfirmedSteps.has(currentStep.id);
-  const progressLimit = canRevealNext ? currentIndex + 1 : currentIndex;
+  const revealFromIndex = Math.min(canRevealNext ? currentIndex + 1 : currentIndex, lastStepIndex);
+  const nextPuzzleOffset = tour.steps
+    .slice(revealFromIndex)
+    .findIndex((step) => step.type === 'puzzle');
 
-  return Math.min(Math.max(firstPuzzleLimit, progressLimit), lastStepIndex);
+  return nextPuzzleOffset === -1 ? lastStepIndex : revealFromIndex + nextPuzzleOffset;
 }
 
 export function getVisibleMarkers(
@@ -101,41 +106,8 @@ export function getVisibleRoute(
     locationConfirmedSteps
   );
   const visibleSteps = tour.steps.slice(0, revealLimit + 1);
-  const visibleCurrentStepIndex = Math.min(currentStepIndex, revealLimit);
-  const route: { latitude: number; longitude: number }[] = [];
 
-  for (let i = 0; i < revealLimit; i++) {
-    const step = visibleSteps[i];
-    const nextStep = visibleSteps[i + 1];
-
-    const currentVisible = step.type !== 'puzzle' || solvedSteps.has(step.id);
-    const nextVisible =
-      i + 1 <= revealLimit || nextStep.type !== 'puzzle' || solvedSteps.has(nextStep.id);
-
-    if (currentVisible && route.length === 0) {
-      route.push(step.coordinate);
-    }
-
-    if (currentVisible && nextVisible) {
-      if (route.length === 0) {
-        route.push(step.coordinate);
-      }
-      route.push(nextStep.coordinate);
-    }
-  }
-
-  if (route.length > 0) {
-    const currentStep = visibleSteps[visibleCurrentStepIndex];
-    const lastCoord = route[route.length - 1];
-    if (
-      lastCoord.latitude !== currentStep.coordinate.latitude ||
-      lastCoord.longitude !== currentStep.coordinate.longitude
-    ) {
-      route.push(currentStep.coordinate);
-    }
-  }
-
-  return route;
+  return visibleSteps.map((step) => step.coordinate);
 }
 
 export function canNavigateForward(

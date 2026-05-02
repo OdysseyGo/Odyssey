@@ -5,8 +5,13 @@ import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { profileToursContainerStyles } from './ProfileToursContainer.styles';
-import { ProfileToursContainerProps, TOUR_TABS, TourTab } from './ProfileToursContainer.config';
-import { Tour, TourStatus, getMyTours } from '@/api/tours';
+import {
+  ProfileTourTabKey,
+  ProfileToursContainerProps,
+  TOUR_TABS,
+  TourTab,
+} from './ProfileToursContainer.config';
+import { Tour, getMyTours } from '@/api/tours';
 import ProfileTourCard from './ProfileTourCard';
 import { useTranslation } from 'react-i18next';
 
@@ -16,14 +21,15 @@ export default function ProfileToursContainer(_props: ProfileToursContainerProps
   const color = Colors[theme];
   const { t } = useTranslation();
 
-  const [activeTab, setActiveTab] = useState<TourStatus>('PUBLISHED');
+  const [activeTab, setActiveTab] = useState<ProfileTourTabKey>('PUBLISHED');
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchTours = useCallback(async (status: TourStatus) => {
+  const fetchTours = useCallback(async (tab: ProfileTourTabKey) => {
     setLoading(true);
     try {
-      const response = await getMyTours(status);
+      const response =
+        tab === 'AI' ? await getMyTours({ generation_source: 'AI' }) : await getMyTours(tab);
       setTours(response.results);
     } catch (error) {
       console.error('Failed to fetch tours:', error);
@@ -45,10 +51,10 @@ export default function ProfileToursContainer(_props: ProfileToursContainerProps
     switch (activeTab) {
       case 'PUBLISHED':
         return t('profile.emptyPublished');
-      case 'DRAFT':
-        return t('profile.emptyDraft');
-      case 'ARCHIVED':
-        return t('profile.emptyArchived');
+      case 'PENDING':
+        return t('profile.emptyPending');
+      case 'AI':
+        return t('profile.emptyAiTours');
       default:
         return t('profile.emptyDefault');
     }

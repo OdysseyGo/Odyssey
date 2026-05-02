@@ -23,7 +23,7 @@ import AuthButton from '@/components/LoginComponents/AuthButton';
 import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
 import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import BackButton from '@/components/common/BackButton';
-import { getByUsername, resetPassword } from '@/api/users';
+import { requestPasswordReset, resetPassword } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -37,12 +37,13 @@ export default function ForgotPasswordScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [errors, setErrors] = useState<{ username?: string; email?: string; general?: string }>({});
+  const [codeSent, setCodeSent] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; general?: string }>({});
   const [loading, setLoading] = useState(false);
 
   const [showResetModal, setShowResetModal] = useState(false);
+  const [code, setCode] = useState('');
   const [newPass, setNewPass] = useState('');
   const [confirmNewPass, setConfirmNewPass] = useState('');
   const [modalError, setModalError] = useState('');
@@ -78,35 +79,25 @@ export default function ForgotPasswordScreen() {
     useCallback(() => {
       resetScrollPosition();
       const keyboardHideSubscription = Keyboard.addListener('keyboardDidHide', resetScrollPosition);
-
       return () => keyboardHideSubscription.remove();
     }, [resetScrollPosition])
   );
 
   const validate = () => {
     const newErrors: typeof errors = {};
-    if (!username.trim()) newErrors.username = t('auth.errors.usernameRequired');
     if (!email.trim()) newErrors.email = t('auth.errors.emailRequired');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleForgot = async () => {
+  const handleSendCode = async () => {
     if (!validate()) return;
     setLoading(true);
     try {
-      const resp = await getByUsername(username);
-      if (!resp) {
-        setErrors({ general: t('auth.errors.userNotFound') });
-        return;
-      }
-      if (resp.email.toLowerCase() !== email.toLowerCase()) {
-        setErrors({ general: t('auth.errors.usernameEmailMismatch') });
-        return;
-      }
-      setShowResetModal(true);
-    } catch (e) {
-      console.error(e);
+      await requestPasswordReset(email.trim());
+      setCodeSent(true);
+      setErrors({});
+    } catch {
       setErrors({ general: t('auth.errors.somethingWentWrong') });
     } finally {
       setLoading(false);
@@ -114,6 +105,10 @@ export default function ForgotPasswordScreen() {
   };
 
   const submitNewPassword = async () => {
+    if (!code.trim()) {
+      setModalError(t('auth.errors.codeRequired'));
+      return;
+    }
     if (!newPass || !confirmNewPass) {
       setModalError(t('auth.errors.bothFieldsRequired'));
       return;
@@ -123,12 +118,11 @@ export default function ForgotPasswordScreen() {
       return;
     }
     try {
-      await resetPassword({ username, email, new_password: newPass });
+      await resetPassword({ email: email.trim(), code: code.trim(), new_password: newPass });
       setShowResetModal(false);
       router.replace('/login');
-    } catch (e) {
-      console.error(e);
-      setModalError(t('auth.errors.couldNotUpdate'));
+    } catch {
+      setModalError(t('auth.errors.invalidCode'));
     }
   };
 
@@ -189,7 +183,7 @@ export default function ForgotPasswordScreen() {
           >
             <Text style={[styles.cardTitle, { color: theme.text }]}>{t('auth.resetTitle')}</Text>
             <Text style={[styles.cardSubtitle, { color: theme.subText }]}>
-              {t('auth.resetSubtitle')}
+              {codeSent ? t('auth.codeSentSubtitle', { email }) : t('auth.resetSubtitle')}
             </Text>
 
             {/* Error banner */}
@@ -213,19 +207,22 @@ export default function ForgotPasswordScreen() {
               </View>
             )}
 
+            {/* Code-sent success banner */}
+            {codeSent && (
+              <View
+                style={[
+                  styles.successBanner,
+                  { backgroundColor: `${theme.primary}12`, borderColor: `${theme.primary}35` },
+                ]}
+              >
+                <Ionicons name="checkmark-circle" size={16} color={theme.primary} />
+                <Text style={[styles.successBannerText, { color: theme.primary }]}>
+                  {t('auth.codeSentBanner')}
+                </Text>
+              </View>
+            )}
+
             <View style={styles.inputs}>
-              <AuthTextInput
-                label={t('auth.username')}
-                value={username}
-                onChangeText={(text) => {
-                  setUsername(text);
-                  setErrors((e) => ({ ...e, username: undefined }));
-                }}
-                placeholder={t('auth.usernamePlaceholder')}
-                autoCapitalize="none"
-                returnKeyType="next"
-                error={errors.username}
-              />
               <AuthTextInput
                 label={t('auth.email')}
                 value={email}
@@ -237,12 +234,21 @@ export default function ForgotPasswordScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 returnKeyType="done"
-                onSubmitEditing={handleForgot}
+                onSubmitEditing={codeSent ? () => setShowResetModal(true) : handleSendCode}
                 error={errors.email}
+                editable={!codeSent}
               />
             </View>
 
-            <AuthButton title={t('auth.verify')} onPress={handleForgot} loading={loading} />
+            {!codeSent ? (
+              <AuthButton title={t('auth.sendCode')} onPress={handleSendCode} loading={loading} />
+            ) : (
+              <AuthButton
+                title={t('auth.enterCode')}
+                onPress={() => setShowResetModal(true)}
+                loading={false}
+              />
+            )}
 
             <View style={styles.footerRow}>
               <Text style={[styles.footerLabel, { color: theme.subText }]}>
@@ -260,43 +266,112 @@ export default function ForgotPasswordScreen() {
 
       {/* ── Reset password modal ── */}
       <Modal visible={showResetModal} transparent animationType="fade">
-        <View style={modalStyles.overlay}>
-          <View style={[modalStyles.card, { backgroundColor: theme.cardSurface }]}>
-            <Text style={[modalStyles.title, { color: theme.text }]}>
-              {t('auth.resetPassword')}
-            </Text>
+        <KeyboardAvoidingView
+          style={modalStyles.flex}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={modalStyles.overlay}>
+            <View style={[modalStyles.card, { backgroundColor: theme.cardSurface }]}>
+              {/* Header icon */}
+              <View style={modalStyles.headerRow}>
+                <View style={[modalStyles.iconWrap, { backgroundColor: `${theme.primary}15` }]}>
+                  <Ionicons name="lock-closed" size={28} color={theme.primary} />
+                </View>
+                <TouchableOpacity
+                  style={[modalStyles.closeBtn, { backgroundColor: theme.foreground }]}
+                  onPress={() => {
+                    setShowResetModal(false);
+                    setModalError('');
+                  }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="close" size={18} color={theme.subText} />
+                </TouchableOpacity>
+              </View>
 
-            {modalError ? (
-              <Text style={[modalStyles.error, { color: theme.error }]}>{modalError}</Text>
-            ) : null}
-
-            <AuthTextInput
-              label={t('auth.newPassword')}
-              value={newPass}
-              onChangeText={setNewPass}
-              secureTextEntry
-              showPasswordToggle
-              placeholder={t('auth.newPasswordPlaceholder')}
-            />
-            <AuthTextInput
-              label={t('auth.confirmPassword')}
-              value={confirmNewPass}
-              onChangeText={setConfirmNewPass}
-              secureTextEntry
-              placeholder={t('auth.confirmNewPasswordPlaceholder')}
-            />
-
-            <AuthButton title={t('auth.updatePassword')} onPress={submitNewPassword} />
-            <TouchableOpacity
-              style={[modalStyles.cancelButton, { borderColor: `${theme.subText}40` }]}
-              onPress={() => setShowResetModal(false)}
-            >
-              <Text style={[modalStyles.cancelText, { color: theme.subText }]}>
-                {t('auth.cancel')}
+              <Text style={[modalStyles.title, { color: theme.text }]}>
+                {t('auth.resetPassword')}
               </Text>
-            </TouchableOpacity>
+              <Text style={[modalStyles.subtitle, { color: theme.subText }]}>
+                {t('auth.codeSentSubtitle', { email })}
+              </Text>
+
+              {/* Error banner */}
+              {modalError ? (
+                <View
+                  style={[
+                    modalStyles.errorBanner,
+                    { backgroundColor: `${theme.error}12`, borderColor: `${theme.error}30` },
+                  ]}
+                >
+                  <Ionicons name="alert-circle" size={15} color={theme.error} />
+                  <Text style={[modalStyles.errorText, { color: theme.error }]}>{modalError}</Text>
+                </View>
+              ) : null}
+
+              {/* OTP code box */}
+              <View
+                style={[
+                  modalStyles.codeSection,
+                  { backgroundColor: theme.primaryMuted, borderColor: `${theme.primary}25` },
+                ]}
+              >
+                <Text style={[modalStyles.codeLabel, { color: theme.primary }]}>
+                  {t('auth.otpCode').toUpperCase()}
+                </Text>
+                <AuthTextInput
+                  value={code}
+                  onChangeText={(text) => {
+                    setCode(text);
+                    setModalError('');
+                  }}
+                  placeholder={t('auth.otpCodePlaceholder')}
+                  keyboardType="number-pad"
+                  autoCapitalize="none"
+                  maxLength={6}
+                />
+              </View>
+
+              {/* Divider */}
+              <View style={[modalStyles.dividerRow, { borderColor: theme.borderLight }]}>
+                <View style={[modalStyles.dividerLine, { backgroundColor: theme.borderLight }]} />
+                <Text style={[modalStyles.dividerText, { color: theme.subText }]}>
+                  {t('auth.newPassword').toUpperCase()}
+                </Text>
+                <View style={[modalStyles.dividerLine, { backgroundColor: theme.borderLight }]} />
+              </View>
+
+              <AuthTextInput
+                label={t('auth.newPassword')}
+                value={newPass}
+                onChangeText={setNewPass}
+                secureTextEntry
+                showPasswordToggle
+                placeholder={t('auth.newPasswordPlaceholder')}
+              />
+              <AuthTextInput
+                label={t('auth.confirmPassword')}
+                value={confirmNewPass}
+                onChangeText={setConfirmNewPass}
+                secureTextEntry
+                placeholder={t('auth.confirmNewPasswordPlaceholder')}
+              />
+
+              <AuthButton title={t('auth.updatePassword')} onPress={submitNewPassword} />
+              <TouchableOpacity
+                style={[modalStyles.cancelButton, { borderColor: `${theme.subText}30` }]}
+                onPress={() => {
+                  setShowResetModal(false);
+                  setModalError('');
+                }}
+              >
+                <Text style={[modalStyles.cancelText, { color: theme.subText }]}>
+                  {t('auth.cancel')}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </KeyboardAvoidingView>
   );
@@ -372,6 +447,24 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
+  // ── Success banner
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm + 2,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Spacing.borderRadius,
+    borderWidth: 1,
+    marginBottom: Spacing.lg,
+  },
+  successBannerText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
+  },
+
   // ── Inputs
   inputs: {
     gap: Spacing.xs,
@@ -395,26 +488,106 @@ const styles = StyleSheet.create({
 });
 
 const modalStyles = StyleSheet.create({
+  flex: { flex: 1 },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'center',
-    padding: 24,
+    paddingHorizontal: Spacing.xl,
   },
   card: {
-    padding: 24,
-    borderRadius: 24,
-    gap: 12,
+    borderRadius: 28,
+    padding: Spacing.xl,
+    gap: Spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 12,
   },
+
+  // Header
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xs,
+  },
+  iconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: Spacing.borderRadiusFull,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Text
   title: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 4,
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: -0.4,
   },
-  error: {
+  subtitle: {
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: -Spacing.xs,
+  },
+
+  // Error banner
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm + 2,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Spacing.borderRadius,
+    borderWidth: 1,
+  },
+  errorText: {
+    flex: 1,
     fontSize: 13,
     fontWeight: '500',
+    lineHeight: 18,
   },
+
+  // OTP section
+  codeSection: {
+    borderRadius: Spacing.borderRadius,
+    borderWidth: 1,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  codeLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+
+  // Divider
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginVertical: Spacing.xs,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+
+  // Buttons
   cancelButton: {
     borderWidth: 1,
     borderRadius: Spacing.borderRadius,

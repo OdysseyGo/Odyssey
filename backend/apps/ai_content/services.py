@@ -6,22 +6,29 @@ import random
 import re
 import string
 import threading
+import uuid
 from typing import Optional
+from urllib.error import URLError
+from urllib.request import urlopen
 
 import google.generativeai as genai
+from django.core.files.base import ContentFile
 from django.db import connection, transaction
 
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
+    CompassPuzzleDetail,
     Puzzle,
     Tour,
     TourStep,
     TriviaPuzzleDetail,
 )
-from apps.tours.utils import GoogleMapsFacade
+from apps.tours.utils import GoogleMapsFacade, normalize_tour_country
 
 AR_SECRET_CODE_REGEX = re.compile(r"^[A-Za-z0-9]{4,12}$")
+TRIVIA_OPTION_LABEL_REGEX = re.compile(r"\b[A-H][).:]\s+\S")
+TRIVIA_OPTION_PREFIX_REGEX = re.compile(r"^\s*[A-H][).:]\s*")
 AR_MIN_SCALE = 0.3
 AR_MAX_SCALE = 10.0
 AR_DEFAULT_SCALE = 1.0
@@ -46,6 +53,8 @@ class GeminiService:
 
     # Estimated time a user spends at each stop (reading, exploring, solving puzzles)
     MINUTES_PER_STEP = 5
+    PLACE_PHOTO_TIMEOUT_SECONDS = 10
+    PLACE_PHOTO_MAX_BYTES = 10 * 1024 * 1024
 
     def __init__(self):
         api_key = os.getenv("GEMINI_API_KEY")
@@ -66,6 +75,7 @@ class GeminiService:
         country: str = "",
         country_code: str = "",
         include_ar: bool = False,
+        include_compass: bool = False,
         request=None,
         progress_callback=None,
     ) -> Tour:
@@ -122,6 +132,7 @@ class GeminiService:
             candidate_places,
             num_steps,
             ar_models,
+            include_compass=include_compass,
         )
 
         _emit("Weaving your story together…")
@@ -170,10 +181,11 @@ class GeminiService:
 
         # ---- Step 4: Validate and enrich with verified coordinates ----
         self._validate_tour_data(tour_data, mode)
+        maps_facade = GoogleMapsFacade()
 
         # Build a lookup of verified places by name (case-insensitive)
         places_lookup = {p["name"].strip().lower(): p for p in candidate_places}
-
+        selected_places_by_step: list[Optional[dict]] = []
         # Replace AI coordinates with verified Google Maps coordinates
         for step_data in tour_data["steps"]:
             step_name = step_data["title"].strip().lower()
@@ -198,7 +210,6 @@ class GeminiService:
                         "Falling back to geocoding.",
                         step_data["title"],
                     )
-                    maps_facade = GoogleMapsFacade()
                     verified_lat, verified_lng = maps_facade.geocode_location(
                         name=step_data["title"],
                         city=location_query,
@@ -207,11 +218,45 @@ class GeminiService:
                     )
                     step_data["latitude"] = verified_lat
                     step_data["longitude"] = verified_lng
+            selected_places_by_step.append(matched_place)
+
+        cover_image_attribution = ""
+        cover_image_bytes: Optional[bytes] = None
+        cover_image_ext = ".jpg"
+        if selected_places_by_step:
+            first_place = selected_places_by_step[0]
+            first_place_id = (
+                str(first_place.get("place_id"))
+                if isinstance(first_place, dict) and first_place.get("place_id")
+                else ""
+            )
+            if first_place_id:
+                photo_data = maps_facade.get_place_photo(first_place_id)
+                if isinstance(photo_data, dict):
+                    photo_url = photo_data.get("url", "") or ""
+                    cover_image_attribution = photo_data.get("attribution", "") or ""
+                    downloaded = self._download_place_photo(photo_url)
+                    if downloaded:
+                        cover_image_bytes, cover_image_ext = downloaded
+                else:
+                    logger.warning(
+                        "No Google Places photo found for AI tour cover (place_id=%s)",
+                        first_place_id,
+                    )
+            else:
+                logger.warning(
+                    "No place_id found for first AI tour step; skipping cover image."
+                )
 
         # ---- Step 4b: Reorder stops geometrically to eliminate zigzag ----
         tour_data["steps"] = self._nearest_neighbor_order(tour_data["steps"])
 
         _emit("Your adventure is almost ready…")
+        # ---- Step 5: Persist to database ----
+        canonical_country, canonical_country_code = normalize_tour_country(
+            country=country,
+            country_code=country_code,
+        )
         with transaction.atomic():
             tour = Tour.objects.create(
                 title=tour_data["title"],
@@ -222,10 +267,21 @@ class GeminiService:
                 difficulty=tour_data.get("difficulty", "MEDIUM"),
                 duration_minutes=duration,
                 city=city,
-                country=country,
-                country_code=country_code,
+                country=canonical_country,
+                country_code=canonical_country_code,
+                cover_image_attribution=cover_image_attribution,
+                is_ai_generated=True,
                 status=Tour.ARCHIVED,
+                generation_source=Tour.AI,
             )
+            if cover_image_bytes:
+                filename = f"ai_tour_cover_{uuid.uuid4().hex}{cover_image_ext}"
+                tour.cover_image.save(
+                    filename,
+                    ContentFile(cover_image_bytes),
+                    save=False,
+                )
+                tour.save(update_fields=["cover_image"])
 
             ar_lookup = {m.id: m for m in ar_models}
             for idx, step_data in enumerate(tour_data["steps"], start=1):
@@ -262,25 +318,16 @@ class GeminiService:
                         continue
 
                 # Create puzzle if present (for PUZZLE and HYBRID modes)
+                puzzle_created = False
                 if puzzle_data:
-                    puzzle = Puzzle.objects.create(
+                    puzzle_created = self._create_puzzle_from_ai(
                         step=step,
-                        puzzle_type=puzzle_data.get("type", "TRIVIA"),
-                        question=puzzle_data["question"],
-                        options=puzzle_data.get("options"),
-                        correct_answer=puzzle_data["answer"],
-                        hint=puzzle_data.get("hint", ""),
-                        xp_reward=puzzle_data.get("xp", 25),
+                        step_data=step_data,
+                        puzzle_data=puzzle_data,
+                        candidate_places=candidate_places,
+                        include_compass=include_compass,
                     )
-                    if puzzle.puzzle_type == Puzzle.TRIVIA:
-                        TriviaPuzzleDetail.objects.update_or_create(
-                            puzzle=puzzle,
-                            defaults={
-                                "options": puzzle.options or [],
-                                "correct_answer": puzzle.correct_answer,
-                            },
-                        )
-                elif mode in ("PUZZLE", "HYBRID"):
+                if not puzzle_created and mode in ("PUZZLE", "HYBRID"):
                     puzzle = Puzzle.objects.create(
                         step=step,
                         puzzle_type="TRIVIA",
@@ -293,7 +340,7 @@ class GeminiService:
                         ],
                         correct_answer=step_data["title"],
                         hint="Look at the sign or landmark nearby.",
-                        xp_reward=10,
+                        xp_reward=Puzzle.fixed_xp_reward_for_type(Puzzle.TRIVIA),
                     )
                     TriviaPuzzleDetail.objects.update_or_create(
                         puzzle=puzzle,
@@ -329,6 +376,87 @@ class GeminiService:
             target=_run, name=f"tour-metrics-{tour_pk}", daemon=True
         ).start()
 
+    @staticmethod
+    def _normalize_ai_puzzle_data(step_data: dict, puzzle_data: dict) -> dict:
+        """Coerce Gemini puzzle output into a supported regular puzzle shape."""
+        title = step_data.get("title", "this location")
+        question = puzzle_data.get("question") or f"What is the name of {title}?"
+        answer = puzzle_data.get("answer") or puzzle_data.get("correct_answer") or title
+        options = puzzle_data.get("options")
+        raw_type = str(puzzle_data.get("type", "")).strip().upper().replace("-", "_")
+
+        if not isinstance(options, list):
+            options = []
+
+        options = [
+            GeminiService._clean_trivia_option(option)
+            for option in options
+            if str(option).strip()
+        ]
+        options = [option for option in options if option]
+        answer = GeminiService._clean_trivia_option(answer) or title
+        question = GeminiService._clean_trivia_question(question)
+
+        wants_open_ended = raw_type in {
+            "OPEN_ENDED",
+            "OPEN_ENDED_TEXT",
+            "FREE_TEXT",
+            "TEXT",
+            "RIDDLE",
+            "SHORT_ANSWER",
+        }
+        has_usable_trivia = len(options) >= 2
+        puzzle_type = (
+            Puzzle.OPEN_ENDED
+            if wants_open_ended or not has_usable_trivia
+            else Puzzle.TRIVIA
+        )
+
+        if puzzle_type == Puzzle.OPEN_ENDED:
+            return {
+                **puzzle_data,
+                "type": Puzzle.OPEN_ENDED,
+                "question": question,
+                "options": None,
+                "answer": answer,
+                "hint": puzzle_data.get("hint", ""),
+                "xp": puzzle_data.get("xp", 25),
+            }
+
+        if answer not in options:
+            options.insert(0, answer)
+
+        fallback_options = ["Unknown Place", "Central Park", "The Grand Palace"]
+        for option in fallback_options:
+            if len(options) >= 4:
+                break
+            if option != answer and option not in options:
+                options.append(option)
+
+        return {
+            **puzzle_data,
+            "type": Puzzle.TRIVIA,
+            "question": question,
+            "options": options[:4],
+            "answer": answer,
+            "hint": puzzle_data.get("hint", ""),
+            "xp": puzzle_data.get("xp", 25),
+        }
+
+    @staticmethod
+    def _clean_trivia_question(question: object) -> str:
+        """Remove AI-inlined multiple-choice labels from a trivia question."""
+        text = str(question).strip()
+        matches = list(TRIVIA_OPTION_LABEL_REGEX.finditer(text))
+        if len(matches) >= 2:
+            text = text[: matches[0].start()].strip()
+        return text
+
+    @staticmethod
+    def _clean_trivia_option(option: object) -> str:
+        """Remove leading option labels such as A), B., or C: from answers."""
+        return TRIVIA_OPTION_PREFIX_REGEX.sub("", str(option)).strip()
+
     # ------------------------------------------------------------------
     # Place Discovery (RAG — Retrieval Step)
     # ------------------------------------------------------------------
@@ -355,6 +483,59 @@ class GeminiService:
 
     OUTLIER_MULTIPLIER = 2.5
     MIN_CANDIDATES_AFTER_TRIM = 4
+
+    @staticmethod
+    def _bearing_degrees(lat1: float, lng1: float, lat2: float, lng2: float) -> int:
+        """Initial compass bearing from point 1 to point 2, normalized to [0, 359]."""
+        lat1_r = math.radians(lat1)
+        lat2_r = math.radians(lat2)
+        dlng_r = math.radians(lng2 - lng1)
+        x = math.sin(dlng_r) * math.cos(lat2_r)
+        y = math.cos(lat1_r) * math.sin(lat2_r) - math.sin(lat1_r) * math.cos(
+            lat2_r
+        ) * math.cos(dlng_r)
+        bearing = math.degrees(math.atan2(x, y))
+        return int(round((bearing + 360) % 360)) % 360
+
+    def _resolve_compass_heading(
+        self,
+        step_data: dict,
+        puzzle_data: dict,
+        candidate_places: list[dict],
+    ) -> Optional[int]:
+        """
+        Determine a 0-359 target heading for a COMPASS puzzle.
+
+        Preference order:
+          1. ``target_landmark`` resolves to a verified place — compute the
+             real bearing from the step's coordinates to that landmark.
+          2. ``target_heading_degrees`` (or legacy ``answer``) is an int in
+             [0, 359].
+        Returns None if neither is usable.
+        """
+        landmark_name = puzzle_data.get("target_landmark")
+        if isinstance(landmark_name, str) and landmark_name.strip():
+            match = self._fuzzy_match_place(landmark_name, candidate_places)
+            if match and (
+                float(match["latitude"]) != float(step_data["latitude"])
+                or float(match["longitude"]) != float(step_data["longitude"])
+            ):
+                return self._bearing_degrees(
+                    float(step_data["latitude"]),
+                    float(step_data["longitude"]),
+                    float(match["latitude"]),
+                    float(match["longitude"]),
+                )
+
+        raw = puzzle_data.get("target_heading_degrees")
+        if raw is None:
+            raw = puzzle_data.get("answer")
+        try:
+            heading = int(round(float(raw)))
+        except (TypeError, ValueError):
+            return None
+        heading %= 360
+        return heading if 0 <= heading <= 359 else None
 
     @staticmethod
     def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -461,6 +642,108 @@ class GeminiService:
                 best_match = place
 
         return best_match if best_score >= threshold else None
+
+    # ------------------------------------------------------------------
+    # Puzzle persistence
+    # ------------------------------------------------------------------
+
+    SUPPORTED_AI_PUZZLE_TYPES = (Puzzle.TRIVIA, Puzzle.OPEN_ENDED, Puzzle.COMPASS)
+
+    def _create_puzzle_from_ai(
+        self,
+        *,
+        step: TourStep,
+        step_data: dict,
+        puzzle_data: dict,
+        candidate_places: list[dict],
+        include_compass: bool = False,
+    ) -> bool:
+        """
+        Persist a Puzzle (and its type-specific detail) from an AI payload.
+
+        Returns True on success, False if the payload is unusable so the
+        caller can fall back to the default trivia puzzle.
+        """
+        puzzle_type = (
+            str(puzzle_data.get("type", "TRIVIA")).strip().upper().replace("-", "_")
+        )
+        if puzzle_type not in self.SUPPORTED_AI_PUZZLE_TYPES:
+            puzzle_type = Puzzle.TRIVIA
+        if puzzle_type == Puzzle.COMPASS and not include_compass:
+            # Compass puzzles weren't requested — degrade to trivia and let the
+            # caller's fallback logic produce a valid puzzle if needed.
+            return False
+
+        question = puzzle_data.get("question")
+        if not question:
+            return False
+
+        if puzzle_type == Puzzle.COMPASS:
+            heading = self._resolve_compass_heading(
+                step_data, puzzle_data, candidate_places
+            )
+            if heading is None:
+                logger.warning(
+                    "AI returned an unusable COMPASS puzzle for step '%s'; "
+                    "falling back.",
+                    step_data.get("title"),
+                )
+                return False
+
+            puzzle = Puzzle.objects.create(
+                step=step,
+                puzzle_type=Puzzle.COMPASS,
+                question=question,
+                options=None,
+                correct_answer=str(heading),
+                hint=puzzle_data.get("hint", ""),
+                xp_reward=Puzzle.fixed_xp_reward_for_type(Puzzle.COMPASS),
+            )
+            CompassPuzzleDetail.objects.create(
+                puzzle=puzzle,
+                target_heading_degrees=heading,
+            )
+            return True
+
+        puzzle_data = self._normalize_ai_puzzle_data(step_data, puzzle_data)
+        puzzle_type = puzzle_data["type"]
+        answer = puzzle_data.get("answer")
+        options = puzzle_data.get("options")
+        if not answer:
+            return False
+
+        if puzzle_type == Puzzle.OPEN_ENDED:
+            Puzzle.objects.create(
+                step=step,
+                puzzle_type=Puzzle.OPEN_ENDED,
+                question=puzzle_data["question"],
+                options=None,
+                correct_answer=answer,
+                hint=puzzle_data.get("hint", ""),
+                xp_reward=Puzzle.fixed_xp_reward_for_type(Puzzle.OPEN_ENDED),
+            )
+            return True
+
+        if not isinstance(options, list) or len(options) < 2:
+            return False
+
+        puzzle = Puzzle.objects.create(
+            step=step,
+            puzzle_type=Puzzle.TRIVIA,
+            question=puzzle_data["question"],
+            options=options,
+            correct_answer=answer,
+            hint=puzzle_data.get("hint", ""),
+            xp_reward=Puzzle.fixed_xp_reward_for_type(Puzzle.TRIVIA),
+        )
+        TriviaPuzzleDetail.objects.update_or_create(
+            puzzle=puzzle,
+            defaults={
+                "options": options,
+                "correct_answer": answer,
+            },
+        )
+        return True
 
     # ------------------------------------------------------------------
     # Validation
@@ -581,6 +864,32 @@ class GeminiService:
         except Exception as e:
             logger.warning("Failed to calculate route metrics: %s", e)
 
+    @classmethod
+    def _content_type_to_extension(cls, content_type: str) -> str:
+        ctype = (content_type or "").split(";")[0].strip().lower()
+        if ctype == "image/png":
+            return ".png"
+        if ctype == "image/webp":
+            return ".webp"
+        return ".jpg"
+
+    @classmethod
+    def _download_place_photo(cls, photo_url: str) -> Optional[tuple[bytes, str]]:
+        if not photo_url:
+            return None
+        try:
+            with urlopen(
+                photo_url, timeout=cls.PLACE_PHOTO_TIMEOUT_SECONDS
+            ) as response:
+                content_type = response.headers.get("Content-Type", "")
+                content = response.read(cls.PLACE_PHOTO_MAX_BYTES + 1)
+            if not content or len(content) > cls.PLACE_PHOTO_MAX_BYTES:
+                return None
+            return (content, cls._content_type_to_extension(content_type))
+        except (URLError, TimeoutError, ValueError) as e:
+            logger.warning("Failed to download Google Places photo: %s", e)
+            return None
+
     # ------------------------------------------------------------------
     # Prompt (RAG — Augmented Generation Step)
     # ------------------------------------------------------------------
@@ -596,18 +905,32 @@ class GeminiService:
         candidate_places: list[dict],
         num_steps: int,
         ar_models: list[ARModel] | None = None,
+        include_compass: bool = False,
     ) -> str:
         """
         Build a RAG prompt that constrains Gemini to select from verified
         Google Maps places.
         """
+        puzzle_kinds = ["TRIVIA", "OPEN_ENDED"]
+        if ar_models:
+            puzzle_kinds.append("AR")
+        if include_compass:
+            puzzle_kinds.append("COMPASS")
+        kinds_phrase = (
+            puzzle_kinds[0]
+            if len(puzzle_kinds) == 1
+            else ", ".join(puzzle_kinds[:-1]) + ", or " + puzzle_kinds[-1]
+        )
+
         mode_instructions = {
             "STORY": "Focus on rich narrative storytelling. Each step should have detailed historical or thematic descriptions that immerse the user in the story. No puzzles needed.",
-            "PUZZLE": "Focus on interactive challenges. Each step MUST have a puzzle (trivia question or AR). Keep descriptions brief. Some trivia questions should be formatted as a riddle, others should be normal trivia questions. Make the options challenging.",
-            "HYBRID": "Balance storytelling with puzzles. Each step should have both a narrative description AND a puzzle challenge.",
+            "PUZZLE": f"Focus on interactive challenges, but every step still needs a short story/narrative description before the puzzle. Each step MUST have a puzzle ({kinds_phrase}). Mix multiple-choice trivia with short-answer open-ended riddles where appropriate.",
+            "HYBRID": f"Balance storytelling with puzzles. Each step should have both a narrative description AND a puzzle challenge. Use a mix of {kinds_phrase} puzzles.",
         }
 
-        puzzle_schema = """
+        trivia_schema = """
+        TRIVIA — multiple-choice question grounded in the location's history,
+        architecture, or culture:
         "puzzle": {
             "type": "TRIVIA",
             "question": "What year was this building constructed?",
@@ -615,13 +938,58 @@ class GeminiService:
             "answer": "1875",
             "hint": "It was built during the Victorian era",
             "xp": 25
+        }
+
+        OR
+
+        "puzzle": {
+            "type": "OPEN_ENDED",
+            "question": "I have watched empires rise beneath one dome. What landmark am I?",
+            "answer": "Hagia Sophia",
+            "hint": "Its Turkish name is Ayasofya",
+            "xp": 25
         }"""
+
+        compass_schema = """
+        COMPASS — asks the user to physically face a direction. The phone
+        vibrates as they rotate toward the target heading. STRONGLY PREFER
+        specifying "target_landmark" with the EXACT name of another stop from
+        the VERIFIED LOCATIONS list — the backend will compute the real
+        bearing from this step to that landmark. Only fall back to a raw
+        "target_heading_degrees" integer (0-359, 0=N, 90=E, 180=S, 270=W)
+        when no nearby landmark fits the question:
+        "puzzle": {
+            "type": "COMPASS",
+            "question": "Face the direction of the Blue Mosque from where you stand.",
+            "target_landmark": "Blue Mosque",
+            "hint": "Its silhouette is visible across the square.",
+            "xp": 25
+        }"""
+
+        if include_compass:
+            puzzle_schema = (
+                "\n        Each puzzle is one of three regular types: TRIVIA, "
+                "OPEN_ENDED, or COMPASS. "
+                "Pick whichever fits the location best; mix the types across the "
+                "tour so it does not feel repetitive (aim for at least one "
+                "COMPASS puzzle when there are 3+ steps).\n"
+                + trivia_schema
+                + "\n"
+                + compass_schema
+            )
+        else:
+            puzzle_schema = trivia_schema
 
         puzzle_field = '"puzzle": {...}' if mode in ["PUZZLE", "HYBRID"] else ""
         puzzle_instruction = (
             "Puzzle schema for each step:" + puzzle_schema
             if mode in ["PUZZLE", "HYBRID"]
             else ""
+        )
+        supported_regular_types = (
+            "TRIVIA, OPEN_ENDED, or COMPASS"
+            if include_compass
+            else "TRIVIA or OPEN_ENDED"
         )
 
         user_instruction = (
@@ -678,6 +1046,9 @@ CRITICAL RULES:
 3. Use the EXACT name and GPS coordinates provided in the list above.
 4. ROUTE COHERENCE: Arrange the selected stops as a smooth itinerary with no big jumps. Consecutive stops should be close to each other (ideally under ~1.5 km / 20 min walk apart) and the path should flow in one general direction or loop — NOT zigzag back and forth between far-apart areas. If a location is far from the others, either skip it or visit it at the start/end so it doesn't break the flow. Use the "[~Xm from area centre]" labels and the GPS coordinates to plan the order.
 5. Write engaging, theme-connected narrative content for each selected location.
+6. For trivia puzzles, keep the question text separate from the choices. Do NOT put answer choices or labels like "A)", "B)", "C)", or "D)" inside the "question" field. Put choices only in the "options" array, without letter prefixes.
+7. For PUZZLE and HYBRID modes, every step must include both a non-empty "description" story and a "puzzle" challenge in the same step.
+8. Regular puzzle "type" must be {supported_regular_types}. For OPEN_ENDED, do not include an "options" array, and keep "answer" to one short canonical answer that users can reasonably type.
 
 OUTPUT FORMAT (strict JSON):
 {{

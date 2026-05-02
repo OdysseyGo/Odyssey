@@ -12,6 +12,7 @@ import {
   Dimensions,
   TextInput,
   BackHandler,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +25,7 @@ import AuthButton from '@/components/LoginComponents/AuthButton';
 import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
 import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import BackButton from '@/components/common/BackButton';
+import { ApiError } from '@/api/APIClient';
 import { createUser, CreateUserPayload } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -32,6 +34,11 @@ import { Spacing } from '@/constants/Spacing';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.28 : SCREEN_HEIGHT * 0.32;
 const AUTH_INPUT_MAX_LENGTH = 50;
+const USERNAME_ALLOWED_CHAR_REGEX = /^[\p{L}\p{N}_.@+-]+$/u;
+const NAME_ALLOWED_CHAR_REGEX = /^[\p{L}\p{M}][\p{L}\p{M}' -]*$/u;
+
+const isUsernameInvalidCharacterError = (message: string) =>
+  /enter a valid username|may contain only letters, numbers|invalid username/i.test(message);
 
 export default function RegisterScreen() {
   const colorScheme = useColorTheme();
@@ -49,6 +56,8 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
   const [errors, setErrors] = useState<{
     firstName?: string;
     lastName?: string;
@@ -56,6 +65,7 @@ export default function RegisterScreen() {
     email?: string;
     password?: string;
     confirmPassword?: string;
+    terms?: string;
     general?: string;
   }>({});
   const [loading, setLoading] = useState(false);
@@ -130,11 +140,28 @@ export default function RegisterScreen() {
   const passwordRef = useRef<TextInput>(null);
   const confirmPasswordRef = useRef<TextInput>(null);
 
+  const normalizeNameInput = (value: string) => value.replace(/[\r\n\t]/g, '');
+  const normalizeUsernameInput = (value: string) => value.replace(/[\r\n\t\s]/g, '');
+  const normalizeEmailInput = (value: string) => value.replace(/[\r\n\t\s]/g, '').toLowerCase();
+
   const validateStep1 = () => {
     const newErrors: typeof errors = {};
-    if (!firstName.trim()) newErrors.firstName = t('auth.errors.firstNameRequired');
-    if (!lastName.trim()) newErrors.lastName = t('auth.errors.lastNameRequired');
-    if (!username.trim()) newErrors.username = t('auth.errors.usernameRequired');
+    const normalizedFirstName = firstName.trim();
+    const normalizedLastName = lastName.trim();
+    const normalizedUsername = username.trim();
+
+    if (!normalizedFirstName) newErrors.firstName = t('auth.errors.firstNameRequired');
+    else if (!NAME_ALLOWED_CHAR_REGEX.test(normalizedFirstName))
+      newErrors.firstName = t('auth.errors.firstNameInvalidCharacters');
+
+    if (!normalizedLastName) newErrors.lastName = t('auth.errors.lastNameRequired');
+    else if (!NAME_ALLOWED_CHAR_REGEX.test(normalizedLastName))
+      newErrors.lastName = t('auth.errors.lastNameInvalidCharacters');
+
+    if (!normalizedUsername) newErrors.username = t('auth.errors.usernameRequired');
+    else if (!USERNAME_ALLOWED_CHAR_REGEX.test(normalizedUsername))
+      newErrors.username = t('auth.errors.usernameInvalidCharacters');
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -142,29 +169,43 @@ export default function RegisterScreen() {
   const validateStep2 = () => {
     const newErrors: typeof errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
-    if (!email.trim()) newErrors.email = t('auth.errors.emailRequired');
-    else if (!emailRegex.test(email)) newErrors.email = t('auth.errors.emailFormat');
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) newErrors.email = t('auth.errors.emailRequired');
+    else if (!emailRegex.test(normalizedEmail)) newErrors.email = t('auth.errors.emailFormat');
     if (!password) newErrors.password = t('auth.errors.passwordRequired');
     if (!confirmPassword) newErrors.confirmPassword = t('auth.errors.confirmPasswordRequired');
     if (password && confirmPassword && password !== confirmPassword)
       newErrors.confirmPassword = t('auth.errors.passwordsMismatch');
+    if (!agreedToTerms) newErrors.terms = t('auth.errors.termsRequired');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = () => {
-    if (validateStep1()) setStep(2);
+    if (!validateStep1()) return;
+
+    setFirstName((prev) => prev.trim());
+    setLastName((prev) => prev.trim());
+    setUsername((prev) => prev.trim());
+    setStep(2);
   };
 
   const submitRegistration = async () => {
     setLoading(true);
     try {
+      const normalizedFirstName = firstName.trim();
+      const normalizedLastName = lastName.trim();
+      const normalizedUsername = username.trim();
+      const normalizedEmail = email.trim().toLowerCase();
+
       const user: CreateUserPayload = {
-        username,
-        email,
+        username: normalizedUsername,
+        email: normalizedEmail,
         password,
-        first_name: firstName,
-        last_name: lastName,
+        first_name: normalizedFirstName,
+        last_name: normalizedLastName,
+        terms_accepted: true,
       };
       await createUser(user);
       isNavigatingAway.current = true;
@@ -174,7 +215,11 @@ export default function RegisterScreen() {
       }, 1400);
     } catch (e) {
       console.error(e);
-      setErrors({ general: t('auth.errors.registrationFailed') });
+      if (e instanceof ApiError && isUsernameInvalidCharacterError(e.message)) {
+        setErrors({ general: t('auth.errors.usernameInvalidCharacters') });
+      } else {
+        setErrors({ general: t('auth.errors.registrationFailed') });
+      }
     } finally {
       setLoading(false);
     }
@@ -183,6 +228,7 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     if (!validateStep2()) return;
 
+    setEmail((prev) => prev.trim().toLowerCase());
     await submitRegistration();
   };
 
@@ -294,7 +340,7 @@ export default function RegisterScreen() {
                       label={t('auth.firstName')}
                       value={firstName}
                       onChangeText={(text) => {
-                        setFirstName(text);
+                        setFirstName(normalizeNameInput(text));
                         setErrors((e) => ({ ...e, firstName: undefined }));
                       }}
                       placeholder={t('auth.firstNamePlaceholder')}
@@ -309,7 +355,7 @@ export default function RegisterScreen() {
                       label={t('auth.lastName')}
                       value={lastName}
                       onChangeText={(text) => {
-                        setLastName(text);
+                        setLastName(normalizeNameInput(text));
                         setErrors((e) => ({ ...e, lastName: undefined }));
                       }}
                       placeholder={t('auth.lastNamePlaceholder')}
@@ -324,8 +370,8 @@ export default function RegisterScreen() {
                       label={t('auth.username')}
                       value={username}
                       onChangeText={(text) => {
-                        setUsername(text);
-                        setErrors((e) => ({ ...e, username: undefined }));
+                        setUsername(normalizeUsernameInput(text));
+                        setErrors((e) => ({ ...e, username: undefined, general: undefined }));
                       }}
                       placeholder={t('auth.usernamePlaceholder')}
                       autoCapitalize="none"
@@ -353,7 +399,7 @@ export default function RegisterScreen() {
                       label={t('auth.email')}
                       value={email}
                       onChangeText={(text) => {
-                        setEmail(text);
+                        setEmail(normalizeEmailInput(text));
                         setErrors((e) => ({ ...e, email: undefined }));
                       }}
                       placeholder={t('auth.emailPlaceholder')}
@@ -397,6 +443,55 @@ export default function RegisterScreen() {
                       onSubmitEditing={handleRegister}
                       error={errors.confirmPassword}
                     />
+                    {/* Terms & Privacy checkbox */}
+                    <View style={styles.checkboxRow}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setAgreedToTerms((v) => !v);
+                          setErrors((e) => ({ ...e, terms: undefined }));
+                        }}
+                        activeOpacity={0.7}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons
+                          name={agreedToTerms ? 'checkbox' : 'square-outline'}
+                          size={22}
+                          color={
+                            errors.terms
+                              ? theme.error
+                              : agreedToTerms
+                                ? theme.primary
+                                : theme.subText
+                          }
+                        />
+                      </TouchableOpacity>
+                      <Text style={[styles.checkboxLabel, { color: theme.subText }]}>
+                        {t('auth.termsPrefix')}{' '}
+                        <Text
+                          style={[styles.checkboxLink, { color: theme.primary }]}
+                          onPress={() =>
+                            Linking.openURL('https://odysseygo.github.io/Odyssey/legal')
+                          }
+                        >
+                          {t('auth.terms')}
+                        </Text>{' '}
+                        {t('auth.termsAnd')}{' '}
+                        <Text
+                          style={[styles.checkboxLink, { color: theme.primary }]}
+                          onPress={() =>
+                            Linking.openURL('https://odysseygo.github.io/Odyssey/legal')
+                          }
+                        >
+                          {t('auth.privacy')}
+                        </Text>
+                      </Text>
+                    </View>
+                    {errors.terms && (
+                      <Text style={[styles.checkboxError, { color: theme.error }]}>
+                        {errors.terms}
+                      </Text>
+                    )}
+
                     {showSuccessBanner ? (
                       <View
                         style={[
@@ -548,6 +643,28 @@ const styles = StyleSheet.create({
   inputs: {
     gap: Spacing.xs,
     paddingBottom: Spacing.md,
+  },
+
+  // ── Terms checkbox
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  checkboxLink: {
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  checkboxError: {
+    fontSize: 12,
+    marginTop: 2,
+    marginLeft: 30,
   },
 
   // ── Footer link
