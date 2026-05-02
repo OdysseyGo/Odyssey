@@ -41,7 +41,9 @@ class AdConfigView(APIView):
         platform = _platform_from_request(request)
         placements_qs = AdPlacement.objects.filter(enabled=True)
         placements_data = AdPlacementSerializer(
-            placements_qs, many=True, context={"platform": platform}
+            placements_qs,
+            many=True,
+            context={"platform": platform, "user": request.user},
         ).data
         return Response({"placements": placements_data})
 

@@ -149,6 +149,7 @@ function mapApiPuzzleToInternal(apiPuzzle: ApiTour['steps'][0]['puzzle']): Puzzl
     return {
       type: 'open-ended',
       question: apiPuzzle.question,
+      hint: apiPuzzle.hint,
     };
   }
 

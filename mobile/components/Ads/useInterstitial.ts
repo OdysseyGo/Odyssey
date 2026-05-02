@@ -20,7 +20,7 @@ export function useInterstitial(placementKey: string) {
     if (!isReady) return;
     const placement = getPlacement(placementKey);
     if (!placement || placement.ad_format !== 'INTERSTITIAL') return;
-    if (placement.remaining_today <= 0) return;
+    if (placement.frequency_cap_per_day > 0 && placement.remaining_today <= 0) return;
 
     const ad = InterstitialAd.createForAdRequest(resolveAdUnitId(placement), {
       requestNonPersonalizedAdsOnly: true,

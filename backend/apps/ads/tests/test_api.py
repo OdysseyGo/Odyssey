@@ -61,6 +61,7 @@ def test_config_returns_enabled_placements(client, banner, rewarded_credits):
     assert resp.status_code == 200
     body = resp.json()
     assert "is_ad_free" not in body
+    assert all("remaining_today" in placement for placement in body["placements"])
     keys = {p["key"] for p in body["placements"]}
     assert keys == {"profile_banner", "rewarded_credits"}
 

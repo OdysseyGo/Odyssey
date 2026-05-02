@@ -39,7 +39,11 @@ export const reportImpression = (placementKey: string, clientRequestId: string) 
   apiRequest<void>({
     method: 'post',
     url: '/api/ads/impressions/',
-    data: { placement_key: placementKey, client_request_id: clientRequestId },
+    data: {
+      placement_key: placementKey,
+      platform: Platform.OS === 'ios' ? 'ios' : 'android',
+      client_request_id: clientRequestId,
+    },
   }).catch((err) => {
     if (err?.statusCode === 429) return;
     throw err;

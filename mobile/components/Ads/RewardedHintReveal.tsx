@@ -23,7 +23,8 @@ export default function RewardedHintReveal({ hint, stepId }: Props) {
   }, [stepId]);
 
   if (!hint) return null;
-  if (revealed) {
+  const canUseRewardedGate = isReady && available;
+  if (revealed || !canUseRewardedGate) {
     return (
       <View style={styles.hintBox}>
         <MaterialCommunityIcons name="lightbulb-on" size={18} color="#B45309" />
@@ -31,7 +32,6 @@ export default function RewardedHintReveal({ hint, stepId }: Props) {
       </View>
     );
   }
-  if (!isReady || !available) return null;
 
   const isBusy = status === 'loading' || status === 'idle' || status === 'showing';
 
