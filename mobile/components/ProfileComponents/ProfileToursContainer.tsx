@@ -53,8 +53,6 @@ export default function ProfileToursContainer(_props: ProfileToursContainerProps
         return t('profile.emptyPublished');
       case 'PENDING':
         return t('profile.emptyPending');
-      case 'DRAFT':
-        return t('profile.emptyDraft');
       case 'AI':
         return t('profile.emptyAiTours');
       default:

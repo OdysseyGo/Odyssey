@@ -381,6 +381,7 @@ class TourSerializer(serializers.ModelSerializer):
             "is_ai_generated",
             "user_has_completed_once",
             "status",
+            "review_status",
             "generation_source",
             "created_at",
             "updated_at",
@@ -405,11 +406,14 @@ class TourSerializer(serializers.ModelSerializer):
             "accessibility_rating",
             "metrics_calculated",
             "generation_source",
+            "review_status",
         ]
 
     def validate(self, attrs):
         instance = self.instance
-        current_status = getattr(instance, "status", Tour.DRAFT)
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        current_status = getattr(instance, "status", Tour.PENDING)
         status_value = attrs.get("status", current_status)
         current_cover_image = getattr(instance, "cover_image", None)
         cover_image = attrs.get("cover_image", current_cover_image)
@@ -428,6 +432,15 @@ class TourSerializer(serializers.ModelSerializer):
                 "country_code",
             )
         )
+
+        if (
+            status_value == Tour.PUBLISHED
+            and current_status != Tour.PUBLISHED
+            and (not user or not user.is_staff)
+        ):
+            raise serializers.ValidationError(
+                {"status": "Only admins can publish tours."}
+            )
 
         if status_value == Tour.PUBLISHED and (is_publishing or is_location_update):
             if not has_cover:
@@ -485,6 +498,19 @@ class TourSerializer(serializers.ModelSerializer):
         validated_data.pop("city_latitude", None)
         validated_data.pop("city_longitude", None)
         self._canonicalize_country_fields(validated_data)
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        has_creator_changes = any(
+            key not in {"status", "review_status"} for key in validated_data
+        )
+        if (
+            instance.status == Tour.PENDING
+            and instance.review_status == Tour.REJECTED
+            and user
+            and not user.is_staff
+            and has_creator_changes
+        ):
+            validated_data["review_status"] = Tour.IN_REVIEW
         return super().update(instance, validated_data)
 
     def _canonicalize_country_fields(self, validated_data):

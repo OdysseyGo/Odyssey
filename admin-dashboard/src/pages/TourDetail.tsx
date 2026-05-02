@@ -113,6 +113,7 @@ interface TourData {
   country?: string;
   country_code?: string;
   status: string;
+  review_status?: "IN_REVIEW" | "REJECTED" | null;
   tour_type: string;
   difficulty: string;
   creator: number;
@@ -161,7 +162,6 @@ interface ArPreviewState {
 const STATUS_VARIANT: Record<string, "success" | "warning" | "secondary"> = {
   PUBLISHED: "success",
   PENDING: "warning",
-  DRAFT: "secondary",
   ARCHIVED: "secondary",
 };
 
@@ -566,6 +566,15 @@ export default function TourDetail() {
     );
   }
 
+  const isPendingRejected =
+    tour.status === "PENDING" && tour.review_status === "REJECTED";
+  const pendingSubLabel =
+    tour.status === "PENDING" && tour.review_status
+      ? tour.review_status === "REJECTED"
+        ? "rejected"
+        : "review"
+      : null;
+
   return (
     <div className="space-y-6">
       <button
@@ -581,6 +590,7 @@ export default function TourDetail() {
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold">{tour.title}</h1>
               <Badge variant={STATUS_VARIANT[tour.status] ?? "secondary"}>{tour.status}</Badge>
+              {pendingSubLabel ? <Badge variant="secondary">({pendingSubLabel})</Badge> : null}
             </div>
             <p className="text-muted-foreground">
               {tour.city}
@@ -601,15 +611,15 @@ export default function TourDetail() {
             <Button
               variant="outline"
               onClick={() => setRejectModalOpen(true)}
-              disabled={actionLoading || tour.status === "DRAFT" || tour.status === "ARCHIVED"}
+              disabled={actionLoading || isPendingRejected || tour.status === "ARCHIVED"}
               title={
-                tour.status === "DRAFT"
-                  ? "Already in draft"
+                isPendingRejected
+                  ? "Already pending (rejected)"
                   : tour.status === "ARCHIVED"
                     ? "Tour is archived"
-                    : "Reject and move to draft"
+                    : "Reject and keep pending"
               }
-              className={tour.status === "DRAFT" || tour.status === "ARCHIVED" ? "opacity-40 cursor-not-allowed" : ""}
+              className={isPendingRejected || tour.status === "ARCHIVED" ? "opacity-40 cursor-not-allowed" : ""}
             >
               <XCircle className="h-4 w-4" /> Reject
             </Button>
@@ -631,19 +641,17 @@ export default function TourDetail() {
         {tour.status === "PENDING" && (
           <div className="flex items-center gap-2 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning">
             <CheckCircle className="h-4 w-4 shrink-0" />
-            <span>This tour is <strong>awaiting review</strong> — the creator has submitted it. Approve to publish or reject to send it back to drafts.</span>
-          </div>
-        )}
-        {tour.status === "DRAFT" && (
-          <div className="flex items-center gap-2 rounded-lg border border-muted-foreground/30 bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
-            <XCircle className="h-4 w-4 shrink-0" />
-            <span>This tour is in <strong>draft</strong> — it was rejected or is still being edited. The creator can resubmit it when ready.</span>
+            {tour.review_status === "REJECTED" ? (
+              <span>This tour is <strong>pending (rejected)</strong>. The creator needs to update it before it goes back to review.</span>
+            ) : (
+              <span>This tour is <strong>pending review</strong>. Approve to publish or reject to mark it as pending (rejected).</span>
+            )}
           </div>
         )}
         {tour.status === "PUBLISHED" && (
           <div className="flex items-center gap-2 rounded-lg border border-green-500/40 bg-green-500/10 px-4 py-3 text-sm text-green-700 dark:text-green-400">
             <CheckCircle className="h-4 w-4 shrink-0" />
-            <span>This tour is <strong>live</strong> and visible to explorers. You can reject it to move it back to draft.</span>
+            <span>This tour is <strong>live</strong> and visible to explorers. You can reject it to mark it as pending (rejected).</span>
           </div>
         )}
         {tour.status === "ARCHIVED" && (

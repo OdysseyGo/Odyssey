@@ -4,7 +4,8 @@ import { User } from './users';
 // Types
 export type TourType = 'STORY' | 'PUZZLE' | 'HYBRID';
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
-export type TourStatus = 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'ARCHIVED';
+export type TourStatus = 'PENDING' | 'PUBLISHED' | 'ARCHIVED';
+export type TourReviewStatus = 'IN_REVIEW' | 'REJECTED';
 export type TourGenerationSource = 'USER' | 'AI';
 
 export type TriviaPuzzleDetail = {
@@ -154,6 +155,7 @@ export type Tour = {
   city_latitude?: number;
   city_longitude?: number;
   status: TourStatus;
+  review_status?: TourReviewStatus | null;
   generation_source: TourGenerationSource;
   created_at: string;
   updated_at: string;

@@ -112,9 +112,15 @@ class TourViewSet(viewsets.ModelViewSet):
         env_mode = os.getenv("ENV_MODE", "production")
         if env_mode != "development":
             status = Tour.PENDING
+            review_status = Tour.IN_REVIEW
         else:
             status = Tour.PUBLISHED
-        tour = serializer.save(creator=self.request.user, status=status)
+            review_status = None
+        tour = serializer.save(
+            creator=self.request.user,
+            status=status,
+            review_status=review_status,
+        )
         BadgeService.evaluate_user_badges(tour.creator)
 
     @action(

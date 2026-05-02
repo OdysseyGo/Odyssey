@@ -5,7 +5,13 @@ import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { profileTourCardStyles } from './ProfileTourCard.styles';
-import { ProfileTourCardProps, STATUS_COLORS, STATUS_LABELS } from './ProfileTourCard.config';
+import {
+  REVIEW_STATUS_PILL_COLORS,
+  ProfileTourCardProps,
+  REVIEW_STATUS_PILL_LABELS,
+  STATUS_COLORS,
+  STATUS_LABELS,
+} from './ProfileTourCard.config';
 
 const TYPE_ICONS: Record<string, string> = {
   STORY: 'book-outline',
@@ -19,6 +25,14 @@ export default function ProfileTourCard({ tour, onPress, containerStyle }: Profi
   const color = Colors[theme];
 
   const statusStyle = STATUS_COLORS[tour.status];
+  const pendingPillLabel =
+    tour.status === 'PENDING'
+      ? REVIEW_STATUS_PILL_LABELS[tour.review_status ?? 'IN_REVIEW']
+      : null;
+  const pendingPillColors =
+    tour.status === 'PENDING'
+      ? REVIEW_STATUS_PILL_COLORS[tour.review_status ?? 'IN_REVIEW']
+      : null;
 
   const handlePress = () => {
     if (onPress) {
@@ -63,6 +77,21 @@ export default function ProfileTourCard({ tour, onPress, containerStyle }: Profi
               {STATUS_LABELS[tour.status]}
             </Text>
           </View>
+          {pendingPillLabel && pendingPillColors ? (
+            <View
+              style={[
+                styles.subStatusPill,
+                {
+                  backgroundColor: pendingPillColors.bg,
+                  borderColor: pendingPillColors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.subStatusText, { color: pendingPillColors.text }]}>
+                {pendingPillLabel}
+              </Text>
+            </View>
+          ) : null}
         </View>
         <View style={styles.metaRow}>
           {tour.city && <Text style={styles.metaText}>{tour.city}</Text>}
