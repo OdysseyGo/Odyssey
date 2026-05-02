@@ -106,8 +106,8 @@ export default function AITourCreation() {
         duration: formData.duration,
         language: formData.language,
         additional_details: formData.additionalDetails.trim() || undefined,
-        include_ar: formData.includeAr,
-        include_compass: formData.includeCompass,
+        include_ar: formData.mode === 'STORY' ? false : formData.includeAr,
+        include_compass: formData.mode === 'STORY' ? false : formData.includeCompass,
       });
 
       Alert.alert(t('aiTour.successTitle'), response.message, [
@@ -216,39 +216,44 @@ export default function AITourCreation() {
             <FormOptionCard
               options={tourModeOptions}
               selectedValue={formData.mode}
-              onSelect={(value) => updateFormData({ mode: value as AITourFormData['mode'] })}
+              onSelect={(value) => {
+                const selectedMode = value as AITourFormData['mode'];
+                updateFormData({
+                  mode: selectedMode,
+                  includeAr: selectedMode === 'STORY' ? false : formData.includeAr,
+                  includeCompass: selectedMode === 'STORY' ? false : formData.includeCompass,
+                });
+              }}
             />
           </View>
 
-          {formData.mode !== 'STORY' && (
-            <>
-              <View style={styles.sectionDivider} />
+          <View style={styles.sectionDivider} />
 
-              <View style={styles.arToggleRow}>
-                <View style={styles.arToggleLabels}>
-                  <Text style={styles.sectionTitle}>{t('aiTour.includeAr.title')}</Text>
-                  <Text style={styles.sectionSubtitle}>{t('aiTour.includeAr.subtitle')}</Text>
-                </View>
-                <Switch
-                  value={formData.includeAr}
-                  onValueChange={(value) => updateFormData({ includeAr: value })}
-                />
-              </View>
+          <View style={[styles.arToggleRow, formData.mode === 'STORY' && { opacity: 0.5 }]}>
+            <View style={styles.arToggleLabels}>
+              <Text style={styles.sectionTitle}>{t('aiTour.includeAr.title')}</Text>
+              <Text style={styles.sectionSubtitle}>{t('aiTour.includeAr.subtitle')}</Text>
+            </View>
+            <Switch
+              value={formData.mode === 'STORY' ? false : formData.includeAr}
+              onValueChange={(value) => updateFormData({ includeAr: value })}
+              disabled={formData.mode === 'STORY'}
+            />
+          </View>
 
-              <View style={styles.sectionDivider} />
+          <View style={styles.sectionDivider} />
 
-              <View style={styles.arToggleRow}>
-                <View style={styles.arToggleLabels}>
-                  <Text style={styles.sectionTitle}>{t('aiTour.includeCompass.title')}</Text>
-                  <Text style={styles.sectionSubtitle}>{t('aiTour.includeCompass.subtitle')}</Text>
-                </View>
-                <Switch
-                  value={formData.includeCompass}
-                  onValueChange={(value) => updateFormData({ includeCompass: value })}
-                />
-              </View>
-            </>
-          )}
+          <View style={[styles.arToggleRow, formData.mode === 'STORY' && { opacity: 0.5 }]}>
+            <View style={styles.arToggleLabels}>
+              <Text style={styles.sectionTitle}>{t('aiTour.includeCompass.title')}</Text>
+              <Text style={styles.sectionSubtitle}>{t('aiTour.includeCompass.subtitle')}</Text>
+            </View>
+            <Switch
+              value={formData.mode === 'STORY' ? false : formData.includeCompass}
+              onValueChange={(value) => updateFormData({ includeCompass: value })}
+              disabled={formData.mode === 'STORY'}
+            />
+          </View>
 
           <View style={styles.sectionDivider} />
 

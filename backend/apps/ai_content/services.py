@@ -629,7 +629,9 @@ class GeminiService:
         Returns True on success, False if the payload is unusable so the
         caller can fall back to the default trivia puzzle.
         """
-        puzzle_type = (puzzle_data.get("type") or "TRIVIA").upper()
+        puzzle_type = (
+            str(puzzle_data.get("type", "TRIVIA")).strip().upper().replace("-", "_")
+        )
         if puzzle_type not in self.SUPPORTED_AI_PUZZLE_TYPES:
             puzzle_type = Puzzle.TRIVIA
         if puzzle_type == Puzzle.COMPASS and not include_compass:

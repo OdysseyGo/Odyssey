@@ -192,12 +192,28 @@ class TourViewSet(viewsets.ModelViewSet):
 
         generation_source = request.query_params.get("generation_source")
         if generation_source:
+            if generation_source not in {Tour.USER, Tour.AI}:
+                return Response(
+                    {
+                        "error": (
+                            "generation_source must be one of: "
+                            f"{Tour.USER}, {Tour.AI}."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             queryset = queryset.filter(generation_source=generation_source)
 
         is_ai_generated = request.query_params.get("is_ai_generated")
         if is_ai_generated is not None:
+            normalized_is_ai_generated = str(is_ai_generated).strip().lower()
+            if normalized_is_ai_generated not in {"true", "false"}:
+                return Response(
+                    {"error": "is_ai_generated must be either 'true' or 'false'."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             queryset = queryset.filter(
-                is_ai_generated=str(is_ai_generated).lower() == "true"
+                is_ai_generated=normalized_is_ai_generated == "true"
             )
 
         queryset = queryset.annotate(average_rating=Avg("reviews__rating")).order_by(

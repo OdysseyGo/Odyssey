@@ -871,6 +871,36 @@ class TestCompassPuzzleGeneration(TestCase):
         first_step = tour.steps.order_by("order").first()
         assert first_step.puzzle.puzzle_type == Puzzle.TRIVIA
 
+    @patch("apps.ai_content.services.GoogleMapsFacade")
+    @patch("apps.ai_content.services.genai")
+    def test_non_string_puzzle_type_does_not_crash(self, mock_genai, mock_maps_cls):
+        """Unexpected non-string puzzle type values should degrade gracefully."""
+        tour_data = self._tour_with_compass({"type": 12345})
+
+        mock_model = MagicMock()
+        mock_model.generate_content.return_value = _mock_gemini_response(tour_data)
+        mock_genai.GenerativeModel.return_value = mock_model
+
+        mock_facade = mock_maps_cls.return_value
+        mock_facade.search_places.return_value = _candidate_places()
+        mock_facade.calculate_route_metrics.return_value = {"success": False}
+        mock_facade.estimate_accessibility.return_value = 5
+
+        service = GeminiService()
+        tour = service.generate_tour(
+            city="Istanbul",
+            theme="History",
+            mode="PUZZLE",
+            duration=30,
+            language="en",
+            creator=self._make_creator(),
+            include_compass=True,
+        )
+
+        first_step = tour.steps.order_by("order").first()
+        assert first_step.puzzle is not None
+        assert first_step.puzzle.puzzle_type != Puzzle.COMPASS
+
 
 class TestBearingDegrees(TestCase):
     def test_due_east(self):
