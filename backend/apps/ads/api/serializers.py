@@ -35,7 +35,9 @@ class AdPlacementSerializer(serializers.ModelSerializer):
             return 0
 
         today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        shown_today = obj.impressions.filter(user=user, shown_at__gte=today_start).count()
+        shown_today = obj.impressions.filter(
+            user=user, shown_at__gte=today_start
+        ).count()
         return max(0, obj.frequency_cap_per_day - shown_today)
 
 
