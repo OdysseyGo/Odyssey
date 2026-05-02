@@ -3,6 +3,7 @@ import { TextInput, TextInputProps } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { formTextAreaStyles } from './FormTextArea.styles';
+import { sanitizeMultiLineText } from '@/utils/inputSanitizers';
 
 type FormTextAreaProps = {
   value: string;
@@ -26,7 +27,7 @@ export default function FormTextArea({
     <TextInput
       style={[styles.textInput, styles.textArea]}
       value={value}
-      onChangeText={onChangeText}
+      onChangeText={(text) => onChangeText(sanitizeMultiLineText(text))}
       placeholder={placeholder}
       placeholderTextColor={color.placeholderTextColor}
       multiline

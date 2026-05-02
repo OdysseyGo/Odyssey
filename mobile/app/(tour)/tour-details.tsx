@@ -7,6 +7,7 @@ import { useTourCreation } from '@/contexts/TourCreationContext';
 import { TourDetailsStep } from '@/components/TourCreation/steps';
 import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
+import { sanitizeMultiLineText, sanitizeSingleLineText } from '@/utils/inputSanitizers';
 import { getTour } from '@/api/tours';
 import {
   getApiTourStepIds,
@@ -81,8 +82,8 @@ export default function TourDetailsScreen() {
   }, [validTourId, setTourData, setEditingContext]);
 
   const canProceed =
-    tourData.title.trim().length > 0 &&
-    tourData.description.trim().length > 0 &&
+    sanitizeSingleLineText(tourData.title).trim().length > 0 &&
+    sanitizeMultiLineText(tourData.description).trim().length > 0 &&
     !!tourData.coverImage &&
     tourData.category.length > 0 &&
     tourData.country.trim().length > 0 &&

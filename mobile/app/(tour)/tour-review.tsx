@@ -24,9 +24,13 @@ import { TourReviewStep } from '@/components/TourCreation/steps';
 import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/api/APIClient';
+import { sanitizeMultiLineText, sanitizeSingleLineText } from '@/utils/inputSanitizers';
 import { setProfileNeedsRefresh } from '@/lib/profileRefresh';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
+const STEP_UPLOAD_CONCURRENCY = 3;
+const STEP_UPLOAD_MAX_RETRIES = 2;
+const STEP_UPLOAD_RETRY_BASE_MS = 1200;
 
 function getSubmitErrorMessage(error: unknown, fallbackMessage: string) {
   if (error instanceof ApiError) {
@@ -35,11 +39,73 @@ function getSubmitErrorMessage(error: unknown, fallbackMessage: string) {
   return fallbackMessage;
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isTransientSubmissionError(error: unknown) {
+  if (error instanceof ApiError) {
+    if (!error.statusCode) return true;
+    return error.statusCode === 429 || error.statusCode >= 500;
+  }
+  if (error instanceof Error) {
+    return /timeout|network|cannot reach/i.test(error.message);
+  }
+  return false;
+}
+
+async function withRetry<T>(operation: () => Promise<T>, maxRetries: number): Promise<T> {
+  let attempt = 0;
+  // Retry only transient errors. Non-transient errors fail fast.
+  while (true) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (attempt >= maxRetries || !isTransientSubmissionError(error)) {
+        throw error;
+      }
+      attempt += 1;
+      await sleep(STEP_UPLOAD_RETRY_BASE_MS * attempt);
+    }
+  }
+}
+
+async function runWithConcurrency(
+  tasks: (() => Promise<void>)[],
+  concurrency: number
+): Promise<void> {
+  let nextIndex = 0;
+  let firstError: unknown = null;
+
+  const worker = async () => {
+    while (nextIndex < tasks.length && !firstError) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      try {
+        await tasks[currentIndex]();
+      } catch (error) {
+        firstError = error;
+      }
+    }
+  };
+
+  const workerCount = Math.max(1, Math.min(concurrency, tasks.length));
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+
+  if (firstError) {
+    throw firstError;
+  }
+}
+
 export default function TourReviewScreen() {
   const theme = useColorTheme();
   const color = Colors[theme];
   const { tourData, resetTourData, editingTourId, originalStepIds } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [submitProgress, setSubmitProgress] = React.useState<{
+    completed: number;
+    total: number;
+  } | null>(null);
   const [showUnderReviewNotice, setShowUnderReviewNotice] = React.useState(false);
   const { t } = useTranslation();
   const isEditing = editingTourId !== null;
@@ -55,83 +121,248 @@ export default function TourReviewScreen() {
     Number.isFinite(tourData.stateLatitude) &&
     Number.isFinite(tourData.stateLongitude);
 
-  const savePuzzleForStep = async (tourId: number, stepId: number, loc: TourLocation) => {
-    if (!loc.puzzle) {
+  const savePuzzleForStep = async (
+    tourId: number,
+    stepId: number,
+    location: TourLocation
+  ): Promise<void> => {
+    if (!location.puzzle) {
       return;
     }
 
+    const puzzle = location.puzzle;
     const basePayload = {
-      question: loc.puzzle.question,
-      hint: loc.puzzle.hint,
+      question: sanitizeMultiLineText(puzzle.question).trim(),
+      hint: sanitizeMultiLineText(puzzle.hint),
     };
 
-    if (loc.puzzle.puzzle_type === 'TRIVIA') {
-      await setStepTriviaPuzzle(tourId, stepId, {
-        ...basePayload,
-        options: loc.puzzle.options,
-        correct_answer: loc.puzzle.correctAnswer,
-      });
+    if (puzzle.puzzle_type === 'TRIVIA') {
+      await withRetry(
+        () =>
+          setStepTriviaPuzzle(tourId, stepId, {
+            ...basePayload,
+            options: puzzle.options.map((option) => sanitizeSingleLineText(option)),
+            correct_answer: sanitizeSingleLineText(puzzle.correctAnswer),
+          }),
+        STEP_UPLOAD_MAX_RETRIES
+      );
       return;
     }
 
-    if (loc.puzzle.puzzle_type === 'OPEN_ENDED') {
-      await setStepOpenEndedPuzzle(tourId, stepId, {
-        ...basePayload,
-        correct_answer: loc.puzzle.correctAnswer,
-      });
+    if (puzzle.puzzle_type === 'OPEN_ENDED') {
+      await withRetry(
+        () =>
+          setStepOpenEndedPuzzle(tourId, stepId, {
+            ...basePayload,
+            correct_answer: sanitizeSingleLineText(puzzle.correctAnswer),
+          }),
+        STEP_UPLOAD_MAX_RETRIES
+      );
       return;
     }
 
-    if (loc.puzzle.puzzle_type === 'PICTURE_COMPARE') {
-      if (!loc.puzzle.referenceImage || !loc.puzzle.referenceImage.startsWith('file://')) {
+    if (puzzle.puzzle_type === 'PICTURE_COMPARE') {
+      const referenceImageUri = puzzle.referenceImage;
+      if (!referenceImageUri || !referenceImageUri.startsWith('file://')) {
         throw new Error('PICTURE_COMPARE puzzles require a local reference image.');
       }
 
-      await setStepPictureComparePuzzle(tourId, stepId, {
-        ...basePayload,
-        referenceImageUri: loc.puzzle.referenceImage,
-      });
+      await withRetry(
+        () =>
+          setStepPictureComparePuzzle(tourId, stepId, {
+            ...basePayload,
+            referenceImageUri,
+          }),
+        STEP_UPLOAD_MAX_RETRIES
+      );
       return;
     }
 
-    if (loc.puzzle.puzzle_type === 'AR') {
-      if (!loc.puzzle.arConfig) {
+    if (puzzle.puzzle_type === 'AR') {
+      const arConfig = puzzle.arConfig;
+      if (!arConfig) {
         throw new Error('AR puzzles require a selected model, code, and anchor.');
       }
 
-      await setStepArPuzzle(tourId, stepId, {
-        ...basePayload,
-        scene_asset_url: loc.puzzle.arConfig.sceneAssetUrl,
-        metadata: {
-          version: 1,
-          model_id: loc.puzzle.arConfig.modelId,
-          anchor_id: loc.puzzle.arConfig.anchorId,
-          placement_mode: loc.puzzle.arConfig.placementMode,
-          secret_code: loc.puzzle.arConfig.secretCode,
-          model_scale_meters: loc.puzzle.arConfig.modelScaleMeters,
-          anchor_position: {
-            x: loc.puzzle.arConfig.anchorPosition.x,
-            y: loc.puzzle.arConfig.anchorPosition.y,
-            z: loc.puzzle.arConfig.anchorPosition.z,
-          },
-        },
-      });
+      await withRetry(
+        () =>
+          setStepArPuzzle(tourId, stepId, {
+            ...basePayload,
+            scene_asset_url: arConfig.sceneAssetUrl,
+            metadata: {
+              version: 1,
+              model_id: arConfig.modelId,
+              anchor_id: arConfig.anchorId,
+              placement_mode: arConfig.placementMode,
+              secret_code: arConfig.secretCode,
+              model_scale_meters: arConfig.modelScaleMeters,
+              anchor_position: {
+                x: arConfig.anchorPosition.x,
+                y: arConfig.anchorPosition.y,
+                z: arConfig.anchorPosition.z,
+              },
+            },
+          }),
+        STEP_UPLOAD_MAX_RETRIES
+      );
       return;
     }
 
-    if (loc.puzzle.puzzle_type === 'COMPASS') {
+    if (puzzle.puzzle_type === 'COMPASS') {
+      const targetHeadingDegrees = puzzle.targetHeadingDegrees;
       if (
-        typeof loc.puzzle.targetHeadingDegrees !== 'number' ||
-        !Number.isInteger(loc.puzzle.targetHeadingDegrees)
+        typeof targetHeadingDegrees !== 'number' ||
+        !Number.isInteger(targetHeadingDegrees)
       ) {
         throw new Error('COMPASS puzzles require a valid integer target heading.');
       }
 
-      await setStepCompassPuzzle(tourId, stepId, {
-        ...basePayload,
-        target_heading_degrees: ((loc.puzzle.targetHeadingDegrees % 360) + 360) % 360,
-      });
+      await withRetry(
+        () =>
+          setStepCompassPuzzle(tourId, stepId, {
+            ...basePayload,
+            target_heading_degrees: ((targetHeadingDegrees % 360) + 360) % 360,
+          }),
+        STEP_UPLOAD_MAX_RETRIES
+      );
     }
+  };
+
+  const incrementSubmitProgress = () => {
+    setSubmitProgress((prev) => {
+      if (!prev) return prev;
+      return { ...prev, completed: Math.min(prev.total, prev.completed + 1) };
+    });
+  };
+
+  const submitCreateTour = async (): Promise<void> => {
+    let createdTourId: number | null = null;
+
+    try {
+      const tour = await createTour({
+        title: sanitizeSingleLineText(tourData.title).trim() || 'Untitled Tour',
+        description:
+          sanitizeMultiLineText(tourData.description).trim() || 'No description provided.',
+        cover_image: tourData.coverImage,
+        tour_type: tourData.tourType,
+        category: tourData.category || 'General',
+        difficulty: tourData.difficulty,
+        duration_minutes: tourData.estimatedDuration,
+        city: sanitizeSingleLineText(tourData.state).trim(),
+        country: sanitizeSingleLineText(tourData.country).trim(),
+        country_code: sanitizeSingleLineText(tourData.countryCode).trim(),
+        city_latitude: tourData.stateLatitude,
+        city_longitude: tourData.stateLongitude,
+        is_premium: false,
+      });
+
+      createdTourId = tour.id;
+      const submittingTourId = createdTourId;
+
+      const stepTasks = tourData.locations.map((location, index) => async () => {
+        const createdStep = await withRetry(
+          () =>
+            createTourStep(submittingTourId, {
+              title: sanitizeSingleLineText(location.title).trim() || `Stop ${index + 1}`,
+              description: sanitizeMultiLineText(location.story),
+              latitude: Number(location.latitude).toFixed(8),
+              longitude: Number(location.longitude).toFixed(8),
+              order: location.order,
+              image: location.image,
+            }),
+          STEP_UPLOAD_MAX_RETRIES
+        );
+
+        await savePuzzleForStep(submittingTourId, createdStep.id, location);
+        incrementSubmitProgress();
+      });
+
+      await runWithConcurrency(stepTasks, STEP_UPLOAD_CONCURRENCY);
+
+      // Keep main behavior: finalize normalized location metadata after all steps.
+      await updateTour(tour.id, {
+        city: sanitizeSingleLineText(tourData.state).trim(),
+        country: sanitizeSingleLineText(tourData.country).trim(),
+        country_code: sanitizeSingleLineText(tourData.countryCode).trim(),
+        city_latitude: tourData.stateLatitude,
+        city_longitude: tourData.stateLongitude,
+      });
+
+      setShowUnderReviewNotice(true);
+    } catch (error) {
+      if (createdTourId) {
+        try {
+          await deleteTour(createdTourId);
+        } catch (deleteError) {
+          console.error('Error on deleting tour', deleteError);
+        }
+      }
+      throw error;
+    }
+  };
+
+  const submitEditTour = async (): Promise<void> => {
+    if (!editingTourId) {
+      throw new Error('Missing tour id');
+    }
+
+    const tourPayload = {
+      title: sanitizeSingleLineText(tourData.title).trim() || 'Untitled Tour',
+      description:
+        sanitizeMultiLineText(tourData.description).trim() || 'No description provided.',
+      cover_image: tourData.coverImage,
+      tour_type: tourData.tourType,
+      category: tourData.category || 'General',
+      difficulty: tourData.difficulty,
+      duration_minutes: tourData.estimatedDuration,
+      city: sanitizeSingleLineText(tourData.state).trim(),
+      country: sanitizeSingleLineText(tourData.country).trim(),
+      country_code: sanitizeSingleLineText(tourData.countryCode).trim(),
+      city_latitude: tourData.stateLatitude,
+      city_longitude: tourData.stateLongitude,
+      is_premium: false,
+    };
+
+    await updateTour(editingTourId, tourPayload);
+
+    const upsertTasks = tourData.locations.map((location, index) => async () => {
+      const savedStep = await withRetry(
+        () => {
+          const stepPayload = {
+            title: sanitizeSingleLineText(location.title).trim() || `Stop ${index + 1}`,
+            description: sanitizeMultiLineText(location.story),
+            latitude: Number(location.latitude).toFixed(8),
+            longitude: Number(location.longitude).toFixed(8),
+            order: location.order,
+            image: location.image,
+          };
+
+          if (location.backendStepId) {
+            return updateTourStep(editingTourId, location.backendStepId, stepPayload);
+          }
+
+          return createTourStep(editingTourId, stepPayload);
+        },
+        STEP_UPLOAD_MAX_RETRIES
+      );
+
+      await savePuzzleForStep(editingTourId, savedStep.id, location);
+      incrementSubmitProgress();
+    });
+
+    await runWithConcurrency(upsertTasks, STEP_UPLOAD_CONCURRENCY);
+
+    const currentStepIds = new Set(
+      tourData.locations
+        .map((location) => location.backendStepId)
+        .filter((stepId): stepId is number => stepId !== undefined)
+    );
+    const stepIdsToDelete = originalStepIds.filter((stepId) => !currentStepIds.has(stepId));
+    await Promise.all(
+      stepIdsToDelete.map((stepId) =>
+        withRetry(() => deleteTourStep(editingTourId, stepId), STEP_UPLOAD_MAX_RETRIES)
+      )
+    );
   };
 
   const handleSubmitTour = async () => {
@@ -177,70 +408,11 @@ export default function TourReviewScreen() {
           : t('creation.submitConfirm'),
         onPress: async () => {
           setIsSubmitting(true);
-
-          let createdTourId: number | null = null;
+          setSubmitProgress({ completed: 0, total: tourData.locations.length });
 
           try {
-            const tourPayload = {
-              title: tourData.title || 'Untitled Tour',
-              description: tourData.description || 'No description provided.',
-              cover_image: tourData.coverImage,
-              tour_type: tourData.tourType,
-              category: tourData.category || 'General',
-              difficulty: tourData.difficulty,
-              duration_minutes: tourData.estimatedDuration,
-              city: tourData.state,
-              country: tourData.country,
-              country_code: tourData.countryCode,
-              city_latitude: tourData.stateLatitude,
-              city_longitude: tourData.stateLongitude,
-              is_premium: false,
-            };
-
-            const tourId = isEditing ? editingTourId : (await createTour(tourPayload)).id;
-
-            if (!tourId) {
-              throw new Error('Missing tour id');
-            }
-
             if (isEditing) {
-              await updateTour(tourId, tourPayload);
-            }
-
-            createdTourId = isEditing ? null : tourId;
-            console.log('Tour created:', createdTourId);
-
-            for (const [index, loc] of tourData.locations.entries()) {
-              const stepPayload = {
-                title: loc.title || `Stop ${index + 1}`,
-                description: loc.story || '',
-                latitude: Number(loc.latitude).toFixed(8),
-                longitude: Number(loc.longitude).toFixed(8),
-                order: loc.order,
-                image: loc.image,
-              };
-
-              const savedStep =
-                isEditing && loc.backendStepId
-                  ? await updateTourStep(tourId, loc.backendStepId, stepPayload)
-                  : await createTourStep(tourId, stepPayload);
-
-              await savePuzzleForStep(tourId, savedStep.id, loc);
-            }
-
-            if (isEditing) {
-              const currentStepIds = new Set(
-                tourData.locations
-                  .map((location) => location.backendStepId)
-                  .filter((stepId): stepId is number => stepId !== undefined)
-              );
-              const stepIdsToDelete = originalStepIds.filter(
-                (stepId) => !currentStepIds.has(stepId)
-              );
-              await Promise.all(stepIdsToDelete.map((stepId) => deleteTourStep(tourId, stepId)));
-            }
-
-            if (isEditing) {
+              await submitEditTour();
               Alert.alert(successTitle, successMessage, [
                 {
                   text: t('creation.ok'),
@@ -252,26 +424,17 @@ export default function TourReviewScreen() {
                 },
               ]);
             } else {
-              setShowUnderReviewNotice(true);
+              await submitCreateTour();
             }
           } catch (error) {
             console.error('Submit failed:', error);
-
-            if (createdTourId) {
-              try {
-                console.log(`Hata oluştu! Yarım kalan tur (${createdTourId}) siliniyor...`);
-                await deleteTour(createdTourId);
-              } catch (deleteError) {
-                console.error('Error on deleting tour', deleteError);
-              }
-            }
-
             Alert.alert(
               t('creation.errorTitle'),
               getSubmitErrorMessage(error, t('creation.errorMessage'))
             );
           } finally {
             setIsSubmitting(false);
+            setSubmitProgress(null);
           }
         },
       },
@@ -316,11 +479,17 @@ export default function TourReviewScreen() {
       <TourReviewStep tourData={tourData} />
       <CreationFooter
         buttonText={
-          isSubmitting
-            ? t('creation.submitting')
-            : isEditing
-              ? t('creation.updateCta', { defaultValue: 'Update Tour' })
-              : t('creation.submit')
+          isSubmitting && submitProgress
+            ? t('creation.uploadingProgress', {
+                current: submitProgress.completed,
+                total: submitProgress.total,
+                defaultValue: 'Uploading step {{current}}/{{total}}',
+              })
+            : isSubmitting
+              ? t('creation.submitting')
+              : isEditing
+                ? t('creation.updateCta', { defaultValue: 'Update Tour' })
+                : t('creation.submit')
         }
         onPress={handleSubmitTour}
         disabled={isSubmitting || !isReadyToSubmit || !hasValidSelectedLocation}

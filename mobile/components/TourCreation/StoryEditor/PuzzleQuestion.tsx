@@ -23,7 +23,10 @@ export default function PuzzleQuestion({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>{t('creation.puzzle.challenge')}</Text>
+      <Text style={styles.sectionTitle}>
+        {t('creation.puzzle.challenge')}
+        {isRequired ? ' *' : ''}
+      </Text>
       <StoryInputField
         label={`${t('creation.puzzle.question')}${isRequired ? ' *' : ''}`}
         value={question}

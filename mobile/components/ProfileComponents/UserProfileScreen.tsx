@@ -24,6 +24,7 @@ import {
   User,
 } from '@/api/users';
 import { getCurrentUser } from '@/api/auth';
+import { ReportCategory, submitReport } from '@/api/reports';
 import { Tour } from '@/api/tours';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -35,6 +36,7 @@ import ProfileStatsComp from './ProfileStatsComp';
 import ProfileTourCard from './ProfileTourCard';
 import ProfileBadgesContainer from './ProfileBadgesContainer';
 import { getUserBadges, UserBadge } from '@/api/profile';
+import ReportContentModal from '@/components/common/ReportContentModal';
 
 const HEADER_HEIGHT = 240;
 
@@ -152,6 +154,10 @@ export default function UserProfileScreen() {
   const [toursLoading, setToursLoading] = useState(false);
   const [badges, setBadges] = useState<UserBadge[]>(cached?.badges ?? []);
   const [badgesCount, setBadgesCount] = useState(cached?.badgesCount ?? 0);
+  const [reportVisible, setReportVisible] = useState(false);
+  const [reportCategory, setReportCategory] = useState<ReportCategory>('INAPPROPRIATE');
+  const [reportReason, setReportReason] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
 
   const stickyOpacity = scrollY.interpolate({
     inputRange: [HEADER_HEIGHT * 0.5, HEADER_HEIGHT * 0.7],
@@ -273,6 +279,63 @@ export default function UserProfileScreen() {
     }
   };
 
+  const handleOpenReport = () => {
+    if (!user) return;
+    if (isGuest) {
+      Alert.alert(
+        t('report.loginRequiredTitle', { defaultValue: 'Log in to report' }),
+        t('report.loginRequiredMessage', {
+          defaultValue: 'You need to log in before reporting content.',
+        }),
+        [
+          { text: t('report.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+          {
+            text: t('report.loginButton', { defaultValue: 'Log in' }),
+            onPress: () => router.push('/login'),
+          },
+        ]
+      );
+      return;
+    }
+
+    setReportVisible(true);
+  };
+
+  const handleSubmitReport = async () => {
+    if (!user || reportSubmitting) return;
+    const reason = reportReason.trim();
+    if (reportCategory === 'OTHER' && reason.length < 3) return;
+
+    try {
+      setReportSubmitting(true);
+      await submitReport({
+        content_type: 'USER',
+        content_id: user.id,
+        category: reportCategory,
+        reason,
+      });
+      setReportVisible(false);
+      setReportCategory('INAPPROPRIATE');
+      setReportReason('');
+      Alert.alert(
+        t('report.successTitle', { defaultValue: 'Report submitted' }),
+        t('report.successMessage', {
+          defaultValue: 'Thanks for helping keep Odyssey safe. Our team will review it.',
+        })
+      );
+    } catch (err: any) {
+      Alert.alert(
+        t('report.errorTitle', { defaultValue: 'Could not submit report' }),
+        err?.message ||
+          t('report.errorMessage', {
+            defaultValue: 'Please check your connection and try again.',
+          })
+      );
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
+
   // ── Loading ────────────────────────────────────────────
 
   if (loading) return <SkeletonLoading theme={color} />;
@@ -346,6 +409,20 @@ export default function UserProfileScreen() {
           <Ionicons name="chevron-back" size={26} color={color.white} />
         </TouchableOpacity>
       </View>
+
+      {!isSelf && (
+        <View style={[styles.reportButtonOverlay, { top: insets.top + 8 }]}>
+          <TouchableOpacity
+            onPress={handleOpenReport}
+            style={styles.reportButton}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('report.userButton', { defaultValue: 'Report user' })}
+          >
+            <Ionicons name="flag-outline" size={22} color={color.white} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Sticky username bar — fades in on scroll */}
       <Animated.View
@@ -497,6 +574,23 @@ export default function UserProfileScreen() {
           )}
         </View>
       </Animated.ScrollView>
+
+      <ReportContentModal
+        visible={reportVisible}
+        title={t('report.userTitle', { defaultValue: 'Report user' })}
+        subtitle={t('report.subtitle', {
+          defaultValue: 'Choose the closest reason, then add details so our team can review it.',
+        })}
+        category={reportCategory}
+        reason={reportReason}
+        submitting={reportSubmitting}
+        onChangeCategory={setReportCategory}
+        onChangeReason={setReportReason}
+        onClose={() => {
+          if (!reportSubmitting) setReportVisible(false);
+        }}
+        onSubmit={handleSubmitReport}
+      />
     </View>
   );
 }

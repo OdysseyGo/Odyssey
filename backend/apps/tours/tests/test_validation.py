@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.tours.models import Tour
+from apps.tours.models import Tour, TourStep
 
 User = get_user_model()
 
@@ -152,3 +152,43 @@ class TourValidationTests(APITestCase):
             f"/api/tours/{tour.id}/steps/", step_data, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_step_rejects_when_step_limit_reached(self):
+        tour = Tour.objects.create(
+            title="Step Limit Tour",
+            description="D",
+            creator=self.user,
+            tour_type="STORY",
+            category="History",
+            difficulty="EASY",
+            duration_minutes=60,
+        )
+
+        TourStep.objects.bulk_create(
+            [
+                TourStep(
+                    tour=tour,
+                    order=i,
+                    title=f"Stop {i + 1}",
+                    description="",
+                    latitude="1.0",
+                    longitude="1.0",
+                )
+                for i in range(150)
+            ]
+        )
+
+        response = self.client.post(
+            f"/api/tours/{tour.id}/steps/",
+            {
+                "title": "Overflow Stop",
+                "description": "",
+                "latitude": "1.0",
+                "longitude": "1.0",
+                "order": 150,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("steps", response.data)

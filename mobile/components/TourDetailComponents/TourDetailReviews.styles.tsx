@@ -85,6 +85,13 @@ export const tourDetailReviewsStyles = (theme: ThemeName) => {
       alignItems: 'center',
       gap: Spacing.xs,
     },
+    reportReviewButton: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     ratingText: {
       color: color.text,
       fontSize: 13,

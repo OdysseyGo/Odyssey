@@ -5,7 +5,7 @@ from django.db.models import Avg, OuterRef, Subquery
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
 from apps.gamification.models import TourProgress
@@ -39,6 +39,8 @@ from .serializers import (
     TourStepSerializer,
     TriviaPuzzleUpsertSerializer,
 )
+
+MAX_TOUR_STEPS = 150
 
 
 @api_view(["GET"])
@@ -109,7 +111,7 @@ class TourViewSet(viewsets.ModelViewSet):
         # Default to production-safe behavior when ENV_MODE is unset.
         env_mode = os.getenv("ENV_MODE", "production")
         if env_mode != "development":
-            status = Tour.DRAFT
+            status = Tour.PENDING
         else:
             status = Tour.PUBLISHED
         tour = serializer.save(creator=self.request.user, status=status)
@@ -263,6 +265,12 @@ class TourStepViewSet(viewsets.ModelViewSet):
         return TourStep.objects.filter(tour_id=self.kwargs["tour_pk"]).order_by("order")
 
     def perform_create(self, serializer):
+        tour_id = self.kwargs["tour_pk"]
+        if TourStep.objects.filter(tour_id=tour_id).count() >= MAX_TOUR_STEPS:
+            raise ValidationError(
+                {"steps": f"A tour can have at most {MAX_TOUR_STEPS} steps."}
+            )
+
         step = serializer.save(tour_id=self.kwargs["tour_pk"])
         recalculate_tour_metrics(step.tour)
         self._send_tour_back_to_review(step.tour)

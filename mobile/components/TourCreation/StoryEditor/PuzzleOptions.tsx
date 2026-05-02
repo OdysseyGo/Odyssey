@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { useTranslation } from 'react-i18next';
 import { TOUR_TEXT_FIELD_MAX_LENGTH } from '../TourCreation.types';
+import { sanitizeSingleLineText } from '@/utils/inputSanitizers';
 
 interface PuzzleOptionsProps {
   options: string[];
@@ -57,7 +58,7 @@ export default function PuzzleOptions({
             <TextInput
               style={styles.optionInput}
               value={option}
-              onChangeText={(text) => onOptionChange(text, index)}
+              onChangeText={(text) => onOptionChange(sanitizeSingleLineText(text), index)}
               placeholder={t('creation.puzzle.optionPlaceholder', { number: index + 1 })}
               placeholderTextColor={color.placeholder}
               maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
