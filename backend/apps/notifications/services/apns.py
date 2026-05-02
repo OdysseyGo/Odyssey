@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timezone
+import os
 from pathlib import Path
 
 import httpx
@@ -19,7 +20,7 @@ class APNsService:
         self.use_sandbox = settings.APNS_USE_SANDBOX
 
         current_dir = Path(__file__).parent.resolve()
-        self.certificate_path = current_dir / "keys/AuthKey_RDHGT44P65.p8"
+        self.certificate_path = current_dir / f"keys/AuthKey_{self.key_id}.p8"
 
         # APNs server URLs
         self.sandbox_url = "https://api.sandbox.push.apple.com"
