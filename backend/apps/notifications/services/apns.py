@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timezone
-import os
 from pathlib import Path
 
 import httpx
