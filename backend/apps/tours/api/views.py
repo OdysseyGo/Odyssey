@@ -10,6 +10,7 @@ from rest_framework.response import Response
 
 from apps.gamification.models import TourProgress
 from apps.gamification.services import BadgeService
+from apps.notifications.utils import create_notification
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
@@ -21,7 +22,6 @@ from apps.tours.models import (
     TourStep,
     TriviaPuzzleDetail,
 )
-from apps.notifications.utils import create_notification
 
 from ..permissions import IsCreatorOrReadOnly
 from ..utils import recalculate_tour_metrics
@@ -734,7 +734,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
             user=tour.creator,
             title="New Review on Your Tour! ⭐",
             body=f"{self.request.user.username} gave a review to your tour '{tour.title}'.",
-            data={"tour_id": tour.id, "review_id": self.review.id, "type": "new_review"}
+            data={
+                "tour_id": tour.id,
+                "review_id": self.review.id,
+                "type": "new_review",
+            },
         )
 
     def perform_update(self, serializer):

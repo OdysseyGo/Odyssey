@@ -34,8 +34,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
-    shouldShowBanner: true, 
-    shouldShowList: true,   
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -69,10 +69,10 @@ function RootLayoutNav() {
 function RootLayoutNavigator() {
   const colorTheme = useColorTheme();
   const themeKey = colorTheme;
-  const router = useRouter(); 
+  const router = useRouter();
 
   useEffect(() => {
-    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+    const responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data as {
         type?: string;
         tour_id?: string | number;
@@ -80,13 +80,15 @@ function RootLayoutNavigator() {
         user_id?: string | number;
       };
 
-      if (data?.type && ['new_tour', 'tour_approved', 'new_review'].includes(data.type) && data?.tour_id ) {
+      if (
+        data?.type &&
+        ['new_tour', 'tour_approved', 'new_review'].includes(data.type) &&
+        data?.tour_id
+      ) {
         router.push(`/tour/${data.tour_id}`);
-      } 
-      else if (data?.type === 'new_follower' && data?.follower_id) {
+      } else if (data?.type === 'new_follower' && data?.follower_id) {
         router.push(`/profile?userId=${data.follower_id}`);
-      }
-      else if (data?.type === 'friend_level_up' && data?.user_id) {
+      } else if (data?.type === 'friend_level_up' && data?.user_id) {
         router.push({
           pathname: '/profile/[userId]',
           params: { userId: data.user_id.toString() },
@@ -94,7 +96,7 @@ function RootLayoutNavigator() {
       }
     });
     return () => {
-      responseListener.remove(); 
+      responseListener.remove();
     };
   }, []);
 

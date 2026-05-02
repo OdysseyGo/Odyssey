@@ -113,25 +113,25 @@ export default function LoginScreen() {
         router.dismissTo('/(tabs)/profile');
       }
       try {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
 
-      if (finalStatus === 'granted') {
-        const tokenData = await Notifications.getDevicePushTokenAsync();
-        const token = tokenData.data;
-        await registerDeviceToken({
-          device_token: token, 
-          platform: Platform.OS === 'ios' ? 'ios' : 'android'
-        });
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+
+        if (finalStatus === 'granted') {
+          const tokenData = await Notifications.getDevicePushTokenAsync();
+          const token = tokenData.data;
+          await registerDeviceToken({
+            device_token: token,
+            platform: Platform.OS === 'ios' ? 'ios' : 'android',
+          });
+        }
+      } catch (pushError) {
+        console.warn('Push token registration failed:', pushError);
       }
-    } catch (pushError) {
-      console.warn('Push token registration failed:', pushError);
-    }
       router.replace('/(tabs)/profile');
     } catch (e) {
       console.error(e);
