@@ -205,6 +205,7 @@ export default function RegisterScreen() {
         password,
         first_name: normalizedFirstName,
         last_name: normalizedLastName,
+        terms_accepted: true,
       };
       await createUser(user);
       isNavigatingAway.current = true;

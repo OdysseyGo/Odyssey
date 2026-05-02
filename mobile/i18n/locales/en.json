@@ -91,7 +91,13 @@
       "codeRequired": "Please enter the reset code",
       "invalidCode": "Invalid or expired code. Please try again."
     },
-    "userCreated": "User has been created!"
+    "userCreated": "User has been created!",
+    "termsUpdateTitle": "Terms Updated",
+    "termsUpdateSubtitle": "We've updated our Terms of Use and Privacy Policy. Please review and accept the new terms to continue using Odyssey.",
+    "termsUpdatePrefix": "I have read and agree to the updated",
+    "termsUpdateAnd": "and",
+    "termsUpdateAccept": "Accept & Continue",
+    "termsUpdateLogout": "Log out"
   },
   "profile": {
     "notLoggedIn": "You need to be logged in to view your profile.",
