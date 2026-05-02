@@ -108,7 +108,11 @@ export default function LoginScreen() {
         SecureStore.setItemAsync('refreshToken', response.refresh),
       ]);
       setProfileNeedsRefresh();
-      router.dismissTo('/(tabs)/profile');
+      if (response.terms_update_required) {
+        router.dismissTo('/terms-update');
+      } else {
+        router.dismissTo('/(tabs)/profile');
+      }
     } catch (e) {
       console.error(e);
       setErrors({ general: t('auth.errors.loginFailed') });

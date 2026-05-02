@@ -150,6 +150,8 @@ class AdminUserDetailSerializer(serializers.ModelSerializer):
             "ban_records",
             "badges",
             "badge_history",
+            "terms_accepted_at",
+            "terms_version",
         ]
 
     def get_ban_records(self, obj):

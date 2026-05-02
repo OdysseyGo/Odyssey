@@ -39,6 +39,8 @@ class User(AbstractUser):
         help_text="DiceBear avatar URL",
     )
     is_banned = models.BooleanField(default=False)
+    terms_accepted_at = models.DateTimeField(null=True, blank=True)
+    terms_version = models.CharField(max_length=20, blank=True, default="")
 
     class Meta:
         db_table = "user"

@@ -81,6 +81,10 @@ function RootLayoutNavigator() {
               <Stack.Screen name="login" options={{ headerShown: false }} />
               <Stack.Screen name="register" options={{ headerShown: false }} />
               <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="terms-update"
+                options={{ headerShown: false, gestureEnabled: false }}
+              />
               <Stack.Screen name="(tour)" options={{ headerShown: false }} />
               <Stack.Screen name="tour/[id]" options={{ headerShown: false }} />
               <Stack.Screen name="profile" options={{ headerShown: false }} />

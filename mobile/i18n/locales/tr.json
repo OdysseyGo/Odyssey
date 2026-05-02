@@ -91,7 +91,13 @@
       "codeRequired": "Lütfen sıfırlama kodunu girin",
       "invalidCode": "Geçersiz veya süresi dolmuş kod. Lütfen tekrar deneyin."
     },
-    "userCreated": "Kullanıcı oluşturuldu!"
+    "userCreated": "Kullanıcı oluşturuldu!",
+    "termsUpdateTitle": "Koşullar Güncellendi",
+    "termsUpdateSubtitle": "Kullanım Koşullarımızı ve Gizlilik Politikamızı güncelledik. Odyssey'i kullanmaya devam etmek için lütfen yeni koşulları inceleyin ve kabul edin.",
+    "termsUpdatePrefix": "Güncellenen",
+    "termsUpdateAnd": "ve",
+    "termsUpdateAccept": "Kabul Et ve Devam Et",
+    "termsUpdateLogout": "Çıkış yap"
   },
   "profile": {
     "notLoggedIn": "Profilini görüntülemek için giriş yapman gerekiyor.",

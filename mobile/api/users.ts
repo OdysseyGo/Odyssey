@@ -18,6 +18,7 @@ export type User = {
   rating: number;
   avatar_url: string;
   total_walked_km: number | string;
+  terms_update_required: boolean;
 };
 
 export type AddFriendUserDisplayDTO = {
@@ -41,6 +42,7 @@ export type CreateUserPayload = {
   password: string;
   first_name?: string;
   last_name?: string;
+  terms_accepted: boolean;
 };
 
 export type UpdateUserPayload = {
@@ -75,6 +77,7 @@ export type UserCredentials = {
 export type LoginResponse = {
   access: string;
   refresh: string;
+  terms_update_required: boolean;
 };
 
 export type FollowPayload = {
@@ -238,6 +241,12 @@ export const resetPassword = (payload: { email: string; code: string; new_passwo
     url: '/api/users/reset-password/',
     data: payload,
     auth: false,
+  });
+
+export const acceptTermsUpdate = () =>
+  apiRequest<{ terms_version: string }>({
+    method: 'post',
+    url: '/api/users/accept-terms/',
   });
 
 export const followUser = (payload: FollowPayload) =>

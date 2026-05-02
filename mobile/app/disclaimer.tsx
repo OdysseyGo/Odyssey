@@ -8,6 +8,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { rememberDisclaimerAccepted } from '@/lib/disclaimer';
+import { getCurrentUser } from '@/api/auth';
 
 export default function DisclaimerScreen() {
   const colorScheme = useColorTheme();
@@ -23,7 +24,8 @@ export default function DisclaimerScreen() {
 
   async function handleAccept() {
     await rememberDisclaimerAccepted();
-    router.replace('/(tabs)/map');
+    const user = await getCurrentUser();
+    router.replace(user?.terms_update_required ? '/terms-update' : '/(tabs)/map');
   }
 
   return (
