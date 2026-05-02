@@ -74,11 +74,11 @@ function RootLayoutNavigator() {
                 }}
               >
                 <Stack.Screen name="index" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="disclaimer"
-                options={{ headerShown: false, gestureEnabled: false }}
-              />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="disclaimer"
+                  options={{ headerShown: false, gestureEnabled: false }}
+                />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
                 <Stack.Screen name="login" options={{ headerShown: false }} />
                 <Stack.Screen name="register" options={{ headerShown: false }} />
