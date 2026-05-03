@@ -851,7 +851,10 @@
       "duration_one": "{{count}} min",
       "duration_other": "{{count}} min",
       "areaTitle": "{{count}} tours in this area",
-      "duration": "{{count}} min"
+      "duration": "{{count}} min",
+      "viewTour": "View Tour",
+      "stops_one": "{{count}} stop",
+      "stops_other": "{{count}} stops"
     },
     "searchMode": {
       "searchHere": "Search here",

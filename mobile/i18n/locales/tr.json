@@ -237,7 +237,10 @@
       "reset": "Sıfırla",
       "apply": "Filtreleri uygula",
       "showResults": "{{count}} turu göster"
-    }
+    },
+    "story": "Hikaye",
+    "puzzle": "Bulmaca",
+    "hybrid": "Karma"
   },
   "search": {
     "placeholder": "Tur, destinasyon ara...",
@@ -853,7 +856,10 @@
       "duration_one": "{{count}} dk",
       "duration_other": "{{count}} dk",
       "areaTitle": "Bu alanda {{count}} tur",
-      "duration": "{{count}} dk"
+      "duration": "{{count}} dk",
+      "viewTour": "Tura Git",
+      "stops_one": "{{count}} durak",
+      "stops_other": "{{count}} durak"
     },
     "searchMode": {
       "searchHere": "Burada ara",
