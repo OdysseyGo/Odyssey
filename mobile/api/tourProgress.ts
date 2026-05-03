@@ -264,13 +264,14 @@ export async function checkStepLocation(
   data: { step_id: number; latitude: number; longitude: number },
   signal?: AbortSignal
 ): Promise<CheckLocationResponse> {
-  return apiRequest<CheckLocationResponse, { step_id: number; latitude: number; longitude: number }>(
-    {
-      method: 'POST',
-      url: `/api/tour-progress/${id}/check-location/`,
-      data,
-      auth: true,
-      signal,
-    }
-  );
+  return apiRequest<
+    CheckLocationResponse,
+    { step_id: number; latitude: number; longitude: number }
+  >({
+    method: 'POST',
+    url: `/api/tour-progress/${id}/check-location/`,
+    data,
+    auth: true,
+    signal,
+  });
 }

@@ -146,7 +146,9 @@ class StepLocationConfirmation(models.Model):
         unique_together = ("progress", "step")
 
     def __str__(self):
-        return f"Location confirmation(progress={self.progress_id}, step={self.step_id})"
+        return (
+            f"Location confirmation(progress={self.progress_id}, step={self.step_id})"
+        )
 
 
 class PictureCompareConfig(models.Model):

@@ -99,7 +99,9 @@ class TourProgressViewSet(
 
     @staticmethod
     def _is_location_confirmed(progress, step):
-        return StepLocationConfirmation.objects.filter(progress=progress, step=step).exists()
+        return StepLocationConfirmation.objects.filter(
+            progress=progress, step=step
+        ).exists()
 
     def _location_gate_error_response(self, progress):
         return Response(
@@ -332,7 +334,9 @@ class TourProgressViewSet(
         step_lat = float(current_step.latitude)
         step_lng = float(current_step.longitude)
         radius_m = self.LOCATION_CHECK_RADIUS_M
-        distance_m = self._haversine_distance_m(submitted_lat, submitted_lng, step_lat, step_lng)
+        distance_m = self._haversine_distance_m(
+            submitted_lat, submitted_lng, step_lat, step_lng
+        )
         accepted = distance_m <= radius_m
 
         if accepted:

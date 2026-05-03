@@ -144,5 +144,7 @@ class TourProgressSerializer(serializers.ModelSerializer):
 
     def get_location_confirmed_step_ids(self, obj):
         return list(
-            obj.location_confirmations.values_list("step_id", flat=True).order_by("step_id")
+            obj.location_confirmations.values_list("step_id", flat=True).order_by(
+                "step_id"
+            )
         )

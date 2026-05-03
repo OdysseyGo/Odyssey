@@ -382,10 +382,7 @@ export default function TourNavigation({
     } catch (error) {
       console.error('Failed to get location:', error);
       if (error instanceof ApiError) {
-        Alert.alert(
-          t('tourStep.locationCheckFailedTitle', 'Location check failed'),
-          error.message
-        );
+        Alert.alert(t('tourStep.locationCheckFailedTitle', 'Location check failed'), error.message);
         return;
       }
       if (error instanceof Error && error.message.startsWith('OUTSIDE_AREA:')) {
