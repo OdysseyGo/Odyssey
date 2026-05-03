@@ -381,9 +381,7 @@ function MultipleChoiceView({
 
       {(hasPersistedWrongAttempt || isFinished) && !isSolved && (
         <Text style={styles.exhaustedHint}>
-          {isFinished
-            ? t('tourStep.questionFinishedReveal')
-            : t('tourStep.alreadyAnswered')}
+          {isFinished ? t('tourStep.questionFinishedReveal') : t('tourStep.alreadyAnswered')}
         </Text>
       )}
     </View>
