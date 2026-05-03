@@ -166,9 +166,7 @@ class TourViewSet(viewsets.ModelViewSet):
             try:
                 limit = max(1, min(int(limit_param), 500))
             except ValueError:
-                return Response(
-                    {"error": "limit must be an integer."}, status=400
-                )
+                return Response({"error": "limit must be an integer."}, status=400)
 
         first_lat = Subquery(
             TourStep.objects.filter(tour=OuterRef("pk"))
@@ -210,7 +208,9 @@ class TourViewSet(viewsets.ModelViewSet):
             tours = tours[:limit]
 
         if fields == "map":
-            serializer = TourInBoundsMapSerializer(tours, many=True, context={"request": request})
+            serializer = TourInBoundsMapSerializer(
+                tours, many=True, context={"request": request}
+            )
         else:
             tours = tours.prefetch_related("steps", "reviews__user", "creator")
             serializer = self.get_serializer(tours, many=True)

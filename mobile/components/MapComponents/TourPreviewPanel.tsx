@@ -132,7 +132,9 @@ export default function TourPreviewPanel({ tour, onClose, onViewTour }: TourPrev
                     size={10}
                     color={colors.subText}
                   />
-                  <Text style={styles.tagText}>{t(tourTypeLabel(displayedTour.tour_type) as any)}</Text>
+                  <Text style={styles.tagText}>
+                    {t(tourTypeLabel(displayedTour.tour_type) as any)}
+                  </Text>
                 </View>
               </View>
             </View>

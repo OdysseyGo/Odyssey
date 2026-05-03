@@ -27,11 +27,7 @@ function MapMarker({
   void coverImage;
 
   return (
-    <Marker
-      coordinate={coordinate}
-      tracksViewChanges={false}
-      onPress={onPress}
-    >
+    <Marker coordinate={coordinate} tracksViewChanges={false} onPress={onPress}>
       <View style={[styles.container, { opacity }]}>
         <View
           style={[

@@ -244,7 +244,7 @@ export default function MapScreen() {
       if (completingTourRef.current) return;
       completingTourRef.current = true;
 
-        setFinalXP(Math.max(0, awardedXP ?? 0));
+      setFinalXP(Math.max(0, awardedXP ?? 0));
       setCompletionBadges(awardedBadges ?? []);
       await showTourCompleteInterstitial();
       setShowCompleteModal(true);
