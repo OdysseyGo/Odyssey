@@ -119,10 +119,7 @@ export function AdsProvider({ children }: { children: ReactNode }) {
     syncAuthState();
   }, [pathname, syncAuthState]);
 
-  const getPlacement = useCallback(
-    (key: string) => state.placements.get(key),
-    [state.placements]
-  );
+  const getPlacement = useCallback((key: string) => state.placements.get(key), [state.placements]);
 
   const contextValue = useMemo(
     () => ({
@@ -133,11 +130,7 @@ export function AdsProvider({ children }: { children: ReactNode }) {
     [state, getPlacement, refresh]
   );
 
-  return (
-    <AdsContext.Provider value={contextValue}>
-      {children}
-    </AdsContext.Provider>
-  );
+  return <AdsContext.Provider value={contextValue}>{children}</AdsContext.Provider>;
 }
 
 export function useAds() {

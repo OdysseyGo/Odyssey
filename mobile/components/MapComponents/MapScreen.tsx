@@ -351,7 +351,8 @@ export default function MapScreen() {
       pathname,
       segments: segments.map((segment) => String(segment)),
       rootRouteNames: getRootRouteNames(rootNavigationState),
-      rootRouteIndex: typeof rootNavigationState?.index === 'number' ? rootNavigationState.index : null,
+      rootRouteIndex:
+        typeof rootNavigationState?.index === 'number' ? rootNavigationState.index : null,
       instanceId: instanceIdRef.current,
       branch: isActive && tour ? 'active' : 'inactive',
       tourId: tour?.id ?? null,
@@ -365,7 +366,8 @@ export default function MapScreen() {
       pathname,
       segments: segments.map((segment) => String(segment)),
       rootRouteNames: getRootRouteNames(rootNavigationState),
-      rootRouteIndex: typeof rootNavigationState?.index === 'number' ? rootNavigationState.index : null,
+      rootRouteIndex:
+        typeof rootNavigationState?.index === 'number' ? rootNavigationState.index : null,
       instanceId: instanceIdRef.current,
       mountedCount: DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS.size,
       activeInstanceIds: Array.from(DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS),
@@ -703,40 +705,43 @@ export default function MapScreen() {
     setShowSearchButton(true);
   }, []);
 
-  const handleUserLocationReady = useCallback(async (region: Region) => {
-    currentRegionRef.current = region;
-    setIsZoomedOut(region.latitudeDelta > MAX_SEARCH_DELTA);
+  const handleUserLocationReady = useCallback(
+    async (region: Region) => {
+      currentRegionRef.current = region;
+      setIsZoomedOut(region.latitudeDelta > MAX_SEARCH_DELTA);
 
-    if (initialSearchDoneRef.current || region.latitudeDelta > MAX_SEARCH_DELTA) return;
+      if (initialSearchDoneRef.current || region.latitudeDelta > MAX_SEARCH_DELTA) return;
 
-    abortControllerRef.current?.abort();
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
 
-    setNearbyLoading(true);
+      setNearbyLoading(true);
 
-    const north = region.latitude + region.latitudeDelta / 2;
-    const south = region.latitude - region.latitudeDelta / 2;
-    const east = region.longitude + region.longitudeDelta / 2;
-    const west = region.longitude - region.longitudeDelta / 2;
+      const north = region.latitude + region.latitudeDelta / 2;
+      const south = region.latitude - region.latitudeDelta / 2;
+      const east = region.longitude + region.longitudeDelta / 2;
+      const west = region.longitude - region.longitudeDelta / 2;
 
-    try {
-      const tours = await fetchNearbyMapTours(north, south, east, west, controller.signal);
-      if (!controller.signal.aborted) {
-        setNearbyTours(sortNearbyTours(tours, nearbySortRef.current));
-        lastFetchedBboxRef.current = { north, south, east, west };
+      try {
+        const tours = await fetchNearbyMapTours(north, south, east, west, controller.signal);
+        if (!controller.signal.aborted) {
+          setNearbyTours(sortNearbyTours(tours, nearbySortRef.current));
+          lastFetchedBboxRef.current = { north, south, east, west };
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          setNearbyTours([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setNearbyLoading(false);
+          initialSearchDoneRef.current = true;
+        }
       }
-    } catch {
-      if (!controller.signal.aborted) {
-        setNearbyTours([]);
-      }
-    } finally {
-      if (!controller.signal.aborted) {
-        setNearbyLoading(false);
-        initialSearchDoneRef.current = true;
-      }
-    }
-  }, [fetchNearbyMapTours]);
+    },
+    [fetchNearbyMapTours]
+  );
 
   const getTourCoordinates = useCallback(
     (tour: MapTour): { latitude: number; longitude: number } | null => {
@@ -834,12 +839,15 @@ export default function MapScreen() {
     setNearbyTours((prev) => sortNearbyTours(prev, sort));
   }, []);
 
-  const handleFiltersChange = useCallback((nextFilters: InBoundsFilters) => {
-    setNearbyFilters(nextFilters);
-    nearbyFiltersRef.current = nextFilters;
-    setShowSearchButton(true);
-    clearSelectedTour();
-  }, [clearSelectedTour]);
+  const handleFiltersChange = useCallback(
+    (nextFilters: InBoundsFilters) => {
+      setNearbyFilters(nextFilters);
+      nearbyFiltersRef.current = nextFilters;
+      setShowSearchButton(true);
+      clearSelectedTour();
+    },
+    [clearSelectedTour]
+  );
 
   const defaultRegion = useMemo(
     () => ({ latitude: 41.0082, longitude: 28.9784, latitudeDelta: 0.05, longitudeDelta: 0.05 }),

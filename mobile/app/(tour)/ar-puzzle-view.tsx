@@ -47,12 +47,7 @@ function toModelWorldPoint(
 
 function ARPuzzleScene(props: any) {
   const viro = getViroModule();
-  if (!viro) {
-    return null;
-  }
-
-  const { Viro3DObject, ViroARScene, ViroAmbientLight, ViroText } = viro;
-  const appProps = props.sceneNavigator.viroAppProps;
+  const appProps = props?.sceneNavigator?.viroAppProps ?? {};
   const sceneAssetUrl = appProps?.sceneAssetUrl as string;
   const secretCode = appProps?.secretCode as string;
   const stepId = (appProps?.stepId as string | undefined) ?? 'unknown';
@@ -84,6 +79,12 @@ function ARPuzzleScene(props: any) {
       }
     };
   }, [sceneAssetUrl, stepId, puzzleId]);
+
+  if (!viro) {
+    return null;
+  }
+
+  const { Viro3DObject, ViroARScene, ViroAmbientLight, ViroText } = viro;
 
   return (
     <ViroARScene>
@@ -177,84 +178,90 @@ export default function ARPuzzleViewScreen() {
     MAX_MODEL_SCALE_METERS
   );
 
-  const cleanupArResources = useCallback((reason: string, hideNavigator: boolean = true) => {
-    if (isDisposedRef.current) {
+  const cleanupArResources = useCallback(
+    (reason: string, hideNavigator: boolean = true) => {
+      if (isDisposedRef.current) {
+        if (__DEV__) {
+          console.log('[ARPuzzleView] cleanup_skip_already_disposed', {
+            instanceId: instanceIdRef.current,
+            reason,
+            stepId,
+            puzzleId,
+            modelUri: sceneAssetUrl || 'none',
+          });
+        }
+        return;
+      }
+
+      isDisposedRef.current = true;
+      if (hideNavigator) {
+        setNavigatorVisible(false);
+      }
+
+      const navigator = navigatorRef.current as any;
+      let resetCalled = false;
+      let cleanupCalled = false;
+      let nodeHandle: number | null = null;
+
+      try {
+        if (typeof navigator?._resetARSession === 'function') {
+          navigator._resetARSession(true, true);
+          resetCalled = true;
+        } else if (typeof navigator?.arSceneNavigator?.resetARSession === 'function') {
+          navigator.arSceneNavigator.resetARSession(true, true);
+          resetCalled = true;
+        }
+      } catch (error) {
+        if (__DEV__) {
+          console.log('[ARPuzzleView] reset_error', {
+            instanceId: instanceIdRef.current,
+            reason,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+
+      try {
+        nodeHandle = navigator ? findNodeHandle(navigator) : null;
+        if (nodeHandle && NativeModules?.VRTARSceneNavigatorModule?.cleanup) {
+          NativeModules.VRTARSceneNavigatorModule.cleanup(nodeHandle);
+          cleanupCalled = true;
+        }
+      } catch (error) {
+        if (__DEV__) {
+          console.log('[ARPuzzleView] native_cleanup_error', {
+            instanceId: instanceIdRef.current,
+            reason,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+
       if (__DEV__) {
-        console.log('[ARPuzzleView] cleanup_skip_already_disposed', {
+        console.log('[ARPuzzleView] cleanup', {
           instanceId: instanceIdRef.current,
           reason,
           stepId,
           puzzleId,
           modelUri: sceneAssetUrl || 'none',
+          resetCalled,
+          cleanupCalled,
+          nodeHandle,
         });
       }
-      return;
-    }
+    },
+    [puzzleId, sceneAssetUrl, stepId]
+  );
 
-    isDisposedRef.current = true;
-    if (hideNavigator) {
-      setNavigatorVisible(false);
-    }
-
-    const navigator = navigatorRef.current as any;
-    let resetCalled = false;
-    let cleanupCalled = false;
-    let nodeHandle: number | null = null;
-
-    try {
-      if (typeof navigator?._resetARSession === 'function') {
-        navigator._resetARSession(true, true);
-        resetCalled = true;
-      } else if (typeof navigator?.arSceneNavigator?.resetARSession === 'function') {
-        navigator.arSceneNavigator.resetARSession(true, true);
-        resetCalled = true;
+  const closeWithCleanup = useCallback(
+    (reason: string) => {
+      cleanupArResources(reason);
+      if (typeof router.canGoBack === 'function' && router.canGoBack()) {
+        router.back();
       }
-    } catch (error) {
-      if (__DEV__) {
-        console.log('[ARPuzzleView] reset_error', {
-          instanceId: instanceIdRef.current,
-          reason,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-    }
-
-    try {
-      nodeHandle = navigator ? findNodeHandle(navigator) : null;
-      if (nodeHandle && NativeModules?.VRTARSceneNavigatorModule?.cleanup) {
-        NativeModules.VRTARSceneNavigatorModule.cleanup(nodeHandle);
-        cleanupCalled = true;
-      }
-    } catch (error) {
-      if (__DEV__) {
-        console.log('[ARPuzzleView] native_cleanup_error', {
-          instanceId: instanceIdRef.current,
-          reason,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-    }
-
-    if (__DEV__) {
-      console.log('[ARPuzzleView] cleanup', {
-        instanceId: instanceIdRef.current,
-        reason,
-        stepId,
-        puzzleId,
-        modelUri: sceneAssetUrl || 'none',
-        resetCalled,
-        cleanupCalled,
-        nodeHandle,
-      });
-    }
-  }, [puzzleId, sceneAssetUrl, stepId]);
-
-  const closeWithCleanup = useCallback((reason: string) => {
-    cleanupArResources(reason);
-    if (typeof router.canGoBack === 'function' && router.canGoBack()) {
-      router.back();
-    }
-  }, [cleanupArResources]);
+    },
+    [cleanupArResources]
+  );
 
   useEffect(() => {
     if (__DEV__) {
@@ -355,7 +362,10 @@ export default function ARPuzzleViewScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={[styles.topBar, { top: insets.top + 12 }]}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => closeWithCleanup('manual_close')}>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => closeWithCleanup('manual_close')}
+        >
           <Ionicons name="arrow-back" size={20} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.topBarTitle}>View Puzzle</Text>
