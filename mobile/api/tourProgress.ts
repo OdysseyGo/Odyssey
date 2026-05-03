@@ -15,6 +15,7 @@ export type TourProgress = {
   skip_count: number;
   wrong_attempt_count: number;
   step_attempt_counts: Record<string, number>;
+  location_confirmed_step_ids?: number[];
 };
 
 export type CreateTourProgressRequest = {
@@ -27,6 +28,14 @@ export type StepActionResponse = {
   new_step_id: number | null;
   awarded_xp: number;
   awarded_badges?: UserBadge[];
+};
+
+export type CheckLocationResponse = {
+  status: string;
+  accepted: boolean;
+  step_id: number;
+  distance_m: number;
+  radius_m: number;
 };
 
 export const DEFAULT_MAX_FAILED_ATTEMPTS = 3;
@@ -245,4 +254,23 @@ export async function deleteTourProgress(request: DeleteTourProgressRequest, sig
     auth: true,
     signal,
   });
+}
+
+/**
+ * Check whether the device location is inside current step's accepted area.
+ */
+export async function checkStepLocation(
+  id: number,
+  data: { step_id: number; latitude: number; longitude: number },
+  signal?: AbortSignal
+): Promise<CheckLocationResponse> {
+  return apiRequest<CheckLocationResponse, { step_id: number; latitude: number; longitude: number }>(
+    {
+      method: 'POST',
+      url: `/api/tour-progress/${id}/check-location/`,
+      data,
+      auth: true,
+      signal,
+    }
+  );
 }

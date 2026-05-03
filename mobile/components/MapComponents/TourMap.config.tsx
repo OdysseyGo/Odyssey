@@ -12,12 +12,19 @@ export interface RouteCoordinate {
   longitude: number;
 }
 
+export interface AcceptedArea {
+  latitude: number;
+  longitude: number;
+  radiusM: number;
+}
+
 export interface TourMapProps {
   markers: MapMarkerProps[];
   route: RouteCoordinate[];
   initialRegion?: Region;
   currentStepIndex?: number;
   tour?: { steps: { coordinate: { latitude: number; longitude: number } }[] };
+  acceptedArea?: AcceptedArea;
   onRegionChange?: (region: Region) => void;
   onRegionChangeComplete?: (region: Region) => void;
   onUserLocationReady?: (region: Region) => void;

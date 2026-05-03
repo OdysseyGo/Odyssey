@@ -345,6 +345,9 @@ export function ActiveTourProvider({ children }: { children: ReactNode }) {
         restoredSolvedSteps.add(internalTour.steps[i].id);
         restoredLocationConfirmedSteps.add(internalTour.steps[i].id);
       }
+      for (const stepId of activeProgress.location_confirmed_step_ids ?? []) {
+        restoredLocationConfirmedSteps.add(String(stepId));
+      }
 
       setState({
         tour: internalTour,

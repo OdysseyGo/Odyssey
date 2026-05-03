@@ -125,6 +125,30 @@ class TourProgress(models.Model):
         return f"{self.user} - {self.tour} ({self.status})"
 
 
+class StepLocationConfirmation(models.Model):
+    progress = models.ForeignKey(
+        TourProgress,
+        on_delete=models.CASCADE,
+        related_name="location_confirmations",
+    )
+    step = models.ForeignKey(
+        "tours.TourStep",
+        on_delete=models.CASCADE,
+        related_name="location_confirmations",
+    )
+    checked_latitude = models.DecimalField(max_digits=18, decimal_places=9)
+    checked_longitude = models.DecimalField(max_digits=18, decimal_places=9)
+    distance_m = models.FloatField()
+    confirmed_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("progress", "step")
+
+    def __str__(self):
+        return f"Location confirmation(progress={self.progress_id}, step={self.step_id})"
+
+
 class PictureCompareConfig(models.Model):
     singleton_id = models.PositiveSmallIntegerField(
         default=1, unique=True, editable=False

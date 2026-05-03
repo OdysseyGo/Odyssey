@@ -18,6 +18,7 @@ import HexBadge from '@/components/ProfileComponents/HexBadge';
 import { openExternalMapsDirections, type ExternalMapsProvider } from '@/utils/externalMaps';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { DEFAULT_MAX_FAILED_ATTEMPTS } from '@/api/tourProgress';
+import { ApiError } from '@/api/APIClient';
 
 function NavigationArrows({
   canGoBack,
@@ -310,12 +311,50 @@ export default function TourNavigation({
     if (!requiresLocation || isLocationConfirmed) return;
 
     try {
+      const permission = await Location.getForegroundPermissionsAsync();
+      const permissionStatus =
+        permission.status === 'granted'
+          ? permission.status
+          : (await Location.requestForegroundPermissionsAsync()).status;
+
+      if (permissionStatus !== 'granted') {
+        Alert.alert(t('tourId.locationRequiredTitle'), t('tourId.locationRequiredMessage'));
+        return;
+      }
+
       const location = await Location.getCurrentPositionAsync({});
       await onLocationConfirm(currentStep.id, location.coords.latitude, location.coords.longitude);
     } catch (error) {
       console.error('Failed to get location:', error);
+      if (error instanceof ApiError) {
+        Alert.alert(
+          t('tourStep.locationCheckFailedTitle', 'Location check failed'),
+          error.message
+        );
+        return;
+      }
+      if (error instanceof Error && error.message.startsWith('OUTSIDE_AREA:')) {
+        const [, distance, radius] = error.message.split(':');
+        Alert.alert(
+          t('tourStep.locationCheckFailedTitle', 'Location check failed'),
+          t('tourStep.locationCheckOutsideArea', {
+            defaultValue:
+              'You are outside the accepted area ({{distance}}m away, allowed: {{radius}}m).',
+            distance: Number(distance).toFixed(1),
+            radius: Number(radius).toFixed(0),
+          })
+        );
+        return;
+      }
+      Alert.alert(
+        t('tourStep.locationCheckFailedTitle', 'Location check failed'),
+        t(
+          'tourStep.locationCheckUnavailable',
+          "We couldn't verify your current location. Please try again."
+        )
+      );
     }
-  }, [currentStep.id, isLocationConfirmed, onLocationConfirm, requiresLocation]);
+  }, [currentStep.id, isLocationConfirmed, onLocationConfirm, requiresLocation, t]);
 
   const handleOpenDirections = useCallback(
     async (provider: ExternalMapsProvider) => {

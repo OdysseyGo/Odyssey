@@ -21,7 +21,13 @@ import { Spacing } from '@/constants/Spacing';
 import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
 
 import { useActiveTour } from '@/contexts/ActiveTourContext';
-import { completeStep, DEFAULT_MAX_FAILED_ATTEMPTS, skipStep } from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
+import {
+  checkStepLocation,
+  completeStep,
+  DEFAULT_MAX_FAILED_ATTEMPTS,
+  skipStep,
+} from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
+import { ApiError } from '@/api/APIClient';
 import { useRewardedAd } from '@/components/Ads/useRewardedAd';
 import type { UserBadge } from '@/api/profile';
 
@@ -65,6 +71,21 @@ export default function BottomSlider({
 
   const rewardedSkip = useRewardedAd('rewarded_hint');
   const skipUsingAdRef = useRef(false);
+  const handleStepActionError = useCallback(
+    (error: unknown): boolean => {
+      if (
+        error instanceof ApiError &&
+        error.statusCode === 400 &&
+        error.message.includes('Location confirmation is required')
+      ) {
+        Alert.alert(t('tourStep.locationCheckFailedTitle'), t('tourStep.locationCheckOutsideArea'));
+        return true;
+      }
+      return false;
+    },
+    [t]
+  );
+
   const skipCountsAsMistake = useCallback(
     (stepId: string) => {
       const currentStep = tour?.steps.find((step) => step.id === stepId);
@@ -136,7 +157,8 @@ export default function BottomSlider({
         }
       }
     } catch (error) {
-      console.error('[BottomSlider] completeStep/skipStep error:', error);
+      if (handleStepActionError(error)) return;
+      console.warn('[BottomSlider] completeStep/skipStep error:', error);
       Alert.alert(t('common.error'), t('common.syncError'));
     }
   }, [
@@ -150,6 +172,7 @@ export default function BottomSlider({
     recordSkip,
     skipCountsAsMistake,
     onTourComplete,
+    handleStepActionError,
     t,
   ]);
 
@@ -207,7 +230,8 @@ export default function BottomSlider({
         }
       }
     } catch (error) {
-      console.error('[BottomSlider] skipStep error:', error);
+      if (handleStepActionError(error)) return;
+      console.warn('[BottomSlider] skipStep error:', error);
       Alert.alert(t('common.error'), t('common.syncError'));
     }
   }, [
@@ -220,6 +244,7 @@ export default function BottomSlider({
     recordSkip,
     skipCountsAsMistake,
     onTourComplete,
+    handleStepActionError,
     t,
   ]);
 
@@ -281,9 +306,21 @@ export default function BottomSlider({
 
   const handleLocationConfirm = useCallback(
     async (stepId: string, latitude: number, longitude: number) => {
+      if (!progressId) {
+        throw new Error('MISSING_PROGRESS');
+      }
+
+      const result = await checkStepLocation(progressId, {
+        step_id: Number(stepId),
+        latitude,
+        longitude,
+      });
+      if (!result.accepted) {
+        throw new Error(`OUTSIDE_AREA:${result.distance_m}:${result.radius_m}`);
+      }
       confirmLocation(stepId);
     },
-    [confirmLocation]
+    [confirmLocation, progressId]
   );
 
   // Slider is anchored to bottom. translateY moves it:
