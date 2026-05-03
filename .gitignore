@@ -50,4 +50,5 @@ logs/
 
 vscode/
 
+backend/apps/notifications/services/keys/*.p8
 .github/copilot-instructions.md

@@ -221,6 +221,14 @@ Follow the steps below to configure S3 for your environment:
 
    The `boto3` and `django-storages` packages (listed in `backend/requirements/base.txt`) will be installed automatically during the Docker build. Once running, any image uploaded through the API (e.g., tour cover images) will be stored in your S3 bucket and served via `https://<bucket>.s3.amazonaws.com/`.
 
+
+## 7. Notifications
+
+Set `APPLE_AUTH_KEY_P8_B64` in `.env` to the base64-encoded contents of your APNs `.p8` key. Also backend needs another run with 
+
+   ```bash
+   python manage.py send_notifications
+   ```
 #### Advertisements (Google AdMob)
 
 Odyssey shows banner, interstitial, and rewarded ads via Google AdMob. Rewarded ads are verified server-to-server with AdMob Server-Side Verification (SSV) and grant **credits**, **free AI tour slots**, **puzzle hints/skips**, or **tour revives** (the revive flow is reserved for a future feature; the backend ledger is ready).

@@ -331,7 +331,22 @@
       },
       "notifications": {
         "label": "Notificaciones",
-        "description": "Gestiona tus preferencias de notificaciones"
+        "description": "Gestiona tus preferencias de notificaciones",
+        "statusOn": "Activadas",
+        "statusOff": "Desactivadas",
+        "enablePush": "Habilitar Notificaciones Push",
+        "deniedTitle": "Notificaciones Desactivadas",
+        "deniedMessage": "Por favor, habilita las notificaciones en los ajustes de tu dispositivo para recibir alertas.",
+        "openSettings": "Abrir Ajustes",
+        "errorTitle": "Error",
+        "errorMessage": "No se pudieron actualizar las preferencias de notificación. Por favor, inténtalo de nuevo.",
+        "types": {
+          "new_tour": "Nuevos Tours de a quien Sigues",
+          "tour_approved": "Aprobaciones de Tours",
+          "new_review": "Nuevas Reseñas en tus Tours",
+          "new_follower": "Nuevos Seguidores",
+          "friend_level_up": "Tus amigos suben de nivel"
+        }
       },
       "privacy": {
         "label": "Privacidad",

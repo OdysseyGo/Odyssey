@@ -58,6 +58,7 @@ export const createEmptyPuzzle = (): Puzzle => ({
 
 export interface TourLocation {
   id: string;
+  serverStepId?: number;
   latitude: number;
   longitude: number;
   title: string;
@@ -69,6 +70,8 @@ export interface TourLocation {
 }
 
 export interface TourCreationData {
+  sourceTourId?: number;
+  sourceTourStatus?: 'PENDING' | 'PUBLISHED' | 'ARCHIVED';
   title: string;
   description: string;
   coverImage?: string;
@@ -110,6 +113,8 @@ export const TOUR_TYPE_OPTIONS = [
 ];
 
 export const createEmptyTourData = (): TourCreationData => ({
+  sourceTourId: undefined,
+  sourceTourStatus: undefined,
   title: '',
   description: '',
   coverImage: undefined,

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -29,6 +30,19 @@ type SquareCameraOverlayCaptureProps = {
 
 const CROP_RATIO = 0.62;
 const OUTPUT_SIZE = 512;
+
+async function safeDeleteFile(uri?: string | null) {
+  if (!uri || !uri.startsWith('file://')) return;
+
+  try {
+    const info = await FileSystem.getInfoAsync(uri);
+    if (info.exists) {
+      await FileSystem.deleteAsync(uri, { idempotent: true });
+    }
+  } catch {
+    // Best-effort cleanup only.
+  }
+}
 
 export default function SquareCameraOverlayCapture({
   visible,
@@ -62,11 +76,13 @@ export default function SquareCameraOverlayCapture({
   const handleTakePhoto = async () => {
     if (isCapturing || !cameraRef.current) return;
 
+    let rawPhotoUri: string | null = null;
     try {
       setIsCapturing(true);
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.9,
       });
+      rawPhotoUri = photo?.uri ?? null;
 
       if (!photo?.uri || !photo.width || !photo.height) {
         return;
@@ -99,8 +115,12 @@ export default function SquareCameraOverlayCapture({
 
       await onCapture(manipulated.uri);
       onClose();
+      if (manipulated.uri !== rawPhotoUri) {
+        await safeDeleteFile(rawPhotoUri);
+      }
     } catch {
       Alert.alert('Capture failed', 'Could not process this photo. Please try again.');
+      await safeDeleteFile(rawPhotoUri);
     } finally {
       setIsCapturing(false);
     }
