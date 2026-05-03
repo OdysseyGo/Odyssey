@@ -1,5 +1,6 @@
 import os
 
+from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Avg, Count, OuterRef, Subquery
 from django_filters.rest_framework import DjangoFilterBackend
@@ -43,6 +44,25 @@ from .serializers import (
 )
 
 MAX_TOUR_STEPS = 150
+MIN_LEVEL_FOR_PERSONAL_TOUR_MUTATIONS = settings.PERSONAL_TOUR_MIN_LEVEL
+
+
+def enforce_personal_tour_level_requirement(*, user, tour=None):
+    if not user or not user.is_authenticated or user.is_staff:
+        return
+
+    # Only gate personal tours (USER). AI tours are intentionally out of scope.
+    if tour is not None and tour.generation_source != Tour.USER:
+        return
+
+    if user.level < MIN_LEVEL_FOR_PERSONAL_TOUR_MUTATIONS:
+        raise PermissionDenied(
+            (
+                "You need to be at least level "
+                f"{MIN_LEVEL_FOR_PERSONAL_TOUR_MUTATIONS} to create, edit, "
+                "or delete personal tours."
+            )
+        )
 
 
 @api_view(["GET"])
@@ -110,6 +130,8 @@ class TourViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
+        enforce_personal_tour_level_requirement(user=self.request.user)
+
         # Default to production-safe behavior when ENV_MODE is unset.
         env_mode = os.getenv("ENV_MODE", "production")
         if env_mode != "development":
@@ -125,6 +147,17 @@ class TourViewSet(viewsets.ModelViewSet):
             submission_type=Tour.CREATE,
         )
         BadgeService.evaluate_user_badges(tour.creator)
+
+    def perform_update(self, serializer):
+        enforce_personal_tour_level_requirement(
+            user=self.request.user,
+            tour=serializer.instance,
+        )
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        enforce_personal_tour_level_requirement(user=self.request.user, tour=instance)
+        instance.delete()
 
     @staticmethod
     def _user_can_manage_tour(user, tour):
@@ -370,6 +403,7 @@ class TourViewSet(viewsets.ModelViewSet):
         tour = self.get_object()
         if not self._user_can_manage_tour(request.user, tour):
             raise PermissionDenied("Only the tour creator can request an edit review.")
+        enforce_personal_tour_level_requirement(user=request.user, tour=tour)
         if tour.status != Tour.PUBLISHED:
             return Response(
                 {"error": "Only published tours can be sent for edit review."},
@@ -395,6 +429,7 @@ class TourViewSet(viewsets.ModelViewSet):
         tour = self.get_object()
         if not self._user_can_manage_tour(request.user, tour):
             raise PermissionDenied("Only the tour creator can request a delete review.")
+        enforce_personal_tour_level_requirement(user=request.user, tour=tour)
         if tour.status != Tour.PUBLISHED:
             return Response(
                 {"error": "Only published tours can be sent for delete review."},

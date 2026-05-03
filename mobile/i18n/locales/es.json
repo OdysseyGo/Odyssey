@@ -443,6 +443,9 @@
       "personalDescription": "Selecciona ubicaciones manualmente, añade historias y personaliza cada detalle de tu tour",
       "ai": "Creación con IA",
       "aiDescription": "Deja que la IA te ayude a generar contenido de tour, historias y sugerencias basadas en tus preferencias",
+      "personalUnlockLevel": "Se desbloquea en el nivel {{level}}",
+      "personalLockedTitle": "La Creación Personal se desbloquea en el nivel {{level}}",
+      "personalLockedMessage": "La Creación Personal se desbloquea en el nivel {{level}}. Ahora estás en el nivel {{currentLevel}}. Sigue así, ¡buena suerte!",
       "skip": "No importa, buscaré un tour",
       "comingSoon": "PRÓXIMAMENTE"
     },

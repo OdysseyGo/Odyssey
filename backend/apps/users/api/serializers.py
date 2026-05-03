@@ -20,6 +20,7 @@ class LoginResponseSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     terms_accepted = serializers.BooleanField(write_only=True, required=False)
     terms_update_required = serializers.SerializerMethodField(read_only=True)
+    personal_tour_min_level = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -43,6 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
             "avatar_url",
             "terms_accepted",
             "terms_update_required",
+            "personal_tour_min_level",
         ]
         extra_kwargs = {
             "password": {"write_only": True},
@@ -50,6 +52,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_terms_update_required(self, obj):
         return obj.terms_version != settings.CURRENT_TERMS_VERSION
+
+    def get_personal_tour_min_level(self, obj):
+        return settings.PERSONAL_TOUR_MIN_LEVEL
 
     def validate_terms_accepted(self, value):
         if not value:

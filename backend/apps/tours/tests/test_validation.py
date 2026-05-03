@@ -11,11 +11,16 @@ User = get_user_model()
 
 class TourValidationTests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="password")
+        self.user = User.objects.create_user(
+            username="testuser",
+            password="password",
+            level=5,
+        )
         self.staff_user = User.objects.create_user(
             username="staffuser",
             password="password",
             is_staff=True,
+            level=5,
         )
         self.client.force_authenticate(user=self.user)
 
