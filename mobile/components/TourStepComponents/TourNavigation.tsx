@@ -266,6 +266,18 @@ export default function TourNavigation({
   const popupOpacity = useRef(new Animated.Value(0)).current;
   const crossOpacity = useRef(new Animated.Value(0)).current;
   const crossScale = useRef(new Animated.Value(0.3)).current;
+  const [isLocationToastVisible, setIsLocationToastVisible] = useState(false);
+  const locationToastOpacity = useRef(new Animated.Value(0)).current;
+  const locationToastTranslateY = useRef(new Animated.Value(-10)).current;
+  const locationToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (locationToastTimerRef.current) {
+        clearTimeout(locationToastTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (prevTierRef.current === currentTier) return;
@@ -307,6 +319,48 @@ export default function TourNavigation({
     onStepSolved(currentStep.id);
   }, [currentStep.id, onStepSolved]);
 
+  const showLocationConfirmedToast = useCallback(() => {
+    if (locationToastTimerRef.current) {
+      clearTimeout(locationToastTimerRef.current);
+      locationToastTimerRef.current = null;
+    }
+
+    setIsLocationToastVisible(true);
+    locationToastOpacity.setValue(0);
+    locationToastTranslateY.setValue(-10);
+
+    Animated.parallel([
+      Animated.timing(locationToastOpacity, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(locationToastTranslateY, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      locationToastTimerRef.current = setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(locationToastOpacity, {
+            toValue: 0,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+          Animated.timing(locationToastTranslateY, {
+            toValue: -10,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          setIsLocationToastVisible(false);
+          locationToastTimerRef.current = null;
+        });
+      }, 700);
+    });
+  }, [locationToastOpacity, locationToastTranslateY]);
+
   const handleLocationConfirm = useCallback(async () => {
     if (!requiresLocation || isLocationConfirmed) return;
 
@@ -324,6 +378,7 @@ export default function TourNavigation({
 
       const location = await Location.getCurrentPositionAsync({});
       await onLocationConfirm(currentStep.id, location.coords.latitude, location.coords.longitude);
+      showLocationConfirmedToast();
     } catch (error) {
       console.error('Failed to get location:', error);
       if (error instanceof ApiError) {
@@ -354,7 +409,14 @@ export default function TourNavigation({
         )
       );
     }
-  }, [currentStep.id, isLocationConfirmed, onLocationConfirm, requiresLocation, t]);
+  }, [
+    currentStep.id,
+    isLocationConfirmed,
+    onLocationConfirm,
+    requiresLocation,
+    showLocationConfirmedToast,
+    t,
+  ]);
 
   const handleOpenDirections = useCallback(
     async (provider: ExternalMapsProvider) => {
@@ -432,6 +494,22 @@ export default function TourNavigation({
               {TIER_LABELS[tierPopup.to]}
             </Text>
           </View>
+        </Animated.View>
+      )}
+      {isLocationToastVisible && (
+        <Animated.View
+          style={[
+            styles.locationToast,
+            {
+              opacity: locationToastOpacity,
+              transform: [{ translateY: locationToastTranslateY }],
+            },
+          ]}
+        >
+          <MaterialCommunityIcons name="check-circle" size={18} color={colors.easy} />
+          <Text style={styles.locationToastText}>
+            {t('tourStep.locationCheckSuccessTitle', 'Location confirmed')}
+          </Text>
         </Animated.View>
       )}
       <View style={styles.headerRow}>
