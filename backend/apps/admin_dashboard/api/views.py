@@ -256,7 +256,8 @@ class AdminTourViewSet(ModelViewSet):
             )
 
         tour.status = Tour.PUBLISHED
-        tour.save(update_fields=["status"])
+        tour.review_status = None
+        tour.save(update_fields=["status", "review_status"])
 
         try:
             send_mail(
@@ -279,8 +280,9 @@ class AdminTourViewSet(ModelViewSet):
     def reject(self, request, pk=None):
         tour = self.get_object()
         reason = request.data.get("reason", "").strip()
-        tour.status = Tour.DRAFT
-        tour.save(update_fields=["status"])
+        tour.status = Tour.PENDING
+        tour.review_status = Tour.REJECTED
+        tour.save(update_fields=["status", "review_status"])
 
         try:
             reason_block = f'\nReason from our team:\n"{reason}"\n' if reason else ""
@@ -289,8 +291,8 @@ class AdminTourViewSet(ModelViewSet):
                 message=(
                     f"Hi {tour.creator.username},\n\n"
                     f'After review, your tour "{tour.title}" was not approved at this time '
-                    f"and has been moved back to drafts.{reason_block}\n"
-                    "Please make the necessary changes and resubmit when it's ready.\n\n"
+                    f"and is now marked as pending (rejected).{reason_block}\n"
+                    "Please make the necessary changes and update the tour to send it back for review.\n\n"
                     "— The Odyssey Team"
                 ),
                 from_email=None,
@@ -299,7 +301,7 @@ class AdminTourViewSet(ModelViewSet):
         except Exception as e:
             logger.error("Failed to send rejection email for tour %s: %s", tour.id, e)
 
-        return Response({"detail": "Tour rejected and set to draft."})
+        return Response({"detail": "Tour rejected and marked as pending (rejected)."})
 
     @action(detail=True, methods=["post"], url_path="archive")
     def archive(self, request, pk=None):

@@ -20,11 +20,11 @@ import Colors from '@/constants/Colors';
 import { isLoggedIn } from '@/api/auth';
 import { getToursInBounds } from '@/api/tours';
 import type { InBoundsSort, Tour } from '@/api/tours';
+import { deleteTourProgress } from '@/api/tourProgress';
 import type { MapMarkerProps } from './MapMarker.config';
 import type { Region } from './TourMap.config';
 import type { UserBadge } from '@/api/profile';
-
-import { deleteTourProgress } from '@/api/tourProgress';
+import { useInterstitial } from '@/components/Ads/useInterstitial';
 
 const MAX_SEARCH_DELTA = 0.5;
 const MAX_NEARBY_TOURS_TO_RENDER = 10;
@@ -91,6 +91,8 @@ export default function MapScreen() {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [finalXP, setFinalXP] = useState<number>(0);
   const [completionBadges, setCompletionBadges] = useState<UserBadge[]>([]);
+  const { show: showTourCompleteInterstitial } = useInterstitial('tour_complete_interstitial');
+  const completingTourRef = useRef(false);
 
   const [nearbyTours, setNearbyTours] = useState<Tour[]>([]);
   const [nearbyToursForMap, setNearbyToursForMap] = useState<Tour[]>([]);
@@ -237,11 +239,18 @@ export default function MapScreen() {
     return Math.max(0, Math.min(highestStepIndex, tour.steps.length));
   }, [tour, highestStepIndex, showCompleteModal]);
 
-  const handleTourComplete = useCallback(async (awardedXP: number, awardedBadges?: UserBadge[]) => {
-    setFinalXP(Math.max(0, awardedXP ?? 0));
-    setCompletionBadges(awardedBadges ?? []);
-    setShowCompleteModal(true);
-  }, []);
+  const handleTourComplete = useCallback(
+    async (awardedXP: number, awardedBadges?: UserBadge[]) => {
+      if (completingTourRef.current) return;
+      completingTourRef.current = true;
+
+        setFinalXP(Math.max(0, awardedXP ?? 0));
+      setCompletionBadges(awardedBadges ?? []);
+      await showTourCompleteInterstitial();
+      setShowCompleteModal(true);
+    },
+    [showTourCompleteInterstitial]
+  );
 
   const handleEndTourPress = useCallback(() => setShowEndConfirmModal(true), []);
 
@@ -260,6 +269,8 @@ export default function MapScreen() {
 
   const handleCloseCompleteModal = useCallback(() => {
     setShowCompleteModal(false);
+    setCompletionBadges([]);
+    completingTourRef.current = false;
     endTour();
   }, [endTour]);
 

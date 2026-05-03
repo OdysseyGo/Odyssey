@@ -91,7 +91,13 @@
       "codeRequired": "Please enter the reset code",
       "invalidCode": "Invalid or expired code. Please try again."
     },
-    "userCreated": "User has been created!"
+    "userCreated": "User has been created!",
+    "termsUpdateTitle": "Terms Updated",
+    "termsUpdateSubtitle": "We've updated our Terms of Use and Privacy Policy. Please review and accept the new terms to continue using Odyssey.",
+    "termsUpdatePrefix": "I have read and agree to the updated",
+    "termsUpdateAnd": "and",
+    "termsUpdateAccept": "Accept & Continue",
+    "termsUpdateLogout": "Log out"
   },
   "profile": {
     "notLoggedIn": "You need to be logged in to view your profile.",
@@ -110,16 +116,14 @@
     "cancel": "Cancel",
     "tabs": {
       "published": "Published",
-      "pending": "Under Review",
-      "drafts": "Drafts",
+      "pending": "Pending",
       "aiTours": "AI Tours",
       "archived": "Archived",
       "settings": "Settings",
       "tutorials": "Tutorials"
     },
     "emptyPublished": "No published tours yet. Publish a tour to share it with the community!",
-    "emptyPending": "No tours under review. Submit a draft tour and we'll review it soon!",
-    "emptyDraft": "No draft tours. Start creating a new tour!",
+    "emptyPending": "No pending tours yet.",
     "emptyAiTours": "No AI-generated tours yet. Create one to start your showcase!",
     "emptyArchived": "No archived tours.",
     "emptyDefault": "No tours found.",
@@ -603,6 +607,7 @@
     "missingInfoTitle": "Missing Information",
     "missingInfoMessage": "Please provide both a state and a theme for your tour.",
     "successTitle": "Tour Created! 🎉",
+    "successMessage": "Your tour is ready to explore.",
     "viewTour": "View Tour",
     "createAnother": "Create Another",
     "failedTitle": "Generation Failed",
@@ -613,8 +618,8 @@
       "subtitle": "Tell us about your dream tour and let AI craft a unique experience with real locations, engaging stories, and interactive content."
     },
     "loading": {
-      "title": "Creating Your Tour...",
-      "subtitle": "AI is finding the best locations and crafting engaging content for you"
+      "title": "Crafting Your Adventure...",
+      "subtitle": "This usually takes about 20–30 seconds"
     },
     "languageSelector": {
       "title": "Content Language",
@@ -741,7 +746,7 @@
       "step3text": "Track your Odyssey XP and check your followers!",
       "step4text": "Find other travelers to join on your journey!",
       "step5text": "Check out the badges you earned!",
-      "step6text": "Check your created (published, draft and archived) tours on this tab! You can also rate your tour with the completed tours button.",
+      "step6text": "Check your created (published, pending and archived) tours on this tab! You can also rate your tour with the completed tours button.",
       "step7text": "You can change your account settings or your app preferences in the settings tab."
     },
     "tours": {

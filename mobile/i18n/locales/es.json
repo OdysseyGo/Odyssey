@@ -102,14 +102,14 @@
     "cancel": "Cancelar",
     "tabs": {
       "published": "Publicados",
-      "drafts": "Borradores",
+      "pending": "Pendientes",
       "aiTours": "Tours de IA",
       "archived": "Archivados",
       "settings": "Ajustes",
       "tutorials": "Tutoriales"
     },
     "emptyPublished": "Aún no hay tours publicados. ¡Publica uno para compartirlo con la comunidad!",
-    "emptyDraft": "No hay borradores. ¡Empieza a crear un nuevo tour!",
+    "emptyPending": "No hay tours pendientes.",
     "emptyAiTours": "Aún no hay tours generados con IA. ¡Crea uno para empezar tu escaparate!",
     "emptyArchived": "No hay tours archivados.",
     "emptyDefault": "No se encontraron tours.",
@@ -590,6 +590,7 @@
     "missingInfoTitle": "Falta Información",
     "missingInfoMessage": "Por favor, proporciona tanto un estado como un tema para tu tour.",
     "successTitle": "¡Tour Creado! 🎉",
+    "successMessage": "Tu tour está listo para explorar.",
     "viewTour": "Ver Tour",
     "createAnother": "Crear Otro",
     "failedTitle": "Error de Generación",
@@ -600,8 +601,8 @@
       "subtitle": "Cuéntanos sobre tu tour soñado y deja que la IA cree una experiencia única con ubicaciones reales, historias atractivas y contenido interactivo."
     },
     "loading": {
-      "title": "Creando tu Tour...",
-      "subtitle": "La IA está buscando las mejores ubicaciones y elaborando contenido atractivo para ti"
+      "title": "Creando tu Aventura...",
+      "subtitle": "Esto suele tardar unos 20–30 segundos"
     },
     "languageSelector": {
       "title": "Idioma del Contenido",
@@ -725,7 +726,7 @@
       "step3text": "¡Haz un seguimiento de tus Odyssey XP, revisa y califica tours completados, y comprueba tus seguidores!",
       "step4text": "¡Encuentra a otros viajeros para que se unan a tu viaje!",
       "step5text": "¡Mira las insignias que has ganado!",
-      "step6text": "¡Revisa tus tours creados (publicados, borradores y archivados) en esta pestaña!",
+      "step6text": "¡Revisa tus tours creados (publicados, pendientes y archivados) en esta pestaña!",
       "step7text": "Puedes cambiar los ajustes de tu cuenta o las preferencias de la aplicación en la pestaña de ajustes."
     },
     "tours": {

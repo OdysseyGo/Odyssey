@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "apps.ai_content",
     "storages",
     "apps.admin_dashboard",
+    "apps.ads",
 ]
 
 MIDDLEWARE = [
@@ -85,16 +86,21 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "password_reset_request": "5/hour",
         "password_reset_confirm": "20/hour",
+        "ai_generation": os.getenv("AI_GENERATION_RATE_LIMIT", "5/hour"),
     },
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
 }
+
+AI_GENERATION_MAX_ACTIVE_JOBS = int(os.getenv("AI_GENERATION_MAX_ACTIVE_JOBS", "1"))
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Odyssey API",
     "DESCRIPTION": "Backend API for the Odyssey mobile app",
     "VERSION": "1.0.0",
 }
+
+CURRENT_TERMS_VERSION = "2026-05-01"
 
 ROOT_URLCONF = "config.urls"
 

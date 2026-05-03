@@ -13,6 +13,7 @@ interface Tour {
   title: string;
   city: string;
   status: string;
+  review_status?: "IN_REVIEW" | "REJECTED" | null;
   tour_type: string;
   difficulty: string;
   creator: number;
@@ -37,7 +38,7 @@ interface Filters {
 
 const STATUS_VARIANT: Record<string, "success" | "warning" | "secondary"> = {
   PUBLISHED: "success",
-  DRAFT: "warning",
+  PENDING: "warning",
   ARCHIVED: "secondary",
 };
 
@@ -97,7 +98,7 @@ export default function Tours() {
 
       {/* Status tabs */}
       <div className="flex gap-1 rounded-lg border border-border bg-muted/40 p-1 w-fit">
-        {(["", "PENDING", "PUBLISHED", "DRAFT", "ARCHIVED"] as const).map((s) => (
+        {(["", "PENDING", "PUBLISHED", "ARCHIVED"] as const).map((s) => (
           <button
             key={s}
             onClick={() => updateFilter("status", s)}
@@ -107,7 +108,7 @@ export default function Tours() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {s === "" ? "All" : s === "PENDING" ? "⏳ Pending" : s === "PUBLISHED" ? "✅ Published" : s === "DRAFT" ? "Draft" : "Archived"}
+            {s === "" ? "All" : s === "PENDING" ? "⏳ Pending" : s === "PUBLISHED" ? "✅ Published" : "Archived"}
           </button>
         ))}
       </div>
@@ -130,8 +131,7 @@ export default function Tours() {
           >
             <option value="">All Status</option>
             <option value="PUBLISHED">Published</option>
-            <option value="PENDING">Pending Review</option>
-            <option value="DRAFT">Draft</option>
+            <option value="PENDING">Pending</option>
             <option value="ARCHIVED">Archived</option>
           </Select>
           <Select
@@ -213,6 +213,11 @@ export default function Tours() {
                 accessor: (row: Tour) => (
                   <Badge variant={STATUS_VARIANT[row.status] ?? "secondary"}>
                     {row.status}
+                    {row.status === "PENDING" && row.review_status
+                      ? row.review_status === "REJECTED"
+                        ? " (REJECTED)"
+                        : " (IN_REVIEW)"
+                      : ""}
                   </Badge>
                 ),
               },

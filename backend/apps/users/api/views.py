@@ -1,6 +1,7 @@
 import logging
 import secrets
 
+from django.conf import settings
 from django.contrib.auth import authenticate  # login direkt
 from django.core.mail import send_mail
 from django.db.models import Avg, F, QuerySet  # F dbden çıkarmadan yazıyon
@@ -78,7 +79,8 @@ class UserViewSet(ModelViewSet):
             {
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
-                # "user": UserSerializer(user).data,
+                "terms_update_required": user.terms_version
+                != settings.CURRENT_TERMS_VERSION,
             }
         )
 
@@ -106,6 +108,19 @@ class UserViewSet(ModelViewSet):
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="accept-terms",
+        permission_classes=[IsAuthenticated],
+    )
+    def accept_terms(self, request):
+        user = request.user
+        user.terms_version = settings.CURRENT_TERMS_VERSION
+        user.terms_accepted_at = timezone.now()
+        user.save(update_fields=["terms_version", "terms_accepted_at"])
+        return Response({"terms_version": user.terms_version})
 
     @action(detail=False, methods=["patch"], url_path="me/avatar")
     def update_avatar(self, request):

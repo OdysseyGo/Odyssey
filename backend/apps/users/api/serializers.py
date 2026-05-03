@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.utils import timezone
 from rest_framework import serializers
 
 from apps.users.models.Follow import Follow
@@ -16,6 +18,9 @@ class LoginResponseSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    terms_accepted = serializers.BooleanField(write_only=True, required=False)
+    terms_update_required = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = User
         fields = [
@@ -36,13 +41,27 @@ class UserSerializer(serializers.ModelSerializer):
             "rating",
             "total_walked_km",
             "avatar_url",
+            "terms_accepted",
+            "terms_update_required",
         ]
         extra_kwargs = {
             "password": {"write_only": True},
         }
 
+    def get_terms_update_required(self, obj):
+        return obj.terms_version != settings.CURRENT_TERMS_VERSION
+
+    def validate_terms_accepted(self, value):
+        if not value:
+            raise serializers.ValidationError("You must accept the terms to register.")
+        return value
+
     def create(self, validated_data):
+        terms_accepted = validated_data.pop("terms_accepted", False)
         password = validated_data.pop("password", None)
+        if terms_accepted:
+            validated_data["terms_accepted_at"] = timezone.now()
+            validated_data["terms_version"] = settings.CURRENT_TERMS_VERSION
         user = super().create(validated_data)
         if password:
             user.set_password(password)

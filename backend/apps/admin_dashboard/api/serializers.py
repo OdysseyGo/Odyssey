@@ -150,6 +150,8 @@ class AdminUserDetailSerializer(serializers.ModelSerializer):
             "ban_records",
             "badges",
             "badge_history",
+            "terms_accepted_at",
+            "terms_version",
         ]
 
     def get_ban_records(self, obj):
@@ -826,6 +828,7 @@ class AdminTourListSerializer(serializers.ModelSerializer):
             "tour_type",
             "difficulty",
             "status",
+            "review_status",
             "generation_source",
             "city",
             "country",
@@ -925,6 +928,7 @@ class AdminTourDetailSerializer(serializers.ModelSerializer):
             "metrics_calculated",
             "accessibility_rating",
             "status",
+            "review_status",
             "generation_source",
             "created_at",
             "updated_at",

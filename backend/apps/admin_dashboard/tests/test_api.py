@@ -228,7 +228,8 @@ class AdminTourViewSetTests(APITestCase):
             city="Istanbul",
             country="Turkey",
             country_code="TR",
-            status=Tour.DRAFT,
+            status=Tour.PENDING,
+            review_status=Tour.IN_REVIEW,
         )
         self.step = TourStep.objects.create(
             tour=self.tour,
@@ -247,7 +248,7 @@ class AdminTourViewSetTests(APITestCase):
         self.assertIn("step_count", response.data["results"][0])
 
     def test_list_tours_filter_by_status(self):
-        response = self.client.get("/api/admin/tours/?status=DRAFT")
+        response = self.client.get("/api/admin/tours/?status=PENDING")
         self.assertEqual(response.data["count"], 1)
 
         response = self.client.get("/api/admin/tours/?status=PUBLISHED")
@@ -273,15 +274,18 @@ class AdminTourViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.tour.refresh_from_db()
         self.assertEqual(self.tour.status, Tour.PUBLISHED)
+        self.assertIsNone(self.tour.review_status)
 
     def test_reject_tour(self):
         self.tour.status = Tour.PUBLISHED
+        self.tour.review_status = None
         self.tour.save()
 
         response = self.client.post(f"/api/admin/tours/{self.tour.id}/reject/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.tour.refresh_from_db()
-        self.assertEqual(self.tour.status, Tour.DRAFT)
+        self.assertEqual(self.tour.status, Tour.PENDING)
+        self.assertEqual(self.tour.review_status, Tour.REJECTED)
 
     def test_archive_tour(self):
         response = self.client.post(f"/api/admin/tours/{self.tour.id}/archive/")

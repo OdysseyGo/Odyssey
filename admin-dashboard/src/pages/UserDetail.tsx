@@ -30,6 +30,8 @@ interface UserData {
   badges_earned_count: number;
   badges: UserBadge[];
   badge_history: UserBadgeHistory[];
+  terms_accepted_at: string | null;
+  terms_version: string;
 }
 
 interface BadgeData {
@@ -249,6 +251,28 @@ export default function UserDetail() {
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Joined</dt>
               <dd>{new Date(user.date_joined).toLocaleDateString()}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Terms Accepted</dt>
+              <dd>
+                {user.terms_accepted_at ? (
+                  <span title={new Date(user.terms_accepted_at).toLocaleString()}>
+                    {new Date(user.terms_accepted_at).toLocaleDateString()}
+                  </span>
+                ) : (
+                  <Badge variant="destructive">Not accepted</Badge>
+                )}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Terms Version</dt>
+              <dd>
+                {user.terms_version ? (
+                  <Badge variant="secondary">{user.terms_version}</Badge>
+                ) : (
+                  <Badge variant="destructive">None</Badge>
+                )}
+              </dd>
             </div>
           </dl>
         </Card>

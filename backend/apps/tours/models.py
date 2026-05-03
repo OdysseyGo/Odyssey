@@ -42,16 +42,20 @@ class Tour(models.Model):
         (HARD, "Hard"),
     ]
 
-    DRAFT = "DRAFT"
     PENDING = "PENDING"
     PUBLISHED = "PUBLISHED"
     ARCHIVED = "ARCHIVED"
 
     STATUS_CHOICES = [
-        (DRAFT, "Draft"),
-        (PENDING, "Pending Review"),
+        (PENDING, "Pending"),
         (PUBLISHED, "Published"),
         (ARCHIVED, "Archived"),
+    ]
+    IN_REVIEW = "IN_REVIEW"
+    REJECTED = "REJECTED"
+    REVIEW_STATUS_CHOICES = [
+        (IN_REVIEW, "In Review"),
+        (REJECTED, "Rejected"),
     ]
 
     USER = "USER"
@@ -126,7 +130,13 @@ class Tour(models.Model):
         help_text="1-10 rating. 10=Most Accessible (Flat, Short). 1=Least (Steep, Long, Complex)",
     )
 
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=DRAFT)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    review_status = models.CharField(
+        max_length=20,
+        choices=REVIEW_STATUS_CHOICES,
+        null=True,
+        blank=True,
+    )
     generation_source = models.CharField(
         max_length=10,
         choices=GENERATION_SOURCE_CHOICES,

@@ -5,6 +5,7 @@ import os
 import random
 import re
 import string
+import threading
 import uuid
 from typing import Optional
 from urllib.error import URLError
@@ -12,7 +13,7 @@ from urllib.request import urlopen
 
 import google.generativeai as genai
 from django.core.files.base import ContentFile
-from django.db import transaction
+from django.db import connection, transaction
 
 from apps.tours.models import (
     ARModel,
@@ -76,6 +77,7 @@ class GeminiService:
         include_ar: bool = False,
         include_compass: bool = False,
         request=None,
+        progress_callback=None,
     ) -> Tour:
         """
         Generate a complete tour with steps and puzzles using RAG.
@@ -96,7 +98,15 @@ class GeminiService:
             creator: User object who will own the tour
             custom_prompt: Optional user instructions
         """
-        # ---- Step 1: Discover real places from Google Maps ----
+
+        def _emit(label):
+            if progress_callback:
+                try:
+                    progress_callback(label)
+                except Exception as e:
+                    logger.warning("progress_callback failed: %s", e)
+
+        _emit(f"Exploring {city} for the perfect spots…")
         num_steps = max(3, duration // 15)
         location_query = self._format_location(city, country)
         candidate_places = self._discover_places(location_query, theme, num_steps)
@@ -125,7 +135,7 @@ class GeminiService:
             include_compass=include_compass,
         )
 
-        # ---- Step 3: Generate creative content via Gemini (with retries) ----
+        _emit("Weaving your story together…")
         max_retries = 3
         last_error = None
 
@@ -241,6 +251,7 @@ class GeminiService:
         # ---- Step 4b: Reorder stops geometrically to eliminate zigzag ----
         tour_data["steps"] = self._nearest_neighbor_order(tour_data["steps"])
 
+        _emit("Your adventure is almost ready…")
         # ---- Step 5: Persist to database ----
         canonical_country, canonical_country_code = normalize_tour_country(
             country=country,
@@ -339,10 +350,31 @@ class GeminiService:
                         },
                     )
 
-        # ---- Step 6: Calculate real-world metrics ----
-        self._calculate_metrics(tour)
+        # ---- Step 6: Calculate real-world metrics (background) ----
+        # Directions + Elevation API calls add 1–3s and aren't required for
+        # the response. Run them in a background thread so the user gets
+        # their tour immediately; metrics get filled in shortly after.
+        self._spawn_metrics_calculation(tour.pk)
 
         return tour
+
+    def _spawn_metrics_calculation(self, tour_pk: int) -> None:
+        def _run():
+            try:
+                tour = Tour.objects.get(pk=tour_pk)
+                self._calculate_metrics(tour)
+            except Exception as e:
+                logger.warning(
+                    "Background metrics calculation failed for tour %s: %s",
+                    tour_pk,
+                    e,
+                )
+            finally:
+                connection.close()
+
+        threading.Thread(
+            target=_run, name=f"tour-metrics-{tour_pk}", daemon=True
+        ).start()
 
     @staticmethod
     def _normalize_ai_puzzle_data(step_data: dict, puzzle_data: dict) -> dict:
@@ -441,7 +473,10 @@ class GeminiService:
         choose from.  Typically fetches 3× the required number of steps.
         """
         maps_facade = GoogleMapsFacade()
-        max_candidates = max(num_steps * 3, 15)
+        # Cap at 20 — Google Places returns up to 20 results per page, and
+        # paginating costs a hard-coded 2s sleep waiting for the next_page_token
+        # to activate. Staying under 20 keeps generation snappy.
+        max_candidates = min(20, max(num_steps * 3, 15))
         return maps_facade.search_places(
             city=city, theme=theme, max_results=max_candidates
         )
