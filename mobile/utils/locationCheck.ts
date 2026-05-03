@@ -3,12 +3,7 @@ import { isDevelopmentEnvMode } from '@/utils/envMode';
 
 export const LOCATION_CHECK_RADIUS_M = 100;
 
-function haversineDistanceMeters(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
+function haversineDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const earthRadiusM = 6_371_000;
   const lat1Rad = (lat1 * Math.PI) / 180;
   const lon1Rad = (lon1 * Math.PI) / 180;
@@ -49,7 +44,9 @@ export function checkStepLocationLocal(params: {
   const accepted = distanceM <= LOCATION_CHECK_RADIUS_M;
 
   return {
-    status: accepted ? 'Location confirmed. You can continue.' : 'You are outside the accepted area.',
+    status: accepted
+      ? 'Location confirmed. You can continue.'
+      : 'You are outside the accepted area.',
     accepted,
     step_id: params.stepId,
     distance_m: Number(distanceM.toFixed(2)),

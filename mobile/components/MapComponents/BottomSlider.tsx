@@ -21,11 +21,7 @@ import { Spacing } from '@/constants/Spacing';
 import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
 
 import { useActiveTour } from '@/contexts/ActiveTourContext';
-import {
-  completeStep,
-  DEFAULT_MAX_FAILED_ATTEMPTS,
-  skipStep,
-} from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
+import { completeStep, DEFAULT_MAX_FAILED_ATTEMPTS, skipStep } from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
 import { useRewardedAd } from '@/components/Ads/useRewardedAd';
 import type { UserBadge } from '@/api/profile';
 import { checkStepLocationLocal } from '@/utils/locationCheck';
