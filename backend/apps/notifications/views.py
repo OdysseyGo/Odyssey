@@ -43,20 +43,21 @@ class DeviceTokenViewSet(viewsets.ModelViewSet):
         to prevent sending notifications to the wrong device.
         """
         device_token_str = request.data.get("device_token")
-        
+
         if not device_token_str:
             return Response(
-                {"detail": "Device token is required."}, 
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Device token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         deleted_count, _ = DeviceToken.objects.filter(
-            user=request.user, 
-            device_token=device_token_str
+            user=request.user, device_token=device_token_str
         ).delete()
 
         if deleted_count > 0:
-            return Response({"detail": "Token deleted successfully."}, status=status.HTTP_200_OK)
+            return Response(
+                {"detail": "Token deleted successfully."}, status=status.HTTP_200_OK
+            )
         else:
             return Response({"detail": "Token not found."}, status=status.HTTP_200_OK)
 
