@@ -24,6 +24,7 @@ import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { completeStep, DEFAULT_MAX_FAILED_ATTEMPTS, skipStep } from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
 import { useRewardedAd } from '@/components/Ads/useRewardedAd';
 import type { UserBadge } from '@/api/profile';
+import { checkStepLocationLocal } from '@/utils/locationCheck';
 
 const BOTTOM_SHEET_ANIMATION_DURATION = Animations.bottomSheet.animationDuration;
 const COLLAPSED_VISIBLE_HEIGHT = 110;
@@ -159,7 +160,7 @@ export default function BottomSlider({
         }
       }
     } catch (error) {
-      console.error('[BottomSlider] completeStep/skipStep error:', error);
+      console.warn('[BottomSlider] completeStep/skipStep error:', error);
       Alert.alert(t('common.error'), t('common.syncError'));
     }
   }, [
@@ -230,7 +231,7 @@ export default function BottomSlider({
         }
       }
     } catch (error) {
-      console.error('[BottomSlider] skipStep error:', error);
+      console.warn('[BottomSlider] skipStep error:', error);
       Alert.alert(t('common.error'), t('common.syncError'));
     }
   }, [
@@ -304,9 +305,24 @@ export default function BottomSlider({
 
   const handleLocationConfirm = useCallback(
     async (stepId: string, latitude: number, longitude: number) => {
+      const currentStep = tour?.steps.find((step) => step.id === stepId);
+      if (!currentStep) {
+        throw new Error('MISSING_STEP');
+      }
+
+      const result = checkStepLocationLocal({
+        stepId: Number(stepId),
+        userLatitude: latitude,
+        userLongitude: longitude,
+        stepLatitude: currentStep.coordinate.latitude,
+        stepLongitude: currentStep.coordinate.longitude,
+      });
+      if (!result.accepted) {
+        throw new Error(`OUTSIDE_AREA:${result.distance_m}:${result.radius_m}`);
+      }
       confirmLocation(stepId);
     },
-    [confirmLocation]
+    [confirmLocation, tour?.steps]
   );
 
   // Slider is anchored to bottom. translateY moves it:

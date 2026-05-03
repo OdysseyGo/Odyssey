@@ -15,6 +15,7 @@ export type TourProgress = {
   skip_count: number;
   wrong_attempt_count: number;
   step_attempt_counts: Record<string, number>;
+  location_confirmed_step_ids?: number[];
 };
 
 export type CreateTourProgressRequest = {
@@ -27,6 +28,14 @@ export type StepActionResponse = {
   new_step_id: number | null;
   awarded_xp: number;
   awarded_badges?: UserBadge[];
+};
+
+export type CheckLocationResponse = {
+  status: string;
+  accepted: boolean;
+  step_id: number;
+  distance_m: number;
+  radius_m: number;
 };
 
 export const DEFAULT_MAX_FAILED_ATTEMPTS = 3;

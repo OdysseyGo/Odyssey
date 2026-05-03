@@ -647,7 +647,12 @@
     "finish": "Finalizar",
     "answerConfirmTitle": "¿Confirmar esta respuesta?",
     "answerConfirmMessage": "¿Seguro? Las respuestas incorrectas pueden reducir el progreso de tu insignia.",
-    "answerConfirmAction": "Responder"
+    "answerConfirmAction": "Responder",
+    "locationCheckSuccessTitle": "Ubicación confirmada",
+    "locationCheckSuccessMessage": "Perfecto, estás en el lugar correcto. Este paso ya está desbloqueado.",
+    "locationCheckFailedTitle": "¡No estás en el punto!",
+    "locationCheckOutsideArea": "Ve al paso actual del tour que se muestra en el mapa (dentro de 100m).",
+    "locationCheckUnavailable": "No pudimos verificar tu ubicación en este momento. Inténtalo de nuevo."
   },
   "map": {
     "noActiveTour": {

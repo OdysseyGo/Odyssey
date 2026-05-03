@@ -27,6 +27,7 @@ import type { Region, TourMapMode } from './TourMap.config';
 import type { UserBadge } from '@/api/profile';
 import { useInterstitial } from '@/components/Ads/useInterstitial';
 import { TOUR_CATEGORIES } from '@/components/TourCreation';
+import { LOCATION_CHECK_RADIUS_M } from '@/utils/locationCheck';
 
 const MAX_SEARCH_DELTA = 0.5;
 const MAX_NEARBY_TOURS_TO_RENDER = 10;
@@ -546,6 +547,18 @@ export default function MapScreen() {
       longitudeDelta: 0.02,
     };
   }, [tour, isActive]);
+
+  const acceptedArea = useMemo(() => {
+    if (!tour || !isActive) return undefined;
+    const step = tour.steps[currentStepIndex];
+    if (!step || step.requiresLocationConfirmation !== true) return undefined;
+
+    return {
+      latitude: step.coordinate.latitude,
+      longitude: step.coordinate.longitude,
+      radiusM: LOCATION_CHECK_RADIUS_M,
+    };
+  }, [tour, isActive, currentStepIndex]);
 
   const completedStepsForEndTour = useMemo(() => {
     if (!tour || tour.steps.length === 0) return 0;
@@ -1435,6 +1448,7 @@ export default function MapScreen() {
         initialRegion={initialRegion}
         currentStepIndex={currentStepIndex}
         tour={tour}
+        acceptedArea={acceptedArea}
         animateToRegion={animateToRegion}
         centerOnUserRequestKey={centerOnUserRequestKey}
         mapMode={mapMode}

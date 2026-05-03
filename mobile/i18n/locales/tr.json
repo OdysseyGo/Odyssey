@@ -664,7 +664,12 @@
     "finish": "Bitir",
     "answerConfirmTitle": "Bu cevabı kilitle?",
     "answerConfirmMessage": "Emin misiniz? Yanlış cevaplar rozet ilerlemenizi azaltabilir.",
-    "answerConfirmAction": "Cevapla"
+    "answerConfirmAction": "Cevapla",
+    "locationCheckSuccessTitle": "Konum doğrulandı",
+    "locationCheckSuccessMessage": "Harika, doğru noktadasın. Bu adımın kilidi açıldı.",
+    "locationCheckFailedTitle": "Doğru noktada değilsin!",
+    "locationCheckOutsideArea": "Haritada gösterilen mevcut tur adımına git (100m içinde).",
+    "locationCheckUnavailable": "Konumun şu anda doğrulanamadı. Lütfen tekrar dene."
   },
   "map": {
     "noActiveTour": {

@@ -18,6 +18,7 @@ import HexBadge from '@/components/ProfileComponents/HexBadge';
 import { openExternalMapsDirections, type ExternalMapsProvider } from '@/utils/externalMaps';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { DEFAULT_MAX_FAILED_ATTEMPTS } from '@/api/tourProgress';
+import { isDevelopmentEnvMode } from '@/utils/envMode';
 
 function NavigationArrows({
   canGoBack,
@@ -290,6 +291,18 @@ export default function TourNavigation({
   const popupOpacity = useRef(new Animated.Value(0)).current;
   const crossOpacity = useRef(new Animated.Value(0)).current;
   const crossScale = useRef(new Animated.Value(0.3)).current;
+  const [isLocationToastVisible, setIsLocationToastVisible] = useState(false);
+  const locationToastOpacity = useRef(new Animated.Value(0)).current;
+  const locationToastTranslateY = useRef(new Animated.Value(-10)).current;
+  const locationToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (locationToastTimerRef.current) {
+        clearTimeout(locationToastTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (prevTierRef.current === currentTier) return;
@@ -331,16 +344,109 @@ export default function TourNavigation({
     onStepSolved(currentStep.id);
   }, [currentStep.id, onStepSolved]);
 
+  const showLocationConfirmedToast = useCallback(() => {
+    if (locationToastTimerRef.current) {
+      clearTimeout(locationToastTimerRef.current);
+      locationToastTimerRef.current = null;
+    }
+
+    setIsLocationToastVisible(true);
+    locationToastOpacity.setValue(0);
+    locationToastTranslateY.setValue(-10);
+
+    Animated.parallel([
+      Animated.timing(locationToastOpacity, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(locationToastTranslateY, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      locationToastTimerRef.current = setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(locationToastOpacity, {
+            toValue: 0,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+          Animated.timing(locationToastTranslateY, {
+            toValue: -10,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          setIsLocationToastVisible(false);
+          locationToastTimerRef.current = null;
+        });
+      }, 700);
+    });
+  }, [locationToastOpacity, locationToastTranslateY]);
+
   const handleLocationConfirm = useCallback(async () => {
     if (!requiresLocation || isLocationConfirmed) return;
 
     try {
+      if (isDevelopmentEnvMode()) {
+        await onLocationConfirm(
+          currentStep.id,
+          currentStep.coordinate.latitude,
+          currentStep.coordinate.longitude
+        );
+        showLocationConfirmedToast();
+        return;
+      }
+
+      const permission = await Location.getForegroundPermissionsAsync();
+      const permissionStatus =
+        permission.status === 'granted'
+          ? permission.status
+          : (await Location.requestForegroundPermissionsAsync()).status;
+
+      if (permissionStatus !== 'granted') {
+        Alert.alert(t('tourId.locationRequiredTitle'), t('tourId.locationRequiredMessage'));
+        return;
+      }
+
       const location = await Location.getCurrentPositionAsync({});
       await onLocationConfirm(currentStep.id, location.coords.latitude, location.coords.longitude);
+      showLocationConfirmedToast();
     } catch (error) {
       console.error('Failed to get location:', error);
+      if (error instanceof Error && error.message.startsWith('OUTSIDE_AREA:')) {
+        const [, distance, radius] = error.message.split(':');
+        Alert.alert(
+          t('tourStep.locationCheckFailedTitle', 'Location check failed'),
+          t('tourStep.locationCheckOutsideArea', {
+            defaultValue:
+              'You are outside the accepted area ({{distance}}m away, allowed: {{radius}}m).',
+            distance: Number(distance).toFixed(1),
+            radius: Number(radius).toFixed(0),
+          })
+        );
+        return;
+      }
+      Alert.alert(
+        t('tourStep.locationCheckFailedTitle', 'Location check failed'),
+        t(
+          'tourStep.locationCheckUnavailable',
+          "We couldn't verify your current location. Please try again."
+        )
+      );
     }
-  }, [currentStep.id, isLocationConfirmed, onLocationConfirm, requiresLocation]);
+  }, [
+    currentStep.coordinate.latitude,
+    currentStep.coordinate.longitude,
+    currentStep.id,
+    isLocationConfirmed,
+    onLocationConfirm,
+    requiresLocation,
+    showLocationConfirmedToast,
+    t,
+  ]);
 
   const handleOpenDirections = useCallback(
     async (provider: ExternalMapsProvider) => {
@@ -418,6 +524,22 @@ export default function TourNavigation({
               {TIER_LABELS[tierPopup.to]}
             </Text>
           </View>
+        </Animated.View>
+      )}
+      {isLocationToastVisible && (
+        <Animated.View
+          style={[
+            styles.locationToast,
+            {
+              opacity: locationToastOpacity,
+              transform: [{ translateY: locationToastTranslateY }],
+            },
+          ]}
+        >
+          <MaterialCommunityIcons name="check-circle" size={18} color={colors.easy} />
+          <Text style={styles.locationToastText}>
+            {t('tourStep.locationCheckSuccessTitle', 'Location confirmed')}
+          </Text>
         </Animated.View>
       )}
       <View style={styles.headerRow}>

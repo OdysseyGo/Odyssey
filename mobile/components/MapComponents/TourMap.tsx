@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useRef } from 'react';
-import MapView, { Polyline } from 'react-native-maps';
+import MapView, { Circle, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 
 import getStyles from './TourMap.styles';
@@ -23,6 +23,7 @@ export default function TourMap({
   initialRegion = defaultRegion,
   currentStepIndex,
   tour,
+  acceptedArea,
   onRegionChange,
   onRegionChangeComplete,
   onMapPress,
@@ -238,6 +239,16 @@ export default function TourMap({
 
       {route.length >= 2 && (
         <Polyline coordinates={route} strokeWidth={4} strokeColor={colors.primary} />
+      )}
+
+      {acceptedArea && (
+        <Circle
+          center={{ latitude: acceptedArea.latitude, longitude: acceptedArea.longitude }}
+          radius={acceptedArea.radiusM}
+          strokeWidth={2}
+          strokeColor={colors.primary}
+          fillColor={`${colors.primary}26`}
+        />
       )}
     </MapView>
   );
