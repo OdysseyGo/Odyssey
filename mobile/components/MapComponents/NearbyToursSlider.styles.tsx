@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { ODYSSEY_TAB_BAR_INNER_PADDING } from '@/components/Navigation/OdysseyTabBar.config';
 
 export default function getStyles(theme: ThemeName) {
   const color = Colors[theme];
@@ -11,34 +12,44 @@ export default function getStyles(theme: ThemeName) {
       right: 0,
       bottom: 0,
     },
-    sheet: {
+    sheetShadow: {
       flex: 1,
-      backgroundColor: color.cardSurface,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: -4 },
-      shadowOpacity: 0.14,
+      borderTopLeftRadius: Spacing.xxl,
+      borderTopRightRadius: Spacing.xxl,
+      shadowColor: color.profileHeaderShadow,
+      shadowOffset: { width: 0, height: -8 },
+      shadowOpacity: theme === 'dark' ? 0.34 : 0.14,
       shadowRadius: 16,
-      elevation: 18,
-      overflow: 'hidden',
+      elevation: 12,
     },
-    headerPressable: {
+    bottomPanel: {
+      flex: 1,
+      overflow: 'hidden',
+      borderTopLeftRadius: Spacing.xxl,
+      borderTopRightRadius: Spacing.xxl,
+      borderWidth: 1,
+      borderBottomWidth: 0,
+      borderColor: color.borderLight,
+      backgroundColor: color.cardSurface,
+    },
+    grabberPressable: {
+      width: '100%',
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.md,
       paddingBottom: Spacing.sm,
+      alignItems: 'center',
     },
     handleBar: {
-      width: 40,
-      height: 4,
-      backgroundColor: color.borderLight,
+      width: 48,
+      height: 5,
+      backgroundColor: color.primary,
       borderRadius: Spacing.borderRadiusFull,
-      alignSelf: 'center',
-      marginTop: 10,
-      marginBottom: 10,
+      marginBottom: Spacing.md,
     },
-    headerRow: {
+    sheetHeaderContent: {
+      width: '100%',
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: Spacing.lg,
       gap: Spacing.md,
     },
     headerIconBox: {
@@ -49,21 +60,61 @@ export default function getStyles(theme: ThemeName) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    headerTitle: {
+    sheetHeaderText: {
+      flex: 1,
+      minWidth: 0,
+    },
+    sheetEyebrow: {
+      color: color.subText,
+      fontSize: 11,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    sheetTitle: {
+      color: color.text,
       fontSize: 15,
       fontWeight: '700',
-      color: color.text,
-    },
-    headerSubtitle: {
-      fontSize: 12,
-      color: color.subText,
       marginTop: 1,
     },
     divider: {
       height: 1,
       backgroundColor: color.borderLight,
-      marginTop: Spacing.xs,
-      marginHorizontal: Spacing.lg,
+      marginHorizontal: ODYSSEY_TAB_BAR_INNER_PADDING,
+      marginTop: Spacing.sm,
+    },
+    sortRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 6,
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.sm,
+      paddingBottom: 2,
+    },
+    filtersContainer: {
+      paddingBottom: 4,
+    },
+    filterSectionTitle: {
+      color: color.subText,
+      fontSize: 10,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.3,
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.sm,
+    },
+    sortChip: {
+      borderWidth: 1,
+      borderColor: color.borderLight,
+      backgroundColor: color.foreground,
+      borderRadius: Spacing.borderRadiusFull,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+    },
+    sortChipText: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: color.text,
     },
     list: {
       flex: 1,
@@ -74,7 +125,7 @@ export default function getStyles(theme: ThemeName) {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: color.foreground,
-      borderRadius: 16,
+      borderRadius: Spacing.borderRadius,
       marginTop: Spacing.sm,
       padding: Spacing.md,
       gap: Spacing.md,
@@ -87,10 +138,15 @@ export default function getStyles(theme: ThemeName) {
     cardPressed: {
       opacity: 0.75,
     },
+    cardThumbnail: {
+      width: 56,
+      height: 56,
+      borderRadius: 12,
+    },
     iconBox: {
-      width: 52,
-      height: 52,
-      borderRadius: 14,
+      width: 56,
+      height: 56,
+      borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -99,7 +155,7 @@ export default function getStyles(theme: ThemeName) {
       gap: 5,
     },
     cardTitle: {
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: '700',
       color: color.text,
     },
@@ -123,11 +179,22 @@ export default function getStyles(theme: ThemeName) {
       fontWeight: '600',
       color: color.subText,
     },
+    notOnMapTag: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: Spacing.borderRadiusFull,
+      backgroundColor: `${color.secondary}20`,
+    },
+    notOnMapTagText: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: color.secondary,
+    },
     difficultyTagText: {
       color: color.white,
-    },
-    chevron: {
-      opacity: 0.4,
     },
     emptyContainer: {
       alignItems: 'center',

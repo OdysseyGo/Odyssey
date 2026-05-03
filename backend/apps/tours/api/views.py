@@ -1,7 +1,7 @@
 import os
 
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db.models import Avg, OuterRef, Subquery
+from django.db.models import Avg, Count, OuterRef, Subquery
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -35,6 +35,7 @@ from .serializers import (
     PictureComparePuzzleUpsertSerializer,
     PuzzleSerializer,
     ReviewSerializer,
+    TourInBoundsMapSerializer,
     TourSerializer,
     TourStepSerializer,
     TriviaPuzzleUpsertSerializer,
@@ -161,6 +162,21 @@ class TourViewSet(viewsets.ModelViewSet):
                 {"error": "north, south, east, west are required."}, status=400
             )
 
+        sort = request.query_params.get("sort", "rating").strip().lower()
+        fields = request.query_params.get("fields", "full").strip().lower()
+        limit_param = request.query_params.get("limit")
+        category = request.query_params.get("category")
+        difficulty = request.query_params.get("difficulty")
+        tour_type = request.query_params.get("tour_type")
+        is_premium = request.query_params.get("is_premium")
+
+        limit = None
+        if limit_param is not None:
+            try:
+                limit = max(1, min(int(limit_param), 500))
+            except ValueError:
+                return Response({"error": "limit must be an integer."}, status=400)
+
         first_lat = Subquery(
             TourStep.objects.filter(tour=OuterRef("pk"))
             .order_by("order")
@@ -176,6 +192,7 @@ class TourViewSet(viewsets.ModelViewSet):
             Tour.objects.filter(status=Tour.PUBLISHED)
             .annotate(
                 average_rating=Avg("reviews__rating"),
+                review_count=Count("reviews", distinct=True),
                 first_lat=first_lat,
                 first_lng=first_lng,
             )
@@ -185,10 +202,70 @@ class TourViewSet(viewsets.ModelViewSet):
                 first_lng__gte=west,
                 first_lng__lte=east,
             )
-            .prefetch_related("steps", "reviews__user", "creator")
         )
 
-        serializer = self.get_serializer(tours, many=True)
+        if category:
+            tours = tours.filter(category__iexact=category.strip())
+
+        if difficulty:
+            normalized_difficulty = difficulty.strip().upper()
+            valid_difficulties = {choice[0] for choice in Tour.DIFFICULTY_CHOICES}
+            if normalized_difficulty not in valid_difficulties:
+                return Response(
+                    {
+                        "error": (
+                            "difficulty must be one of: "
+                            + ", ".join(sorted(valid_difficulties))
+                        )
+                    },
+                    status=400,
+                )
+            tours = tours.filter(difficulty=normalized_difficulty)
+
+        if tour_type:
+            normalized_tour_type = tour_type.strip().upper()
+            valid_tour_types = {choice[0] for choice in Tour.TOUR_TYPE_CHOICES}
+            if normalized_tour_type not in valid_tour_types:
+                return Response(
+                    {
+                        "error": (
+                            "tour_type must be one of: "
+                            + ", ".join(sorted(valid_tour_types))
+                        )
+                    },
+                    status=400,
+                )
+            tours = tours.filter(tour_type=normalized_tour_type)
+
+        if is_premium is not None:
+            normalized_is_premium = is_premium.strip().lower()
+            if normalized_is_premium not in {"true", "false"}:
+                return Response(
+                    {"error": "is_premium must be either 'true' or 'false'."},
+                    status=400,
+                )
+            tours = tours.filter(is_premium=(normalized_is_premium == "true"))
+
+        if sort == "name":
+            tours = tours.order_by("title", "-average_rating", "-review_count", "-id")
+        elif sort == "reviews":
+            tours = tours.order_by("-review_count", "-average_rating", "-id")
+        elif sort == "newest":
+            tours = tours.order_by("-created_at")
+        else:
+            tours = tours.order_by("-average_rating", "-review_count", "-id")
+
+        if limit is not None:
+            tours = tours[:limit]
+
+        if fields == "map":
+            serializer = TourInBoundsMapSerializer(
+                tours, many=True, context={"request": request}
+            )
+        else:
+            tours = tours.prefetch_related("steps", "reviews__user", "creator")
+            serializer = self.get_serializer(tours, many=True)
+
         return Response(serializer.data)
 
     @action(
