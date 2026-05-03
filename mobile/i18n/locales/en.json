@@ -345,7 +345,22 @@
       },
       "notifications": {
         "label": "Notifications",
-        "description": "Manage notification preferences"
+        "description": "Manage notification preferences",
+        "statusOn": "On",
+        "statusOff": "Off",
+        "enablePush": "Enable Push Notifications",
+        "deniedTitle": "Notifications Disabled",
+        "deniedMessage": "Please enable notifications in your device settings to receive alerts.",
+        "openSettings": "Open Settings",
+        "errorTitle": "Error",
+        "errorMessage": "Could not update notification preferences. Please try again.",
+        "types": {
+          "new_tour": "New Tours from Following",
+          "tour_approved": "Tour Approvals",
+          "new_review": "New Reviews on Your Tours",
+          "new_follower": "New Followers",
+          "friend_level_up": "Friend Level Ups"
+        }
       },
       "logout": {
         "label": "Logout",

@@ -132,6 +132,14 @@ export type DeviceTokenResponse = {
   updated_at: string;
 };
 
+export type NotificationPreferences = {
+  new_tour: boolean;
+  tour_approved: boolean;
+  new_review: boolean;
+  new_follower: boolean;
+  friend_level_up: boolean;
+};
+
 // API functions
 
 /**
@@ -364,5 +372,18 @@ export const deregisterDeviceToken = (payload: { device_token: string }) =>
   apiRequest<void, { device_token: string }>({
     method: 'post',
     url: '/api/notifications/device-tokens/deregister_token/',
+    data: payload,
+  });
+
+export const getNotificationPreferences = () =>
+  apiRequest<NotificationPreferences>({
+    method: 'get',
+    url: '/api/notifications/preferences/',
+  });
+
+export const updateNotificationPreferences = (payload: Partial<NotificationPreferences>) =>
+  apiRequest<NotificationPreferences>({
+    method: 'patch',
+    url: '/api/notifications/preferences/',
     data: payload,
   });

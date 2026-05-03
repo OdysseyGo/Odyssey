@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -15,7 +16,7 @@ class DeviceToken(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="device_tokens"
     )
-    device_token = models.CharField(max_length=500, unique=True)
+    device_token = models.CharField(max_length=500)
     platform = models.CharField(max_length=10, choices=PLATFORM_CHOICES, default="ios")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -45,3 +46,19 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+class NotificationPreference(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notification_prefs",
+    )
+    new_tour = models.BooleanField(default=True)
+    tour_approved = models.BooleanField(default=True)
+    new_review = models.BooleanField(default=True)
+    new_follower = models.BooleanField(default=True)
+    friend_level_up = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Notification Prefs for {self.user.username}"

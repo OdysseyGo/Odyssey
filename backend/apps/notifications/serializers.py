@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import DeviceToken, Notification
+from .models import DeviceToken, Notification, NotificationPreference
 
 
 class DeviceTokenSerializer(serializers.ModelSerializer):
@@ -48,4 +48,16 @@ class NotificationSerializer(serializers.ModelSerializer):
             "sent_at",
             "sent_count",
             "created_at",
+        ]
+
+
+class NotificationPreferenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationPreference
+        fields = [
+            "new_tour",
+            "tour_approved",
+            "new_review",
+            "new_follower",
+            "friend_level_up",
         ]

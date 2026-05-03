@@ -345,7 +345,22 @@
       },
       "notifications": {
         "label": "Bildirimler",
-        "description": "Bildirim tercihlerini yönet"
+        "description": "Bildirim tercihlerini yönetin",
+        "statusOn": "Açık",
+        "statusOff": "Kapalı",
+        "enablePush": "Bildirimlere İzin Ver",
+        "deniedTitle": "Bildirimler Kapalı",
+        "deniedMessage": "Bildirim alabilmek için lütfen cihaz ayarlarından bildirimlere izin verin.",
+        "openSettings": "Ayarları Aç",
+        "errorTitle": "Hata",
+        "errorMessage": "Bildirim tercihleri güncellenemedi. Lütfen tekrar deneyin.",
+        "types": {
+          "new_tour": "Takip Ettiklerinden Yeni Turlar",
+          "tour_approved": "Tur Onayları",
+          "new_review": "Turlarına Gelen Yeni Yorumlar",
+          "new_follower": "Yeni Takipçiler",
+          "friend_level_up": "Arkadaş Seviye Atlamaları"
+        }
       },
       "logout": {
         "label": "Çıkış Yap",
