@@ -1,10 +1,10 @@
-import { View, Pressable, Text, Animated, Image } from 'react-native';
+import { View, Pressable, Text, Animated } from 'react-native';
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import Supercluster from 'supercluster';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import getStyles from './MapScreen.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -19,16 +19,51 @@ import { useActiveTour } from '@/contexts/ActiveTourContext';
 import Colors from '@/constants/Colors';
 import { isLoggedIn } from '@/api/auth';
 import { getToursInBounds } from '@/api/tours';
-import type { Tour } from '@/api/tours';
+import type { InBoundsSort, Tour } from '@/api/tours';
 import type { MapMarkerProps } from './MapMarker.config';
-import type { ClusterMarkerProps } from './ClusterMarker';
 import type { Region } from './TourMap.config';
 import type { UserBadge } from '@/api/profile';
 
 import { deleteTourProgress } from '@/api/tourProgress';
 
-function regionToZoom(longitudeDelta: number): number {
-  return Math.round(Math.log(360 / longitudeDelta) / Math.LN2);
+const MAX_SEARCH_DELTA = 0.5;
+const MAX_NEARBY_TOURS_TO_RENDER = 10;
+
+function isValidRegion(region: Region | null | undefined): region is Region {
+  if (!region) return false;
+  return (
+    Number.isFinite(region.latitude) &&
+    Number.isFinite(region.longitude) &&
+    Number.isFinite(region.latitudeDelta) &&
+    Number.isFinite(region.longitudeDelta) &&
+    region.latitude >= -90 &&
+    region.latitude <= 90 &&
+    region.longitude >= -180 &&
+    region.longitude <= 180 &&
+    region.latitudeDelta > 0 &&
+    region.longitudeDelta > 0
+  );
+}
+
+const EMPTY_MARKERS: MapMarkerProps[] = [];
+
+function sortNearbyTours(tours: Tour[], sort: InBoundsSort): Tour[] {
+  return [...tours].sort((a, b) => {
+    if (sort === 'name') {
+      return a.title.localeCompare(b.title);
+    }
+    if (sort === 'reviews') {
+      const reviewDelta = (b.reviews?.length ?? 0) - (a.reviews?.length ?? 0);
+      if (reviewDelta !== 0) return reviewDelta;
+      return (b.average_rating ?? 0) - (a.average_rating ?? 0);
+    }
+    if (sort === 'newest') {
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+    const ratingDelta = (b.average_rating ?? 0) - (a.average_rating ?? 0);
+    if (ratingDelta !== 0) return ratingDelta;
+    return (b.reviews?.length ?? 0) - (a.reviews?.length ?? 0);
+  });
 }
 
 export default function MapScreen() {
@@ -37,6 +72,7 @@ export default function MapScreen() {
   const colors = Colors[theme];
   const router = useRouter();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   const {
     tour,
@@ -56,32 +92,39 @@ export default function MapScreen() {
   const [finalXP, setFinalXP] = useState<number>(0);
   const [completionBadges, setCompletionBadges] = useState<UserBadge[]>([]);
 
-  // Area search state
   const [nearbyTours, setNearbyTours] = useState<Tour[]>([]);
+  const [nearbyToursForMap, setNearbyToursForMap] = useState<Tour[]>([]);
+  const [nearbySort, setNearbySort] = useState<InBoundsSort>('rating');
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
-  const [prefetchedImages, setPrefetchedImages] = useState<Set<string>>(new Set());
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [animateToRegion, setAnimateToRegion] = useState<Region | undefined>();
-  const [clusterRegion, setClusterRegion] = useState<Region | null>(null);
+  const [centerOnUserRequestKey, setCenterOnUserRequestKey] = useState(0);
 
-  const superclusterRef = useRef(
-    new Supercluster<{ tourId: number }>({ radius: 60, maxZoom: 16 })
-  );
-  const [hasSearched, setHasSearched] = useState(false);
   const [isZoomedOut, setIsZoomedOut] = useState(false);
   const [isCoolingDown, setIsCoolingDown] = useState(false);
   const [isDraggingMap, setIsDraggingMap] = useState(false);
   const [showSearchButton, setShowSearchButton] = useState(false);
+  const [isLegendOpen, setIsLegendOpen] = useState(false);
+
   const currentRegionRef = useRef<Region | null>(null);
+  const nearbySortRef = useRef<InBoundsSort>('rating');
+  const regionBeforeSelectionRef = useRef<Region | null>(null);
   const isDraggingMapRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const cooldownRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastFetchedBboxRef = useRef<{
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  } | null>(null);
+  const lastMarkerPressAtRef = useRef<number>(0);
   const spinAnim = useRef(new Animated.Value(0)).current;
+  const legendAnim = useRef(new Animated.Value(0)).current;
   const spinLoop = useRef<Animated.CompositeAnimation | null>(null);
   const initialSearchDoneRef = useRef(false);
-
-  // ~55 km visible height — beyond this the results would be overwhelming
-  const MAX_SEARCH_DELTA = 0.5;
+  const lastSortTapAtRef = useRef(0);
+  const [legendPanelHeight, setLegendPanelHeight] = useState(168);
 
   useFocusEffect(
     useCallback(() => {
@@ -102,11 +145,29 @@ export default function MapScreen() {
       setIsCoolingDown(false);
       setIsDraggingMap(false);
       isDraggingMapRef.current = false;
-      initialSearchDoneRef.current = false;
       setShowSearchButton(false);
 
       const region = currentRegionRef.current;
-      if (!region || region.latitudeDelta > MAX_SEARCH_DELTA) return;
+      if (!isValidRegion(region) || region.latitudeDelta > MAX_SEARCH_DELTA) return;
+
+      const cached = lastFetchedBboxRef.current;
+      if (cached) {
+        const north = region.latitude + region.latitudeDelta / 2;
+        const south = region.latitude - region.latitudeDelta / 2;
+        const east = region.longitude + region.longitudeDelta / 2;
+        const west = region.longitude - region.longitudeDelta / 2;
+        if (
+          north <= cached.north &&
+          south >= cached.south &&
+          east <= cached.east &&
+          west >= cached.west
+        ) {
+          initialSearchDoneRef.current = true;
+          return;
+        }
+      }
+
+      initialSearchDoneRef.current = false;
 
       abortControllerRef.current?.abort();
       const controller = new AbortController();
@@ -114,17 +175,26 @@ export default function MapScreen() {
 
       setNearbyLoading(true);
 
+      const north = region.latitude + region.latitudeDelta / 2;
+      const south = region.latitude - region.latitudeDelta / 2;
+      const east = region.longitude + region.longitudeDelta / 2;
+      const west = region.longitude - region.longitudeDelta / 2;
+
       getToursInBounds(
-        region.latitude + region.latitudeDelta / 2,
-        region.latitude - region.latitudeDelta / 2,
-        region.longitude + region.longitudeDelta / 2,
-        region.longitude - region.longitudeDelta / 2,
+        north,
+        south,
+        east,
+        west,
+        { sort: nearbySortRef.current, fields: 'full' },
         controller.signal
       )
         .then((tours) => {
           if (!controller.signal.aborted) {
-            setNearbyTours(tours);
-            setHasSearched(true);
+            setNearbyTours(sortNearbyTours(tours, nearbySortRef.current));
+            setNearbyToursForMap(
+              sortNearbyTours(tours, 'rating').slice(0, MAX_NEARBY_TOURS_TO_RENDER)
+            );
+            lastFetchedBboxRef.current = { north, south, east, west };
           }
         })
         .catch(() => {})
@@ -136,38 +206,8 @@ export default function MapScreen() {
         });
 
       return () => controller.abort();
-    }, [MAX_SEARCH_DELTA, spinAnim])
+    }, [spinAnim])
   );
-
-  const MAX_BANNER_MARKERS = 8;
-
-  useEffect(() => {
-    const urls = nearbyTours
-      .slice(0, MAX_BANNER_MARKERS)
-      .map((t) => t.cover_image)
-      .filter(Boolean) as string[];
-    if (urls.length === 0) return;
-    Promise.all(urls.map((url) => Image.prefetch(url))).then(() => {
-      setPrefetchedImages(new Set(urls));
-    });
-  }, [nearbyTours]);
-
-  useEffect(() => {
-    superclusterRef.current.load(
-      nearbyTours
-        .filter((t) => t.steps.length > 0)
-        .map((t) => ({
-          type: 'Feature' as const,
-          geometry: {
-            type: 'Point' as const,
-            coordinates: [parseFloat(t.steps[0].longitude), parseFloat(t.steps[0].latitude)],
-          },
-          properties: { tourId: t.id },
-        }))
-    );
-    // Trigger cluster recompute with the current region
-    if (currentRegionRef.current) setClusterRegion({ ...currentRegionRef.current });
-  }, [nearbyTours]);
 
   const visibleMarkers = useMemo(() => {
     if (!tour || !isActive) return [];
@@ -193,19 +233,11 @@ export default function MapScreen() {
 
   const completedStepsForModal = useMemo(() => {
     if (!tour || tour.steps.length === 0) return 0;
-
-    if (showCompleteModal) {
-      return tour.steps.length;
-    }
-
-    // Highest reached index represents the current active step on backend;
-    // completed steps are those before it.
+    if (showCompleteModal) return tour.steps.length;
     return Math.max(0, Math.min(highestStepIndex, tour.steps.length));
   }, [tour, highestStepIndex, showCompleteModal]);
 
-  // Active tour handlers
   const handleTourComplete = useCallback(async (awardedXP: number, awardedBadges?: UserBadge[]) => {
-    // Backend is source of truth: replay completions return awarded_xp=0.
     setFinalXP(Math.max(0, awardedXP ?? 0));
     setCompletionBadges(awardedBadges ?? []);
     setShowCompleteModal(true);
@@ -233,8 +265,7 @@ export default function MapScreen() {
 
   const handleSearchHere = useCallback(async () => {
     const region = currentRegionRef.current;
-    if (!region) return;
-    if (region.latitudeDelta > MAX_SEARCH_DELTA) return;
+    if (!isValidRegion(region) || region.latitudeDelta > MAX_SEARCH_DELTA) return;
 
     abortControllerRef.current?.abort();
     const controller = new AbortController();
@@ -248,7 +279,6 @@ export default function MapScreen() {
     spinLoop.current.start();
     setIsCoolingDown(true);
     setNearbyLoading(true);
-    setHasSearched(true);
 
     cooldownRef.current = setTimeout(() => {
       spinLoop.current?.stop();
@@ -257,33 +287,42 @@ export default function MapScreen() {
       setShowSearchButton(false);
     }, 2500);
 
+    const north = region.latitude + region.latitudeDelta / 2;
+    const south = region.latitude - region.latitudeDelta / 2;
+    const east = region.longitude + region.longitudeDelta / 2;
+    const west = region.longitude - region.longitudeDelta / 2;
+
     try {
       const tours = await getToursInBounds(
-        region.latitude + region.latitudeDelta / 2,
-        region.latitude - region.latitudeDelta / 2,
-        region.longitude + region.longitudeDelta / 2,
-        region.longitude - region.longitudeDelta / 2,
+        north,
+        south,
+        east,
+        west,
+        { sort: nearbySortRef.current, fields: 'full' },
         controller.signal
       );
-      if (!controller.signal.aborted) setNearbyTours(tours);
+      if (!controller.signal.aborted) {
+        setNearbyTours(sortNearbyTours(tours, nearbySortRef.current));
+        setNearbyToursForMap(sortNearbyTours(tours, 'rating').slice(0, MAX_NEARBY_TOURS_TO_RENDER));
+        lastFetchedBboxRef.current = { north, south, east, west };
+      }
     } catch (e) {
-      if (e instanceof Error && e.name !== 'AbortError') setNearbyTours([]);
+      if (e instanceof Error && e.name !== 'AbortError') {
+        setNearbyTours([]);
+        setNearbyToursForMap([]);
+      }
     } finally {
       setNearbyLoading(false);
     }
-  }, [MAX_SEARCH_DELTA, spinAnim]);
+  }, [spinAnim]);
 
-  const handleRegionChangeComplete = useCallback(
-    (region: Region) => {
-      currentRegionRef.current = region;
-      isDraggingMapRef.current = false;
-      setIsDraggingMap(false);
-      setIsZoomedOut(region.latitudeDelta > MAX_SEARCH_DELTA);
-      setClusterRegion(region);
-      if (initialSearchDoneRef.current) setShowSearchButton(true);
-    },
-    [MAX_SEARCH_DELTA]
-  );
+  const handleRegionChangeComplete = useCallback((region: Region) => {
+    currentRegionRef.current = region;
+    isDraggingMapRef.current = false;
+    setIsDraggingMap(false);
+    setIsZoomedOut(region.latitudeDelta > MAX_SEARCH_DELTA);
+    if (initialSearchDoneRef.current) setShowSearchButton(true);
+  }, []);
 
   const handleRegionChange = useCallback((region: Region) => {
     currentRegionRef.current = region;
@@ -295,49 +334,83 @@ export default function MapScreen() {
     setShowSearchButton(true);
   }, []);
 
-  const handleUserLocationReady = useCallback(
-    async (region: Region) => {
-      currentRegionRef.current = region;
-      setIsZoomedOut(region.latitudeDelta > MAX_SEARCH_DELTA);
+  const handleUserLocationReady = useCallback(async (region: Region) => {
+    currentRegionRef.current = region;
+    setIsZoomedOut(region.latitudeDelta > MAX_SEARCH_DELTA);
 
-      if (initialSearchDoneRef.current || region.latitudeDelta > MAX_SEARCH_DELTA) return;
+    if (initialSearchDoneRef.current || region.latitudeDelta > MAX_SEARCH_DELTA) return;
 
-      abortControllerRef.current?.abort();
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
-      setNearbyLoading(true);
+    setNearbyLoading(true);
 
-      try {
-        const tours = await getToursInBounds(
-          region.latitude + region.latitudeDelta / 2,
-          region.latitude - region.latitudeDelta / 2,
-          region.longitude + region.longitudeDelta / 2,
-          region.longitude - region.longitudeDelta / 2,
-          controller.signal
-        );
-        if (!controller.signal.aborted) {
-          setNearbyTours(tours);
-          setHasSearched(true);
-        }
-      } catch {
-        if (!controller.signal.aborted) setNearbyTours([]);
-      } finally {
-        if (!controller.signal.aborted) {
-          setNearbyLoading(false);
-          initialSearchDoneRef.current = true;
-        }
+    const north = region.latitude + region.latitudeDelta / 2;
+    const south = region.latitude - region.latitudeDelta / 2;
+    const east = region.longitude + region.longitudeDelta / 2;
+    const west = region.longitude - region.longitudeDelta / 2;
+
+    try {
+      const tours = await getToursInBounds(
+        north,
+        south,
+        east,
+        west,
+        { sort: nearbySortRef.current, fields: 'full' },
+        controller.signal
+      );
+      if (!controller.signal.aborted) {
+        setNearbyTours(sortNearbyTours(tours, nearbySortRef.current));
+        setNearbyToursForMap(sortNearbyTours(tours, 'rating').slice(0, MAX_NEARBY_TOURS_TO_RENDER));
+        lastFetchedBboxRef.current = { north, south, east, west };
       }
-    },
-    [MAX_SEARCH_DELTA]
-  );
+    } catch {
+      if (!controller.signal.aborted) {
+        setNearbyTours([]);
+        setNearbyToursForMap([]);
+      }
+    } finally {
+      if (!controller.signal.aborted) {
+        setNearbyLoading(false);
+        initialSearchDoneRef.current = true;
+      }
+    }
+  }, []);
 
   const handleNearbyTourPress = useCallback(
     (tourId: number) => {
-      router.push(`/tour/${tourId}`);
+      const targetTour = nearbyTours.find((item) => item.id === tourId);
+      if (!targetTour || targetTour.steps.length === 0) return;
+
+      const lng = parseFloat(targetTour.steps[0].longitude);
+      const lat = parseFloat(targetTour.steps[0].latitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+      if (isValidRegion(currentRegionRef.current)) {
+        regionBeforeSelectionRef.current = { ...currentRegionRef.current };
+      }
+
+      lastMarkerPressAtRef.current = Date.now();
+      setSelectedTour(targetTour);
+      setAnimateToRegion({
+        latitude: lat,
+        longitude: lng,
+        latitudeDelta: 0.002,
+        longitudeDelta: 0.002,
+      });
     },
-    [router]
+    [nearbyTours]
   );
+
+  const handlePreviewClose = useCallback(() => {
+    const previousRegion = regionBeforeSelectionRef.current;
+    setSelectedTour(null);
+    if (isValidRegion(previousRegion)) {
+      setAnimateToRegion(previousRegion);
+    }
+    regionBeforeSelectionRef.current = null;
+  }, []);
 
   const handlePreviewViewTour = useCallback(
     (tourId: number) => {
@@ -347,87 +420,135 @@ export default function MapScreen() {
     [router]
   );
 
+  const handleMapPress = useCallback(() => {
+    if (Date.now() - lastMarkerPressAtRef.current < 250) return;
+    setSelectedTour(null);
+  }, []);
+
+  const handleCenterOnUser = useCallback(() => {
+    setCenterOnUserRequestKey((prev) => prev + 1);
+  }, []);
+
+  const handleSortChange = useCallback((sort: InBoundsSort) => {
+    if (sort === nearbySortRef.current) return;
+    const now = Date.now();
+    if (now - lastSortTapAtRef.current < 180) return;
+    lastSortTapAtRef.current = now;
+
+    setNearbySort(sort);
+    nearbySortRef.current = sort;
+    setNearbyTours((prev) => sortNearbyTours(prev, sort));
+  }, []);
+
   const defaultRegion = useMemo(
     () => ({ latitude: 41.0082, longitude: 28.9784, latitudeDelta: 0.05, longitudeDelta: 0.05 }),
     []
   );
 
-  const { nearbyMarkersForMap, clusterMarkersForMap } = useMemo<{
-    nearbyMarkersForMap: MapMarkerProps[];
-    clusterMarkersForMap: ClusterMarkerProps[];
-  }>(() => {
-    const region = clusterRegion ?? currentRegionRef.current;
-    if (!region || nearbyTours.length === 0) {
-      return { nearbyMarkersForMap: [], clusterMarkersForMap: [] };
-    }
-
-    const zoom = regionToZoom(region.longitudeDelta);
-    const bbox: [number, number, number, number] = [
-      region.longitude - region.longitudeDelta / 2,
-      region.latitude - region.latitudeDelta / 2,
-      region.longitude + region.longitudeDelta / 2,
-      region.latitude + region.latitudeDelta / 2,
-    ];
-
-    const items = superclusterRef.current.getClusters(bbox, zoom);
-    const tourById = new Map(nearbyTours.map((t) => [t.id, t]));
-
+  const nearbyMarkersForMap = useMemo(() => {
+    if (nearbyToursForMap.length === 0) return EMPTY_MARKERS;
+    const selectedId = selectedTour ? `nearby-${selectedTour.id}` : null;
     const individualMarkers: MapMarkerProps[] = [];
-    const clusterMarkers: ClusterMarkerProps[] = [];
 
-    for (const item of items) {
-      const [lng, lat] = item.geometry.coordinates;
+    for (const tour of nearbyToursForMap) {
+      if (tour.steps.length === 0) continue;
+      const lng = parseFloat(tour.steps[0].longitude);
+      const lat = parseFloat(tour.steps[0].latitude);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
-
-      const props = item.properties as any;
-      if (props.cluster) {
-        const clusterId = props.cluster_id as number;
-        clusterMarkers.push({
-          id: `cluster-${clusterId}`,
-          coordinate: { latitude: lat, longitude: lng },
-          count: props.point_count as number,
-          onPress: () => {
-            const expansionZoom = superclusterRef.current.getClusterExpansionZoom(clusterId);
-            const delta = 360 / Math.pow(2, Math.min(expansionZoom, 18));
-            setAnimateToRegion({
-              latitude: lat,
-              longitude: lng,
-              latitudeDelta: delta,
-              longitudeDelta: delta,
-            });
-          },
-        });
-      } else {
-        const tour = tourById.get(props.tourId as number);
-        if (!tour) continue;
-        const difficultyKey = (tour.difficulty || '').toLowerCase() as 'easy' | 'medium' | 'hard';
-        const circleColor = colors[difficultyKey] ?? colors.medium;
-        individualMarkers.push({
-          id: `nearby-${tour.id}`,
-          coordinate: { latitude: lat, longitude: lng },
-          title: tour.title,
-          iconType: (tour.tour_type === 'PUZZLE'
-            ? 'puzzle'
-            : tour.tour_type === 'HYBRID'
-              ? 'story-puzzle'
-              : 'story') as MapMarkerProps['iconType'],
-          circleSize: 38,
-          circleColor,
-          opacity: 0.9,
-          coverImage:
-            tour.cover_image && prefetchedImages.has(tour.cover_image)
-              ? tour.cover_image
-              : undefined,
-          selected: selectedTour?.id === tour.id,
-          onPress: () => setSelectedTour(tour),
-        });
-      }
+      if (lat < -85 || lat > 85 || lng < -180 || lng > 180) continue;
+      const difficultyKey = (tour.difficulty || '').toLowerCase() as 'easy' | 'medium' | 'hard';
+      const circleColor = colors[difficultyKey] ?? colors.medium;
+      individualMarkers.push({
+        id: `nearby-${tour.id}`,
+        coordinate: { latitude: lat, longitude: lng },
+        title: tour.title,
+        iconType: (tour.tour_type === 'PUZZLE'
+          ? 'puzzle'
+          : tour.tour_type === 'HYBRID'
+            ? 'story-puzzle'
+            : 'story') as MapMarkerProps['iconType'],
+        circleSize: 38,
+        circleColor,
+        opacity: 0.9,
+        selected: selectedId !== null && `nearby-${tour.id}` === selectedId,
+        onPress: () => {
+          if (isValidRegion(currentRegionRef.current)) {
+            regionBeforeSelectionRef.current = { ...currentRegionRef.current };
+          }
+          lastMarkerPressAtRef.current = Date.now();
+          setSelectedTour(tour);
+          setAnimateToRegion({
+            latitude: lat,
+            longitude: lng,
+            latitudeDelta: 0.002,
+            longitudeDelta: 0.002,
+          });
+        },
+      });
     }
 
-    return { nearbyMarkersForMap: individualMarkers, clusterMarkersForMap: clusterMarkers };
-  }, [nearbyTours, prefetchedImages, colors, clusterRegion, selectedTour]);
+    return individualMarkers;
+  }, [nearbyToursForMap, colors, selectedTour]);
 
-  // No active tour — area search map
+  const markerLegendItems = useMemo(
+    () => [
+      {
+        key: 'story',
+        icon: 'book-outline' as const,
+        label: t('tour.story', { defaultValue: 'Story' }),
+      },
+      {
+        key: 'puzzle',
+        icon: 'puzzle' as const,
+        label: t('tour.puzzle', { defaultValue: 'Puzzle' }),
+      },
+      {
+        key: 'hybrid',
+        icon: 'book-play' as const,
+        label: t('tour.hybrid', { defaultValue: 'Hybrid' }),
+      },
+    ],
+    [t]
+  );
+  const mapVisibleTourIds = useMemo(
+    () => nearbyToursForMap.map((tour) => tour.id),
+    [nearbyToursForMap]
+  );
+  const legendToggleTop = insets.top + 12;
+  const legendPanelTop = legendToggleTop + 42;
+  const locateTopInExplore = isLegendOpen
+    ? legendPanelTop + legendPanelHeight + 8
+    : legendToggleTop + 44;
+
+  useEffect(() => {
+    Animated.timing(legendAnim, {
+      toValue: isLegendOpen ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [isLegendOpen, legendAnim]);
+
+  const difficultyLegendItems = useMemo(
+    () => [
+      {
+        key: 'easy',
+        color: colors.easy,
+        label: t('tourDetail.easy', { defaultValue: 'Easy' }),
+      },
+      {
+        key: 'medium',
+        color: colors.medium,
+        label: t('tourDetail.medium', { defaultValue: 'Medium' }),
+      },
+      {
+        key: 'hard',
+        color: colors.hard,
+        label: t('tourDetail.hard', { defaultValue: 'Hard' }),
+      },
+    ],
+    [colors.easy, colors.hard, colors.medium, t]
+  );
+
   if (!isActive || !tour) {
     return (
       <View style={styles.container}>
@@ -438,13 +559,20 @@ export default function MapScreen() {
           currentStepIndex={0}
           onRegionChange={handleRegionChange}
           onRegionChangeComplete={handleRegionChangeComplete}
+          onMapPress={handleMapPress}
           onUserLocationReady={handleUserLocationReady}
           nearbyMarkers={nearbyMarkersForMap}
-          clusterMarkers={clusterMarkersForMap}
           animateToRegion={animateToRegion}
+          centerOnUserRequestKey={centerOnUserRequestKey}
         />
 
-        {/* Search Here — visible only after initial load when user moves the map */}
+        <Pressable
+          style={[styles.locateMeButton, { top: locateTopInExplore }]}
+          onPress={handleCenterOnUser}
+        >
+          <MaterialCommunityIcons name="crosshairs-gps" size={15} color={colors.primary} />
+        </Pressable>
+
         {showSearchButton && (
           <Pressable
             style={[
@@ -506,19 +634,98 @@ export default function MapScreen() {
           </Pressable>
         )}
 
+        {!selectedTour && (
+          <>
+            <Pressable
+              style={[styles.legendToggleButton, { top: legendToggleTop }]}
+              onPress={() => setIsLegendOpen((prev) => !prev)}
+            >
+              <MaterialCommunityIcons name="help-circle-outline" size={18} color={colors.primary} />
+            </Pressable>
+
+            <Animated.View
+              pointerEvents={isLegendOpen ? 'auto' : 'none'}
+              onLayout={(event) => {
+                const nextHeight = Math.ceil(event.nativeEvent.layout.height);
+                if (nextHeight > 0 && Math.abs(nextHeight - legendPanelHeight) > 1) {
+                  setLegendPanelHeight(nextHeight);
+                }
+              }}
+              style={[
+                styles.legendCard,
+                { top: legendPanelTop },
+                {
+                  opacity: legendAnim,
+                  transform: [
+                    {
+                      translateY: legendAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [-8, 0],
+                      }),
+                    },
+                    {
+                      scale: legendAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.98, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              <Text style={styles.legendTitle}>
+                {t('map.legend.title', { defaultValue: 'Marker legend' })}
+              </Text>
+
+              <Text style={styles.legendSectionTitle}>
+                {t('map.legend.typeTitle', { defaultValue: 'Tour type' })}
+              </Text>
+              <View style={styles.legendRow}>
+                {markerLegendItems.map((item) => (
+                  <View key={item.key} style={styles.legendItem}>
+                    <View style={styles.legendIconBadge}>
+                      <MaterialCommunityIcons
+                        name={item.icon}
+                        size={12}
+                        color={colors.background}
+                      />
+                    </View>
+                    <Text style={styles.legendText}>{item.label}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <Text style={styles.legendSectionTitle}>
+                {t('map.legend.difficultyTitle', { defaultValue: 'Difficulty color' })}
+              </Text>
+              <View style={styles.legendRow}>
+                {difficultyLegendItems.map((item) => (
+                  <View key={item.key} style={styles.legendItem}>
+                    <View style={[styles.legendColorDot, { backgroundColor: item.color }]} />
+                    <Text style={styles.legendText}>{item.label}</Text>
+                  </View>
+                ))}
+              </View>
+            </Animated.View>
+          </>
+        )}
+
         <TourPreviewPanel
           tour={selectedTour}
-          onClose={() => setSelectedTour(null)}
+          onClose={handlePreviewClose}
           onViewTour={handlePreviewViewTour}
         />
 
-        {hasSearched && (
-          <NearbyToursSlider
-            tours={nearbyTours}
-            loading={nearbyLoading}
-            onTourPress={handleNearbyTourPress}
-          />
-        )}
+        <NearbyToursSlider
+          tours={nearbyTours}
+          loading={nearbyLoading}
+          onTourPress={handleNearbyTourPress}
+          onTourView={handlePreviewViewTour}
+          mapVisibleTourIds={mapVisibleTourIds}
+          sortBy={nearbySort}
+          onSortChange={handleSortChange}
+          hidden={!!selectedTour}
+        />
       </View>
     );
   }
@@ -531,7 +738,15 @@ export default function MapScreen() {
         initialRegion={initialRegion}
         currentStepIndex={currentStepIndex}
         tour={tour}
+        centerOnUserRequestKey={centerOnUserRequestKey}
       />
+
+      <Pressable
+        style={[styles.locateMeButton, { top: insets.top + 12 }]}
+        onPress={handleCenterOnUser}
+      >
+        <MaterialCommunityIcons name="crosshairs-gps" size={15} color={colors.primary} />
+      </Pressable>
 
       <BottomSlider
         tour={tour}

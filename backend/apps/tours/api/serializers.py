@@ -521,3 +521,25 @@ class TourSerializer(serializers.ModelSerializer):
         )
         validated_data["country"] = canonical_country
         validated_data["country_code"] = canonical_country_code
+
+
+class TourInBoundsMapSerializer(serializers.ModelSerializer):
+    average_rating = serializers.FloatField(read_only=True)
+    review_count = serializers.IntegerField(read_only=True)
+    first_lat = serializers.FloatField(read_only=True)
+    first_lng = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = Tour
+        fields = [
+            "id",
+            "title",
+            "tour_type",
+            "difficulty",
+            "duration_minutes",
+            "cover_image",
+            "average_rating",
+            "review_count",
+            "first_lat",
+            "first_lng",
+        ]

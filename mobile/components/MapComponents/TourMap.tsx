@@ -7,7 +7,6 @@ import { TourMapProps } from './TourMap.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import MapMarker from './MapMarker';
-import ClusterMarker from './ClusterMarker';
 
 const defaultRegion = {
   latitude: 41.0082,
@@ -15,6 +14,8 @@ const defaultRegion = {
   latitudeDelta: 0.05,
   longitudeDelta: 0.05,
 };
+
+const NEARBY_TOUR_FOCUS_ANIMATION_MS = 900;
 
 export default function TourMap({
   markers,
@@ -24,15 +25,21 @@ export default function TourMap({
   tour,
   onRegionChange,
   onRegionChangeComplete,
+  onMapPress,
   onUserLocationReady,
   nearbyMarkers,
-  clusterMarkers,
   animateToRegion,
+  centerOnUserRequestKey,
 }: TourMapProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const colors = Colors[theme];
   const mapRef = useRef<MapView>(null);
+  const onUserLocationReadyRef = useRef(onUserLocationReady);
+
+  useEffect(() => {
+    onUserLocationReadyRef.current = onUserLocationReady;
+  }, [onUserLocationReady]);
 
   // Get user location on mount (but don't animate if there's an active tour)
   useEffect(() => {
@@ -51,19 +58,39 @@ export default function TourMap({
         longitudeDelta: 0.05,
       };
 
-      onUserLocationReady?.(userRegion);
+      onUserLocationReadyRef.current?.(userRegion);
 
       if (mapRef.current && !tour) {
         mapRef.current.animateToRegion(userRegion, 1000);
       }
     })();
-  }, [onUserLocationReady, tour]);
+  }, [tour]);
 
   useEffect(() => {
     if (mapRef.current && animateToRegion) {
-      mapRef.current.animateToRegion(animateToRegion, 400);
+      mapRef.current.animateToRegion(animateToRegion, NEARBY_TOUR_FOCUS_ANIMATION_MS);
     }
   }, [animateToRegion]);
+
+  useEffect(() => {
+    if (centerOnUserRequestKey === undefined) return;
+
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+
+      const currentLocation = await Location.getCurrentPositionAsync({});
+      const userRegion = {
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+
+      onUserLocationReadyRef.current?.(userRegion);
+      mapRef.current?.animateToRegion(userRegion, 850);
+    })();
+  }, [centerOnUserRequestKey]);
 
   // Animate to current step when it changes (for active tours)
   useEffect(() => {
@@ -93,6 +120,7 @@ export default function TourMap({
       followsUserLocation={false}
       onRegionChange={onRegionChange}
       onRegionChangeComplete={onRegionChangeComplete}
+      onPress={onMapPress}
     >
       {markers.map((marker) => (
         <MapMarker
@@ -120,16 +148,6 @@ export default function TourMap({
           coverImage={marker.coverImage}
           onPress={marker.onPress}
           selected={marker.selected}
-        />
-      ))}
-
-      {clusterMarkers?.map((cluster) => (
-        <ClusterMarker
-          key={cluster.id}
-          id={cluster.id}
-          coordinate={cluster.coordinate}
-          count={cluster.count}
-          onPress={cluster.onPress}
         />
       ))}
 

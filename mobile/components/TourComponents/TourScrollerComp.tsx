@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, FlatList } from 'react-native';
 import TourDisplayComp from './TourDisplayComp';
 import type { TourDisplayProps } from './TourDisplayComp.config';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -42,8 +41,7 @@ export default function TourScrollerComp({ title, data, accentColor }: TourScrol
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        decelerationRate="fast"
-        disableIntervalMomentum={true}
+        decelerationRate="normal"
         nestedScrollEnabled={true}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => <TourDisplayComp {...item} />}

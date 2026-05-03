@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 import Colors, { ThemeName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { ODYSSEY_TAB_BAR_INNER_PADDING } from '@/components/Navigation/OdysseyTabBar.config';
 
 export default function getStyles(theme: ThemeName) {
   const color = Colors[theme];
@@ -78,8 +79,30 @@ export default function getStyles(theme: ThemeName) {
     divider: {
       height: 1,
       backgroundColor: color.borderLight,
-      marginHorizontal: Spacing.lg,
+      marginHorizontal: ODYSSEY_TAB_BAR_INNER_PADDING,
       marginTop: Spacing.sm,
+    },
+    sortRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 6,
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.sm,
+      paddingBottom: 2,
+    },
+    sortChip: {
+      borderWidth: 1,
+      borderColor: color.borderLight,
+      backgroundColor: color.foreground,
+      borderRadius: Spacing.borderRadiusFull,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+    },
+    sortChipText: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: color.text,
     },
     list: {
       flex: 1,
@@ -143,6 +166,20 @@ export default function getStyles(theme: ThemeName) {
       fontSize: 11,
       fontWeight: '600',
       color: color.subText,
+    },
+    notOnMapTag: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: Spacing.borderRadiusFull,
+      backgroundColor: `${color.secondary}20`,
+    },
+    notOnMapTagText: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: color.secondary,
     },
     difficultyTagText: {
       color: color.white,

@@ -162,6 +162,8 @@ export type Tour = {
   average_rating?: number;
 };
 
+export type InBoundsSort = 'rating' | 'name' | 'reviews' | 'newest';
+
 export function getTourImageUri(tour: Pick<Tour, 'id' | 'cover_image' | 'creator'>): string {
   return tour.cover_image || '';
 }
@@ -535,12 +537,22 @@ export async function getToursInBounds(
   south: number,
   east: number,
   west: number,
+  options?: {
+    sort?: InBoundsSort;
+    limit?: number;
+    fields?: 'full' | 'map';
+  },
   signal?: AbortSignal
 ): Promise<Tour[]> {
+  const params: Record<string, any> = { north, south, east, west };
+  if (options?.sort) params.sort = options.sort;
+  if (options?.limit) params.limit = options.limit;
+  if (options?.fields) params.fields = options.fields;
+
   return apiRequest<Tour[]>({
     method: 'GET',
     url: '/api/tours/in-bounds/',
-    params: { north, south, east, west },
+    params,
     auth: false,
     signal,
   });

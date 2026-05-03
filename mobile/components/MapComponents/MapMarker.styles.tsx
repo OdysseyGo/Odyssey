@@ -37,9 +37,9 @@ export default function getStyles(theme: ThemeName) {
       alignItems: 'center',
     },
     banner: {
-      width: 48,
-      height: 36,
-      borderRadius: 6,
+      width: 60,
+      height: 45,
+      borderRadius: 7,
       overflow: 'hidden',
       borderWidth: 1.5,
       borderColor: color.background,

@@ -1,5 +1,4 @@
 import { MapMarkerProps, exampleMapMarkers } from './MapMarker.config';
-import type { ClusterMarkerProps } from './ClusterMarker';
 
 export interface Region {
   latitude: number;
@@ -21,10 +20,11 @@ export interface TourMapProps {
   tour?: { steps: { coordinate: { latitude: number; longitude: number } }[] };
   onRegionChange?: (region: Region) => void;
   onRegionChangeComplete?: (region: Region) => void;
+  onMapPress?: () => void;
   onUserLocationReady?: (region: Region) => void;
   nearbyMarkers?: MapMarkerProps[];
-  clusterMarkers?: ClusterMarkerProps[];
   animateToRegion?: Region;
+  centerOnUserRequestKey?: number;
 }
 
 export const exampleTourMap: TourMapProps = {

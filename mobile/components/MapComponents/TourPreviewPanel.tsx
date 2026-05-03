@@ -68,6 +68,7 @@ export default function TourPreviewPanel({ tour, onClose, onViewTour }: TourPrev
   if (!displayedTour) return null;
 
   const iconBg = difficultyColor(displayedTour.difficulty, colors);
+  const ratingLabel = `${(displayedTour.average_rating ?? 0).toFixed(1)}/5`;
 
   return (
     <Animated.View
@@ -102,6 +103,10 @@ export default function TourPreviewPanel({ tour, onClose, onViewTour }: TourPrev
                   <Text style={[styles.tagText, styles.difficultyText]}>
                     {t(`tourDetail.${displayedTour.difficulty.toLowerCase()}` as any)}
                   </Text>
+                </View>
+                <View style={styles.tag}>
+                  <MaterialCommunityIcons name="star-outline" size={10} color={colors.star} />
+                  <Text style={styles.tagText}>{ratingLabel}</Text>
                 </View>
                 <View style={styles.tag}>
                   <MaterialCommunityIcons name="clock-outline" size={10} color={colors.subText} />

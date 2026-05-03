@@ -35,13 +35,49 @@ export default function FeaturedTourCarousel({
   const scrollViewRef = useRef<ScrollView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const currentOffsetXRef = useRef(0);
 
-  const scrollToIndex = useCallback((index: number) => {
-    scrollViewRef.current?.scrollTo({
-      x: index * SCREEN_WIDTH,
-      animated: true,
-    });
+  const stopSmoothScroll = useCallback(() => {
+    if (animationFrameRef.current !== null) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
   }, []);
+
+  const scrollToIndex = useCallback(
+    (index: number, duration = 850) => {
+      const targetX = index * SCREEN_WIDTH;
+      const startX = currentOffsetXRef.current;
+      const distance = targetX - startX;
+
+      if (Math.abs(distance) < 1) {
+        scrollViewRef.current?.scrollTo({ x: targetX, animated: false });
+        return;
+      }
+
+      stopSmoothScroll();
+      const startTime = Date.now();
+      const easeInOut = (t: number) => 0.5 * (1 - Math.cos(Math.PI * t));
+
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        const eased = easeInOut(progress);
+        const nextX = startX + distance * eased;
+        scrollViewRef.current?.scrollTo({ x: nextX, animated: false });
+
+        if (progress < 1) {
+          animationFrameRef.current = requestAnimationFrame(animate);
+        } else {
+          animationFrameRef.current = null;
+        }
+      };
+
+      animationFrameRef.current = requestAnimationFrame(animate);
+    },
+    [stopSmoothScroll]
+  );
 
   useEffect(() => {
     if (tours.length <= 1) return;
@@ -59,14 +95,16 @@ export default function FeaturedTourCarousel({
     startAutoPlay();
 
     return () => {
+      stopSmoothScroll();
       if (autoPlayRef.current) {
         clearInterval(autoPlayRef.current);
       }
     };
-  }, [tours.length, autoPlayInterval, scrollToIndex]);
+  }, [tours.length, autoPlayInterval, scrollToIndex, stopSmoothScroll]);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
+    currentOffsetXRef.current = contentOffsetX;
     const newIndex = Math.round(contentOffsetX / SCREEN_WIDTH);
     if (newIndex !== activeIndex && newIndex >= 0 && newIndex < tours.length) {
       setActiveIndex(newIndex);
@@ -74,6 +112,7 @@ export default function FeaturedTourCarousel({
   };
 
   const handleScrollBeginDrag = () => {
+    stopSmoothScroll();
     if (autoPlayRef.current) {
       clearInterval(autoPlayRef.current);
     }
@@ -114,6 +153,7 @@ export default function FeaturedTourCarousel({
           onScrollBeginDrag={handleScrollBeginDrag}
           onScrollEndDrag={handleScrollEndDrag}
           scrollEventThrottle={16}
+          decelerationRate="normal"
           style={styles.scrollView}
         >
           {tours.map((tour, index) => (
