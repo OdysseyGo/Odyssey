@@ -24,6 +24,7 @@ class AdminUserFilter(filters.FilterSet):
 
 class AdminTourFilter(filters.FilterSet):
     status = filters.ChoiceFilter(choices=Tour.STATUS_CHOICES)
+    submission_type = filters.ChoiceFilter(choices=Tour.SUBMISSION_TYPE_CHOICES)
     tour_type = filters.ChoiceFilter(choices=Tour.TOUR_TYPE_CHOICES)
     difficulty = filters.ChoiceFilter(choices=Tour.DIFFICULTY_CHOICES)
     city = filters.CharFilter(lookup_expr="icontains")
@@ -37,6 +38,7 @@ class AdminTourFilter(filters.FilterSet):
         model = Tour
         fields = [
             "status",
+            "submission_type",
             "tour_type",
             "difficulty",
             "city",

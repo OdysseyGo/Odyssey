@@ -114,6 +114,7 @@ interface TourData {
   country_code?: string;
   status: string;
   review_status?: "IN_REVIEW" | "REJECTED" | null;
+  submission_type?: "CREATE" | "EDIT" | "DELETE";
   tour_type: string;
   difficulty: string;
   creator: number;
@@ -568,6 +569,9 @@ export default function TourDetail() {
 
   const isPendingRejected =
     tour.status === "PENDING" && tour.review_status === "REJECTED";
+  const submissionType = tour.submission_type ?? "CREATE";
+  const approveLabel =
+    submissionType === "DELETE" ? "Approve Delete" : "Approve";
   const pendingSubLabel =
     tour.status === "PENDING" && tour.review_status
       ? tour.review_status === "REJECTED"
@@ -591,6 +595,7 @@ export default function TourDetail() {
               <h1 className="text-2xl font-bold">{tour.title}</h1>
               <Badge variant={STATUS_VARIANT[tour.status] ?? "secondary"}>{tour.status}</Badge>
               {pendingSubLabel ? <Badge variant="secondary">({pendingSubLabel})</Badge> : null}
+              <Badge variant="secondary">{submissionType}</Badge>
             </div>
             <p className="text-muted-foreground">
               {tour.city}
@@ -603,10 +608,16 @@ export default function TourDetail() {
               variant="outline"
               onClick={handleApprove}
               disabled={actionLoading || tour.status === "PUBLISHED"}
-              title={tour.status === "PUBLISHED" ? "Already published" : "Approve and publish"}
+              title={
+                tour.status === "PUBLISHED"
+                  ? "Already published"
+                  : submissionType === "DELETE"
+                    ? "Approve delete request"
+                    : "Approve and publish"
+              }
               className={tour.status === "PUBLISHED" ? "opacity-40 cursor-not-allowed" : ""}
             >
-              <CheckCircle className="h-4 w-4" /> Approve
+              <CheckCircle className="h-4 w-4" /> {approveLabel}
             </Button>
             <Button
               variant="outline"
@@ -644,7 +655,7 @@ export default function TourDetail() {
             {tour.review_status === "REJECTED" ? (
               <span>This tour is <strong>pending (rejected)</strong>. The creator needs to update it before it goes back to review.</span>
             ) : (
-              <span>This tour is <strong>pending review</strong>. Approve to publish or reject to mark it as pending (rejected).</span>
+              <span>This tour is <strong>pending review</strong> as a <strong>{submissionType.toLowerCase()}</strong> request.</span>
             )}
           </div>
         )}

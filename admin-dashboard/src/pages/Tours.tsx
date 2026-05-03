@@ -14,6 +14,7 @@ interface Tour {
   city: string;
   status: string;
   review_status?: "IN_REVIEW" | "REJECTED" | null;
+  submission_type?: "CREATE" | "EDIT" | "DELETE";
   tour_type: string;
   difficulty: string;
   creator: number;
@@ -220,6 +221,10 @@ export default function Tours() {
                       : ""}
                   </Badge>
                 ),
+              },
+              {
+                header: "Submission",
+                accessor: (row: Tour) => row.submission_type ?? "CREATE",
               },
               { header: "Type", accessor: "tour_type" },
               { header: "Difficulty", accessor: "difficulty" },

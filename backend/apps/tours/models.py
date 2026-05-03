@@ -65,6 +65,15 @@ class Tour(models.Model):
         (AI, "AI"),
     ]
 
+    CREATE = "CREATE"
+    EDIT = "EDIT"
+    DELETE = "DELETE"
+    SUBMISSION_TYPE_CHOICES = [
+        (CREATE, "Create"),
+        (EDIT, "Edit"),
+        (DELETE, "Delete"),
+    ]
+
     title = models.CharField(max_length=255)
     description = models.TextField()
     creator = models.ForeignKey(
@@ -142,6 +151,12 @@ class Tour(models.Model):
         choices=GENERATION_SOURCE_CHOICES,
         default=USER,
         help_text="Indicates whether the tour was manually created or AI generated.",
+    )
+    submission_type = models.CharField(
+        max_length=10,
+        choices=SUBMISSION_TYPE_CHOICES,
+        default=CREATE,
+        help_text="Indicates what kind of creator submission is currently under review.",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
