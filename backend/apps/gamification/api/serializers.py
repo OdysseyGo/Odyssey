@@ -111,6 +111,7 @@ class TourProgressSerializer(serializers.ModelSerializer):
         allow_null=True,
     )
     step_attempt_counts = serializers.SerializerMethodField()
+
     class Meta:
         model = TourProgress
         fields = [
