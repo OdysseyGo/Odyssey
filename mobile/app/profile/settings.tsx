@@ -12,7 +12,7 @@ import {
   Alert,
   Switch,
 } from 'react-native';
-import { User, Bell, Globe, Palette, Check, LogOut } from 'lucide-react-native';
+import { User, Bell, Globe, Palette, Check, LogOut, CircleHelp } from 'lucide-react-native';
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -54,6 +54,7 @@ type EditProfileForm = {
 };
 
 type PopupView = 'settings' | 'edit-profile';
+const FAQ_URL = 'https://odysseygo.github.io/Odyssey/faq';
 
 export default function SettingsScreen({
   onClose,
@@ -254,6 +255,19 @@ export default function SettingsScreen({
         },
       ],
     },
+    {
+      title: t('settings.support.title'),
+      items: [
+        {
+          key: 'help_faq',
+          icon: CircleHelp,
+          label: t('settings.support.help.label'),
+          labelKey: 'settings.support.help.label',
+          description: t('settings.support.help.description'),
+          descriptionKey: 'settings.support.help.description',
+        },
+      ],
+    },
   ];
 
   const validateEditProfileForm = () => {
@@ -379,6 +393,11 @@ export default function SettingsScreen({
     if (item.key === 'logout') {
       onClose?.();
       setTimeout(() => onLogout?.(), 0);
+      return;
+    }
+
+    if (item.key === 'help_faq') {
+      void Linking.openURL(FAQ_URL);
     }
   };
 

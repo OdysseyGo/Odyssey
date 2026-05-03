@@ -78,6 +78,7 @@ const config: Config = {
         { href: '/#reports',     label: 'Reports',     position: 'left' },
         { href: '/#team',        label: 'Team',        position: 'left' },
         { to: '/legal',          label: 'Legal',       position: 'left' },
+        { to: '/faq',            label: 'FAQ',         position: 'left' },
         {
           href: '#',
           label: 'Download App',

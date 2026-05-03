@@ -153,6 +153,7 @@
     "feature1": "Crea y únete a tours guiados",
     "feature2": "Gana insignias y XP",
     "feature3": "Conecta con otros viajeros",
+    "helpButton": "Ayuda y FAQ",
     "completedTours": "Tours completados",
     "emptyCompletedTour": "No se encontraron tours",
     "errorTitle": "Algo salió mal",
@@ -168,7 +169,10 @@
     "reviewSuccessTitle": "Reseña enviada",
     "reviewSuccessMessage": "¡Gracias por tus comentarios!",
     "reviewErrorTitle": "No se pudo enviar la reseña",
-    "reviewErrorMessage": "Inténtalo de nuevo más tarde."
+    "reviewErrorMessage": "Inténtalo de nuevo más tarde.",
+    "helpMini": "Ayuda",
+    "helpDescription": "Consulta preguntas frecuentes y la guía básica de la app.",
+    "openFaq": "Abrir FAQ"
   },
   "tour": {
     "featured": "Destacado",

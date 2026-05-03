@@ -182,7 +182,11 @@
     "signInSubtitle": "Join thousands of explorers on Odyssey.",
     "feature1": "Create and join guided tours",
     "feature2": "Earn badges and XP",
-    "feature3": "Connect with other travelers"
+    "feature3": "Connect with other travelers",
+    "helpButton": "Help & FAQ",
+    "helpMini": "Help",
+    "helpDescription": "Read frequently asked questions and core app guidance.",
+    "openFaq": "Open FAQ"
   },
   "tour": {
     "featured": "Featured",
