@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   ReactNode,
@@ -118,17 +119,18 @@ export function AdsProvider({ children }: { children: ReactNode }) {
     syncAuthState();
   }, [pathname, syncAuthState]);
 
-  return (
-    <AdsContext.Provider
-      value={{
-        ...state,
-        getPlacement: (key) => state.placements.get(key),
-        refresh,
-      }}
-    >
-      {children}
-    </AdsContext.Provider>
+  const getPlacement = useCallback((key: string) => state.placements.get(key), [state.placements]);
+
+  const contextValue = useMemo(
+    () => ({
+      ...state,
+      getPlacement,
+      refresh,
+    }),
+    [state, getPlacement, refresh]
   );
+
+  return <AdsContext.Provider value={contextValue}>{children}</AdsContext.Provider>;
 }
 
 export function useAds() {
