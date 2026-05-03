@@ -582,7 +582,10 @@ export default function MapScreen() {
     () =>
       [
         { value: 'EASY' as Difficulty, label: t('tourDetail.easy', { defaultValue: 'Easy' }) },
-        { value: 'MEDIUM' as Difficulty, label: t('tourDetail.medium', { defaultValue: 'Medium' }) },
+        {
+          value: 'MEDIUM' as Difficulty,
+          label: t('tourDetail.medium', { defaultValue: 'Medium' }),
+        },
         { value: 'HARD' as Difficulty, label: t('tourDetail.hard', { defaultValue: 'Hard' }) },
       ] as const,
     [t]
@@ -775,153 +778,155 @@ export default function MapScreen() {
                 },
               ]}
             >
-                <View style={styles.searchFilterHeaderRow}>
-                  <Text style={styles.searchFilterPanelTitle}>
-                    {t('map.filters.label', { defaultValue: 'Filters' })}
+              <View style={styles.searchFilterHeaderRow}>
+                <Text style={styles.searchFilterPanelTitle}>
+                  {t('map.filters.label', { defaultValue: 'Filters' })}
+                </Text>
+                <Pressable
+                  style={styles.searchFilterResetButton}
+                  onPress={() =>
+                    handleFiltersChange({
+                      ...nearbyFilters,
+                      category: undefined,
+                      difficulty: undefined,
+                      tour_type: undefined,
+                    })
+                  }
+                >
+                  <Text style={styles.searchFilterResetButtonText}>
+                    {t('map.filters.reset', { defaultValue: 'Reset' })}
                   </Text>
-                  <Pressable
-                    style={styles.searchFilterResetButton}
-                    onPress={() =>
-                      handleFiltersChange({
-                        ...nearbyFilters,
-                        category: undefined,
-                        difficulty: undefined,
-                        tour_type: undefined,
-                      })
-                    }
-                  >
-                    <Text style={styles.searchFilterResetButtonText}>
-                      {t('map.filters.reset', { defaultValue: 'Reset' })}
-                    </Text>
-                  </Pressable>
-                </View>
+                </Pressable>
+              </View>
 
-                <Text style={styles.searchFilterSectionTitle}>
-                  {t('map.filters.type', { defaultValue: 'Tour type' })}
-                </Text>
-                <View style={styles.searchFilterChipsRow}>
+              <Text style={styles.searchFilterSectionTitle}>
+                {t('map.filters.type', { defaultValue: 'Tour type' })}
+              </Text>
+              <View style={styles.searchFilterChipsRow}>
+                <Pressable
+                  style={[
+                    styles.searchFilterChip,
+                    !nearbyFilters.tour_type && styles.searchFilterChipActive,
+                  ]}
+                  onPress={() => handleFiltersChange({ ...nearbyFilters, tour_type: undefined })}
+                >
+                  <Text
+                    style={[
+                      styles.searchFilterChipText,
+                      !nearbyFilters.tour_type && styles.searchFilterChipTextActive,
+                    ]}
+                  >
+                    {t('map.filters.all', { defaultValue: 'All' })}
+                  </Text>
+                </Pressable>
+                {nearbyTourTypeOptions.map((option) => (
                   <Pressable
+                    key={option.value}
                     style={[
                       styles.searchFilterChip,
-                      !nearbyFilters.tour_type && styles.searchFilterChipActive,
-                    ]}
-                    onPress={() => handleFiltersChange({ ...nearbyFilters, tour_type: undefined })}
-                  >
-                    <Text
-                      style={[
-                        styles.searchFilterChipText,
-                        !nearbyFilters.tour_type && styles.searchFilterChipTextActive,
-                      ]}
-                    >
-                      {t('map.filters.all', { defaultValue: 'All' })}
-                    </Text>
-                  </Pressable>
-                  {nearbyTourTypeOptions.map((option) => (
-                    <Pressable
-                      key={option.value}
-                      style={[
-                        styles.searchFilterChip,
-                        nearbyFilters.tour_type === option.value && styles.searchFilterChipActive,
-                      ]}
-                      onPress={() => handleFiltersChange({ ...nearbyFilters, tour_type: option.value })}
-                    >
-                      <Text
-                        style={[
-                          styles.searchFilterChipText,
-                          nearbyFilters.tour_type === option.value &&
-                            styles.searchFilterChipTextActive,
-                        ]}
-                      >
-                        {option.label}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-
-                <Text style={styles.searchFilterSectionTitle}>
-                  {t('map.filters.difficulty', { defaultValue: 'Difficulty' })}
-                </Text>
-                <View style={styles.searchFilterChipsRow}>
-                  <Pressable
-                    style={[
-                      styles.searchFilterChip,
-                      !nearbyFilters.difficulty && styles.searchFilterChipActive,
+                      nearbyFilters.tour_type === option.value && styles.searchFilterChipActive,
                     ]}
                     onPress={() =>
-                      handleFiltersChange({ ...nearbyFilters, difficulty: undefined })
+                      handleFiltersChange({ ...nearbyFilters, tour_type: option.value })
                     }
                   >
                     <Text
                       style={[
                         styles.searchFilterChipText,
-                        !nearbyFilters.difficulty && styles.searchFilterChipTextActive,
+                        nearbyFilters.tour_type === option.value &&
+                          styles.searchFilterChipTextActive,
                       ]}
                     >
-                      {t('map.filters.all', { defaultValue: 'All' })}
+                      {option.label}
                     </Text>
                   </Pressable>
-                  {nearbyDifficultyOptions.map((option) => (
-                    <Pressable
-                      key={option.value}
-                      style={[
-                        styles.searchFilterChip,
-                        nearbyFilters.difficulty === option.value && styles.searchFilterChipActive,
-                      ]}
-                      onPress={() => handleFiltersChange({ ...nearbyFilters, difficulty: option.value })}
-                    >
-                      <Text
-                        style={[
-                          styles.searchFilterChipText,
-                          nearbyFilters.difficulty === option.value &&
-                            styles.searchFilterChipTextActive,
-                        ]}
-                      >
-                        {option.label}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
+                ))}
+              </View>
 
-                <Text style={styles.searchFilterSectionTitle}>
-                  {t('map.filters.category', { defaultValue: 'Category' })}
-                </Text>
-                <View style={styles.searchFilterChipsRow}>
+              <Text style={styles.searchFilterSectionTitle}>
+                {t('map.filters.difficulty', { defaultValue: 'Difficulty' })}
+              </Text>
+              <View style={styles.searchFilterChipsRow}>
+                <Pressable
+                  style={[
+                    styles.searchFilterChip,
+                    !nearbyFilters.difficulty && styles.searchFilterChipActive,
+                  ]}
+                  onPress={() => handleFiltersChange({ ...nearbyFilters, difficulty: undefined })}
+                >
+                  <Text
+                    style={[
+                      styles.searchFilterChipText,
+                      !nearbyFilters.difficulty && styles.searchFilterChipTextActive,
+                    ]}
+                  >
+                    {t('map.filters.all', { defaultValue: 'All' })}
+                  </Text>
+                </Pressable>
+                {nearbyDifficultyOptions.map((option) => (
                   <Pressable
+                    key={option.value}
                     style={[
                       styles.searchFilterChip,
-                      !nearbyFilters.category && styles.searchFilterChipActive,
+                      nearbyFilters.difficulty === option.value && styles.searchFilterChipActive,
                     ]}
-                    onPress={() => handleFiltersChange({ ...nearbyFilters, category: undefined })}
+                    onPress={() =>
+                      handleFiltersChange({ ...nearbyFilters, difficulty: option.value })
+                    }
                   >
                     <Text
                       style={[
                         styles.searchFilterChipText,
-                        !nearbyFilters.category && styles.searchFilterChipTextActive,
+                        nearbyFilters.difficulty === option.value &&
+                          styles.searchFilterChipTextActive,
                       ]}
                     >
-                      {t('map.filters.all', { defaultValue: 'All' })}
+                      {option.label}
                     </Text>
                   </Pressable>
-                  {nearbyCategoryOptions.map((category) => (
-                    <Pressable
-                      key={category}
+                ))}
+              </View>
+
+              <Text style={styles.searchFilterSectionTitle}>
+                {t('map.filters.category', { defaultValue: 'Category' })}
+              </Text>
+              <View style={styles.searchFilterChipsRow}>
+                <Pressable
+                  style={[
+                    styles.searchFilterChip,
+                    !nearbyFilters.category && styles.searchFilterChipActive,
+                  ]}
+                  onPress={() => handleFiltersChange({ ...nearbyFilters, category: undefined })}
+                >
+                  <Text
+                    style={[
+                      styles.searchFilterChipText,
+                      !nearbyFilters.category && styles.searchFilterChipTextActive,
+                    ]}
+                  >
+                    {t('map.filters.all', { defaultValue: 'All' })}
+                  </Text>
+                </Pressable>
+                {nearbyCategoryOptions.map((category) => (
+                  <Pressable
+                    key={category}
+                    style={[
+                      styles.searchFilterChip,
+                      nearbyFilters.category === category && styles.searchFilterChipActive,
+                    ]}
+                    onPress={() => handleFiltersChange({ ...nearbyFilters, category })}
+                  >
+                    <Text
                       style={[
-                        styles.searchFilterChip,
-                        nearbyFilters.category === category && styles.searchFilterChipActive,
+                        styles.searchFilterChipText,
+                        nearbyFilters.category === category && styles.searchFilterChipTextActive,
                       ]}
-                      onPress={() => handleFiltersChange({ ...nearbyFilters, category })}
                     >
-                      <Text
-                        style={[
-                          styles.searchFilterChipText,
-                          nearbyFilters.category === category && styles.searchFilterChipTextActive,
-                        ]}
-                      >
-                        {category}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
+                      {category}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
             </Animated.View>
           </>
         )}
