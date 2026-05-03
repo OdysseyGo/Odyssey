@@ -139,6 +139,19 @@ export default function MapScreen() {
     nearbyFiltersRef.current = nearbyFilters;
   }, [nearbyFilters]);
 
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+      if (cooldownRef.current) {
+        clearTimeout(cooldownRef.current);
+      }
+      spinLoop.current?.stop();
+      spinAnim.stopAnimation();
+      legendAnim.stopAnimation();
+      filterPanelAnim.stopAnimation();
+    };
+  }, [filterPanelAnim, legendAnim, spinAnim]);
+
   useFocusEffect(
     useCallback(() => {
       const checkLoginAndResume = async () => {
@@ -222,7 +235,12 @@ export default function MapScreen() {
           }
         });
 
-      return () => controller.abort();
+      return () => {
+        controller.abort();
+        setNearbyTours([]);
+        setNearbyToursForMap([]);
+        setSelectedTour(null);
+      };
     }, [spinAnim])
   );
 

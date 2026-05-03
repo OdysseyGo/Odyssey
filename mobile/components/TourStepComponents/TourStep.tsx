@@ -16,6 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
 import { Camera } from 'expo-camera';
+import * as FileSystem from 'expo-file-system';
 import { Accelerometer, Magnetometer } from 'expo-sensors';
 import * as Haptics from 'expo-haptics';
 import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -91,6 +92,19 @@ const GEM_COLORS = {
   lightBackground2: '#E0F2FE',
   solvedGreen: '#30D158',
 } as const;
+
+async function safeDeleteTemporaryFile(uri?: string | null) {
+  if (!uri || !uri.startsWith('file://')) return;
+
+  try {
+    const info = await FileSystem.getInfoAsync(uri);
+    if (info.exists) {
+      await FileSystem.deleteAsync(uri, { idempotent: true });
+    }
+  } catch {
+    // Ignore cleanup failures.
+  }
+}
 
 function clamp01(value: number) {
   return Math.max(0, Math.min(1, value));
@@ -415,6 +429,17 @@ function PictureCompareView({
   const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
   const isExhausted = attemptCount >= maxAttempts;
   const referenceImageUri = puzzle.referenceImageUri;
+  const latestPreviewUriRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    latestPreviewUriRef.current = previewUri;
+  }, [previewUri]);
+
+  useEffect(() => {
+    return () => {
+      void safeDeleteTemporaryFile(latestPreviewUriRef.current);
+    };
+  }, []);
 
   const handleCaptureAndCheck = async () => {
     if (isSolved || isSubmitting) {
@@ -427,7 +452,13 @@ function PictureCompareView({
   const handleCapturedImage = async (photoUri: string) => {
     if (!progressId) {
       Alert.alert('Progress missing', 'Could not verify puzzle without active tour progress.');
+      await safeDeleteTemporaryFile(photoUri);
       return;
+    }
+
+    const previousPreviewUri = latestPreviewUriRef.current;
+    if (previousPreviewUri && previousPreviewUri !== photoUri) {
+      await safeDeleteTemporaryFile(previousPreviewUri);
     }
 
     setPreviewUri(photoUri);
