@@ -38,8 +38,9 @@ const COMPASS_HEADING_DEADBAND_DEGREES = 0.35;
 
 const PUZZLE_TYPE_LABEL_KEYS: Record<PuzzleType, string> = {
   TRIVIA: 'creation.puzzle.types.trivia',
+  OPEN_ENDED: 'creation.puzzle.types.openEnded',
   AR: 'creation.puzzle.types.ar',
-  GYROSCOPE: 'creation.puzzle.types.gyroscope',
+  COMPASS: 'creation.puzzle.types.compass',
   PICTURE_COMPARE: 'creation.puzzle.types.pictureCompare',
 };
 
@@ -273,7 +274,9 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
       ) : isCompass ? (
         <View>
           <View style={styles.section}>
-            <Text style={[styles.label, { color: color.text }]}>Target Heading (0-359) *</Text>
+            <Text style={[styles.label, { color: color.text }]}>
+              {t('creation.puzzle.targetHeadingLabel')}
+            </Text>
             <TextInput
               style={[styles.xpInput, { color: color.text, borderColor: color.borderLight }]}
               value={String(currentPuzzle.targetHeadingDegrees ?? 0)}
@@ -286,7 +289,7 @@ export default function PuzzleEditor({ puzzle, onChange, isRequired = false }: P
                 }
               }}
               keyboardType="number-pad"
-              placeholder="238"
+              placeholder={t('creation.puzzle.targetHeadingPlaceholder')}
               placeholderTextColor={color.placeholder}
             />
           </View>

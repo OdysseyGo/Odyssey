@@ -12,6 +12,7 @@ import { BADGE_TIER_PALETTE, BadgeTier } from '@/constants/badgeTheme';
 import { useTranslation } from 'react-i18next';
 import { normalizeCountryCode } from '@/lib/flags';
 import { getBadgeTier, getXpLabel } from '@/lib/badgeVisuals';
+import { getLocalizedBadgeDescription, getLocalizedBadgeName } from '@/lib/badgeI18n';
 import HexBadge from './HexBadge';
 
 const TIER_GRADIENTS: Record<BadgeTier, readonly [string, string, string]> = {
@@ -37,10 +38,23 @@ function formatEarnedDate(date?: string) {
   }).format(parsed);
 }
 
-function getTierLabel(tier: BadgeTier, code?: string | null) {
+function getTierLabel(tier: BadgeTier, t: (key: string) => string, code?: string | null) {
   const xpLabel = getXpLabel(code);
   if (xpLabel) return xpLabel;
-  return tier.charAt(0).toUpperCase() + tier.slice(1);
+  switch (tier) {
+    case 'gold':
+      return t('profile.badgeTier.gold');
+    case 'silver':
+      return t('profile.badgeTier.silver');
+    case 'bronze':
+      return t('profile.badgeTier.bronze');
+    case 'platinum':
+      return t('profile.badgeTier.platinum');
+    case 'diamond':
+      return t('profile.badgeTier.diamond');
+    default:
+      return t('profile.badgeTier.neutral');
+  }
 }
 
 export default function ProfileBadgesContainer({
@@ -65,7 +79,13 @@ export default function ProfileBadgesContainer({
   const selectedBadgeLocation = selectedBadge?.city
     ? `${selectedBadge.city} · ${normalizeCountryCode(selectedBadge.countryCode)}`
     : null;
-  const selectedBadgeTierLabel = getTierLabel(selectedBadgeTier, selectedBadge?.code);
+  const selectedBadgeTierLabel = getTierLabel(selectedBadgeTier, t, selectedBadge?.code);
+  const selectedBadgeLocalizedName = selectedBadge
+    ? getLocalizedBadgeName(t, selectedBadge.code, selectedBadge.name)
+    : '';
+  const selectedBadgeLocalizedDescription = selectedBadge
+    ? getLocalizedBadgeDescription(t, selectedBadge.code, selectedBadge.description)
+    : '';
   const selectedBadgeHasTour = Boolean(selectedBadge?.sourceTourId);
   const handleSourceTourPress = () => {
     if (!selectedBadge?.sourceTourId) return;
@@ -108,31 +128,34 @@ export default function ProfileBadgesContainer({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {badges.map((badge) => (
-          <Pressable
-            key={badge.id}
-            style={[styles.badgeCard, badge.unlocked && styles.badgeCardUnlocked]}
-            onPress={() => setSelectedBadge(badge)}
-          >
-            <HexBadge
-              code={badge.code}
-              badgeCriteria={badge.criteria}
-              iconUrl={badge.icon}
-              city={badge.city}
-              countryCode={badge.countryCode}
-              fallbackLabel={badge.name}
-              visualConfig={badge.visualConfig as any}
-            />
-            <Text style={styles.badgeName} numberOfLines={2}>
-              {badge.name}
-            </Text>
-            {badge.city ? (
-              <Text style={styles.badgeMetaText} numberOfLines={1}>
-                {badge.city} · {normalizeCountryCode(badge.countryCode)}
+        {badges.map((badge) => {
+          const localizedName = getLocalizedBadgeName(t, badge.code, badge.name);
+          return (
+            <Pressable
+              key={badge.id}
+              style={[styles.badgeCard, badge.unlocked && styles.badgeCardUnlocked]}
+              onPress={() => setSelectedBadge(badge)}
+            >
+              <HexBadge
+                code={badge.code}
+                badgeCriteria={badge.criteria}
+                iconUrl={badge.icon}
+                city={badge.city}
+                countryCode={badge.countryCode}
+                fallbackLabel={localizedName}
+                visualConfig={badge.visualConfig as any}
+              />
+              <Text style={styles.badgeName} numberOfLines={2}>
+                {localizedName}
               </Text>
-            ) : null}
-          </Pressable>
-        ))}
+              {badge.city ? (
+                <Text style={styles.badgeMetaText} numberOfLines={1}>
+                  {badge.city} · {normalizeCountryCode(badge.countryCode)}
+                </Text>
+              ) : null}
+            </Pressable>
+          );
+        })}
 
         {badges.length > 3 && onViewAll && (
           <TouchableOpacity style={styles.viewAllCard} activeOpacity={0.7} onPress={onViewAll}>
@@ -180,7 +203,7 @@ export default function ProfileBadgesContainer({
                     iconUrl={selectedBadge.icon}
                     city={selectedBadge.city}
                     countryCode={selectedBadge.countryCode}
-                    fallbackLabel={selectedBadge.name}
+                    fallbackLabel={selectedBadgeLocalizedName}
                     visualConfig={selectedBadge.visualConfig as any}
                     scale={1.45}
                   />
@@ -189,9 +212,9 @@ export default function ProfileBadgesContainer({
                 <Text style={[styles.detailsTier, { color: selectedAccentTextColor }]}>
                   {selectedBadgeTierLabel}
                 </Text>
-                <Text style={styles.detailsName}>{selectedBadge.name}</Text>
-                {selectedBadge.description ? (
-                  <Text style={styles.detailsDescription}>{selectedBadge.description}</Text>
+                <Text style={styles.detailsName}>{selectedBadgeLocalizedName}</Text>
+                {selectedBadgeLocalizedDescription ? (
+                  <Text style={styles.detailsDescription}>{selectedBadgeLocalizedDescription}</Text>
                 ) : null}
 
                 <View style={styles.detailsInfoGrid}>

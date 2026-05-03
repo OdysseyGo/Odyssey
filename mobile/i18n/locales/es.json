@@ -1,17 +1,18 @@
 {
   "common": {
     "cancel": "Cancelar",
-    "ok": "Aceptar",
+    "ok": "OK",
     "error": "Error",
     "syncError": "No se pudo sincronizar el progreso con el servidor.",
     "retry": "Reintentar",
     "submit": "Enviar",
     "submitting": "Enviando...",
-    "ok": "OK",
-    "error": "Error",
-    "syncError": "No se pudo sincronizar el progreso con el servidor.",
     "close": "Cerrar",
-    "save": "Guardar"
+    "save": "Guardar",
+    "loading": "Cargando...",
+    "noImage": "Sin imagen",
+    "done": "Listo",
+    "modal": "Modal"
   },
   "auth": {
     "welcomeTitle": "¡Bienvenido, aventurero!",
@@ -43,6 +44,12 @@
     "remembered": "¡Ah, lo recordé!",
     "alreadyHaveAccount": "¿Ya tienes cuenta? Inicia sesión",
     "verify": "Verificar",
+    "sendCode": "Enviar código",
+    "enterCode": "Ingresar código de restablecimiento",
+    "otpCode": "Código de restablecimiento",
+    "otpCodePlaceholder": "Código de 6 dígitos",
+    "codeSentSubtitle": "Enviamos un código de 6 dígitos a {{email}}. Ingrésalo abajo para restablecer tu contraseña.",
+    "codeSentBanner": "¡Código enviado! Revisa tu bandeja de entrada (y la carpeta de spam).",
     "resetPassword": "Restablecer contraseña",
     "updatePassword": "Actualizar contraseña",
     "cancel": "Cancelar",
@@ -86,9 +93,17 @@
       "somethingWentWrong": "Algo salió mal",
       "bothFieldsRequired": "Ambos campos son obligatorios",
       "couldNotUpdate": "No se pudo actualizar la contraseña",
-      "termsRequired": "Debes aceptar los Términos de Uso y la Política de Privacidad"
+      "termsRequired": "Debes aceptar los Términos de Uso y la Política de Privacidad",
+      "codeRequired": "Por favor, ingresa el código de restablecimiento",
+      "invalidCode": "Código inválido o vencido. Inténtalo de nuevo."
     },
-    "userCreated": "¡Usuario creado!"
+    "userCreated": "¡Usuario creado!",
+    "termsUpdateTitle": "Términos actualizados",
+    "termsUpdateSubtitle": "Actualizamos nuestros Términos de Uso y Política de Privacidad. Revísalos y acepta los nuevos términos para seguir usando Odyssey.",
+    "termsUpdatePrefix": "He leído y acepto los",
+    "termsUpdateAnd": "y la",
+    "termsUpdateAccept": "Aceptar y continuar",
+    "termsUpdateLogout": "Cerrar sesión"
   },
   "profile": {
     "notLoggedIn": "Debes iniciar sesión para ver tu perfil.",
@@ -175,7 +190,36 @@
     "reviewErrorTitle": "No se pudo enviar la reseña",
     "reviewErrorMessage": "Inténtalo de nuevo más tarde.",
     "logoutConfirmTitle": "Cerrar sesión",
-    "logoutConfirmMessage": "¿Seguro que quieres cerrar sesión?"
+    "logoutConfirmMessage": "¿Seguro que quieres cerrar sesión?",
+    "badgeMistakes_one": "{{count}} error",
+    "badgeMistakes_other": "{{count}} errores",
+    "ownTourReviewDisabled": "No puedes reseñar tu propio tour",
+    "xpProgress": "{{current}} / {{total}} XP",
+    "xpToNextLevel": "{{xp}} XP para {{title}}",
+    "maxLevelReached": "NIVEL MÁXIMO ALCANZADO",
+    "durationHoursMinutes": "{{hours}}h {{minutes}}m",
+    "durationHoursOnly": "{{hours}}h",
+    "badgeTier": {
+      "gold": "Oro",
+      "silver": "Plata",
+      "bronze": "Bronce",
+      "platinum": "Platino",
+      "diamond": "Diamante",
+      "neutral": "Insignia"
+    },
+    "levelTitles": {
+      "creator": "Creador",
+      "novice": "Novato",
+      "explorer": "Explorador",
+      "adventurer": "Aventurero",
+      "pathfinder": "Pionero",
+      "wanderer": "Errante",
+      "navigator": "Navegante",
+      "trailblazer": "Pionero",
+      "veteran": "Veterano",
+      "expert": "Experto",
+      "legend": "Leyenda"
+    }
   },
   "tour": {
     "featured": "Destacado",
@@ -195,6 +239,9 @@
       "other": "Otro"
     },
     "all": "Todos",
+    "story": "Historia",
+    "puzzle": "Puzle",
+    "hybrid": "Híbrido",
     "loadError": "No se pudieron cargar los tours",
     "errorTitle": "Algo salió mal",
     "emptyTitle": "Aún no hay tours aquí",
@@ -314,7 +361,9 @@
       "SAFETY": "Problema de seguridad",
       "PRIVACY": "Problema de privacidad",
       "OTHER": "Otro"
-    }
+    },
+    "tapToInteractMap": "Toca para interactuar con el mapa",
+    "photoCredit": "Foto: {{attribution}}"
   },
   "report": {
     "tourButton": "Reportar tour",
@@ -623,11 +672,15 @@
       "hintText": "Una pista útil si el usuario se atasca.",
       "types": {
         "trivia": "Trivia",
+        "openEnded": "Respuesta abierta",
         "ar": "Desafío AR",
+        "compass": "Brújula",
         "gyroscope": "Giroscopio",
         "pictureCompare": "Comparación de imagen"
       },
-      "pictureTargetImage": "Elige tu imagen objetivo"
+      "pictureTargetImage": "Elige tu imagen objetivo",
+      "targetHeadingLabel": "Rumbo objetivo (0-359) *",
+      "targetHeadingPlaceholder": "238"
     },
     "editLocation": {
       "header": "Editar Ubicación",
@@ -669,6 +722,14 @@
       "arUnavailableRuntime": "AR no está disponible en este entorno.",
       "selectModelFirst": "Selecciona primero un modelo AR.",
       "anchorCount": "{{count}} anclajes"
+    },
+    "incompleteLocationTitle": "Completa los detalles de ubicación",
+    "incompleteLocationMessage": "Selecciona el país y el estado de las listas desplegables.",
+    "underReviewTitle": "Tu tour está en revisión",
+    "underReviewMessage": "Gracias por enviar tu tour. Nuestro equipo lo está revisando y se publicará pronto.",
+    "reviewStatus": {
+      "review": "En revisión",
+      "rejected": "Rechazado"
     }
   },
   "aiTour": {
@@ -718,7 +779,8 @@
     "includeCompass": {
       "title": "Incluir Puzzles de Brújula",
       "subtitle": "Deja que la IA añada puzzles de orientación con brújula en las paradas donde encajen"
-    }
+    },
+    "adUnavailableMessage": "Se requiere un anuncio con recompensa antes de generar con IA. Vuelve a intentarlo en breve."
   },
   "tourStep": {
     "tourProgress": "Progreso del Tour",
@@ -777,6 +839,60 @@
       "enterSecretCodePlaceholder": "Introduce el código secreto",
       "checkCode": "Comprobar código",
       "incorrectAttemptsRemaining": "El código no es correcto. Quedan {{count}} intentos."
+    },
+    "questionFinishedReveal": "Esta pregunta está finalizada. Se muestra la respuesta correcta.",
+    "openEnded": {
+      "title": "Respuesta abierta",
+      "enterAnswerFirst": "Primero escribe una respuesta.",
+      "checkingAnswer": "Comprobando respuesta...",
+      "matchedUnlocked": "Coincide. Este paso se desbloqueó.",
+      "notCloseNoAttempts": "La respuesta no es lo bastante cercana. No quedan intentos.",
+      "notCloseAttemptsRemaining_one": "La respuesta no es lo bastante cercana. Queda {{count}} intento.",
+      "notCloseAttemptsRemaining_other": "La respuesta no es lo bastante cercana. Quedan {{count}} intentos.",
+      "verifyError": "No se pudo verificar la respuesta ahora mismo. Inténtalo de nuevo.",
+      "placeholder": "Escribe tu respuesta",
+      "submitAnswer": "Enviar respuesta",
+      "noAttemptsRemainingSkip": "No quedan intentos. Puedes saltar este paso."
+    },
+    "compass": {
+      "title": "Encuentra el punto de referencia",
+      "subtitle": "Gira el teléfono hasta que la baliza del tour se bloquee.",
+      "beaconStatus": "Estado de la baliza",
+      "signal": "Señal",
+      "goal": "Objetivo",
+      "holdProgress": "Progreso de bloqueo",
+      "guidance": {
+        "holdToLock": "Mantén para bloquear",
+        "rotateSlowly": "Gira despacio"
+      },
+      "signalStrength": {
+        "locked": "Bloqueada",
+        "strong": "Fuerte",
+        "good": "Buena",
+        "weak": "Débil",
+        "searching": "Buscando"
+      },
+      "action": {
+        "waypointLocked": "Punto bloqueado",
+        "holdSteady": "Mantén firme",
+        "moveGently": "Muévete suavemente",
+        "scanSlowly": "Escanea despacio"
+      },
+      "status": {
+        "waypointFound": "Punto encontrado",
+        "signalLocked": "Señal bloqueada",
+        "holdSteady": "Mantén firme",
+        "strongSignal": "Señal fuerte",
+        "signalFound": "Señal encontrada",
+        "faintSignal": "Señal tenue",
+        "turnSlowly": "Gira despacio"
+      },
+      "instruction": {
+        "locked": "El punto del tour está bloqueado.",
+        "keepStill": "Mantén el teléfono quieto hasta que se complete la baliza.",
+        "followSignal": "Muévete con suavidad y sigue la señal más fuerte.",
+        "searchWaypoint": "Gira el teléfono lentamente para buscar el punto."
+      }
     }
   },
   "map": {
@@ -804,7 +920,8 @@
       "steps": "Pasos",
       "complete": "Completado",
       "xpEarned": "¡+{{xp}} XP ganados!",
-      "done": "Hecho"
+      "done": "Hecho",
+      "badgeEarned": "Insignia obtenida"
     },
     "activeTour": {
       "stepOf": "Paso {{current}} de {{total}}",
@@ -825,7 +942,25 @@
       "appleMaps": "Apple Maps",
       "googleMaps": "Google Maps",
       "yandexMaps": "Yandex Maps",
-      "directionsUnavailableMessage": "No se pudieron abrir las indicaciones ahora mismo. Inténtalo de nuevo."
+      "directionsUnavailableMessage": "No se pudieron abrir las indicaciones ahora mismo. Inténtalo de nuevo.",
+      "legend": {
+        "title": "Leyenda del tour",
+        "steps": "Tipo de paso",
+        "story": "Paso de historia",
+        "puzzle": "Paso de puzle",
+        "status": "Estado del marcador",
+        "current": "Paso actual (más grande)",
+        "upcoming": "Siguiente paso (atenuado)",
+        "controlsTitle": "Controles",
+        "myLocation": "Mi ubicación",
+        "currentStep": "Ir al paso actual"
+      },
+      "skipPromptTitle": "¿Saltar este paso?",
+      "skipPromptMessage": "Mira un anuncio corto para saltar sin penalización, o salta de todos modos.",
+      "skipAnyway": "Saltar de todos modos",
+      "watchAdToSkip": "Ver anuncio",
+      "progressPanelAccessibilityLabel": "Ajustar panel de progreso del tour",
+      "progressPanelAccessibilityHint": "Expande o contrae el panel de progreso del tour"
     },
     "nearby": {
       "title_one": "{{count}} tour cercano",
@@ -840,12 +975,41 @@
       "duration_one": "{{count}} min",
       "duration_other": "{{count}} min",
       "areaTitle": "{{count}} tours en esta área",
-      "duration": "{{count}} min"
+      "duration": "{{count}} min",
+      "viewTour": "Ver tour",
+      "stops_one": "{{count}} parada",
+      "stops_other": "{{count}} paradas",
+      "notOnMap": "No está en el mapa",
+      "sort": {
+        "rating": "Mejor valorados",
+        "reviews": "Más reseñados",
+        "name": "Nombre",
+        "newest": "Más recientes"
+      }
     },
     "searchMode": {
       "searchHere": "Buscar aquí",
       "stopDragging": "Deja de arrastrar para buscar",
       "zoomIn": "Acerca el mapa para buscar"
+    },
+    "filters": {
+      "label": "Filtros",
+      "active": "Filtros activos",
+      "reset": "Restablecer",
+      "type": "Tipo de tour",
+      "all": "Todos",
+      "difficulty": "Dificultad",
+      "category": "Categoría"
+    },
+    "legend": {
+      "title": "Leyenda de marcadores",
+      "typeTitle": "Tipo de tour",
+      "difficultyTitle": "Color de dificultad",
+      "controlsTitle": "Controles",
+      "controls": {
+        "myLocation": "Mi ubicación",
+        "searchHere": "Buscar en esta zona"
+      }
     }
   },
   "friends": {
@@ -857,7 +1021,22 @@
     "addFriend": "Añadir Amigo"
   },
   "badges": {
-    "noBadges": "Aún no hay insignias"
+    "noBadges": "Aún no hay insignias",
+    "names": {
+      "creator": "Creador",
+      "novice": "Novato",
+      "explorer": "Explorador",
+      "adventurer": "Aventurero",
+      "pathfinder": "Pionero",
+      "wanderer": "Errante",
+      "navigator": "Navegante",
+      "trailblazer": "Pionero",
+      "veteran": "Veterano",
+      "expert": "Experto",
+      "legend": "Leyenda",
+      "master": "Maestro",
+      "social_butterfly": "Mariposa social"
+    }
   },
   "tutorial": {
     "title": "Ayuda y Tutoriales",
@@ -920,5 +1099,26 @@
     "legalSuffix": ". Lee y acepta para comenzar tu misión.",
     "mascot": "¡Ody te observa — mantén los ojos abiertos, aventurero!",
     "cta": "Acepto"
+  },
+  "puzzle": {
+    "watchAdForHint": "Mira un anuncio para revelar la pista"
+  },
+  "notFound": {
+    "header": "Oops!",
+    "title": "Esta pantalla no existe.",
+    "goHome": "¡Ir a la pantalla principal!"
+  },
+  "devInfo": {
+    "openCode": "Abre el código de esta pantalla:",
+    "autoUpdateHint": "Cambia el texto, guarda el archivo y tu app se actualizará automáticamente.",
+    "helpLinkText": "Toca aquí si tu app no se actualiza automáticamente después de los cambios"
+  },
+  "compass": {
+    "calibrating": "Calibrando...",
+    "legend": {
+      "acceptableWindow": "Región verde: ventana de resolución aceptable",
+      "exactHeading": "Línea verde oscura: rumbo objetivo exacto",
+      "pointerDirection": "Puntero blanco: dirección frontal del teléfono"
+    }
   }
 }

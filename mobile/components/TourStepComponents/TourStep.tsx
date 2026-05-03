@@ -21,6 +21,7 @@ import * as Haptics from 'expo-haptics';
 import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 
 import getStyles from './TourStep.styles';
 import {
@@ -100,56 +101,62 @@ function getGemStatusText({
   solved,
   alignmentProgress,
   resonanceLevel,
+  t,
 }: {
   solved: boolean;
   alignmentProgress: number;
   resonanceLevel: number;
+  t: TFunction;
 }) {
-  if (solved) return 'Waypoint found';
-  if (alignmentProgress > 0.72) return 'Signal locked';
-  if (alignmentProgress > 0.18) return 'Hold steady';
-  if (resonanceLevel > 0.72) return 'Strong signal';
-  if (resonanceLevel > 0.38) return 'Signal found';
-  if (resonanceLevel > 0.12) return 'Faint signal';
-  return 'Turn slowly';
+  if (solved) return t('tourStep.compass.status.waypointFound');
+  if (alignmentProgress > 0.72) return t('tourStep.compass.status.signalLocked');
+  if (alignmentProgress > 0.18) return t('tourStep.compass.status.holdSteady');
+  if (resonanceLevel > 0.72) return t('tourStep.compass.status.strongSignal');
+  if (resonanceLevel > 0.38) return t('tourStep.compass.status.signalFound');
+  if (resonanceLevel > 0.12) return t('tourStep.compass.status.faintSignal');
+  return t('tourStep.compass.status.turnSlowly');
 }
 
 function getGemInstructionText({
   solved,
   alignmentProgress,
   resonanceLevel,
+  t,
 }: {
   solved: boolean;
   alignmentProgress: number;
   resonanceLevel: number;
+  t: TFunction;
 }) {
-  if (solved) return 'The tour waypoint is locked in.';
-  if (alignmentProgress > 0.18) return 'Keep the phone still until the beacon fills.';
-  if (resonanceLevel > 0.12) return 'Move gently and follow the stronger signal.';
-  return 'Rotate the phone slowly to search for the waypoint.';
+  if (solved) return t('tourStep.compass.instruction.locked');
+  if (alignmentProgress > 0.18) return t('tourStep.compass.instruction.keepStill');
+  if (resonanceLevel > 0.12) return t('tourStep.compass.instruction.followSignal');
+  return t('tourStep.compass.instruction.searchWaypoint');
 }
 
-function getSignalStrengthText(resonanceLevel: number, solved: boolean) {
-  if (solved) return 'Locked';
-  if (resonanceLevel > 0.72) return 'Strong';
-  if (resonanceLevel > 0.38) return 'Good';
-  if (resonanceLevel > 0.12) return 'Weak';
-  return 'Searching';
+function getSignalStrengthText(resonanceLevel: number, solved: boolean, t: TFunction) {
+  if (solved) return t('tourStep.compass.signalStrength.locked');
+  if (resonanceLevel > 0.72) return t('tourStep.compass.signalStrength.strong');
+  if (resonanceLevel > 0.38) return t('tourStep.compass.signalStrength.good');
+  if (resonanceLevel > 0.12) return t('tourStep.compass.signalStrength.weak');
+  return t('tourStep.compass.signalStrength.searching');
 }
 
 function getBeaconActionText({
   solved,
   aligned,
   hasHeading,
+  t,
 }: {
   solved: boolean;
   aligned: boolean;
   hasHeading: boolean;
+  t: TFunction;
 }) {
-  if (solved) return 'Waypoint locked';
-  if (aligned) return 'Hold steady';
-  if (!hasHeading) return 'Move gently';
-  return 'Scan slowly';
+  if (solved) return t('tourStep.compass.action.waypointLocked');
+  if (aligned) return t('tourStep.compass.action.holdSteady');
+  if (!hasHeading) return t('tourStep.compass.action.moveGently');
+  return t('tourStep.compass.action.scanSlowly');
 }
 
 interface StoryStepViewProps {
@@ -375,8 +382,8 @@ function MultipleChoiceView({
       {(hasPersistedWrongAttempt || isFinished) && !isSolved && (
         <Text style={styles.exhaustedHint}>
           {isFinished
-            ? 'This question is finished. The correct answer is revealed.'
-            : 'You have already answered this question.'}
+            ? t('tourStep.questionFinishedReveal')
+            : t('tourStep.alreadyAnswered')}
         </Text>
       )}
     </View>
@@ -616,6 +623,7 @@ interface OpenEndedViewProps {
 function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEndedViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
   const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
 
   const [answerInput, setAnswerInput] = useState('');
@@ -630,19 +638,19 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
     if (isSolved || isSubmitting || isExhausted) return;
 
     if (!progressId) {
-      Alert.alert('Progress missing', 'Could not verify puzzle without active tour progress.');
+      Alert.alert(t('tourStep.progressMissingTitle'), t('tourStep.progressMissingMessage'));
       return;
     }
 
     const trimmedAnswer = answerInput.trim();
     if (!trimmedAnswer) {
-      setFeedback('Enter an answer first.');
+      setFeedback(t('tourStep.openEnded.enterAnswerFirst'));
       setFeedbackTone('error');
       return;
     }
 
     setIsSubmitting(true);
-    setFeedback('Checking answer...');
+    setFeedback(t('tourStep.openEnded.checkingAnswer'));
     setFeedbackTone('neutral');
     try {
       const response = await submitOpenEndedAnswer(progressId, trimmedAnswer);
@@ -650,7 +658,7 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
         typeof response.max_attempts === 'number' ? response.max_attempts : maxAttempts;
       setMaxAttempts(responseMaxAttempts);
       if (response.accepted) {
-        setFeedback('That matches. This step is unlocked.');
+        setFeedback(t('tourStep.openEnded.matchedUnlocked'));
         setFeedbackTone('success');
         onSolve();
       } else {
@@ -660,13 +668,15 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
           if (response.revealed_answer) {
             setAnswerInput(response.revealed_answer);
           }
-          setFeedback('Answer is not close enough. No attempts remaining.');
+          setFeedback(t('tourStep.openEnded.notCloseNoAttempts'));
           setFeedbackTone('error');
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
-            `Answer is not close enough. ${responseMaxAttempts - newCount} attempt${responseMaxAttempts - newCount === 1 ? '' : 's'} remaining.`
+            t('tourStep.openEnded.notCloseAttemptsRemaining', {
+              count: responseMaxAttempts - newCount,
+            })
           );
           setFeedbackTone('error');
         }
@@ -688,9 +698,7 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
         setAnswerInput(revealedAnswer);
       }
       console.error('submit open ended answer failed', error);
-      setFeedback(
-        error?.response?.data?.error || 'Could not verify answer right now. Please try again.'
-      );
+      setFeedback(error?.response?.data?.error || t('tourStep.openEnded.verifyError'));
       setFeedbackTone('error');
     } finally {
       setIsSubmitting(false);
@@ -700,13 +708,13 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
   return (
     <View style={styles.puzzleBody}>
       <View style={styles.questionCard}>
-        <Text style={styles.questionLabel}>Open ended</Text>
+        <Text style={styles.questionLabel}>{t('tourStep.openEnded.title')}</Text>
         <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
       </View>
 
       {!isSolved && (
         <View style={styles.attemptsRow}>
-          <Text style={styles.attemptsLabel}>Attempts</Text>
+          <Text style={styles.attemptsLabel}>{t('tourStep.attempts')}</Text>
           {Array.from({ length: maxAttempts }, (_, i) => (
             <MaterialCommunityIcons
               key={i}
@@ -723,7 +731,7 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
         value={answerInput}
         onChangeText={setAnswerInput}
         editable={!isSolved && !isSubmitting && !isExhausted}
-        placeholder="Type your answer"
+        placeholder={t('tourStep.openEnded.placeholder')}
         autoCapitalize="none"
       />
 
@@ -738,7 +746,7 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
         {isSubmitting ? (
           <ActivityIndicator size="small" color={Colors[theme].white} />
         ) : (
-          <Text style={styles.captureButtonText}>Submit answer</Text>
+          <Text style={styles.captureButtonText}>{t('tourStep.openEnded.submitAnswer')}</Text>
         )}
       </Pressable>
 
@@ -771,7 +779,7 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
       ) : null}
 
       {isExhausted && !isSolved && (
-        <Text style={styles.exhaustedHint}>No attempts remaining. You can skip this step.</Text>
+        <Text style={styles.exhaustedHint}>{t('tourStep.openEnded.noAttemptsRemainingSkip')}</Text>
       )}
     </View>
   );
@@ -1044,6 +1052,7 @@ interface CompassViewProps {
 function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
   const solvedRef = useRef(isSolved);
   const nextPulseAtMsRef = useRef(0);
   const holdStartedAtMsRef = useRef<number | null>(null);
@@ -1211,23 +1220,28 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
   const absoluteDelta = heading === null ? null : circularDeltaDegrees(heading, targetHeading);
   const isAligned =
     solved || (absoluteDelta !== null && absoluteDelta <= COMPASS_SOLVE_TOLERANCE_DEGREES);
-  const signalStrengthText = getSignalStrengthText(resonance, solved);
+  const signalStrengthText = getSignalStrengthText(resonance, solved, t);
   const beaconActionText = getBeaconActionText({
     solved,
     aligned: isAligned,
     hasHeading: heading !== null,
+    t,
   });
-  const guidanceText = isAligned ? 'Hold to lock' : 'Rotate slowly';
+  const guidanceText = isAligned
+    ? t('tourStep.compass.guidance.holdToLock')
+    : t('tourStep.compass.guidance.rotateSlowly');
   const holdPercent = Math.round(progress * 100);
   const statusText = getGemStatusText({
     solved,
     alignmentProgress: progress,
     resonanceLevel: resonance,
+    t,
   });
   const instructionText = getGemInstructionText({
     solved,
     alignmentProgress: progress,
     resonanceLevel: resonance,
+    t,
   });
 
   const glowOpacity = solved ? 0.42 : 0.04 + resonance * 0.22 + progress * 0.16;
@@ -1249,8 +1263,8 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
       <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
       <View style={styles.gemPuzzleFrame}>
         <View style={styles.gemHeader}>
-          <Text style={styles.gemTitle}>Find the Waypoint</Text>
-          <Text style={styles.gemSubtitle}>Rotate your phone until the tour beacon locks on.</Text>
+          <Text style={styles.gemTitle}>{t('tourStep.compass.title')}</Text>
+          <Text style={styles.gemSubtitle}>{t('tourStep.compass.subtitle')}</Text>
         </View>
 
         <View style={styles.gemGuideCard}>
@@ -1263,7 +1277,7 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
               />
             </View>
             <View style={styles.gemCueCopy}>
-              <Text style={styles.gemCueLabel}>Beacon status</Text>
+              <Text style={styles.gemCueLabel}>{t('tourStep.compass.beaconStatus')}</Text>
               <Text style={styles.gemCueText}>{beaconActionText}</Text>
             </View>
             <Text style={styles.gemAccuracyText}>{signalStrengthText}</Text>
@@ -1271,12 +1285,12 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
 
           <View style={styles.gemReadoutRow}>
             <View style={styles.gemReadoutItem}>
-              <Text style={styles.gemReadoutLabel}>Signal</Text>
+              <Text style={styles.gemReadoutLabel}>{t('tourStep.compass.signal')}</Text>
               <Text style={styles.gemReadoutValue}>{signalStrengthText}</Text>
             </View>
             <View style={styles.gemReadoutDivider} />
             <View style={styles.gemReadoutItem}>
-              <Text style={styles.gemReadoutLabel}>Goal</Text>
+              <Text style={styles.gemReadoutLabel}>{t('tourStep.compass.goal')}</Text>
               <Text style={styles.gemReadoutValue}>{guidanceText}</Text>
             </View>
           </View>
@@ -1414,7 +1428,7 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
         <Text style={styles.gemInstruction}>{instructionText}</Text>
         <View style={styles.gemHoldCard}>
           <View style={styles.gemHoldHeader}>
-            <Text style={styles.gemHoldLabel}>Hold progress</Text>
+            <Text style={styles.gemHoldLabel}>{t('tourStep.compass.holdProgress')}</Text>
             <Text style={styles.gemHoldValue}>{holdPercent}%</Text>
           </View>
           <View style={styles.gemHoldTrack}>

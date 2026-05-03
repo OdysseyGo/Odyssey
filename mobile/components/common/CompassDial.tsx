@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -60,6 +61,7 @@ export default function CompassDial({
   targetHeadingDegrees = 0,
   toleranceDegrees = 5,
 }: CompassDialProps) {
+  const { t } = useTranslation();
   const animatedHeading = useSharedValue(0);
 
   useEffect(() => {
@@ -210,7 +212,7 @@ export default function CompassDial({
       <View style={styles.readout}>
         <Text style={styles.readoutPrimary}>
           {dial.normalizedHeading === null
-            ? 'Calibrating...'
+            ? t('compass.calibrating')
             : `${Math.round(dial.normalizedHeading)}°`}
         </Text>
         <Text style={styles.readoutSecondary}>{headingToCardinal(dial.normalizedHeading)}</Text>
@@ -220,15 +222,15 @@ export default function CompassDial({
         <View style={styles.legendContainer}>
           <View style={styles.legendItem}>
             <View style={[styles.legendSwatch, { backgroundColor: 'rgba(34, 197, 94, 0.34)' }]} />
-            <Text style={styles.legendText}>Green region: acceptable solve window</Text>
+            <Text style={styles.legendText}>{t('compass.legend.acceptableWindow')}</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendSwatch, { backgroundColor: '#16a34a' }]} />
-            <Text style={styles.legendText}>Dark green line: exact target heading</Text>
+            <Text style={styles.legendText}>{t('compass.legend.exactHeading')}</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendSwatch, { backgroundColor: '#f5f5f5' }]} />
-            <Text style={styles.legendText}>White pointer: phone forward direction</Text>
+            <Text style={styles.legendText}>{t('compass.legend.pointerDirection')}</Text>
           </View>
         </View>
       ) : null}

@@ -414,8 +414,8 @@ export default function BottomSlider({
               onPress={toggleBottomSheet}
               style={styles.grabberPressable}
               accessibilityRole="button"
-              accessibilityLabel="Adjust tour progress panel"
-              accessibilityHint="Expands or collapses the tour progress sheet"
+              accessibilityLabel={t('map.activeTour.progressPanelAccessibilityLabel')}
+              accessibilityHint={t('map.activeTour.progressPanelAccessibilityHint')}
             >
               <Animated.View
                 style={[styles.grabberSurface, { transform: [{ translateY: headerLift }] }]}
@@ -482,7 +482,7 @@ export default function BottomSlider({
         <View style={styles.skipModalOverlay}>
           <View style={styles.skipModalContainer}>
             <View style={styles.skipModalIcon}>
-              <Text style={styles.skipModalIconText}>XP</Text>
+              <Text style={styles.skipModalIconText}>{t('profile.xp')}</Text>
             </View>
 
             <Text style={styles.skipModalTitle}>{t('map.activeTour.skipConfirmTitle')}</Text>

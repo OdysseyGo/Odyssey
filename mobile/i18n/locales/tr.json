@@ -9,8 +9,10 @@
     "submitting": "Gönderiliyor...",
     "close": "Kapat",
     "save": "Kaydet",
-    "error": "Hata",
-    "syncError": "İlerleme sunucuyla senkronize edilemedi."
+    "loading": "Yükleniyor...",
+    "noImage": "Görsel yok",
+    "done": "Bitti",
+    "modal": "Modal"
   },
   "auth": {
     "welcomeTitle": "Hoş geldin, kaşif!",
@@ -188,7 +190,36 @@
     "feature2": "Rozet ve XP kazan",
     "feature3": "Diğer gezginlerle bağlantı kur",
     "logoutConfirmTitle": "Çıkış yap",
-    "logoutConfirmMessage": "Çıkış yapmak istediğinizden emin misiniz?"
+    "logoutConfirmMessage": "Çıkış yapmak istediğinizden emin misiniz?",
+    "badgeMistakes_one": "{{count}} hata",
+    "badgeMistakes_other": "{{count}} hata",
+    "ownTourReviewDisabled": "Kendi turunuzu değerlendiremezsiniz",
+    "xpProgress": "{{current}} / {{total}} XP",
+    "xpToNextLevel": "{{title}} seviyesine {{xp}} XP",
+    "maxLevelReached": "MAKSİMUM SEVİYEYE ULAŞILDI",
+    "durationHoursMinutes": "{{hours}}s {{minutes}}d",
+    "durationHoursOnly": "{{hours}}s",
+    "badgeTier": {
+      "gold": "Altın",
+      "silver": "Gümüş",
+      "bronze": "Bronz",
+      "platinum": "Platin",
+      "diamond": "Elmas",
+      "neutral": "Rozet"
+    },
+    "levelTitles": {
+      "creator": "Yaratıcı",
+      "novice": "Acemi",
+      "explorer": "Kaşif",
+      "adventurer": "Maceracı",
+      "pathfinder": "Yol Bulucu",
+      "wanderer": "Gezgin",
+      "navigator": "Kılavuz",
+      "trailblazer": "Öncü",
+      "veteran": "Usta",
+      "expert": "Uzman",
+      "legend": "Efsane"
+    }
   },
   "tour": {
     "featured": "Öne Çıkan",
@@ -330,7 +361,9 @@
       "SAFETY": "Güvenlik endişesi",
       "PRIVACY": "Gizlilik endişesi",
       "OTHER": "Diğer"
-    }
+    },
+    "tapToInteractMap": "Harita ile etkileşim için dokunun",
+    "photoCredit": "Fotoğraf: {{attribution}}"
   },
   "report": {
     "tourButton": "Turu bildir",
@@ -641,11 +674,15 @@
       "hintText": "Kullanıcı takılırsa işe yarayacak bir ipucu.",
       "types": {
         "trivia": "Bilgi Sorusu",
+        "openEnded": "Açık Uçlu",
         "ar": "AR Meydan Okuması",
+        "compass": "Pusula",
         "gyroscope": "Jiroskop",
         "pictureCompare": "Görsel Karşılaştırma"
       },
-      "pictureTargetImage": "Hedef görselini seç"
+      "pictureTargetImage": "Hedef görselini seç",
+      "targetHeadingLabel": "Hedef Yön (0-359) *",
+      "targetHeadingPlaceholder": "238"
     },
     "editLocation": {
       "header": "Konumu Düzenle",
@@ -685,6 +722,14 @@
       "arUnavailableRuntime": "AR bu çalışma ortamında kullanılamıyor.",
       "selectModelFirst": "Önce bir AR modeli seçin.",
       "anchorCount": "{{count}} bağlantı noktası"
+    },
+    "incompleteLocationTitle": "Konum bilgilerini tamamlayın",
+    "incompleteLocationMessage": "Lütfen ülke ve eyalet bilgilerini açılır listelerden seçin.",
+    "underReviewTitle": "Turunuz inceleniyor",
+    "underReviewMessage": "Turunuzu gönderdiğiniz için teşekkürler. Ekibimiz şimdi inceliyor ve yakında yayınlanacak.",
+    "reviewStatus": {
+      "review": "İncelemede",
+      "rejected": "Reddedildi"
     }
   },
   "aiTour": {
@@ -734,7 +779,8 @@
     "includeCompass": {
       "title": "Pusula Bulmacalarını Dahil Et",
       "subtitle": "Yapay zekanın uygun olan duraklara pusula yönü bulmacaları eklemesine izin verin"
-    }
+    },
+    "adUnavailableMessage": "AI oluşturma öncesinde ödüllü reklam gerekli. Lütfen kısa süre sonra tekrar deneyin."
   },
   "tourStep": {
     "tourProgress": "Tur İlerlemesi",
@@ -793,6 +839,60 @@
       "enterSecretCodePlaceholder": "Gizli kodu gir",
       "checkCode": "Kodu Kontrol Et",
       "incorrectAttemptsRemaining": "Kod doğru değil. {{count}} deneme hakkı kaldı."
+    },
+    "questionFinishedReveal": "Bu soru tamamlandı. Doğru cevap gösterildi.",
+    "openEnded": {
+      "title": "Açık uçlu",
+      "enterAnswerFirst": "Önce bir cevap girin.",
+      "checkingAnswer": "Cevap kontrol ediliyor...",
+      "matchedUnlocked": "Eşleşti. Bu adımın kilidi açıldı.",
+      "notCloseNoAttempts": "Cevap yeterince yakın değil. Deneme hakkı kalmadı.",
+      "notCloseAttemptsRemaining_one": "Cevap yeterince yakın değil. {{count}} deneme hakkı kaldı.",
+      "notCloseAttemptsRemaining_other": "Cevap yeterince yakın değil. {{count}} deneme hakkı kaldı.",
+      "verifyError": "Cevap şu anda doğrulanamadı. Lütfen tekrar deneyin.",
+      "placeholder": "Cevabını yaz",
+      "submitAnswer": "Cevabı gönder",
+      "noAttemptsRemainingSkip": "Deneme hakkı kalmadı. Bu adımı atlayabilirsiniz."
+    },
+    "compass": {
+      "title": "İşaret Noktasını Bul",
+      "subtitle": "Tur işareti kilitlenene kadar telefonunu döndür.",
+      "beaconStatus": "İşaret durumu",
+      "signal": "Sinyal",
+      "goal": "Hedef",
+      "holdProgress": "Bekletme ilerlemesi",
+      "guidance": {
+        "holdToLock": "Kilitlemek için sabit tut",
+        "rotateSlowly": "Yavaşça döndür"
+      },
+      "signalStrength": {
+        "locked": "Kilitli",
+        "strong": "Güçlü",
+        "good": "İyi",
+        "weak": "Zayıf",
+        "searching": "Aranıyor"
+      },
+      "action": {
+        "waypointLocked": "İşaret kilitlendi",
+        "holdSteady": "Sabit tut",
+        "moveGently": "Yavaşça hareket et",
+        "scanSlowly": "Yavaşça tara"
+      },
+      "status": {
+        "waypointFound": "İşaret bulundu",
+        "signalLocked": "Sinyal kilitlendi",
+        "holdSteady": "Sabit tut",
+        "strongSignal": "Güçlü sinyal",
+        "signalFound": "Sinyal bulundu",
+        "faintSignal": "Zayıf sinyal",
+        "turnSlowly": "Yavaşça dön"
+      },
+      "instruction": {
+        "locked": "Tur işaret noktası kilitlendi.",
+        "keepStill": "İşaret dolana kadar telefonu sabit tut.",
+        "followSignal": "Nazikçe hareket et ve güçlü sinyali takip et.",
+        "searchWaypoint": "İşaret noktasını aramak için telefonu yavaşça döndür."
+      }
     }
   },
   "map": {
@@ -820,7 +920,8 @@
       "steps": "Adım",
       "complete": "Tamamlandı",
       "xpEarned": "+{{xp}} XP Kazandınız!",
-      "done": "Tamam"
+      "done": "Tamam",
+      "badgeEarned": "Kazanılan rozet"
     },
     "activeTour": {
       "stepOf": "Adım {{current}} / {{total}}",
@@ -841,7 +942,25 @@
       "appleMaps": "Apple Maps",
       "googleMaps": "Google Maps",
       "yandexMaps": "Yandex Maps",
-      "directionsUnavailableMessage": "Yol tarifi şu anda açılamadı. Lütfen tekrar deneyin."
+      "directionsUnavailableMessage": "Yol tarifi şu anda açılamadı. Lütfen tekrar deneyin.",
+      "legend": {
+        "title": "Tur açıklaması",
+        "steps": "Adım türü",
+        "story": "Hikaye adımı",
+        "puzzle": "Bulmaca adımı",
+        "status": "İşaretleyici durumu",
+        "current": "Mevcut adım (daha büyük)",
+        "upcoming": "Sıradaki adım (soluk)",
+        "controlsTitle": "Kontroller",
+        "myLocation": "Konumum",
+        "currentStep": "Mevcut adıma git"
+      },
+      "skipPromptTitle": "Bu adım atlanacak mı?",
+      "skipPromptMessage": "Ceza almadan atlamak için kısa bir reklam izle veya yine de atla.",
+      "skipAnyway": "Yine de atla",
+      "watchAdToSkip": "Reklam izle",
+      "progressPanelAccessibilityLabel": "Tur ilerleme panelini ayarla",
+      "progressPanelAccessibilityHint": "Tur ilerleme panelini genişletir veya daraltır"
     },
     "nearby": {
       "title_one": "{{count}} yakın tur",
@@ -859,12 +978,38 @@
       "duration": "{{count}} dk",
       "viewTour": "Tura Git",
       "stops_one": "{{count}} durak",
-      "stops_other": "{{count}} durak"
+      "stops_other": "{{count}} durak",
+      "notOnMap": "Haritada değil",
+      "sort": {
+        "rating": "En yüksek puan",
+        "reviews": "En çok yorum",
+        "name": "Ada göre",
+        "newest": "En yeni"
+      }
     },
     "searchMode": {
       "searchHere": "Burada ara",
       "stopDragging": "Aramak için sürüklemeyi bırak",
       "zoomIn": "Aramak için yakınlaştır"
+    },
+    "filters": {
+      "label": "Filtreler",
+      "active": "Filtreler aktif",
+      "reset": "Sıfırla",
+      "type": "Tur türü",
+      "all": "Tümü",
+      "difficulty": "Zorluk",
+      "category": "Kategori"
+    },
+    "legend": {
+      "title": "İşaretleyici açıklaması",
+      "typeTitle": "Tur türü",
+      "difficultyTitle": "Zorluk rengi",
+      "controlsTitle": "Kontroller",
+      "controls": {
+        "myLocation": "Konumum",
+        "searchHere": "Bu alanda ara"
+      }
     }
   },
   "friends": {
@@ -876,7 +1021,22 @@
     "addFriend": "Arkadaş Ekle"
   },
   "badges": {
-    "noBadges": "Henüz rozet yok"
+    "noBadges": "Henüz rozet yok",
+    "names": {
+      "creator": "Yaratıcı",
+      "novice": "Acemi",
+      "explorer": "Kaşif",
+      "adventurer": "Maceracı",
+      "pathfinder": "Yol Bulucu",
+      "wanderer": "Gezgin",
+      "navigator": "Kılavuz",
+      "trailblazer": "Öncü",
+      "veteran": "Usta",
+      "expert": "Uzman",
+      "legend": "Efsane",
+      "master": "Usta",
+      "social_butterfly": "Sosyal Kelebek"
+    }
   },
   "tutorial": {
     "title": "Yardım ve Rehberler",
@@ -939,5 +1099,26 @@
     "legalSuffix": "'nı kabul etmiş olursunuz. Görevinize başlamak için lütfen okuyun ve kabul edin.",
     "mascot": "Ody seni izliyor — gözlerini aç, kaşif!",
     "cta": "Kabul Ediyorum"
+  },
+  "puzzle": {
+    "watchAdForHint": "İpucunu açmak için reklam izle"
+  },
+  "notFound": {
+    "header": "Oops!",
+    "title": "Bu ekran mevcut değil.",
+    "goHome": "Ana ekrana git!"
+  },
+  "devInfo": {
+    "openCode": "Bu ekranın kodunu açın:",
+    "autoUpdateHint": "Metni değiştirin, dosyayı kaydedin ve uygulamanız otomatik güncellensin.",
+    "helpLinkText": "Değişikliklerden sonra uygulama otomatik güncellenmiyorsa buraya dokunun"
+  },
+  "compass": {
+    "calibrating": "Kalibre ediliyor...",
+    "legend": {
+      "acceptableWindow": "Yeşil alan: kabul edilebilir çözüm aralığı",
+      "exactHeading": "Koyu yeşil çizgi: tam hedef yön",
+      "pointerDirection": "Beyaz işaretçi: telefonun ileri yönü"
+    }
   }
 }

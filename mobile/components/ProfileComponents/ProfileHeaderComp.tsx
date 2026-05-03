@@ -27,6 +27,14 @@ const WalkthroughableView = walkthroughable(View);
 
 const HEADER_HEIGHT = 240;
 
+function levelTitleKey(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
 const OptionalCopilot = ({ disable, text, order, name, style, children }: any) => {
   if (disable) {
     return <View style={style}>{children}</View>;
@@ -377,6 +385,14 @@ export default function ProfileHeaderComp({
       ? Math.max(0, xpForNextLevel - currentXp)
       : null;
   const nextTitle = level !== undefined ? getNextLevelTitle(level) : null;
+  const localizedLevelTitle =
+    levelTitle && levelTitleKey(levelTitle)
+      ? t(`profile.levelTitles.${levelTitleKey(levelTitle)}`, { defaultValue: levelTitle })
+      : levelTitle;
+  const localizedNextTitle =
+    nextTitle && levelTitleKey(nextTitle)
+      ? t(`profile.levelTitles.${levelTitleKey(nextTitle)}`, { defaultValue: nextTitle })
+      : nextTitle;
   const isMaxLevel = level !== undefined && nextTitle === null;
 
   const avatarScale = scrollY
@@ -483,20 +499,28 @@ export default function ProfileHeaderComp({
 
         <Animated.View style={{ opacity: textOpacity as any, alignItems: 'center' }}>
           <Text style={styles.username}>{title}</Text>
-          {levelTitle && <Text style={styles.tierTitle}>{levelTitle.toUpperCase()}</Text>}
+          {localizedLevelTitle && (
+            <Text style={styles.tierTitle}>{localizedLevelTitle.toUpperCase()}</Text>
+          )}
 
           {/* XP progress text */}
           {xpInLevel !== null && xpRange !== null && !isMaxLevel && (
             <Text style={styles.xpFractionText}>
-              {xpInLevel.toLocaleString()} / {xpRange.toLocaleString()} XP
+              {t('profile.xpProgress', {
+                current: xpInLevel.toLocaleString(),
+                total: xpRange.toLocaleString(),
+              })}
             </Text>
           )}
-          {xpToNext !== null && nextTitle && !isMaxLevel && (
+          {xpToNext !== null && localizedNextTitle && !isMaxLevel && (
             <Text style={styles.xpToNextText}>
-              {xpToNext.toLocaleString()} XP to {nextTitle}
+              {t('profile.xpToNextLevel', {
+                xp: xpToNext.toLocaleString(),
+                title: localizedNextTitle,
+              })}
             </Text>
           )}
-          {isMaxLevel && <Text style={styles.xpToNextText}>MAX LEVEL REACHED</Text>}
+          {isMaxLevel && <Text style={styles.xpToNextText}>{t('profile.maxLevelReached')}</Text>}
 
           {subtitle ? (
             <View style={styles.locationChip}>

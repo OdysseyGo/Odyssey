@@ -166,11 +166,7 @@ export default function FeaturedTourCarousel({
                   {tour.image ? (
                     <Image source={{ uri: tour.image }} style={styles.image} />
                   ) : (
-                    <TourImagePlaceholder
-                      style={styles.imagePlaceholder}
-                      iconSize={34}
-                      label="No tour image"
-                    />
+                    <TourImagePlaceholder style={styles.imagePlaceholder} iconSize={34} />
                   )}
                   <View style={styles.imageOverlay} />
 

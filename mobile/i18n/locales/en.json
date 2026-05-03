@@ -8,7 +8,11 @@
     "submit": "Submit",
     "submitting": "Submitting...",
     "close": "Close",
-    "save": "Save"
+    "save": "Save",
+    "loading": "Loading...",
+    "noImage": "No image",
+    "done": "Done",
+    "modal": "Modal"
   },
   "auth": {
     "welcomeTitle": "Welcome, adventurer!",
@@ -186,7 +190,36 @@
     "feature2": "Earn badges and XP",
     "feature3": "Connect with other travelers",
     "logoutConfirmTitle": "Log out",
-    "logoutConfirmMessage": "Are you sure you want to log out?"
+    "logoutConfirmMessage": "Are you sure you want to log out?",
+    "badgeMistakes_one": "{{count}} mistake",
+    "badgeMistakes_other": "{{count}} mistakes",
+    "ownTourReviewDisabled": "You can't review your own tour",
+    "xpProgress": "{{current}} / {{total}} XP",
+    "xpToNextLevel": "{{xp}} XP to {{title}}",
+    "maxLevelReached": "MAX LEVEL REACHED",
+    "durationHoursMinutes": "{{hours}}h {{minutes}}m",
+    "durationHoursOnly": "{{hours}}h",
+    "badgeTier": {
+      "gold": "Gold",
+      "silver": "Silver",
+      "bronze": "Bronze",
+      "platinum": "Platinum",
+      "diamond": "Diamond",
+      "neutral": "Badge"
+    },
+    "levelTitles": {
+      "creator": "Creator",
+      "novice": "Novice",
+      "explorer": "Explorer",
+      "adventurer": "Adventurer",
+      "pathfinder": "Pathfinder",
+      "wanderer": "Wanderer",
+      "navigator": "Navigator",
+      "trailblazer": "Trailblazer",
+      "veteran": "Veteran",
+      "expert": "Expert",
+      "legend": "Legend"
+    }
   },
   "tour": {
     "featured": "Featured",
@@ -206,6 +239,9 @@
       "other": "Other"
     },
     "all": "All",
+    "story": "Story",
+    "puzzle": "Puzzle",
+    "hybrid": "Hybrid",
     "loadError": "Failed to load tours",
     "errorTitle": "Something went wrong",
     "emptyTitle": "No tours here yet",
@@ -325,7 +361,9 @@
       "SAFETY": "Safety concern",
       "PRIVACY": "Privacy concern",
       "OTHER": "Other"
-    }
+    },
+    "tapToInteractMap": "Tap to interact with map",
+    "photoCredit": "Photo: {{attribution}}"
   },
   "report": {
     "tourButton": "Report tour",
@@ -636,11 +674,15 @@
       "hintText": "A helpful clue if the user gets stuck.",
       "types": {
         "trivia": "Trivia",
+        "openEnded": "Open Ended",
         "ar": "AR Challenge",
+        "compass": "Compass",
         "gyroscope": "Gyroscope",
         "pictureCompare": "Picture Compare"
       },
-      "pictureTargetImage": "Pick your target image"
+      "pictureTargetImage": "Pick your target image",
+      "targetHeadingLabel": "Target Heading (0-359) *",
+      "targetHeadingPlaceholder": "238"
     },
     "editLocation": {
       "header": "Edit Location",
@@ -680,6 +722,14 @@
       "arUnavailableRuntime": "AR is unavailable in this runtime.",
       "selectModelFirst": "Select an AR model first.",
       "anchorCount": "{{count}} anchors"
+    },
+    "incompleteLocationTitle": "Complete location details",
+    "incompleteLocationMessage": "Please select country and state from the dropdown lists.",
+    "underReviewTitle": "Your tour is under review",
+    "underReviewMessage": "Thanks for submitting your tour. Our team is reviewing it now and it will be published soon.",
+    "reviewStatus": {
+      "review": "Review",
+      "rejected": "Rejected"
     }
   },
   "aiTour": {
@@ -729,7 +779,8 @@
     "includeCompass": {
       "title": "Include Compass Puzzles",
       "subtitle": "Let the AI add compass-heading puzzles on stops where they fit"
-    }
+    },
+    "adUnavailableMessage": "A rewarded ad is required before AI generation. Please try again shortly."
   },
   "tourStep": {
     "tourProgress": "Tour Progress",
@@ -788,6 +839,60 @@
       "enterSecretCodePlaceholder": "Enter secret code",
       "checkCode": "Check Code",
       "incorrectAttemptsRemaining": "Code is not correct. {{count}} attempts remaining."
+    },
+    "questionFinishedReveal": "This question is finished. The correct answer is revealed.",
+    "openEnded": {
+      "title": "Open ended",
+      "enterAnswerFirst": "Enter an answer first.",
+      "checkingAnswer": "Checking answer...",
+      "matchedUnlocked": "That matches. This step is unlocked.",
+      "notCloseNoAttempts": "Answer is not close enough. No attempts remaining.",
+      "notCloseAttemptsRemaining_one": "Answer is not close enough. {{count}} attempt remaining.",
+      "notCloseAttemptsRemaining_other": "Answer is not close enough. {{count}} attempts remaining.",
+      "verifyError": "Could not verify answer right now. Please try again.",
+      "placeholder": "Type your answer",
+      "submitAnswer": "Submit answer",
+      "noAttemptsRemainingSkip": "No attempts remaining. You can skip this step."
+    },
+    "compass": {
+      "title": "Find the Waypoint",
+      "subtitle": "Rotate your phone until the tour beacon locks on.",
+      "beaconStatus": "Beacon status",
+      "signal": "Signal",
+      "goal": "Goal",
+      "holdProgress": "Hold progress",
+      "guidance": {
+        "holdToLock": "Hold to lock",
+        "rotateSlowly": "Rotate slowly"
+      },
+      "signalStrength": {
+        "locked": "Locked",
+        "strong": "Strong",
+        "good": "Good",
+        "weak": "Weak",
+        "searching": "Searching"
+      },
+      "action": {
+        "waypointLocked": "Waypoint locked",
+        "holdSteady": "Hold steady",
+        "moveGently": "Move gently",
+        "scanSlowly": "Scan slowly"
+      },
+      "status": {
+        "waypointFound": "Waypoint found",
+        "signalLocked": "Signal locked",
+        "holdSteady": "Hold steady",
+        "strongSignal": "Strong signal",
+        "signalFound": "Signal found",
+        "faintSignal": "Faint signal",
+        "turnSlowly": "Turn slowly"
+      },
+      "instruction": {
+        "locked": "The tour waypoint is locked in.",
+        "keepStill": "Keep the phone still until the beacon fills.",
+        "followSignal": "Move gently and follow the stronger signal.",
+        "searchWaypoint": "Rotate the phone slowly to search for the waypoint."
+      }
     }
   },
   "map": {
@@ -815,7 +920,8 @@
       "steps": "Steps",
       "complete": "Complete",
       "xpEarned": "+{{xp}} XP Earned!",
-      "done": "Done"
+      "done": "Done",
+      "badgeEarned": "Badge earned"
     },
     "activeTour": {
       "stepOf": "Step {{current}} of {{total}}",
@@ -836,7 +942,25 @@
       "appleMaps": "Apple Maps",
       "googleMaps": "Google Maps",
       "yandexMaps": "Yandex Maps",
-      "directionsUnavailableMessage": "Could not open directions right now. Please try again."
+      "directionsUnavailableMessage": "Could not open directions right now. Please try again.",
+      "legend": {
+        "title": "Tour legend",
+        "steps": "Step type",
+        "story": "Story step",
+        "puzzle": "Puzzle step",
+        "status": "Marker status",
+        "current": "Current step (larger)",
+        "upcoming": "Upcoming step (dimmed)",
+        "controlsTitle": "Controls",
+        "myLocation": "My location",
+        "currentStep": "Go to current step"
+      },
+      "skipPromptTitle": "Skip this step?",
+      "skipPromptMessage": "Watch a short ad to skip without penalty, or skip anyway.",
+      "skipAnyway": "Skip anyway",
+      "watchAdToSkip": "Watch ad",
+      "progressPanelAccessibilityLabel": "Adjust tour progress panel",
+      "progressPanelAccessibilityHint": "Expands or collapses the tour progress sheet"
     },
     "nearby": {
       "title_one": "{{count}} tour nearby",
@@ -854,12 +978,38 @@
       "duration": "{{count}} min",
       "viewTour": "View Tour",
       "stops_one": "{{count}} stop",
-      "stops_other": "{{count}} stops"
+      "stops_other": "{{count}} stops",
+      "notOnMap": "Not on map",
+      "sort": {
+        "rating": "Top rated",
+        "reviews": "Most reviewed",
+        "name": "Name",
+        "newest": "Newest"
+      }
     },
     "searchMode": {
       "searchHere": "Search here",
       "stopDragging": "Stop dragging to search",
       "zoomIn": "Zoom in to search"
+    },
+    "filters": {
+      "label": "Filters",
+      "active": "Filters active",
+      "reset": "Reset",
+      "type": "Tour type",
+      "all": "All",
+      "difficulty": "Difficulty",
+      "category": "Category"
+    },
+    "legend": {
+      "title": "Marker legend",
+      "typeTitle": "Tour type",
+      "difficultyTitle": "Difficulty color",
+      "controlsTitle": "Controls",
+      "controls": {
+        "myLocation": "My location",
+        "searchHere": "Search this area"
+      }
     }
   },
   "friends": {
@@ -871,7 +1021,22 @@
     "addFriend": "Add Friend"
   },
   "badges": {
-    "noBadges": "No badges yet"
+    "noBadges": "No badges yet",
+    "names": {
+      "creator": "Creator",
+      "novice": "Novice",
+      "explorer": "Explorer",
+      "adventurer": "Adventurer",
+      "pathfinder": "Pathfinder",
+      "wanderer": "Wanderer",
+      "navigator": "Navigator",
+      "trailblazer": "Trailblazer",
+      "veteran": "Veteran",
+      "expert": "Expert",
+      "legend": "Legend",
+      "master": "Master",
+      "social_butterfly": "Social Butterfly"
+    }
   },
   "tutorial": {
     "title": "Help & Tutorials",
@@ -934,5 +1099,26 @@
     "legalSuffix": ". Please read and accept to begin your quest.",
     "mascot": "Ody is watching — keep your eyes up, adventurer!",
     "cta": "I Accept"
+  },
+  "puzzle": {
+    "watchAdForHint": "Watch ad to reveal hint"
+  },
+  "notFound": {
+    "header": "Oops!",
+    "title": "This screen doesn't exist.",
+    "goHome": "Go to home screen!"
+  },
+  "devInfo": {
+    "openCode": "Open up the code for this screen:",
+    "autoUpdateHint": "Change any of the text, save the file, and your app will automatically update.",
+    "helpLinkText": "Tap here if your app doesn't automatically update after making changes"
+  },
+  "compass": {
+    "calibrating": "Calibrating...",
+    "legend": {
+      "acceptableWindow": "Green region: acceptable solve window",
+      "exactHeading": "Dark green line: exact target heading",
+      "pointerDirection": "White pointer: phone forward direction"
+    }
   }
 }

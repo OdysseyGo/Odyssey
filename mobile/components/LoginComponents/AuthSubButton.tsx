@@ -4,10 +4,12 @@ import { authSubButtonStyles } from './AuthSubButton.styles';
 import { TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { AuthSubButtonProps } from './AuthSubButton.config';
+import { useTranslation } from 'react-i18next';
 
 export default function AuthSubButton({ title, onPress, disabled, loading }: AuthSubButtonProps) {
   const theme = useColorTheme();
   const styles = authSubButtonStyles(theme);
+  const { t } = useTranslation();
   const isDisabled = disabled || loading;
 
   return (
@@ -18,7 +20,7 @@ export default function AuthSubButton({ title, onPress, disabled, loading }: Aut
       disabled={isDisabled}
     >
       {loading ? (
-        <ActivityIndicator accessibilityLabel="Loading" />
+        <ActivityIndicator accessibilityLabel={t('common.loading')} />
       ) : (
         <Text style={styles.title}>{title}</Text>
       )}

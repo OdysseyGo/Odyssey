@@ -576,8 +576,13 @@ export default function MapScreen() {
       const category = tour.category?.trim();
       if (category) knownCategories.add(category);
     });
-    return Array.from(knownCategories).sort((a, b) => a.localeCompare(b));
-  }, [nearbyTours]);
+    return Array.from(knownCategories)
+      .sort((a, b) => a.localeCompare(b))
+      .map((category) => ({
+        value: category,
+        label: t(`creation.categories.${category.toLowerCase()}`, { defaultValue: category }),
+      }));
+  }, [nearbyTours, t]);
   const nearbyDifficultyOptions = useMemo(
     () =>
       [
@@ -907,22 +912,25 @@ export default function MapScreen() {
                     {t('map.filters.all', { defaultValue: 'All' })}
                   </Text>
                 </Pressable>
-                {nearbyCategoryOptions.map((category) => (
+                {nearbyCategoryOptions.map((option) => (
                   <Pressable
-                    key={category}
+                    key={option.value}
                     style={[
                       styles.searchFilterChip,
-                      nearbyFilters.category === category && styles.searchFilterChipActive,
+                      nearbyFilters.category === option.value && styles.searchFilterChipActive,
                     ]}
-                    onPress={() => handleFiltersChange({ ...nearbyFilters, category })}
+                    onPress={() =>
+                      handleFiltersChange({ ...nearbyFilters, category: option.value })
+                    }
                   >
                     <Text
                       style={[
                         styles.searchFilterChipText,
-                        nearbyFilters.category === category && styles.searchFilterChipTextActive,
+                        nearbyFilters.category === option.value &&
+                          styles.searchFilterChipTextActive,
                       ]}
                     >
-                      {category}
+                      {option.label}
                     </Text>
                   </Pressable>
                 ))}

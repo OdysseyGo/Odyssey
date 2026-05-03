@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { profileTourCardStyles } from './ProfileTourCard.styles';
@@ -23,6 +24,7 @@ export default function ProfileTourCard({ tour, onPress, containerStyle }: Profi
   const theme = useColorTheme();
   const styles = useMemo(() => profileTourCardStyles(theme), [theme]);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   const statusStyle = STATUS_COLORS[tour.status];
   const pendingPillLabel =
@@ -45,10 +47,13 @@ export default function ProfileTourCard({ tour, onPress, containerStyle }: Profi
   };
 
   const formatDuration = (minutes: number) => {
-    if (minutes < 60) return `${minutes} min`;
+    if (minutes < 60) return `${minutes} ${t('tourId.min')}`;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    if (mins > 0) {
+      return t('profile.durationHoursMinutes', { hours, minutes: mins });
+    }
+    return t('profile.durationHoursOnly', { hours });
   };
 
   return (
@@ -70,7 +75,7 @@ export default function ProfileTourCard({ tour, onPress, containerStyle }: Profi
           </Text>
           <View style={[styles.statusBadge, { backgroundColor: color.primary }]}>
             <Text style={[styles.statusText, { color: statusStyle.text }]}>
-              {STATUS_LABELS[tour.status]}
+              {t(STATUS_LABELS[tour.status])}
             </Text>
           </View>
           {pendingPillLabel && pendingPillColors ? (
@@ -84,7 +89,7 @@ export default function ProfileTourCard({ tour, onPress, containerStyle }: Profi
               ]}
             >
               <Text style={[styles.subStatusText, { color: pendingPillColors.text }]}>
-                {pendingPillLabel}
+                {t(pendingPillLabel)}
               </Text>
             </View>
           ) : null}
@@ -94,7 +99,13 @@ export default function ProfileTourCard({ tour, onPress, containerStyle }: Profi
           {tour.city && <Text style={styles.metaText}>&middot;</Text>}
           <Text style={styles.metaText}>{formatDuration(tour.duration_minutes)}</Text>
           <Text style={styles.metaText}>&middot;</Text>
-          <Text style={styles.metaText}>{tour.tour_type}</Text>
+          <Text style={styles.metaText}>
+            {tour.tour_type === 'STORY'
+              ? t('tour.story')
+              : tour.tour_type === 'PUZZLE'
+                ? t('tour.puzzle')
+                : t('tour.hybrid')}
+          </Text>
         </View>
       </View>
       <View style={styles.arrowContainer}>
