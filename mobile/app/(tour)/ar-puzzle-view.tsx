@@ -10,6 +10,8 @@ const MODEL_SCALE: [number, number, number] = [0.25, 0.25, 0.25];
 const DEFAULT_MODEL_SCALE_METERS = 1;
 const MIN_MODEL_SCALE_METERS = 0.3;
 const MAX_MODEL_SCALE_METERS = 10;
+const CODE_REVEAL_AFTER_MODEL_MS = 250;
+const CODE_REVEAL_FALLBACK_MS = 2500;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -53,6 +55,67 @@ function ARPuzzleScene(props: any) {
   );
   const modelScale = getScaledModelScale(modelScaleMeters);
   const anchorWorldPosition = toModelWorldPoint(anchorPosition, MODEL_POSITION, modelScale);
+  const [showCode, setShowCode] = React.useState(false);
+  const fallbackTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const revealTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadSignalSeenRef = React.useRef(false);
+
+  const clearTimers = React.useCallback(() => {
+    if (fallbackTimerRef.current) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+    if (revealTimerRef.current) {
+      clearTimeout(revealTimerRef.current);
+      revealTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleCodeReveal = React.useCallback(() => {
+    if (revealTimerRef.current) {
+      clearTimeout(revealTimerRef.current);
+    }
+    revealTimerRef.current = setTimeout(() => {
+      setShowCode(true);
+    }, CODE_REVEAL_AFTER_MODEL_MS);
+  }, []);
+
+  React.useEffect(() => {
+    setShowCode(false);
+    loadSignalSeenRef.current = false;
+    clearTimers();
+    // Fallback when certain runtimes do not fire model load callbacks reliably.
+    fallbackTimerRef.current = setTimeout(() => {
+      if (!loadSignalSeenRef.current) {
+        setShowCode(true);
+      }
+    }, CODE_REVEAL_FALLBACK_MS);
+
+    return clearTimers;
+  }, [sceneAssetUrl, clearTimers]);
+
+  const handleModelLoad = React.useCallback(() => {
+    loadSignalSeenRef.current = true;
+    if (fallbackTimerRef.current) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+    scheduleCodeReveal();
+  }, [scheduleCodeReveal]);
+
+  const handleModelError = React.useCallback(
+    (error: unknown) => {
+      console.warn('AR model failed to load, revealing code via fallback path.', error);
+      loadSignalSeenRef.current = true;
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+        fallbackTimerRef.current = null;
+      }
+      // Keep puzzle usable even if model callbacks/error behavior differ by runtime.
+      scheduleCodeReveal();
+    },
+    [scheduleCodeReveal]
+  );
 
   return (
     <ViroARScene>
@@ -62,24 +125,30 @@ function ARPuzzleScene(props: any) {
         position={MODEL_POSITION}
         scale={modelScale}
         type="GLB"
+        onLoadEnd={handleModelLoad}
+        onError={handleModelError}
       />
-      <ViroText
-        text={secretCode || 'Code'}
-        width={1}
-        height={1}
-        style={styles.viroText}
-        position={anchorWorldPosition}
-        scale={[0.12, 0.12, 0.12]}
-      />
-      <ViroText
-        text={secretCode || 'Code'}
-        width={1}
-        height={1}
-        style={styles.viroText}
-        position={anchorWorldPosition}
-        rotation={[0, 180, 0]}
-        scale={[0.12, 0.12, 0.12]}
-      />
+      {showCode ? (
+        <>
+          <ViroText
+            text={secretCode || 'Code'}
+            width={1}
+            height={1}
+            style={styles.viroText}
+            position={anchorWorldPosition}
+            scale={[0.12, 0.12, 0.12]}
+          />
+          <ViroText
+            text={secretCode || 'Code'}
+            width={1}
+            height={1}
+            style={styles.viroText}
+            position={anchorWorldPosition}
+            rotation={[0, 180, 0]}
+            scale={[0.12, 0.12, 0.12]}
+          />
+        </>
+      ) : null}
     </ViroARScene>
   );
 }
