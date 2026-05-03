@@ -70,9 +70,9 @@ export async function removeAuthToken(): Promise<void> {
 export async function logout(): Promise<void> {
   try {
     const pushToken = await SecureStore.getItemAsync('devicePushToken');
-    
+
     if (pushToken) {
-       await deregisterDeviceToken({ device_token: pushToken });
+      await deregisterDeviceToken({ device_token: pushToken });
     }
   } catch (error) {
     console.warn('Failed to deregister push token on logout:', error);
