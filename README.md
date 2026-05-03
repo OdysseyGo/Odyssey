@@ -224,7 +224,7 @@ Follow the steps below to configure S3 for your environment:
 
 ## 7. Notifications
 
-Need to have a .p8 key from APN services for sending notifications. Also backend needs another run with 
+Set `APPLE_AUTH_KEY_P8_B64` in `.env` to the base64-encoded contents of your APNs `.p8` key. Also backend needs another run with 
 
    ```bash
    python manage.py send_notifications

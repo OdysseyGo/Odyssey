@@ -331,5 +331,6 @@ LOGGING = {
 # Apple Push Notification Settings
 APPLE_TEAM_ID = os.getenv("APPLE_TEAM_ID")
 APPLE_KEY_ID = os.getenv("APPLE_KEY_ID")
+APPLE_AUTH_KEY_P8_B64 = os.getenv("APPLE_AUTH_KEY_P8_B64")
 APNS_BUNDLE_ID = os.getenv("APNS_BUNDLE_ID", "com.app.odyssey.bilkent")
 APNS_USE_SANDBOX = os.getenv("APNS_USE_SANDBOX", "True") == "True"

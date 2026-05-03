@@ -1,6 +1,6 @@
 import logging
+from base64 import b64decode
 from datetime import datetime, timezone
-from pathlib import Path
 
 import httpx
 import jwt
@@ -15,11 +15,9 @@ class APNsService:
     def __init__(self):
         self.team_id = settings.APPLE_TEAM_ID
         self.key_id = settings.APPLE_KEY_ID
+        self.auth_key_p8_b64 = settings.APPLE_AUTH_KEY_P8_B64
         self.bundle_id = settings.APNS_BUNDLE_ID
         self.use_sandbox = settings.APNS_USE_SANDBOX
-
-        current_dir = Path(__file__).parent.resolve()
-        self.certificate_path = current_dir / f"keys/AuthKey_{self.key_id}.p8"
 
         # APNs server URLs
         self.sandbox_url = "https://api.sandbox.push.apple.com"
@@ -32,9 +30,13 @@ class APNsService:
 
         payload = {"iss": self.team_id, "iat": datetime.now(timezone.utc)}
 
-        # Read your private key file
-        with open(self.certificate_path, "r") as f:
-            private_key = f.read()
+        if not self.auth_key_p8_b64:
+            raise ValueError("APPLE_AUTH_KEY_P8_B64 is not configured")
+
+        try:
+            private_key = b64decode(self.auth_key_p8_b64).decode("utf-8")
+        except Exception as exc:
+            raise ValueError("APPLE_AUTH_KEY_P8_B64 is not valid base64") from exc
 
         token = jwt.encode(payload, private_key, algorithm="ES256", headers=headers)
         return token
