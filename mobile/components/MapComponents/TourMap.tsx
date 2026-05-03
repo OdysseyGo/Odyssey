@@ -3,7 +3,7 @@ import MapView, { Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 
 import getStyles from './TourMap.styles';
-import { TourMapProps } from './TourMap.config';
+import type { TourMapMode, TourMapProps } from './TourMap.config';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import MapMarker from './MapMarker';
@@ -30,16 +30,34 @@ export default function TourMap({
   nearbyMarkers,
   animateToRegion,
   centerOnUserRequestKey,
+  mapMode,
 }: TourMapProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const colors = Colors[theme];
   const mapRef = useRef<MapView>(null);
   const onUserLocationReadyRef = useRef(onUserLocationReady);
+  const resolvedMapMode: TourMapMode = mapMode ?? (tour ? 'active-tour' : 'explore');
+  const mountMetaRef = useRef({
+    mapMode: resolvedMapMode,
+    markerCount: markers.length,
+    routePointCount: route.length,
+  });
 
   useEffect(() => {
     onUserLocationReadyRef.current = onUserLocationReady;
   }, [onUserLocationReady]);
+
+  useEffect(() => {
+    if (__DEV__) {
+      console.log('[TourMap] mount', mountMetaRef.current);
+    }
+    return () => {
+      if (__DEV__) {
+        console.log('[TourMap] unmount', mountMetaRef.current);
+      }
+    };
+  }, []);
 
   // Get user location on mount (but don't animate if there's an active tour)
   useEffect(() => {

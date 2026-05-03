@@ -23,7 +23,7 @@ import { getTour, getToursInBounds } from '@/api/tours';
 import type { Difficulty, InBoundsFilters, InBoundsSort, Tour, TourType } from '@/api/tours';
 import { deleteTourProgress } from '@/api/tourProgress';
 import type { MapMarkerProps } from './MapMarker.config';
-import type { Region } from './TourMap.config';
+import type { Region, TourMapMode } from './TourMap.config';
 import type { UserBadge } from '@/api/profile';
 import { useInterstitial } from '@/components/Ads/useInterstitial';
 import { TOUR_CATEGORIES } from '@/components/TourCreation';
@@ -174,8 +174,11 @@ export default function MapScreen() {
   const [showEndConfirmModal, setShowEndConfirmModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [completionSummary, setCompletionSummary] = useState<CompletionSummary | null>(null);
+  const [mapResetVersion, setMapResetVersion] = useState(0);
   const { show: showTourCompleteInterstitial } = useInterstitial('tour_complete_interstitial');
   const completingTourRef = useRef(false);
+  const completionResetTourIdRef = useRef<string | null>(null);
+  const lastActiveTourIdRef = useRef<string | null>(null);
 
   const [nearbyTours, setNearbyTours] = useState<MapTour[]>([]);
   const [nearbySort, setNearbySort] = useState<InBoundsSort>('rating');
@@ -219,10 +222,20 @@ export default function MapScreen() {
   const wasActiveBranchRef = useRef<boolean | null>(null);
   const [legendPanelHeight, setLegendPanelHeight] = useState(168);
   const filterPanelAnim = useRef(new Animated.Value(0)).current;
+  const mapMode: TourMapMode = isActive && tour ? 'active-tour' : 'explore';
+  const mapInstanceKey = `${mapMode}:${mapResetVersion}`;
 
   useEffect(() => {
     nearbyFiltersRef.current = nearbyFilters;
   }, [nearbyFilters]);
+
+  useEffect(() => {
+    const activeTourId = isActive && tour ? tour.id : null;
+    if (activeTourId && activeTourId !== lastActiveTourIdRef.current) {
+      completionResetTourIdRef.current = null;
+    }
+    lastActiveTourIdRef.current = activeTourId;
+  }, [isActive, tour]);
 
   useEffect(() => {
     selectedNearbyTourIdRef.current = selectedNearbyTourId;
@@ -462,6 +475,19 @@ export default function MapScreen() {
         });
       }
       endTour();
+      if (completionResetTourIdRef.current !== summary.tourId) {
+        completionResetTourIdRef.current = summary.tourId;
+        setMapResetVersion((previousVersion) => {
+          const nextVersion = previousVersion + 1;
+          if (__DEV__) {
+            console.log('[MapScreen] map_reset_increment_on_completion', {
+              tourId: summary.tourId,
+              nextResetVersion: nextVersion,
+            });
+          }
+          return nextVersion;
+        });
+      }
     },
     [endTour, showTourCompleteInterstitial, tour]
   );
@@ -861,6 +887,7 @@ export default function MapScreen() {
     return (
       <View style={styles.container}>
         <TourMap
+          key={mapInstanceKey}
           markers={[]}
           route={[]}
           initialRegion={defaultRegion}
@@ -872,6 +899,7 @@ export default function MapScreen() {
           nearbyMarkers={nearbyMarkersForMap}
           animateToRegion={animateToRegion}
           centerOnUserRequestKey={centerOnUserRequestKey}
+          mapMode={mapMode}
         />
 
         <Pressable
@@ -1262,6 +1290,7 @@ export default function MapScreen() {
   return (
     <View style={styles.container}>
       <TourMap
+        key={mapInstanceKey}
         markers={visibleMarkers}
         route={visibleRoute}
         initialRegion={initialRegion}
@@ -1269,6 +1298,7 @@ export default function MapScreen() {
         tour={tour}
         animateToRegion={animateToRegion}
         centerOnUserRequestKey={centerOnUserRequestKey}
+        mapMode={mapMode}
       />
 
       <Pressable

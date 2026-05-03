@@ -12,6 +12,8 @@ export interface RouteCoordinate {
   longitude: number;
 }
 
+export type TourMapMode = 'active-tour' | 'explore';
+
 export interface TourMapProps {
   markers: MapMarkerProps[];
   route: RouteCoordinate[];
@@ -25,6 +27,7 @@ export interface TourMapProps {
   nearbyMarkers?: MapMarkerProps[];
   animateToRegion?: Region;
   centerOnUserRequestKey?: number;
+  mapMode?: TourMapMode;
 }
 
 export const exampleTourMap: TourMapProps = {
