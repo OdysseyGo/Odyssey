@@ -111,7 +111,7 @@ export default function CreationMethodSelect() {
         t('creation.method.personalLockedMessage', {
           level: personalTourMinLevel,
           currentLevel: resolvedLevel,
-        }),
+        })
       );
       return;
     }
