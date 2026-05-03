@@ -16,7 +16,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { BlurView } from 'expo-blur';
 
 import ProfileTourCard from '@/components/ProfileComponents/ProfileTourCard';
@@ -252,22 +252,39 @@ export default function MyCompletedToursScreen() {
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => {
             const userReview = currentUser ? getUserReview(item) : null;
+            const canReviewTour = currentUser ? item.creator?.id !== currentUser.id : false;
             return (
               <View style={[styles.tourItem, { backgroundColor: theme.cardSurface }]}>
                 <ProfileTourCard
                   tour={item}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/tour/[id]',
+                      params: { id: item.id.toString(), reveal: 'completed' },
+                    })
+                  }
                   containerStyle={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
                 />
                 {item.status === 'PUBLISHED' ? (
                   <TouchableOpacity
-                    style={[styles.reviewButton, { backgroundColor: theme.primary }]}
+                    style={[
+                      styles.reviewButton,
+                      {
+                        backgroundColor: canReviewTour ? theme.primary : theme.foregroundSecondary,
+                      },
+                    ]}
                     activeOpacity={0.8}
+                    disabled={!canReviewTour}
                     onPress={() => openReviewModal(item)}
                   >
                     <Text style={styles.reviewButtonText}>
-                      {userReview
-                        ? t('profile.editReview', { defaultValue: 'Edit Review' })
-                        : t('profile.reviewTour', { defaultValue: 'Review Tour' })}
+                      {canReviewTour
+                        ? userReview
+                          ? t('profile.editReview', { defaultValue: 'Edit Review' })
+                          : t('profile.reviewTour', { defaultValue: 'Review Tour' })
+                        : t('profile.ownTourReviewDisabled', {
+                            defaultValue: "You can't review your own tour",
+                          })}
                     </Text>
                   </TouchableOpacity>
                 ) : null}

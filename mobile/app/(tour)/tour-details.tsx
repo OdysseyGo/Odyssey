@@ -7,6 +7,7 @@ import { useTourCreation } from '@/contexts/TourCreationContext';
 import { TourDetailsStep } from '@/components/TourCreation/steps';
 import { StepIndicator, CreationFooter, CreationHeader } from '@/components/TourCreation/common';
 import { useTranslation } from 'react-i18next';
+import { sanitizeMultiLineText, sanitizeSingleLineText } from '@/utils/inputSanitizers';
 
 const STEPS = ['details', 'locations', 'stories', 'review'];
 
@@ -17,9 +18,15 @@ export default function TourDetailsScreen() {
   const { t } = useTranslation();
 
   const canProceed =
-    tourData.title.trim().length > 0 &&
-    tourData.description.trim().length > 0 &&
-    tourData.category.length > 0;
+    sanitizeSingleLineText(tourData.title).trim().length > 0 &&
+    sanitizeMultiLineText(tourData.description).trim().length > 0 &&
+    !!tourData.coverImage &&
+    tourData.category.length > 0 &&
+    tourData.country.trim().length > 0 &&
+    tourData.countryCode.trim().length > 0 &&
+    tourData.state.trim().length > 0 &&
+    Number.isFinite(tourData.stateLatitude) &&
+    Number.isFinite(tourData.stateLongitude);
 
   const handleNext = () => {
     router.push('/tour-locations');

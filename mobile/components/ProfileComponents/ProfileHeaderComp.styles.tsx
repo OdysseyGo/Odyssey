@@ -4,26 +4,47 @@ import { Spacing } from '@/constants/Spacing';
 
 export const profileHeaderCompStyles = (theme: ThemeName) => {
   const color = Colors[theme];
-  const isLight = theme === 'light';
 
   return StyleSheet.create({
+    outerWrapper: {
+      width: '100%',
+      position: 'relative',
+    },
     container: {
       width: '100%',
       alignItems: 'center',
       justifyContent: 'center',
-
-      backgroundColor: color.primary,
-      paddingBottom: Spacing.xxl + Spacing.lg,
+      paddingBottom: Spacing.xxl + Spacing.lg + 12,
+      overflow: 'hidden',
     },
-    // Subtle lighter band at the bottom to fake a gradient feel
-    bottomGlow: {
+
+    // Soft top-down highlight overlay (fakes a radial spotlight from the top)
+    topHighlight: {
       position: 'absolute',
-      bottom: 0,
+      top: 0,
       left: 0,
       right: 0,
-      height: '45%',
-      backgroundColor: color.primary,
-      opacity: isLight ? 0.55 : 0,
+      height: '60%',
+    },
+
+    // Scalloped bottom edge — outer wraps a rounded inset rectangle that
+    // peeks from the bottom, giving a soft curved separation from the page.
+    bottomCurve: {
+      position: 'absolute',
+      bottom: -1,
+      left: 0,
+      right: 0,
+      height: 28,
+      overflow: 'hidden',
+    },
+    bottomCurveInner: {
+      position: 'absolute',
+      bottom: 0,
+      left: -20,
+      right: -20,
+      height: 50,
+      borderTopLeftRadius: 200,
+      borderTopRightRadius: 200,
     },
 
     settingsButton: {
@@ -36,6 +57,7 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
       backgroundColor: color.profileHeaderButtonBackground,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: color.profileHeaderButtonBorder,
+      zIndex: 5,
       ...Platform.select({
         ios: {
           shadowColor: color.profileHeaderShadow,
@@ -47,67 +69,12 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
       }),
     },
 
-    // Avatar
-    avatarRing: {
-      width: 112,
-      height: 112,
-      borderRadius: 56,
-      borderWidth: isLight ? 3.5 : 3,
-      borderColor: color.profileHeaderAvatarRingBorder,
-      alignItems: 'center',
-      justifyContent: 'center',
-      ...Platform.select({
-        ios: {
-          shadowColor: color.profileHeaderAvatarShadow,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: isLight ? 0.25 : 0.2,
-          shadowRadius: 16,
-        },
-        android: { elevation: 10 },
-      }),
-    },
-    avatarCircle: {
-      width: 104,
-      height: 104,
-      borderRadius: 52,
-      backgroundColor: color.profileHeaderAvatarBackground,
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
-    },
-    avatarImage: {
-      width: '100%',
-      height: '100%',
-    },
-    editBadge: {
-      position: 'absolute',
-      bottom: 2,
-      right: 2,
-      width: 30,
-      height: 30,
-      borderRadius: 15,
-      backgroundColor: isLight ? color.cardSurface : color.white,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 2,
-      borderColor: isLight ? color.headerGradientTop : color.primary,
-      ...Platform.select({
-        ios: {
-          shadowColor: color.profileHeaderShadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.15,
-          shadowRadius: 4,
-        },
-        android: { elevation: 4 },
-      }),
-    },
-
     // Text
     username: {
       fontSize: 24,
       fontWeight: '800',
       color: color.white,
-      marginTop: Spacing.md,
+      marginTop: Spacing.lg,
       letterSpacing: -0.3,
       ...Platform.select({
         ios: {
@@ -116,6 +83,41 @@ export const profileHeaderCompStyles = (theme: ThemeName) => {
           textShadowRadius: 4,
         },
       }),
+    },
+    tierTitle: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: 'rgba(255,255,255,0.9)',
+      letterSpacing: 3,
+      marginTop: 2,
+      ...Platform.select({
+        ios: {
+          textShadowColor: 'rgba(0,0,0,0.3)',
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 3,
+        },
+      }),
+    },
+    xpFractionText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: 'rgba(255,255,255,0.95)',
+      marginTop: 6,
+      letterSpacing: 0.3,
+      ...Platform.select({
+        ios: {
+          textShadowColor: 'rgba(0,0,0,0.25)',
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 2,
+        },
+      }),
+    },
+    xpToNextText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: 'rgba(255,255,255,0.7)',
+      marginTop: 2,
+      letterSpacing: 0.4,
     },
     locationChip: {
       flexDirection: 'row',

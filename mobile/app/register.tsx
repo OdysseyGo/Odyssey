@@ -12,7 +12,7 @@ import {
   Dimensions,
   TextInput,
   BackHandler,
-  Modal,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,6 +25,7 @@ import AuthButton from '@/components/LoginComponents/AuthButton';
 import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
 import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import BackButton from '@/components/common/BackButton';
+import { ApiError } from '@/api/APIClient';
 import { createUser, CreateUserPayload } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -33,6 +34,11 @@ import { Spacing } from '@/constants/Spacing';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.28 : SCREEN_HEIGHT * 0.32;
 const AUTH_INPUT_MAX_LENGTH = 50;
+const USERNAME_ALLOWED_CHAR_REGEX = /^[\p{L}\p{N}_.@+-]+$/u;
+const NAME_ALLOWED_CHAR_REGEX = /^[\p{L}\p{M}][\p{L}\p{M}' -]*$/u;
+
+const isUsernameInvalidCharacterError = (message: string) =>
+  /enter a valid username|may contain only letters, numbers|invalid username/i.test(message);
 
 export default function RegisterScreen() {
   const colorScheme = useColorTheme();
@@ -50,6 +56,8 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
   const [errors, setErrors] = useState<{
     firstName?: string;
     lastName?: string;
@@ -57,12 +65,13 @@ export default function RegisterScreen() {
     email?: string;
     password?: string;
     confirmPassword?: string;
+    terms?: string;
     general?: string;
   }>({});
   const [loading, setLoading] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const isNavigatingAway = useRef(false);
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Entrance animations
@@ -83,6 +92,12 @@ export default function RegisterScreen() {
         useNativeDriver: true,
       }),
     ]).start();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) clearTimeout(redirectTimeoutRef.current);
+    };
   }, []);
 
   const resetScrollPosition = useCallback(() => {
@@ -125,11 +140,28 @@ export default function RegisterScreen() {
   const passwordRef = useRef<TextInput>(null);
   const confirmPasswordRef = useRef<TextInput>(null);
 
+  const normalizeNameInput = (value: string) => value.replace(/[\r\n\t]/g, '');
+  const normalizeUsernameInput = (value: string) => value.replace(/[\r\n\t\s]/g, '');
+  const normalizeEmailInput = (value: string) => value.replace(/[\r\n\t\s]/g, '').toLowerCase();
+
   const validateStep1 = () => {
     const newErrors: typeof errors = {};
-    if (!firstName.trim()) newErrors.firstName = t('auth.errors.firstNameRequired');
-    if (!lastName.trim()) newErrors.lastName = t('auth.errors.lastNameRequired');
-    if (!username.trim()) newErrors.username = t('auth.errors.usernameRequired');
+    const normalizedFirstName = firstName.trim();
+    const normalizedLastName = lastName.trim();
+    const normalizedUsername = username.trim();
+
+    if (!normalizedFirstName) newErrors.firstName = t('auth.errors.firstNameRequired');
+    else if (!NAME_ALLOWED_CHAR_REGEX.test(normalizedFirstName))
+      newErrors.firstName = t('auth.errors.firstNameInvalidCharacters');
+
+    if (!normalizedLastName) newErrors.lastName = t('auth.errors.lastNameRequired');
+    else if (!NAME_ALLOWED_CHAR_REGEX.test(normalizedLastName))
+      newErrors.lastName = t('auth.errors.lastNameInvalidCharacters');
+
+    if (!normalizedUsername) newErrors.username = t('auth.errors.usernameRequired');
+    else if (!USERNAME_ALLOWED_CHAR_REGEX.test(normalizedUsername))
+      newErrors.username = t('auth.errors.usernameInvalidCharacters');
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -137,37 +169,57 @@ export default function RegisterScreen() {
   const validateStep2 = () => {
     const newErrors: typeof errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
-    if (!email.trim()) newErrors.email = t('auth.errors.emailRequired');
-    else if (!emailRegex.test(email)) newErrors.email = t('auth.errors.emailFormat');
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) newErrors.email = t('auth.errors.emailRequired');
+    else if (!emailRegex.test(normalizedEmail)) newErrors.email = t('auth.errors.emailFormat');
     if (!password) newErrors.password = t('auth.errors.passwordRequired');
     if (!confirmPassword) newErrors.confirmPassword = t('auth.errors.confirmPasswordRequired');
     if (password && confirmPassword && password !== confirmPassword)
       newErrors.confirmPassword = t('auth.errors.passwordsMismatch');
+    if (!agreedToTerms) newErrors.terms = t('auth.errors.termsRequired');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = () => {
-    if (validateStep1()) setStep(2);
+    if (!validateStep1()) return;
+
+    setFirstName((prev) => prev.trim());
+    setLastName((prev) => prev.trim());
+    setUsername((prev) => prev.trim());
+    setStep(2);
   };
 
   const submitRegistration = async () => {
-    setShowConfirmModal(false);
     setLoading(true);
     try {
+      const normalizedFirstName = firstName.trim();
+      const normalizedLastName = lastName.trim();
+      const normalizedUsername = username.trim();
+      const normalizedEmail = email.trim().toLowerCase();
+
       const user: CreateUserPayload = {
-        username,
-        email,
+        username: normalizedUsername,
+        email: normalizedEmail,
         password,
-        first_name: firstName,
-        last_name: lastName,
+        first_name: normalizedFirstName,
+        last_name: normalizedLastName,
+        terms_accepted: true,
       };
       await createUser(user);
       isNavigatingAway.current = true;
-      setShowSuccessModal(true);
+      setShowSuccessBanner(true);
+      redirectTimeoutRef.current = setTimeout(() => {
+        router.dismissTo('/login');
+      }, 1400);
     } catch (e) {
       console.error(e);
-      setErrors({ general: t('auth.errors.registrationFailed') });
+      if (e instanceof ApiError && isUsernameInvalidCharacterError(e.message)) {
+        setErrors({ general: t('auth.errors.usernameInvalidCharacters') });
+      } else {
+        setErrors({ general: t('auth.errors.registrationFailed') });
+      }
     } finally {
       setLoading(false);
     }
@@ -176,7 +228,8 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     if (!validateStep2()) return;
 
-    setShowConfirmModal(true);
+    setEmail((prev) => prev.trim().toLowerCase());
+    await submitRegistration();
   };
 
   return (
@@ -287,7 +340,7 @@ export default function RegisterScreen() {
                       label={t('auth.firstName')}
                       value={firstName}
                       onChangeText={(text) => {
-                        setFirstName(text);
+                        setFirstName(normalizeNameInput(text));
                         setErrors((e) => ({ ...e, firstName: undefined }));
                       }}
                       placeholder={t('auth.firstNamePlaceholder')}
@@ -302,7 +355,7 @@ export default function RegisterScreen() {
                       label={t('auth.lastName')}
                       value={lastName}
                       onChangeText={(text) => {
-                        setLastName(text);
+                        setLastName(normalizeNameInput(text));
                         setErrors((e) => ({ ...e, lastName: undefined }));
                       }}
                       placeholder={t('auth.lastNamePlaceholder')}
@@ -317,8 +370,8 @@ export default function RegisterScreen() {
                       label={t('auth.username')}
                       value={username}
                       onChangeText={(text) => {
-                        setUsername(text);
-                        setErrors((e) => ({ ...e, username: undefined }));
+                        setUsername(normalizeUsernameInput(text));
+                        setErrors((e) => ({ ...e, username: undefined, general: undefined }));
                       }}
                       placeholder={t('auth.usernamePlaceholder')}
                       autoCapitalize="none"
@@ -346,7 +399,7 @@ export default function RegisterScreen() {
                       label={t('auth.email')}
                       value={email}
                       onChangeText={(text) => {
-                        setEmail(text);
+                        setEmail(normalizeEmailInput(text));
                         setErrors((e) => ({ ...e, email: undefined }));
                       }}
                       placeholder={t('auth.emailPlaceholder')}
@@ -390,10 +443,81 @@ export default function RegisterScreen() {
                       onSubmitEditing={handleRegister}
                       error={errors.confirmPassword}
                     />
+                    {/* Terms & Privacy checkbox */}
+                    <View style={styles.checkboxRow}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setAgreedToTerms((v) => !v);
+                          setErrors((e) => ({ ...e, terms: undefined }));
+                        }}
+                        activeOpacity={0.7}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons
+                          name={agreedToTerms ? 'checkbox' : 'square-outline'}
+                          size={22}
+                          color={
+                            errors.terms
+                              ? theme.error
+                              : agreedToTerms
+                                ? theme.primary
+                                : theme.subText
+                          }
+                        />
+                      </TouchableOpacity>
+                      <Text style={[styles.checkboxLabel, { color: theme.subText }]}>
+                        {t('auth.termsPrefix')}{' '}
+                        <Text
+                          style={[styles.checkboxLink, { color: theme.primary }]}
+                          onPress={() =>
+                            Linking.openURL('https://odysseygo.github.io/Odyssey/legal')
+                          }
+                        >
+                          {t('auth.terms')}
+                        </Text>{' '}
+                        {t('auth.termsAnd')}{' '}
+                        <Text
+                          style={[styles.checkboxLink, { color: theme.primary }]}
+                          onPress={() =>
+                            Linking.openURL('https://odysseygo.github.io/Odyssey/legal')
+                          }
+                        >
+                          {t('auth.privacy')}
+                        </Text>
+                      </Text>
+                    </View>
+                    {errors.terms && (
+                      <Text style={[styles.checkboxError, { color: theme.error }]}>
+                        {errors.terms}
+                      </Text>
+                    )}
+
+                    {showSuccessBanner ? (
+                      <View
+                        style={[
+                          styles.successBanner,
+                          { backgroundColor: `${theme.correctOptionBackground}14` },
+                        ]}
+                      >
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={16}
+                          color={theme.correctOptionBackground}
+                        />
+                        <Text
+                          style={[
+                            styles.successBannerText,
+                            { color: theme.correctOptionBackground },
+                          ]}
+                        >
+                          {t('auth.accountCreatedSubtitle', { username })}
+                        </Text>
+                      </View>
+                    ) : null}
                     <AuthButton
                       title={t('auth.createAccount')}
                       onPress={handleRegister}
-                      loading={loading}
+                      loading={loading || showSuccessBanner}
                     />
                     <View style={styles.footerRow}>
                       <TouchableOpacity onPress={() => setStep(1)} disabled={loading}>
@@ -409,110 +533,6 @@ export default function RegisterScreen() {
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      <Modal
-        visible={showConfirmModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowConfirmModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: theme.background }]}>
-            <View style={[styles.modalIcon, { backgroundColor: `${theme.primary}18` }]}>
-              <Ionicons name="person-add-outline" size={24} color={theme.primary} />
-            </View>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>
-              {t('auth.confirmRegistrationTitle')}
-            </Text>
-            <Text style={[styles.modalSubtitle, { color: theme.subText }]}>
-              {t('auth.confirmRegistrationSubtitle')}
-            </Text>
-
-            <View style={[styles.accountPreview, { backgroundColor: theme.foreground }]}>
-              <View style={styles.accountPreviewRow}>
-                <Text style={[styles.accountPreviewLabel, { color: theme.subText }]}>
-                  {t('auth.username')}
-                </Text>
-                <Text style={[styles.accountPreviewValue, { color: theme.text }]} numberOfLines={1}>
-                  {username}
-                </Text>
-              </View>
-              <View style={styles.accountPreviewRow}>
-                <Text style={[styles.accountPreviewLabel, { color: theme.subText }]}>
-                  {t('auth.email')}
-                </Text>
-                <Text style={[styles.accountPreviewValue, { color: theme.text }]} numberOfLines={1}>
-                  {email}
-                </Text>
-              </View>
-              <View style={styles.accountPreviewRow}>
-                <Text style={[styles.accountPreviewLabel, { color: theme.subText }]}>
-                  {t('auth.name')}
-                </Text>
-                <Text style={[styles.accountPreviewValue, { color: theme.text }]} numberOfLines={1}>
-                  {`${firstName} ${lastName}`.trim()}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonSecondary]}
-                onPress={() => setShowConfirmModal(false)}
-                disabled={loading}
-              >
-                <Text style={[styles.modalButtonSecondaryText, { color: theme.subText }]}>
-                  {t('auth.cancel')}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: theme.primary }]}
-                onPress={submitRegistration}
-                disabled={loading}
-              >
-                <Text style={[styles.modalButtonPrimaryText, { color: theme.white }]}>
-                  {t('auth.createAccount')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal
-        visible={showSuccessModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => router.dismissTo('/login')}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: theme.background }]}>
-            <View
-              style={[styles.modalIcon, { backgroundColor: `${theme.correctOptionBackground}18` }]}
-            >
-              <Ionicons
-                name="checkmark-circle-outline"
-                size={26}
-                color={theme.correctOptionBackground}
-              />
-            </View>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>
-              {t('auth.accountCreatedTitle')}
-            </Text>
-            <Text style={[styles.modalSubtitle, { color: theme.subText }]}>
-              {t('auth.accountCreatedSubtitle', { username })}
-            </Text>
-            <TouchableOpacity
-              style={[styles.successButton, { backgroundColor: theme.primary }]}
-              onPress={() => router.dismissTo('/login')}
-            >
-              <Text style={[styles.modalButtonPrimaryText, { color: theme.white }]}>
-                {t('auth.login')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </>
   );
 }
@@ -603,11 +623,48 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: 18,
   },
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderRadius: Spacing.borderRadius,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  successBannerText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
+  },
 
   // ── Inputs
   inputs: {
     gap: Spacing.xs,
     paddingBottom: Spacing.md,
+  },
+
+  // ── Terms checkbox
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  checkboxLink: {
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  checkboxError: {
+    fontSize: 12,
+    marginTop: 2,
+    marginLeft: 30,
   },
 
   // ── Footer link
@@ -623,91 +680,5 @@ const styles = StyleSheet.create({
   footerLink: {
     fontSize: 14,
     fontWeight: '700',
-  },
-  modalOverlay: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: Spacing.xl,
-    backgroundColor: 'rgba(15, 23, 42, 0.55)',
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 380,
-    borderRadius: Spacing.borderRadius,
-    padding: Spacing.xl,
-  },
-  modalIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.lg,
-  },
-  modalTitle: {
-    fontSize: 21,
-    fontWeight: '800',
-    lineHeight: 26,
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: Spacing.xs,
-  },
-  accountPreview: {
-    borderRadius: Spacing.borderRadius,
-    padding: Spacing.md,
-    gap: Spacing.sm,
-    marginTop: Spacing.lg,
-  },
-  accountPreviewRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.md,
-  },
-  accountPreviewLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  accountPreviewValue: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '700',
-    textAlign: 'right',
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: Spacing.xl,
-  },
-  modalButton: {
-    flex: 1,
-    minHeight: 46,
-    borderRadius: Spacing.borderRadius,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.md,
-  },
-  modalButtonSecondary: {
-    backgroundColor: 'rgba(148, 163, 184, 0.14)',
-  },
-  modalButtonSecondaryText: {
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  modalButtonPrimaryText: {
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  successButton: {
-    minHeight: 46,
-    borderRadius: Spacing.borderRadius,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.md,
-    marginTop: Spacing.xl,
   },
 });

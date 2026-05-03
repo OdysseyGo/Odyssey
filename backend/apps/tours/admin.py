@@ -3,7 +3,7 @@ from django.contrib import admin
 from .models import (
     ARModel,
     ArPuzzleDetail,
-    GyroscopePuzzleDetail,
+    CompassPuzzleDetail,
     PictureComparePuzzleDetail,
     Puzzle,
     Review,
@@ -60,15 +60,9 @@ class ArPuzzleDetailAdmin(admin.ModelAdmin):
     list_display = ("puzzle", "scene_asset_url")
 
 
-@admin.register(GyroscopePuzzleDetail)
-class GyroscopePuzzleDetailAdmin(admin.ModelAdmin):
-    list_display = (
-        "puzzle",
-        "target_pitch",
-        "target_roll",
-        "target_yaw",
-        "tolerance_degrees",
-    )
+@admin.register(CompassPuzzleDetail)
+class CompassPuzzleDetailAdmin(admin.ModelAdmin):
+    list_display = ("puzzle", "target_heading_degrees")
 
 
 @admin.register(Review)

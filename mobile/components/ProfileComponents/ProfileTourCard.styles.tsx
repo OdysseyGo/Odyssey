@@ -66,6 +66,17 @@ export const profileTourCardStyles = (theme: ThemeName) => {
       fontWeight: '700',
       letterSpacing: 0.2,
     },
+    subStatusPill: {
+      borderWidth: StyleSheet.hairlineWidth,
+      borderRadius: 10,
+      paddingVertical: 1,
+      paddingHorizontal: 6,
+    },
+    subStatusText: {
+      fontSize: 10,
+      fontWeight: '600',
+      letterSpacing: 0.15,
+    },
     metaRow: {
       flexDirection: 'row',
       alignItems: 'center',

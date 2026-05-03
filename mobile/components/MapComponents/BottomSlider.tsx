@@ -21,7 +21,9 @@ import { Spacing } from '@/constants/Spacing';
 import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
 
 import { useActiveTour } from '@/contexts/ActiveTourContext';
-import { completeStep, skipStep } from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
+import { completeStep, DEFAULT_MAX_FAILED_ATTEMPTS, skipStep } from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
+import { useRewardedAd } from '@/components/Ads/useRewardedAd';
+import type { UserBadge } from '@/api/profile';
 
 const BOTTOM_SHEET_ANIMATION_DURATION = Animations.bottomSheet.animationDuration;
 const COLLAPSED_VISIBLE_HEIGHT = 110;
@@ -30,7 +32,9 @@ const TAB_BAR_GAP = Spacing.md;
 export default function BottomSlider({
   onEndTour,
   onTourComplete,
-}: BottomSliderProps & { onTourComplete?: () => Promise<void> | void }) {
+}: BottomSliderProps & {
+  onTourComplete?: (awardedXP: number, awardedBadges?: UserBadge[]) => Promise<void> | void;
+}) {
   const { t } = useTranslation();
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -55,7 +59,37 @@ export default function BottomSlider({
     solveStep,
     confirmLocation,
     recordSkip,
+    stepAnswers,
+    stepAttempts,
   } = useActiveTour();
+
+  const rewardedSkip = useRewardedAd('rewarded_hint');
+  const skipUsingAdRef = useRef(false);
+  const skipCountsAsMistake = useCallback(
+    (stepId: string) => {
+      const currentStep = tour?.steps.find((step) => step.id === stepId);
+      if (!currentStep || currentStep.type !== 'puzzle') return true;
+
+      const failedAttemptCount = stepAttempts.get(stepId) ?? 0;
+      const hasSubmittedTriviaAnswer =
+        currentStep.puzzle.type === 'multiple-choice' && stepAnswers.has(stepId);
+
+      if (currentStep.puzzle.type === 'multiple-choice') {
+        return !hasSubmittedTriviaAnswer && failedAttemptCount === 0;
+      }
+
+      if (
+        currentStep.puzzle.type === 'ar-code' ||
+        currentStep.puzzle.type === 'picture-compare' ||
+        currentStep.puzzle.type === 'open-ended'
+      ) {
+        return failedAttemptCount < DEFAULT_MAX_FAILED_ATTEMPTS;
+      }
+
+      return true;
+    },
+    [stepAnswers, stepAttempts, tour?.steps]
+  );
 
   const handleNavigateNext = useCallback(async () => {
     if (!tour || !progressId) return;
@@ -81,9 +115,12 @@ export default function BottomSlider({
 
     try {
       const response = useSkip ? await skipStep(progressId) : await completeStep(progressId);
+      if (useSkip) {
+        recordSkip(skipCountsAsMistake(currentStep.id));
+      }
 
       if (response.is_tour_complete) {
-        await onTourComplete?.();
+        await onTourComplete?.(response.awarded_xp ?? 0, response.awarded_badges);
       } else if (response.new_step_id) {
         const nextStepIndex = tour.steps.findIndex(
           (s) => s.id === response.new_step_id?.toString()
@@ -110,6 +147,8 @@ export default function BottomSlider({
     solvedSteps,
     setCurrentStepIndex,
     setHighestStepIndex,
+    recordSkip,
+    skipCountsAsMistake,
     onTourComplete,
     t,
   ]);
@@ -129,15 +168,35 @@ export default function BottomSlider({
       return;
     }
 
+    const useAdSkip = skipUsingAdRef.current;
+    skipUsingAdRef.current = false;
+
     setIsSkipConfirmVisible(false);
 
     try {
-      const response = await skipStep(progressId);
+      let response;
+      let attempt = 0;
+      const maxAttempts = useAdSkip ? 6 : 1;
+      while (true) {
+        try {
+          response = await skipStep(progressId, { useAdSkip });
+          break;
+        } catch (err: any) {
+          attempt += 1;
+          const isVerificationRace =
+            useAdSkip &&
+            err?.statusCode === 400 &&
+            typeof err?.message === 'string' &&
+            err.message.includes('No unconsumed HINT');
+          if (!isVerificationRace || attempt >= maxAttempts) throw err;
+          await new Promise((r) => setTimeout(r, 700));
+        }
+      }
 
-      recordSkip();
+      recordSkip(useAdSkip ? false : skipCountsAsMistake(currentStep.id));
 
       if (response.is_tour_complete) {
-        await onTourComplete?.();
+        await onTourComplete?.(response.awarded_xp ?? 0, response.awarded_badges);
       } else if (response.new_step_id) {
         const nextStepIndex = tour.steps.findIndex(
           (s) => s.id === response.new_step_id?.toString()
@@ -159,6 +218,7 @@ export default function BottomSlider({
     setCurrentStepIndex,
     setHighestStepIndex,
     recordSkip,
+    skipCountsAsMistake,
     onTourComplete,
     t,
   ]);
@@ -173,6 +233,38 @@ export default function BottomSlider({
 
     setIsSkipConfirmVisible(true);
   }, [tour, progressId, currentStepIndex, highestStepIndex, setCurrentStepIndex]);
+
+  const handleSkipPress = useCallback(() => {
+    if (!rewardedSkip.available || rewardedSkip.status !== 'loaded') {
+      handleSkip();
+      return;
+    }
+    Alert.alert(
+      t('map.activeTour.skipPromptTitle', { defaultValue: 'Skip this step?' }),
+      t('map.activeTour.skipPromptMessage', {
+        defaultValue: 'Watch a short ad to skip without penalty, or skip anyway.',
+      }),
+      [
+        { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+        {
+          text: t('map.activeTour.skipAnyway', { defaultValue: 'Skip anyway' }),
+          onPress: () => handleSkip(),
+        },
+        {
+          text: t('map.activeTour.watchAdToSkip', { defaultValue: 'Watch ad' }),
+          onPress: async () => {
+            const earned = await rewardedSkip.show();
+            if (earned) {
+              skipUsingAdRef.current = true;
+              await handleConfirmSkip();
+            } else {
+              handleSkip();
+            }
+          },
+        },
+      ]
+    );
+  }, [rewardedSkip, handleSkip, handleConfirmSkip, t]);
 
   const handleNavigatePrev = useCallback(() => {
     if (currentStepIndex > 0) {
@@ -375,7 +467,7 @@ export default function BottomSlider({
               onStepSolved={handleStepSolved}
               onLocationConfirm={handleLocationConfirm}
               onEndTour={onEndTour}
-              onSkipStep={handleSkip}
+              onSkipStep={handleSkipPress}
             />
           </View>
         </View>

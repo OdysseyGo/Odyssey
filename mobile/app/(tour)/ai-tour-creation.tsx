@@ -1,20 +1,29 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Switch,
+} from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { aiTourCreationStyles } from './ai-tour-creation.styles';
 import {
   FormInputGroup,
-  FormTextInput,
   FormTextArea,
+  FormChipSelect,
   FormOptionCard,
   FormDurationPicker,
   FormLocationSelect,
+  TOUR_CATEGORIES,
   TOUR_TEXT_FIELD_MAX_LENGTH,
 } from '@/components/TourCreation';
 import {
   AICreationHeader,
-  ThemeSuggestions,
   LanguageSelector,
   GenerateButton,
   LoadingOverlay,
@@ -22,9 +31,28 @@ import {
   AITourFormData,
   createEmptyFormData,
 } from '@/components/AITourCreation';
-import { generateAITour } from '@/api/aiTours';
+import { generateAITour, getAITourJob, AITourJob, AITourJobAccepted } from '@/api/aiTours';
 import { CreationHeader } from '@/components/TourCreation/common';
-import { useTranslation } from 'react-i18next';
+import { useRewardedAd } from '@/components/Ads/useRewardedAd';
+
+const POLL_INTERVAL_MS = 1500;
+const POLL_TIMEOUT_MS = 5 * 60 * 1000;
+
+async function pollGenerationJob(
+  jobId: string,
+  onProgress: (label: string) => void
+): Promise<AITourJob> {
+  const start = Date.now();
+  while (true) {
+    const job = await getAITourJob(jobId);
+    if (job.progress_label) onProgress(job.progress_label);
+    if (job.status === 'SUCCESS' || job.status === 'FAILED') return job;
+    if (Date.now() - start > POLL_TIMEOUT_MS) {
+      return { ...job, status: 'FAILED', error: 'Generation timed out' };
+    }
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+  }
+}
 
 export default function AITourCreation() {
   const theme = useColorTheme();
@@ -32,7 +60,9 @@ export default function AITourCreation() {
   const { t } = useTranslation();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [progressLabel, setProgressLabel] = useState<string>('');
   const [formData, setFormData] = useState<AITourFormData>(createEmptyFormData());
+  const rewardedAiSlot = useRewardedAd('rewarded_ai_slot');
 
   const tourModeOptions = useMemo(
     () => [
@@ -51,12 +81,34 @@ export default function AITourCreation() {
     [t]
   );
 
+  const categoryKeyMap = useMemo(
+    () =>
+      Object.fromEntries(
+        TOUR_CATEGORIES.map((cat) => [t(`creation.categories.${cat.toLowerCase()}`), cat])
+      ),
+    [t]
+  );
+
+  const translatedCategories = useMemo(
+    () => TOUR_CATEGORIES.map((cat) => t(`creation.categories.${cat.toLowerCase()}`)),
+    [t]
+  ) as unknown as readonly string[];
+
+  const selectedTranslatedCategory = formData.theme
+    ? t(`creation.categories.${formData.theme.toLowerCase()}`)
+    : '';
+
   const updateFormData = (updates: Partial<AITourFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
   };
 
   const isFormValid =
-    formData.country.trim() !== '' && formData.state.trim() !== '' && formData.theme.trim() !== '';
+    formData.country.trim() !== '' &&
+    formData.countryCode.trim() !== '' &&
+    formData.state.trim() !== '' &&
+    Number.isFinite(formData.stateLatitude) &&
+    Number.isFinite(formData.stateLongitude) &&
+    formData.theme.trim() !== '';
 
   const handleGenerate = async () => {
     if (!isFormValid) {
@@ -64,10 +116,24 @@ export default function AITourCreation() {
       return;
     }
 
+    if (!rewardedAiSlot.available || rewardedAiSlot.status !== 'loaded') {
+      Alert.alert(
+        t('aiTour.failedTitle'),
+        t('aiTour.adUnavailableMessage', {
+          defaultValue: 'A rewarded ad is required before AI generation. Please try again shortly.',
+        })
+      );
+      return;
+    }
+
+    const earned = await rewardedAiSlot.show();
+    if (!earned) return;
+
     setIsLoading(true);
+    setProgressLabel('');
 
     try {
-      const response = await generateAITour({
+      const buildPayload = () => ({
         city: formData.state.trim(),
         country: formData.country.trim(),
         country_code: formData.countryCode.trim(),
@@ -76,22 +142,55 @@ export default function AITourCreation() {
         duration: formData.duration,
         language: formData.language,
         additional_details: formData.additionalDetails.trim() || undefined,
+        include_ar: formData.mode === 'STORY' ? false : formData.includeAr,
+        include_compass: formData.mode === 'STORY' ? false : formData.includeCompass,
+        use_ad_slot: true,
       });
 
-      Alert.alert(t('aiTour.successTitle'), response.message, [
-        {
-          text: t('aiTour.viewTour'),
-          onPress: () => router.replace(`/tour/${response.tour_id}`),
-        },
-        {
-          text: t('aiTour.createAnother'),
-          style: 'cancel',
-        },
-      ]);
+      let accepted: AITourJobAccepted | null = null;
+      let attempt = 0;
+      const maxAttempts = 6;
+      while (true) {
+        try {
+          accepted = await generateAITour(buildPayload());
+          break;
+        } catch (err: any) {
+          attempt += 1;
+          const isVerificationRace =
+            err?.statusCode === 403 &&
+            typeof err?.message === 'string' &&
+            err.message.includes('No unconsumed AI_SLOT');
+          if (!isVerificationRace || attempt >= maxAttempts) throw err;
+          await new Promise((r) => setTimeout(r, 700));
+        }
+      }
+
+      if (!accepted) {
+        throw new Error(t('aiTour.failedMessage'));
+      }
+
+      const finalJob = await pollGenerationJob(accepted.job_id, setProgressLabel);
+
+      if (finalJob.status === 'SUCCESS' && finalJob.tour_id != null) {
+        const tourId = finalJob.tour_id;
+        Alert.alert(t('aiTour.successTitle'), t('aiTour.successMessage'), [
+          {
+            text: t('aiTour.viewTour'),
+            onPress: () => router.replace(`/tour/${tourId}`),
+          },
+          {
+            text: t('aiTour.createAnother'),
+            style: 'cancel',
+          },
+        ]);
+      } else {
+        Alert.alert(t('aiTour.failedTitle'), finalJob.error || t('aiTour.failedMessage'));
+      }
     } catch (error: any) {
       Alert.alert(t('aiTour.failedTitle'), error?.message || t('aiTour.failedMessage'));
     } finally {
       setIsLoading(false);
+      setProgressLabel('');
     }
   };
 
@@ -121,6 +220,15 @@ export default function AITourCreation() {
                 defaultValue: 'Search countries...',
               })}
               types="(regions)"
+              onClearSelection={() =>
+                updateFormData({
+                  country: '',
+                  countryCode: '',
+                  state: '',
+                  stateLatitude: undefined,
+                  stateLongitude: undefined,
+                })
+              }
               onSelect={(selectedCountry) =>
                 updateFormData({
                   country: selectedCountry.value,
@@ -158,14 +266,12 @@ export default function AITourCreation() {
           </FormInputGroup>
 
           <FormInputGroup label={t('aiTour.theme')} required>
-            <FormTextInput
-              value={formData.theme}
-              onChangeText={(text) => updateFormData({ theme: text })}
-              placeholder={t('aiTour.themePlaceholder')}
-              maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
-            />
-            <ThemeSuggestions
-              onSelect={(selectedTheme) => updateFormData({ theme: selectedTheme })}
+            <FormChipSelect
+              options={translatedCategories}
+              selectedValue={selectedTranslatedCategory}
+              onSelect={(translatedValue) =>
+                updateFormData({ theme: categoryKeyMap[translatedValue] ?? translatedValue })
+              }
             />
           </FormInputGroup>
 
@@ -177,7 +283,42 @@ export default function AITourCreation() {
             <FormOptionCard
               options={tourModeOptions}
               selectedValue={formData.mode}
-              onSelect={(value) => updateFormData({ mode: value as AITourFormData['mode'] })}
+              onSelect={(value) => {
+                const selectedMode = value as AITourFormData['mode'];
+                updateFormData({
+                  mode: selectedMode,
+                  includeAr: selectedMode === 'STORY' ? false : formData.includeAr,
+                  includeCompass: selectedMode === 'STORY' ? false : formData.includeCompass,
+                });
+              }}
+            />
+          </View>
+
+          <View style={styles.sectionDivider} />
+
+          <View style={[styles.arToggleRow, formData.mode === 'STORY' && { opacity: 0.5 }]}>
+            <View style={styles.arToggleLabels}>
+              <Text style={styles.sectionTitle}>{t('aiTour.includeAr.title')}</Text>
+              <Text style={styles.sectionSubtitle}>{t('aiTour.includeAr.subtitle')}</Text>
+            </View>
+            <Switch
+              value={formData.mode === 'STORY' ? false : formData.includeAr}
+              onValueChange={(value) => updateFormData({ includeAr: value })}
+              disabled={formData.mode === 'STORY'}
+            />
+          </View>
+
+          <View style={styles.sectionDivider} />
+
+          <View style={[styles.arToggleRow, formData.mode === 'STORY' && { opacity: 0.5 }]}>
+            <View style={styles.arToggleLabels}>
+              <Text style={styles.sectionTitle}>{t('aiTour.includeCompass.title')}</Text>
+              <Text style={styles.sectionSubtitle}>{t('aiTour.includeCompass.subtitle')}</Text>
+            </View>
+            <Switch
+              value={formData.mode === 'STORY' ? false : formData.includeCompass}
+              onValueChange={(value) => updateFormData({ includeCompass: value })}
+              disabled={formData.mode === 'STORY'}
             />
           </View>
 
@@ -217,7 +358,7 @@ export default function AITourCreation() {
         <GenerateButton onPress={handleGenerate} disabled={!isFormValid} isLoading={isLoading} />
       </KeyboardAvoidingView>
 
-      <LoadingOverlay visible={isLoading} />
+      <LoadingOverlay visible={isLoading} subtitle={progressLabel || undefined} />
     </View>
   );
 }

@@ -49,3 +49,5 @@ docker-data/
 logs/
 
 vscode/
+
+.github/copilot-instructions.md

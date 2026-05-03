@@ -9,7 +9,7 @@ from rest_framework.test import APITestCase
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
-    GyroscopePuzzleDetail,
+    CompassPuzzleDetail,
     PictureComparePuzzleDetail,
     Puzzle,
     Tour,
@@ -85,7 +85,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Which one is correct?",
                 "hint": "Pick A",
-                "xp_reward": 15,
                 "options": ["A", "B", "C"],
                 "correct_answer": "A",
             },
@@ -101,6 +100,7 @@ class PuzzleTypeEndpointTests(APITestCase):
         detail = TriviaPuzzleDetail.objects.get(puzzle=puzzle)
         self.assertEqual(detail.options, ["A", "B", "C"])
         self.assertEqual(detail.correct_answer, "A")
+        self.assertEqual(puzzle.xp_reward, 25)
 
     def test_set_picture_compare_puzzle_creates_detail_with_threshold(self):
         self.client.post(
@@ -108,7 +108,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Which one is correct?",
                 "hint": "Pick A",
-                "xp_reward": 10,
                 "options": ["A", "B"],
                 "correct_answer": "A",
             },
@@ -120,7 +119,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Match this image",
                 "hint": "Use camera",
-                "xp_reward": 30,
                 "similarity_threshold": 0.82,
                 "reference_image": self._image_file(),
             },
@@ -136,7 +134,44 @@ class PuzzleTypeEndpointTests(APITestCase):
         detail = PictureComparePuzzleDetail.objects.get(puzzle=puzzle)
         self.assertAlmostEqual(detail.similarity_threshold, 0.82)
         self.assertTrue(bool(detail.reference_image))
+        self.assertEqual(puzzle.xp_reward, 50)
 
+        self.assertFalse(
+            TriviaPuzzleDetail.objects.filter(puzzle=puzzle).exists(),
+            "Switching puzzle type should remove stale TRIVIA detail rows.",
+        )
+
+    def test_set_open_ended_puzzle_sets_text_answer_without_leaking_it(self):
+        self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-trivia-puzzle/",
+            {
+                "question": "Which one is correct?",
+                "hint": "Pick A",
+                "options": ["A", "B"],
+                "correct_answer": "A",
+            },
+            format="json",
+        )
+
+        response = self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-open-ended-puzzle/",
+            {
+                "question": "Name this empire",
+                "hint": "Think of Constantinople",
+                "correct_answer": "Byzantine Empire",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["puzzle_type"], Puzzle.OPEN_ENDED)
+        self.assertEqual(response.data["open_ended"]["answer_type"], "text")
+        self.assertNotIn("correct_answer", response.data)
+
+        puzzle = Puzzle.objects.get(step=self.step)
+        self.assertEqual(puzzle.correct_answer, "Byzantine Empire")
+        self.assertIsNone(puzzle.options)
+        self.assertEqual(puzzle.xp_reward, 25)
         self.assertFalse(
             TriviaPuzzleDetail.objects.filter(puzzle=puzzle).exists(),
             "Switching puzzle type should remove stale TRIVIA detail rows.",
@@ -148,7 +183,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Find the hidden object",
                 "hint": "Look up",
-                "xp_reward": 20,
                 "metadata": {
                     "model_id": self.ar_model.id,
                     "anchor_id": "head",
@@ -175,6 +209,7 @@ class PuzzleTypeEndpointTests(APITestCase):
             detail.metadata["anchor_position"],
             {"x": 0.0, "y": 1.2, "z": -1.0},
         )
+        self.assertEqual(puzzle.xp_reward, 50)
 
     def test_set_ar_puzzle_rejects_invalid_secret_code(self):
         response = self.client.post(
@@ -182,7 +217,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Find the hidden object",
                 "hint": "Look up",
-                "xp_reward": 20,
                 "metadata": {
                     "model_id": self.ar_model.id,
                     "anchor_id": "head",
@@ -200,7 +234,6 @@ class PuzzleTypeEndpointTests(APITestCase):
             {
                 "question": "Find the hidden object",
                 "hint": "Look up",
-                "xp_reward": 20,
                 "metadata": {
                     "model_id": self.ar_model.id,
                     "anchor_id": "head",
@@ -230,25 +263,62 @@ class PuzzleTypeEndpointTests(APITestCase):
         self.assertTrue(response.data[0]["preview_image_url"].endswith(".jpg"))
         self.assertTrue(response.data[0]["scene_asset_url"].endswith(".glb"))
 
-    def test_set_gyroscope_puzzle_creates_gyroscope_detail(self):
+    def test_set_compass_puzzle_creates_compass_detail(self):
         response = self.client.post(
-            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-gyroscope-puzzle/",
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-compass-puzzle/",
             {
-                "question": "Face the marker",
-                "hint": "Turn slowly",
-                "xp_reward": 18,
-                "target_pitch": 1.5,
-                "target_roll": 2.5,
-                "target_yaw": 90.0,
-                "tolerance_degrees": 12.0,
+                "question": "Face north-west target",
+                "hint": "Rotate slowly",
+                "target_heading_degrees": 238,
             },
             format="json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["puzzle_type"], Puzzle.GYROSCOPE)
-        self.assertEqual(response.data["gyroscope"]["target_yaw"], 90.0)
+        self.assertEqual(response.data["puzzle_type"], Puzzle.COMPASS)
+        self.assertEqual(response.data["compass"]["target_heading_degrees"], 238)
 
         puzzle = Puzzle.objects.get(step=self.step)
-        detail = GyroscopePuzzleDetail.objects.get(puzzle=puzzle)
-        self.assertEqual(detail.tolerance_degrees, 12.0)
+        detail = CompassPuzzleDetail.objects.get(puzzle=puzzle)
+        self.assertEqual(detail.target_heading_degrees, 238)
+
+    def test_set_compass_puzzle_rejects_out_of_range_heading(self):
+        response = self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-compass-puzzle/",
+            {
+                "question": "Face north-west target",
+                "hint": "Rotate slowly",
+                "target_heading_degrees": 360,
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_switching_from_compass_to_trivia_clears_compass_detail(self):
+        self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-compass-puzzle/",
+            {
+                "question": "Face north-west target",
+                "hint": "Rotate slowly",
+                "target_heading_degrees": 238,
+            },
+            format="json",
+        )
+
+        response = self.client.post(
+            f"/api/tours/{self.tour.id}/steps/{self.step.id}/set-trivia-puzzle/",
+            {
+                "question": "Which one is correct?",
+                "hint": "Pick A",
+                "options": ["A", "B", "C"],
+                "correct_answer": "A",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        puzzle = Puzzle.objects.get(step=self.step)
+        self.assertFalse(
+            CompassPuzzleDetail.objects.filter(puzzle=puzzle).exists(),
+            "Switching puzzle type should remove stale COMPASS detail rows.",
+        )

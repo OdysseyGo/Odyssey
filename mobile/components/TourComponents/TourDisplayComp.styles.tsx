@@ -43,6 +43,7 @@ export const tourDisplayCompStyles = (theme: ThemeName) => {
       resizeMode: 'cover',
     },
     imagePlaceholder: {
+      ...StyleSheet.absoluteFillObject,
       backgroundColor: color.foreground,
       alignItems: 'center',
       justifyContent: 'center',

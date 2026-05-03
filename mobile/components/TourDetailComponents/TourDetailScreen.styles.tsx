@@ -99,5 +99,12 @@ export const tourDetailScreenStyles = (theme: ThemeName) => {
     overlayAbsoluteFill: {
       ...StyleSheet.absoluteFillObject,
     },
+    headerIconButton: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
   });
 };

@@ -7,6 +7,9 @@
     "retry": "Reintentar",
     "submit": "Enviar",
     "submitting": "Enviando...",
+    "ok": "OK",
+    "error": "Error",
+    "syncError": "No se pudo sincronizar el progreso con el servidor.",
     "close": "Cerrar",
     "save": "Guardar"
   },
@@ -53,6 +56,10 @@
     "registerTagline": "Crea tu cuenta",
     "continue": "Continuar",
     "back": "Atrás",
+    "termsPrefix": "Acepto los",
+    "terms": "Términos de Uso",
+    "termsAnd": "y la",
+    "privacy": "Política de Privacidad",
     "resetTagline": "Restablece tu contraseña",
     "successTitle": "Éxito",
     "confirmRegistrationTitle": "¿Crear esta cuenta?",
@@ -62,9 +69,12 @@
     "accountCreatedSubtitle": "\"{{username}}\" está listo. Inicia sesión para empezar a explorar.",
     "errors": {
       "usernameRequired": "El nombre de usuario es obligatorio",
+      "usernameInvalidCharacters": "Usa solo letras, números y @/./+/-/_ en el nombre de usuario.",
       "passwordRequired": "La contraseña es obligatoria",
       "firstNameRequired": "El nombre es obligatorio",
+      "firstNameInvalidCharacters": "El nombre contiene caracteres no válidos.",
       "lastNameRequired": "El apellido es obligatorio",
+      "lastNameInvalidCharacters": "El apellido contiene caracteres no válidos.",
       "emailRequired": "El correo electrónico es obligatorio",
       "emailFormat": "Formato de correo incorrecto. El TLD debe tener al menos 2 caracteres (.com, .es, etc.)",
       "confirmPasswordRequired": "Confirmar contraseña es obligatorio",
@@ -75,7 +85,8 @@
       "usernameEmailMismatch": "El nombre de usuario y el correo no coinciden",
       "somethingWentWrong": "Algo salió mal",
       "bothFieldsRequired": "Ambos campos son obligatorios",
-      "couldNotUpdate": "No se pudo actualizar la contraseña"
+      "couldNotUpdate": "No se pudo actualizar la contraseña",
+      "termsRequired": "Debes aceptar los Términos de Uso y la Política de Privacidad"
     },
     "userCreated": "¡Usuario creado!"
   },
@@ -83,6 +94,7 @@
     "notLoggedIn": "Debes iniciar sesión para ver tu perfil.",
     "loginButton": "¡Quiero iniciar sesión!",
     "logout": "Cerrar sesión",
+    "km": "km",
     "xp": "XP",
     "tours": "Tours",
     "badges": "Insignias",
@@ -95,13 +107,15 @@
     "cancel": "Cancelar",
     "tabs": {
       "published": "Publicados",
-      "drafts": "Borradores",
+      "pending": "Pendientes",
+      "aiTours": "Tours de IA",
       "archived": "Archivados",
       "settings": "Ajustes",
       "tutorials": "Tutoriales"
     },
     "emptyPublished": "Aún no hay tours publicados. ¡Publica uno para compartirlo con la comunidad!",
-    "emptyDraft": "No hay borradores. ¡Empieza a crear un nuevo tour!",
+    "emptyPending": "No hay tours pendientes.",
+    "emptyAiTours": "Aún no hay tours generados con IA. ¡Crea uno para empezar tu escaparate!",
     "emptyArchived": "No hay tours archivados.",
     "emptyDefault": "No se encontraron tours.",
     "followersTitle": "Seguidores",
@@ -272,7 +286,68 @@
     "readLess": "Leer menos",
     "lockedStopTitle": "Parada oculta",
     "lockedStopMessage": "Inicia el tour y resuelve el puzle para revelar esta parada.",
-    "errorTitle": "Algo salió mal"
+    "errorTitle": "Algo salió mal",
+    "reportButton": "Reportar tour",
+    "reportClose": "Cerrar formulario de reporte",
+    "reportTitle": "Reportar tour",
+    "reportSubtitle": "Elige el motivo más cercano y añade detalles para que nuestro equipo pueda revisarlo.",
+    "reportCategoryLabel": "Categoría",
+    "reportDetailsLabel": "Detalles",
+    "reportDetailsLabelOptional": "Detalles opcionales",
+    "reportDetailsLabelRequired": "Detalles obligatorios para Otro",
+    "reportReasonPlaceholder": "Describe el problema...",
+    "reportReasonPlaceholderOptional": "Añade cualquier detalle que ayude...",
+    "reportCancel": "Cancelar",
+    "reportSubmit": "Enviar reporte",
+    "reportSuccessTitle": "Reporte enviado",
+    "reportSuccessMessage": "Gracias por ayudar a mantener Odyssey seguro. Nuestro equipo lo revisará.",
+    "reportErrorTitle": "No se pudo enviar el reporte",
+    "reportErrorMessage": "Comprueba tu conexión e inténtalo de nuevo.",
+    "reportLoginRequiredTitle": "Inicia sesión para reportar",
+    "reportLoginRequiredMessage": "Debes iniciar sesión antes de reportar un tour.",
+    "reportLoginButton": "Iniciar sesión",
+    "reportCategories": {
+      "INAPPROPRIATE": "Contenido inapropiado",
+      "HATE_OR_HARASSMENT": "Odio o acoso",
+      "SPAM": "Spam",
+      "MISLEADING": "Información engañosa",
+      "SAFETY": "Problema de seguridad",
+      "PRIVACY": "Problema de privacidad",
+      "OTHER": "Otro"
+    }
+  },
+  "report": {
+    "tourButton": "Reportar tour",
+    "reviewButton": "Reportar reseña",
+    "userButton": "Reportar usuario",
+    "tourTitle": "Reportar tour",
+    "reviewTitle": "Reportar reseña",
+    "userTitle": "Reportar usuario",
+    "subtitle": "Elige el motivo más cercano y añade detalles para que nuestro equipo pueda revisarlo.",
+    "close": "Cerrar formulario de reporte",
+    "categoryLabel": "Categoría",
+    "detailsLabelOptional": "Detalles opcionales",
+    "detailsLabelRequired": "Detalles obligatorios para Otro",
+    "reasonPlaceholder": "Describe el problema...",
+    "reasonPlaceholderOptional": "Añade cualquier detalle que ayude...",
+    "cancel": "Cancelar",
+    "submit": "Enviar reporte",
+    "successTitle": "Reporte enviado",
+    "successMessage": "Gracias por ayudar a mantener Odyssey seguro. Nuestro equipo lo revisará.",
+    "errorTitle": "No se pudo enviar el reporte",
+    "errorMessage": "Comprueba tu conexión e inténtalo de nuevo.",
+    "loginRequiredTitle": "Inicia sesión para reportar",
+    "loginRequiredMessage": "Debes iniciar sesión antes de reportar contenido.",
+    "loginButton": "Iniciar sesión",
+    "categories": {
+      "INAPPROPRIATE": "Contenido inapropiado",
+      "HATE_OR_HARASSMENT": "Odio o acoso",
+      "SPAM": "Spam",
+      "MISLEADING": "Información engañosa",
+      "SAFETY": "Problema de seguridad",
+      "PRIVACY": "Problema de privacidad",
+      "OTHER": "Otro"
+    }
   },
   "tabs": {
     "settings": "Ajustes",
@@ -381,6 +456,7 @@
     "continueWithCount": "Continuar ({{count}} ubicaciones)",
     "submit": "Enviar Tour",
     "submitting": "Enviando...",
+    "uploadingProgress": "Subiendo paso {{current}}/{{total}}",
     "submitTitle": "Enviar Tour",
     "submitMessage": "¿Estás listo para enviar tu tour para revisión?",
     "cancel": "Cancelar",
@@ -433,7 +509,9 @@
       "cancel": "Cancelar",
       "delete": "Eliminar",
       "tourStops": "Paradas del tour",
-      "locationsCount": "{{count}} ubicaciones"
+      "locationsCount": "{{count}} ubicaciones",
+      "maxStepsReachedTitle": "Se alcanzó el límite de pasos",
+      "maxStepsReachedMessage": "Un tour puede incluir como máximo {{max}} paradas."
     },
     "review": {
       "tourStopsTitle": "Paradas del tour ({{count}})",
@@ -492,10 +570,10 @@
       "difficulty": "Dificultad"
     },
     "story": {
-      "coverImage": "Imagen de Portada (Opcional)",
-      "imagePickerTitle": "Selector de Imágenes",
-      "imagePickerMessage": "La funcionalidad del selector de imágenes requiere que expo-image-picker esté instalado.",
-      "ok": "Aceptar",
+      "coverImage": "Imagen de portada",
+      "imagePickerTitle": "Selector de imagen",
+      "imagePickerMessage": "El selector de imágenes requiere que expo-image-picker esté instalado.",
+      "ok": "OK",
       "tapToAddImage": "Toca para añadir una imagen",
       "stopOf": "Parada {{current}} de {{total}}",
       "writingTipsTitle": "💡 Consejos de Escritura",
@@ -537,6 +615,9 @@
       "optionsRequired": "Opciones (Marca la respuesta correcta) *",
       "optionPlaceholder": "Opción {{number}}",
       "addOption": "Añadir Opción",
+      "correctAnswer": "Respuesta Correcta",
+      "correctAnswerPlaceholder": "p. ej., imperio bizantino",
+      "correctAnswerHint": "El usuario aprueba si su respuesta escrita se parece lo suficiente a esta.",
       "hintLabel": "Pista (Opcional)",
       "hintPlaceholder": "Ej. Mira la placa sobre la puerta.",
       "hintText": "Una pista útil si el usuario se atasca.",
@@ -604,6 +685,7 @@
     "missingInfoTitle": "Falta Información",
     "missingInfoMessage": "Por favor, proporciona tanto un estado como un tema para tu tour.",
     "successTitle": "¡Tour Creado! 🎉",
+    "successMessage": "Tu tour está listo para explorar.",
     "viewTour": "Ver Tour",
     "createAnother": "Crear Otro",
     "failedTitle": "Error de Generación",
@@ -614,8 +696,8 @@
       "subtitle": "Cuéntanos sobre tu tour soñado y deja que la IA cree una experiencia única con ubicaciones reales, historias atractivas y contenido interactivo."
     },
     "loading": {
-      "title": "Creando tu Tour...",
-      "subtitle": "La IA está buscando las mejores ubicaciones y elaborando contenido atractivo para ti"
+      "title": "Creando tu Aventura...",
+      "subtitle": "Esto suele tardar unos 20–30 segundos"
     },
     "languageSelector": {
       "title": "Idioma del Contenido",
@@ -628,6 +710,14 @@
       "puzzleDesc": "Desafíos interactivos y curiosidades en cada ubicación",
       "hybrid": "Modo Híbrido",
       "hybridDesc": "Lo mejor de ambos: historias atractivas con puzzles divertidos"
+    },
+    "includeAr": {
+      "title": "Incluir Puzzles AR",
+      "subtitle": "Deja que la IA añada puzzles de realidad aumentada en las paradas donde encajen"
+    },
+    "includeCompass": {
+      "title": "Incluir Puzzles de Brújula",
+      "subtitle": "Deja que la IA añada puzzles de orientación con brújula en las paradas donde encajen"
     }
   },
   "tourStep": {
@@ -784,7 +874,7 @@
       "step3text": "¡Haz un seguimiento de tus Odyssey XP, revisa y califica tours completados, y comprueba tus seguidores!",
       "step4text": "¡Encuentra a otros viajeros para que se unan a tu viaje!",
       "step5text": "¡Mira las insignias que has ganado!",
-      "step6text": "¡Revisa tus tours creados (publicados, borradores y archivados) en esta pestaña!",
+      "step6text": "¡Revisa tus tours creados (publicados, pendientes y archivados) en esta pestaña!",
       "step7text": "Puedes cambiar los ajustes de tu cuenta o las preferencias de la aplicación en la pestaña de ajustes."
     },
     "tours": {
@@ -819,5 +909,16 @@
     "viroUnavailable": "La vista AR no está disponible en este entorno.",
     "missingAsset": "Falta el recurso del modelo AR.",
     "viewUnavailable": "La vista AR no está disponible en este entorno."
+  },
+  "disclaimer": {
+    "title": "Aventura con Seguridad",
+    "body": "Todo gran viaje comienza con conciencia. Mientras exploras con Odyssey, mantén los ojos en alto y permanece atento al mundo que te rodea.",
+    "legalPrefix": "Al embarcarte en esta aventura, aceptas nuestros",
+    "terms": "Términos de Uso",
+    "legalAnd": "y la",
+    "privacy": "Política de Privacidad",
+    "legalSuffix": ". Lee y acepta para comenzar tu misión.",
+    "mascot": "¡Ody te observa — mantén los ojos abiertos, aventurero!",
+    "cta": "Acepto"
   }
 }

@@ -4,6 +4,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import { storyInputFieldStyles } from './StoryInputField.styles';
 import Colors from '@/constants/Colors';
 import { useTranslation } from 'react-i18next';
+import { sanitizeMultiLineText, sanitizeSingleLineText } from '@/utils/inputSanitizers';
 
 type StoryInputFieldProps = {
   label: string;
@@ -38,7 +39,9 @@ export default function StoryInputField({
       <TextInput
         style={[styles.textInput, multiline && styles.multilineInput]}
         value={value}
-        onChangeText={onChangeText}
+        onChangeText={(text) =>
+          onChangeText(multiline ? sanitizeMultiLineText(text) : sanitizeSingleLineText(text))
+        }
         placeholder={placeholder}
         placeholderTextColor={color.placeholderTextColor}
         multiline={multiline}

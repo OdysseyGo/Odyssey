@@ -17,6 +17,7 @@ import Colors from '@/constants/Colors';
 import HexBadge from '@/components/ProfileComponents/HexBadge';
 import { openExternalMapsDirections, type ExternalMapsProvider } from '@/utils/externalMaps';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
+import { DEFAULT_MAX_FAILED_ATTEMPTS } from '@/api/tourProgress';
 
 function NavigationArrows({
   canGoBack,
@@ -181,7 +182,8 @@ export default function TourNavigation({
   const colors = Colors[theme];
   const [isDirectionsModalVisible, setIsDirectionsModalVisible] = useState(false);
   const [hasAnsweredCurrentStep, setHasAnsweredCurrentStep] = useState(false);
-  const { skipCount, wrongAnswerCount, stepAnswers, stepAttempts } = useActiveTour();
+  const { skipCount, wrongAnswerCount, highestStepIndex, stepAnswers, stepAttempts } =
+    useActiveTour();
 
   useEffect(() => {
     setHasAnsweredCurrentStep(false);
@@ -201,8 +203,17 @@ export default function TourNavigation({
     currentStep.type === 'puzzle' &&
     currentStep.puzzle.type === 'multiple-choice' &&
     (stepAttempts.get(currentStep.id) ?? 0) > 0;
+  const hasPersistedExhaustedAttempt =
+    currentStep.type === 'puzzle' &&
+    (currentStep.puzzle.type === 'picture-compare' ||
+      currentStep.puzzle.type === 'ar-code' ||
+      currentStep.puzzle.type === 'open-ended') &&
+    (stepAttempts.get(currentStep.id) ?? 0) >= DEFAULT_MAX_FAILED_ATTEMPTS;
   const hasAnsweredWrong =
-    (hasAnsweredCurrentStep || stepAnswers.has(currentStep.id) || hasPersistedTriviaWrongAttempt) &&
+    (hasAnsweredCurrentStep ||
+      stepAnswers.has(currentStep.id) ||
+      hasPersistedTriviaWrongAttempt ||
+      hasPersistedExhaustedAttempt) &&
     !isSolved;
 
   const isForwardLocked =
@@ -291,11 +302,11 @@ export default function TourNavigation({
     ]).start(() => setTierPopup(null));
   }, [currentTier]);
 
-  const handleSolve = () => {
+  const handleSolve = useCallback(() => {
     onStepSolved(currentStep.id);
-  };
+  }, [currentStep.id, onStepSolved]);
 
-  const handleLocationConfirm = async () => {
+  const handleLocationConfirm = useCallback(async () => {
     if (!requiresLocation || isLocationConfirmed) return;
 
     try {
@@ -304,7 +315,7 @@ export default function TourNavigation({
     } catch (error) {
       console.error('Failed to get location:', error);
     }
-  };
+  }, [currentStep.id, isLocationConfirmed, onLocationConfirm, requiresLocation]);
 
   const handleOpenDirections = useCallback(
     async (provider: ExternalMapsProvider) => {
@@ -429,6 +440,7 @@ export default function TourNavigation({
         <TourStepComponent
           step={currentStep}
           isSolved={isSolved}
+          isFinished={currentStepIndex < highestStepIndex}
           onSolve={handleSolve}
           onAnswered={() => setHasAnsweredCurrentStep(true)}
         />

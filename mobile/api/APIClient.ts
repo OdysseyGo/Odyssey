@@ -114,7 +114,10 @@ export async function apiRequest<TResponse = unknown, TBody = Record<string, unk
 
       // Clear token on any 401 Unauthorized error
       if (statusCode === 401) {
-        await SecureStore.deleteItemAsync('userToken');
+        await Promise.all([
+          SecureStore.deleteItemAsync('userToken'),
+          SecureStore.deleteItemAsync('refreshToken'),
+        ]);
         throw new ApiError('Your session has expired. Please log in again.', statusCode, error);
       }
 

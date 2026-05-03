@@ -1,6 +1,11 @@
 import { markerColors } from '@/constants/Colors';
 
-export type PuzzleType = 'multiple-choice' | 'picture-compare' | 'ar-code';
+export type PuzzleType =
+  | 'multiple-choice'
+  | 'open-ended'
+  | 'picture-compare'
+  | 'ar-code'
+  | 'compass-bearing';
 
 export interface MultipleChoiceOption {
   id: string;
@@ -13,17 +18,26 @@ export interface MultipleChoicePuzzle {
   question: string;
   options: MultipleChoiceOption[];
   imageUri?: string;
+  hint?: string;
 }
 
 export interface PictureComparePuzzle {
   type: 'picture-compare';
   question: string;
   referenceImageUri?: string;
+  hint?: string;
+}
+
+export interface OpenEndedPuzzle {
+  type: 'open-ended';
+  question: string;
+  hint?: string;
 }
 
 export interface ArCodePuzzle {
   type: 'ar-code';
   question: string;
+  hint?: string;
   sceneAssetUrl?: string;
   secretCode?: string;
   anchorPosition?: {
@@ -34,7 +48,19 @@ export interface ArCodePuzzle {
   modelScaleMeters?: number;
 }
 
-export type Puzzle = MultipleChoicePuzzle | PictureComparePuzzle | ArCodePuzzle;
+export interface CompassBearingPuzzle {
+  type: 'compass-bearing';
+  question: string;
+  hint?: string;
+  targetHeadingDegrees: number;
+}
+
+export type Puzzle =
+  | MultipleChoicePuzzle
+  | OpenEndedPuzzle
+  | PictureComparePuzzle
+  | ArCodePuzzle
+  | CompassBearingPuzzle;
 
 export type TourStepType = 'story' | 'puzzle';
 
@@ -67,12 +93,14 @@ export interface Tour {
   title: string;
   description: string;
   coverImageUri: string;
+  hasCompletedOnce?: boolean;
   steps: TourStep[];
 }
 
 export interface TourStepProps {
   step: TourStep;
   isSolved: boolean;
+  isFinished?: boolean;
   onSolve: () => void;
   onAnswered?: () => void;
 }
@@ -81,19 +109,20 @@ export const exampleTour: Tour = {
   id: 'tour-1',
   title: 'Historic Istanbul Tour',
   description: 'Explore the historic landmarks of Istanbul',
-  coverImageUri: 'https://picsum.photos/400/307',
+  coverImageUri: '',
   steps: [
     {
       id: 'step-1',
       type: 'story',
       title: 'Welcome to Istanbul',
+      requiresLocationConfirmation: true,
       description:
         'Istanbul is a major city in Turkey that straddles Europe and Asia. Its Old City reflects cultural influences of the many empires that once ruled here.',
       coordinate: {
         latitude: 41.0082,
         longitude: 28.9784,
       },
-      images: ['https://picsum.photos/400/299', 'https://picsum.photos/400/301'],
+      images: [],
     },
     {
       id: 'step-2',
@@ -107,7 +136,7 @@ export const exampleTour: Tour = {
       puzzle: {
         type: 'multiple-choice',
         question: 'When was Hagia Sophia originally built?',
-        imageUri: 'https://picsum.photos/400/305',
+        imageUri: '',
         options: [
           { id: 'a', text: '325 AD', isCorrect: false },
           { id: 'b', text: '537 AD', isCorrect: true },
@@ -120,13 +149,14 @@ export const exampleTour: Tour = {
       id: 'step-4',
       type: 'story',
       title: 'Grand Bazaar',
+      requiresLocationConfirmation: true,
       description:
         'The Grand Bazaar is one of the largest and oldest covered markets in the world, with 61 covered streets and over 4,000 shops.',
       coordinate: {
         latitude: 41.0106,
         longitude: 28.968,
       },
-      images: ['https://picsum.photos/400/308'],
+      images: [],
     },
   ],
 };

@@ -1,11 +1,17 @@
 import logging
 import math
 import os
+import re
+from html import unescape
 from typing import Any, Dict, List, Optional
 
 import googlemaps
+import pycountry
+from django.core.cache import cache
 
 from .models import Tour, TourStep
+
+PLACES_CACHE_TTL_SECONDS = 24 * 60 * 60
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +22,33 @@ STREET_CIRCUITY_FACTOR = 1.3
 WALKING_PACE_M_PER_MIN = 80.0
 CIRCULAR_THRESHOLD_M = 200.0
 LONG_LEG_TRANSPORT_THRESHOLD_M = 2000.0
+
+
+def normalize_tour_country(
+    country: str | None, country_code: str | None
+) -> tuple[str, str]:
+    """
+    Normalize country fields for persistence.
+
+    - country_code is normalized to uppercase.
+    - when country_code maps to an ISO-3166 alpha-2 country, country is canonicalized
+      to that country's English name.
+    - if mapping fails, keep the provided country text unchanged.
+    """
+    normalized_country = (country or "").strip()
+    normalized_country_code = (country_code or "").strip().upper()
+
+    if not normalized_country_code:
+        return normalized_country, ""
+
+    matched_country = pycountry.countries.get(alpha_2=normalized_country_code)
+    if matched_country is None:
+        return normalized_country, normalized_country_code
+
+    canonical_country = (
+        getattr(matched_country, "name", "").strip() or normalized_country
+    )
+    return canonical_country, normalized_country_code
 
 
 class GoogleMapsFacade:
@@ -142,6 +175,13 @@ class GoogleMapsFacade:
         if not self.client:
             return []
 
+        cache_key = (
+            f"places:{city.strip().lower()}|{theme.strip().lower()}|{max_results}"
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         places: List[Dict[str, Any]] = []
         seen_place_ids: set = set()
 
@@ -196,7 +236,68 @@ class GoogleMapsFacade:
             except Exception as e:
                 print(f"Fallback places search failed for '{city}': {e}")
 
-        return places[:max_results]
+        result = places[:max_results]
+        if result:
+            cache.set(cache_key, result, PLACES_CACHE_TTL_SECONDS)
+        return result
+
+    @staticmethod
+    def _strip_html(value: str) -> str:
+        if not value:
+            return ""
+        text = re.sub(r"<[^>]+>", "", value)
+        return unescape(text).strip()
+
+    def get_place_photo(
+        self,
+        place_id: str,
+        max_width: int = 1200,
+    ) -> Optional[Dict[str, str]]:
+        """
+        Resolve a Google Places photo URL and attribution for a place_id.
+
+        Returns:
+            {"url": "...", "attribution": "..."} or None
+        """
+        if not self.client or not self.api_key or not place_id:
+            return None
+
+        try:
+            details = self.client.place(place_id=place_id, fields=["photo"])
+            result = details.get("result") or {}
+            photos = result.get("photos") or []
+            if not photos:
+                return None
+
+            first_photo = photos[0]
+            photo_reference = first_photo.get("photo_reference")
+            if not photo_reference:
+                return None
+
+            attribution_items = first_photo.get("html_attributions") or []
+            attribution = ", ".join(
+                filter(
+                    None,
+                    [
+                        self._strip_html(str(item))
+                        for item in attribution_items
+                        if item is not None
+                    ],
+                )
+            )
+            photo_url = (
+                "https://maps.googleapis.com/maps/api/place/photo"
+                f"?maxwidth={max_width}"
+                f"&photo_reference={photo_reference}"
+                f"&key={self.api_key}"
+            )
+            return {
+                "url": photo_url,
+                "attribution": attribution,
+            }
+        except Exception as e:
+            print(f"Place photo lookup failed for place_id '{place_id}': {e}")
+            return None
 
     def calculate_route_metrics(self, steps: List[TourStep]) -> Dict[str, Any]:
         """
@@ -312,11 +413,13 @@ class GoogleMapsFacade:
             # Distance between start and end < 200m?
             # Using Haversine is overkill, just use rough pythagoras on latch/lng or existing dist if we had it.
             # But we can just use the coords.
-            lat1, lng1 = float(sorted_steps[0].latitude), float(
-                sorted_steps[0].longitude
+            lat1, lng1 = (
+                float(sorted_steps[0].latitude),
+                float(sorted_steps[0].longitude),
             )
-            lat2, lng2 = float(sorted_steps[-1].latitude), float(
-                sorted_steps[-1].longitude
+            lat2, lng2 = (
+                float(sorted_steps[-1].latitude),
+                float(sorted_steps[-1].longitude),
             )
 
             # Approx distance in meters (deg * 111km)

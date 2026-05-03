@@ -10,8 +10,13 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.admin_dashboard.models import BanRecord, Report
-from apps.gamification.models import Badge, PictureCompareConfig
-from apps.gamification.visuals import BadgeVisualFileRepository
+from apps.gamification.models import (
+    Badge,
+    PictureCompareConfig,
+    UserBadge,
+    UserBadgeHistory,
+)
+from apps.gamification.visuals import FlagBadgeVisualFileRepository
 from apps.tours.models import ARModel, Review, Tour, TourStep
 
 User = get_user_model()
@@ -78,12 +83,54 @@ class AdminUserViewSetTests(APITestCase):
         self.assertEqual(response.data["count"], 1)
 
     def test_retrieve_user_detail(self):
+        badge = Badge.objects.create(
+            code="CITY_GOLD",
+            name="Gold City",
+            description="Completed a city perfectly",
+            criteria={"type": "city", "tier": "gold"},
+        )
+        tour = Tour.objects.create(
+            title="Istanbul Highlights",
+            description="Historic route",
+            creator=self.admin,
+            tour_type=Tour.STORY,
+            category="History",
+            duration_minutes=45,
+            city="Istanbul",
+            country="Turkey",
+            country_code="TR",
+        )
+        user_badge = UserBadge.objects.create(
+            user=self.user1,
+            badge=badge,
+            city="Istanbul",
+            country_code="TR",
+            mistake_count=0,
+            source_tour=tour,
+        )
+        UserBadgeHistory.objects.create(
+            user=self.user1,
+            badge=badge,
+            user_badge=user_badge,
+            city="Istanbul",
+            country_code="TR",
+            mistake_count=0,
+            source_tour=tour,
+        )
+
         response = self.client.get(f"/api/admin/users/{self.user1.id}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("badges_earned_count", response.data)
         self.assertIn("tours_created_count", response.data)
         self.assertIn("tours_completed_count", response.data)
         self.assertIn("reviews_count", response.data)
+        self.assertEqual(response.data["badges_earned_count"], 1)
+        self.assertEqual(response.data["badges"][0]["badge"]["name"], "Gold City")
+        self.assertEqual(
+            response.data["badges"][0]["source_tour_detail"]["title"],
+            "Istanbul Highlights",
+        )
+        self.assertEqual(response.data["badge_history"][0]["event_type"], "EARNED")
 
     def test_update_user_role(self):
         response = self.client.patch(
@@ -181,7 +228,8 @@ class AdminTourViewSetTests(APITestCase):
             city="Istanbul",
             country="Turkey",
             country_code="TR",
-            status=Tour.DRAFT,
+            status=Tour.PENDING,
+            review_status=Tour.IN_REVIEW,
         )
         self.step = TourStep.objects.create(
             tour=self.tour,
@@ -200,7 +248,7 @@ class AdminTourViewSetTests(APITestCase):
         self.assertIn("step_count", response.data["results"][0])
 
     def test_list_tours_filter_by_status(self):
-        response = self.client.get("/api/admin/tours/?status=DRAFT")
+        response = self.client.get("/api/admin/tours/?status=PENDING")
         self.assertEqual(response.data["count"], 1)
 
         response = self.client.get("/api/admin/tours/?status=PUBLISHED")
@@ -226,15 +274,18 @@ class AdminTourViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.tour.refresh_from_db()
         self.assertEqual(self.tour.status, Tour.PUBLISHED)
+        self.assertIsNone(self.tour.review_status)
 
     def test_reject_tour(self):
         self.tour.status = Tour.PUBLISHED
+        self.tour.review_status = None
         self.tour.save()
 
         response = self.client.post(f"/api/admin/tours/{self.tour.id}/reject/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.tour.refresh_from_db()
-        self.assertEqual(self.tour.status, Tour.DRAFT)
+        self.assertEqual(self.tour.status, Tour.PENDING)
+        self.assertEqual(self.tour.review_status, Tour.REJECTED)
 
     def test_archive_tour(self):
         response = self.client.post(f"/api/admin/tours/{self.tour.id}/archive/")
@@ -491,11 +542,18 @@ class BadgeVisualViewSetTests(APITestCase):
         )
         self._badge_visuals_tmpdir = tempfile.TemporaryDirectory()
         self._original_badge_visual_path = os.environ.get("BADGE_VISUAL_CONFIG_PATH")
+        self._original_game_badge_visual_path = os.environ.get(
+            "BADGE_VISUAL_GAME_CONFIG_PATH"
+        )
         os.environ["BADGE_VISUAL_CONFIG_PATH"] = os.path.join(
             self._badge_visuals_tmpdir.name,
             "badge_visuals.json",
         )
-        BadgeVisualFileRepository.write(
+        os.environ["BADGE_VISUAL_GAME_CONFIG_PATH"] = os.path.join(
+            self._badge_visuals_tmpdir.name,
+            "badge_visuals_game.json",
+        )
+        FlagBadgeVisualFileRepository.write(
             {"template": {}, "overrides": [], "meta": {"version": 1}}
         )
         self.client.force_authenticate(user=self.admin)
@@ -505,6 +563,12 @@ class BadgeVisualViewSetTests(APITestCase):
             os.environ.pop("BADGE_VISUAL_CONFIG_PATH", None)
         else:
             os.environ["BADGE_VISUAL_CONFIG_PATH"] = self._original_badge_visual_path
+        if self._original_game_badge_visual_path is None:
+            os.environ.pop("BADGE_VISUAL_GAME_CONFIG_PATH", None)
+        else:
+            os.environ["BADGE_VISUAL_GAME_CONFIG_PATH"] = (
+                self._original_game_badge_visual_path
+            )
         self._badge_visuals_tmpdir.cleanup()
 
     def test_list_bundle(self):
@@ -513,6 +577,18 @@ class BadgeVisualViewSetTests(APITestCase):
         self.assertIn("template", response.data)
         self.assertIn("overrides", response.data)
         self.assertIn("badges", response.data)
+
+    def test_list_flag_bundle_v2(self):
+        response = self.client.get("/api/admin/badge-visuals/flag/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("template", response.data)
+        self.assertIn("overrides", response.data)
+        self.assertIn("badges", response.data)
+
+    def test_list_game_bundle_v2(self):
+        response = self.client.get("/api/admin/badge-visuals/game/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("items", response.data)
 
     def test_update_template(self):
         response = self.client.post(
@@ -537,7 +613,7 @@ class BadgeVisualViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["country_code"], "FR")
         self.assertEqual(response.data["badge"], self.badge.id)
-        payload = BadgeVisualFileRepository.read()
+        payload = FlagBadgeVisualFileRepository.read()
         self.assertEqual(len(payload["overrides"]), 1)
         self.assertEqual(payload["overrides"][0]["badge_code"], "CITY_GOLD")
 
@@ -556,7 +632,7 @@ class BadgeVisualViewSetTests(APITestCase):
             f"/api/admin/badge-visuals/overrides/{override_id}/"
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        payload = BadgeVisualFileRepository.read()
+        payload = FlagBadgeVisualFileRepository.read()
         self.assertEqual(payload["overrides"], [])
 
     def test_export_config(self):
@@ -567,10 +643,34 @@ class BadgeVisualViewSetTests(APITestCase):
             'attachment; filename="badge_visuals.json"', response["Content-Disposition"]
         )
 
+    def test_export_game_config(self):
+        response = self.client.get("/api/admin/badge-visuals/game/export/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertIn("badge_visuals_game.json", response["Content-Disposition"])
+
     def test_requires_staff(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get("/api/admin/badge-visuals/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_upload_badge_visual_image_accepts_png(self):
+        response = self.client.post(
+            "/api/admin/badge-visuals/upload-image/",
+            {"image": image_file("badge-image.png")},
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("url", response.data)
+        self.assertIn(".png", response.data["url"])
+
+    def test_upload_badge_visual_image_rejects_non_png(self):
+        response = self.client.post(
+            "/api/admin/badge-visuals/upload-image/",
+            {"image": image_file("badge-image.jpg")},
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class AnalyticsViewSetTests(APITestCase):
@@ -667,6 +767,7 @@ class ReportViewSetTests(APITestCase):
             {
                 "content_type": "TOUR",
                 "content_id": self.tour.id,
+                "category": Report.INAPPROPRIATE,
                 "reason": "Offensive content",
             },
             format="json",
@@ -675,7 +776,98 @@ class ReportViewSetTests(APITestCase):
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.first()
         self.assertEqual(report.reporter, self.user)
+        self.assertEqual(report.category, Report.INAPPROPRIATE)
         self.assertEqual(report.status, Report.PENDING)
+
+    def test_submit_report_allows_category_without_reason_unless_other(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "/api/reports/",
+            {
+                "content_type": "TOUR",
+                "content_id": self.tour.id,
+                "category": Report.SPAM,
+                "reason": "",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        report = Report.objects.first()
+        self.assertEqual(report.category, Report.SPAM)
+        self.assertEqual(report.reason, "")
+
+    def test_submit_report_allows_open_ended_other_category(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "/api/reports/",
+            {
+                "content_type": "TOUR",
+                "content_id": self.tour.id,
+                "category": Report.OTHER,
+                "reason": "The route asks people to enter a locked private garden.",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        report = Report.objects.first()
+        self.assertEqual(report.category, Report.OTHER)
+        self.assertIn("private garden", report.reason)
+
+    def test_submit_review_report_as_user(self):
+        review = Review.objects.create(
+            tour=self.tour,
+            user=self.offender,
+            rating=1,
+            comment="Spammy review",
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "/api/reports/",
+            {
+                "content_type": "REVIEW",
+                "content_id": review.id,
+                "category": Report.SPAM,
+                "reason": "",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        report = Report.objects.first()
+        self.assertEqual(report.content_type, Report.REVIEW)
+        self.assertEqual(report.content_id, review.id)
+        self.assertEqual(report.category, Report.SPAM)
+
+    def test_submit_user_report_as_user(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "/api/reports/",
+            {
+                "content_type": "USER",
+                "content_id": self.offender.id,
+                "category": Report.HATE_OR_HARASSMENT,
+                "reason": "",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        report = Report.objects.first()
+        self.assertEqual(report.content_type, Report.USER)
+        self.assertEqual(report.content_id, self.offender.id)
+        self.assertEqual(report.category, Report.HATE_OR_HARASSMENT)
+
+    def test_submit_report_requires_reason_for_other_category(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "/api/reports/",
+            {
+                "content_type": "TOUR",
+                "content_id": self.tour.id,
+                "category": Report.OTHER,
+                "reason": "",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_submit_report_validates_content_exists(self):
         self.client.force_authenticate(user=self.user)

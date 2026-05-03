@@ -2,10 +2,11 @@ import re
 
 from rest_framework import serializers
 
+from apps.gamification.models import TourProgress
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
-    GyroscopePuzzleDetail,
+    CompassPuzzleDetail,
     PictureComparePuzzleDetail,
     Puzzle,
     Review,
@@ -13,7 +14,7 @@ from apps.tours.models import (
     TourStep,
     TriviaPuzzleDetail,
 )
-from apps.tours.utils import GoogleMapsFacade
+from apps.tours.utils import GoogleMapsFacade, normalize_tour_country
 from apps.users.api.serializers import UserSerializer
 
 DEFAULT_PICTURE_COMPARE_THRESHOLD = 0.7
@@ -63,16 +64,15 @@ class ArPuzzleDetailSerializer(serializers.ModelSerializer):
         fields = ["scene_asset_url", "metadata"]
 
 
-class GyroscopePuzzleDetailSerializer(serializers.ModelSerializer):
+class CompassPuzzleDetailSerializer(serializers.ModelSerializer):
     class Meta:
-        model = GyroscopePuzzleDetail
-        fields = ["target_pitch", "target_roll", "target_yaw", "tolerance_degrees"]
+        model = CompassPuzzleDetail
+        fields = ["target_heading_degrees"]
 
 
 class PuzzleBaseUpsertSerializer(serializers.Serializer):
     question = serializers.CharField()
     hint = serializers.CharField(required=False, allow_blank=True, default="")
-    xp_reward = serializers.IntegerField(required=False, min_value=0, default=10)
 
 
 class TriviaPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
@@ -231,18 +231,31 @@ class ArPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
         return attrs
 
 
-class GyroscopePuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
-    target_pitch = serializers.FloatField(required=False, default=0.0)
-    target_roll = serializers.FloatField(required=False, default=0.0)
-    target_yaw = serializers.FloatField(required=False, default=0.0)
-    tolerance_degrees = serializers.FloatField(required=False, default=15.0)
+class CompassPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
+    target_heading_degrees = serializers.IntegerField(min_value=0, max_value=359)
+
+
+class OpenEndedPuzzleUpsertSerializer(PuzzleBaseUpsertSerializer):
+    correct_answer = serializers.CharField()
+
+    def validate(self, attrs):
+        correct_answer = str(attrs.get("correct_answer", "")).strip()
+        if not correct_answer:
+            raise serializers.ValidationError(
+                {
+                    "correct_answer": "OPEN_ENDED puzzles require a non-empty correct_answer."
+                }
+            )
+        attrs["correct_answer"] = correct_answer
+        return attrs
 
 
 class PuzzleSerializer(serializers.ModelSerializer):
     trivia = serializers.SerializerMethodField()
+    open_ended = serializers.SerializerMethodField()
     picture_compare = serializers.SerializerMethodField()
     ar = serializers.SerializerMethodField()
-    gyroscope = serializers.SerializerMethodField()
+    compass = serializers.SerializerMethodField()
 
     def get_trivia(self, obj):
         detail = getattr(obj, "trivia_detail", None)
@@ -256,17 +269,23 @@ class PuzzleSerializer(serializers.ModelSerializer):
             return None
         return PictureComparePuzzleDetailSerializer(detail, context=self.context).data
 
+    @staticmethod
+    def get_open_ended(obj):
+        if obj.puzzle_type != Puzzle.OPEN_ENDED:
+            return None
+        return {"answer_type": "text"}
+
     def get_ar(self, obj):
         detail = getattr(obj, "ar_detail", None)
         if detail is None:
             return None
         return ArPuzzleDetailSerializer(detail, context=self.context).data
 
-    def get_gyroscope(self, obj):
-        detail = getattr(obj, "gyroscope_detail", None)
+    def get_compass(self, obj):
+        detail = getattr(obj, "compass_detail", None)
         if detail is None:
             return None
-        return GyroscopePuzzleDetailSerializer(detail, context=self.context).data
+        return CompassPuzzleDetailSerializer(detail, context=self.context).data
 
     class Meta:
         model = Puzzle
@@ -277,9 +296,10 @@ class PuzzleSerializer(serializers.ModelSerializer):
             "hint",
             "xp_reward",
             "trivia",
+            "open_ended",
             "picture_compare",
             "ar",
-            "gyroscope",
+            "compass",
         ]
 
 
@@ -315,8 +335,21 @@ class TourSerializer(serializers.ModelSerializer):
     steps = TourStepSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
     average_rating = serializers.FloatField(read_only=True)
+    user_has_completed_once = serializers.SerializerMethodField()
     city_latitude = serializers.FloatField(write_only=True, required=False)
     city_longitude = serializers.FloatField(write_only=True, required=False)
+
+    def get_user_has_completed_once(self, obj):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return False
+
+        return TourProgress.objects.filter(
+            tour=obj,
+            user=user,
+            has_completed_once=True,
+        ).exists()
 
     class Meta:
         model = Tour
@@ -344,7 +377,12 @@ class TourSerializer(serializers.ModelSerializer):
             "city_latitude",
             "city_longitude",
             "cover_image",
+            "cover_image_attribution",
+            "is_ai_generated",
+            "user_has_completed_once",
             "status",
+            "review_status",
+            "generation_source",
             "created_at",
             "updated_at",
             "steps",
@@ -353,9 +391,12 @@ class TourSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "creator",
+            "is_ai_generated",
+            "user_has_completed_once",
             "created_at",
             "updated_at",
             "average_rating",
+            "cover_image_attribution",
             "total_distance",
             "walking_distance",
             "elevation_gain",
@@ -364,12 +405,19 @@ class TourSerializer(serializers.ModelSerializer):
             "is_circular",
             "accessibility_rating",
             "metrics_calculated",
+            "generation_source",
+            "review_status",
         ]
 
     def validate(self, attrs):
         instance = self.instance
-        current_status = getattr(instance, "status", Tour.DRAFT)
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        current_status = getattr(instance, "status", Tour.PENDING)
         status_value = attrs.get("status", current_status)
+        current_cover_image = getattr(instance, "cover_image", None)
+        cover_image = attrs.get("cover_image", current_cover_image)
+        has_cover = bool(cover_image)
         city = attrs.get("city", getattr(instance, "city", ""))
         city_latitude = attrs.get("city_latitude")
         city_longitude = attrs.get("city_longitude")
@@ -385,7 +433,20 @@ class TourSerializer(serializers.ModelSerializer):
             )
         )
 
+        if (
+            status_value == Tour.PUBLISHED
+            and current_status != Tour.PUBLISHED
+            and (not user or not user.is_staff)
+        ):
+            raise serializers.ValidationError(
+                {"status": "Only admins can publish tours."}
+            )
+
         if status_value == Tour.PUBLISHED and (is_publishing or is_location_update):
+            if not has_cover:
+                raise serializers.ValidationError(
+                    {"cover_image": "Cover image is required before publishing a tour."}
+                )
             if not city:
                 raise serializers.ValidationError(
                     {"city": "City is required before publishing a tour."}
@@ -418,16 +479,71 @@ class TourSerializer(serializers.ModelSerializer):
                     }
                 )
 
+        if instance is None and not has_cover:
+            raise serializers.ValidationError(
+                {"cover_image": "Cover image is required when creating a tour."}
+            )
+
         return attrs
 
     def create(self, validated_data):
         # Assign current user as creator
         validated_data.pop("city_latitude", None)
         validated_data.pop("city_longitude", None)
+        self._canonicalize_country_fields(validated_data)
         validated_data["creator"] = self.context["request"].user
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         validated_data.pop("city_latitude", None)
         validated_data.pop("city_longitude", None)
+        self._canonicalize_country_fields(validated_data)
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        has_creator_changes = any(
+            key not in {"status", "review_status"} for key in validated_data
+        )
+        if (
+            instance.status == Tour.PENDING
+            and instance.review_status == Tour.REJECTED
+            and user
+            and not user.is_staff
+            and has_creator_changes
+        ):
+            validated_data["review_status"] = Tour.IN_REVIEW
         return super().update(instance, validated_data)
+
+    def _canonicalize_country_fields(self, validated_data):
+        if self.instance is None:
+            current_country = ""
+            current_country_code = ""
+        else:
+            current_country = self.instance.country
+            current_country_code = self.instance.country_code
+
+        incoming_has_country = "country" in validated_data
+        incoming_has_country_code = "country_code" in validated_data
+
+        effective_country = validated_data.get("country", current_country)
+        effective_country_code = validated_data.get(
+            "country_code", current_country_code
+        )
+
+        # Normalize explicit incoming text fields even when no code is available.
+        if incoming_has_country:
+            validated_data["country"] = (validated_data.get("country") or "").strip()
+        if incoming_has_country_code:
+            validated_data["country_code"] = (
+                (validated_data.get("country_code") or "").strip().upper()
+            )
+
+        if not effective_country_code:
+            return
+
+        # Keep backend storage language-agnostic by deriving canonical country from ISO code.
+        canonical_country, canonical_country_code = normalize_tour_country(
+            country=effective_country,
+            country_code=effective_country_code,
+        )
+        validated_data["country"] = canonical_country
+        validated_data["country_code"] = canonical_country_code
