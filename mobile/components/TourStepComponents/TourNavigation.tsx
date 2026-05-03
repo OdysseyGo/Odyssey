@@ -18,7 +18,7 @@ import HexBadge from '@/components/ProfileComponents/HexBadge';
 import { openExternalMapsDirections, type ExternalMapsProvider } from '@/utils/externalMaps';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { DEFAULT_MAX_FAILED_ATTEMPTS } from '@/api/tourProgress';
-import { ApiError } from '@/api/APIClient';
+import { isDevelopmentEnvMode } from '@/utils/envMode';
 
 function NavigationArrows({
   canGoBack,
@@ -365,6 +365,16 @@ export default function TourNavigation({
     if (!requiresLocation || isLocationConfirmed) return;
 
     try {
+      if (isDevelopmentEnvMode()) {
+        await onLocationConfirm(
+          currentStep.id,
+          currentStep.coordinate.latitude,
+          currentStep.coordinate.longitude
+        );
+        showLocationConfirmedToast();
+        return;
+      }
+
       const permission = await Location.getForegroundPermissionsAsync();
       const permissionStatus =
         permission.status === 'granted'
@@ -381,10 +391,6 @@ export default function TourNavigation({
       showLocationConfirmedToast();
     } catch (error) {
       console.error('Failed to get location:', error);
-      if (error instanceof ApiError) {
-        Alert.alert(t('tourStep.locationCheckFailedTitle', 'Location check failed'), error.message);
-        return;
-      }
       if (error instanceof Error && error.message.startsWith('OUTSIDE_AREA:')) {
         const [, distance, radius] = error.message.split(':');
         Alert.alert(
@@ -407,6 +413,8 @@ export default function TourNavigation({
       );
     }
   }, [
+    currentStep.coordinate.latitude,
+    currentStep.coordinate.longitude,
     currentStep.id,
     isLocationConfirmed,
     onLocationConfirm,

@@ -255,23 +255,3 @@ export async function deleteTourProgress(request: DeleteTourProgressRequest, sig
     signal,
   });
 }
-
-/**
- * Check whether the device location is inside current step's accepted area.
- */
-export async function checkStepLocation(
-  id: number,
-  data: { step_id: number; latitude: number; longitude: number },
-  signal?: AbortSignal
-): Promise<CheckLocationResponse> {
-  return apiRequest<
-    CheckLocationResponse,
-    { step_id: number; latitude: number; longitude: number }
-  >({
-    method: 'POST',
-    url: `/api/tour-progress/${id}/check-location/`,
-    data,
-    auth: true,
-    signal,
-  });
-}

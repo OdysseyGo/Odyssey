@@ -26,6 +26,7 @@ import type { Region } from './TourMap.config';
 import type { UserBadge } from '@/api/profile';
 import { useInterstitial } from '@/components/Ads/useInterstitial';
 import { TOUR_CATEGORIES } from '@/components/TourCreation';
+import { LOCATION_CHECK_RADIUS_M } from '@/utils/locationCheck';
 
 const MAX_SEARCH_DELTA = 0.5;
 const MAX_NEARBY_TOURS_TO_RENDER = 10;
@@ -66,8 +67,6 @@ function sortNearbyTours(tours: Tour[], sort: InBoundsSort): Tour[] {
     return (b.reviews?.length ?? 0) - (a.reviews?.length ?? 0);
   });
 }
-
-const LOCATION_CHECK_RADIUS_M = 100;
 
 export default function MapScreen() {
   const theme = useColorTheme();

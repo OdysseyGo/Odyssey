@@ -3,7 +3,6 @@ from django.contrib import admin
 from .models import (
     Badge,
     PictureCompareConfig,
-    StepLocationConfirmation,
     TourProgress,
     UserBadge,
     UserBadgeHistory,
@@ -61,9 +60,3 @@ class TourProgressAdmin(admin.ModelAdmin):
 @admin.register(PictureCompareConfig)
 class PictureCompareConfigAdmin(admin.ModelAdmin):
     list_display = ("singleton_id", "similarity_threshold", "updated_at")
-
-
-@admin.register(StepLocationConfirmation)
-class StepLocationConfirmationAdmin(admin.ModelAdmin):
-    list_display = ("progress", "step", "distance_m", "confirmed_at")
-    search_fields = ("progress__id", "step__id", "progress__user__username")

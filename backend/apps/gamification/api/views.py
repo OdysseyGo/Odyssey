@@ -1,5 +1,3 @@
-import math
-
 from django.contrib.auth import get_user_model
 from django.db import models, transaction
 from django.utils import timezone
@@ -13,7 +11,6 @@ from apps.gamification.level_service import LevelService
 from apps.gamification.models import (
     Badge,
     PictureCompareConfig,
-    StepLocationConfirmation,
     TourProgress,
     UserBadge,
     UserBadgeHistory,
@@ -78,40 +75,6 @@ class TourProgressViewSet(
     PICTURE_COMPARE_THRESHOLD = 0.7
     OPEN_ENDED_SIMILARITY_THRESHOLD = DEFAULT_OPEN_ENDED_SIMILARITY_THRESHOLD
     MAX_FAILED_ATTEMPTS = TourRewardService.AR_PICTURE_FAILURE_WINDOW
-    LOCATION_CHECK_RADIUS_M = 100
-
-    @staticmethod
-    def _haversine_distance_m(lat1, lon1, lat2, lon2):
-        earth_radius_m = 6371000.0
-        lat1_rad = math.radians(float(lat1))
-        lon1_rad = math.radians(float(lon1))
-        lat2_rad = math.radians(float(lat2))
-        lon2_rad = math.radians(float(lon2))
-
-        dlat = lat2_rad - lat1_rad
-        dlon = lon2_rad - lon1_rad
-        a = (
-            math.sin(dlat / 2) ** 2
-            + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2) ** 2
-        )
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-        return earth_radius_m * c
-
-    @staticmethod
-    def _is_location_confirmed(progress, step):
-        return StepLocationConfirmation.objects.filter(
-            progress=progress, step=step
-        ).exists()
-
-    def _location_gate_error_response(self, progress):
-        return Response(
-            {
-                "error": "Location confirmation is required before moving to the next step.",
-                "requires_location_confirmation": True,
-                "step_id": progress.current_step_id,
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
 
     @staticmethod
     def _picture_compare_config(puzzle):
@@ -163,7 +126,6 @@ class TourProgressViewSet(
             # Replay: reset completed progress instead of creating a duplicate row.
             with transaction.atomic():
                 existing_progress.puzzle_attempts.all().delete()
-                existing_progress.location_confirmations.all().delete()
                 existing_progress.current_step = first_step
                 existing_progress.status = TourProgress.IN_PROGRESS
                 existing_progress.started_at = timezone.now()
@@ -295,75 +257,6 @@ class TourProgressViewSet(
             "awarded_badges": UserBadgeSerializer(awarded_badges, many=True).data,
         }
 
-    @action(detail=True, methods=["post"], url_path="check-location")
-    def check_location(self, request, pk=None):
-        progress = self.get_object()
-
-        if progress.status == TourProgress.COMPLETED:
-            return Response({"error": "Tour is already completed"}, status=400)
-
-        current_step = progress.current_step
-        if not current_step:
-            return Response(
-                {"error": "No current step is active."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        step_id = request.data.get("step_id")
-        if step_id is None:
-            return Response(
-                {"error": "step_id is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if str(step_id) != str(current_step.id):
-            return Response(
-                {"error": "step_id must match the current active step."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            submitted_lat = float(request.data.get("latitude"))
-            submitted_lng = float(request.data.get("longitude"))
-        except (TypeError, ValueError):
-            return Response(
-                {"error": "latitude and longitude must be valid numbers."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        step_lat = float(current_step.latitude)
-        step_lng = float(current_step.longitude)
-        radius_m = self.LOCATION_CHECK_RADIUS_M
-        distance_m = self._haversine_distance_m(
-            submitted_lat, submitted_lng, step_lat, step_lng
-        )
-        accepted = distance_m <= radius_m
-
-        if accepted:
-            StepLocationConfirmation.objects.update_or_create(
-                progress=progress,
-                step=current_step,
-                defaults={
-                    "checked_latitude": submitted_lat,
-                    "checked_longitude": submitted_lng,
-                    "distance_m": distance_m,
-                },
-            )
-
-        return Response(
-            {
-                "status": (
-                    "Location confirmed. You can continue."
-                    if accepted
-                    else "You are outside the accepted area."
-                ),
-                "accepted": accepted,
-                "step_id": current_step.id,
-                "distance_m": round(distance_m, 2),
-                "radius_m": radius_m,
-            }
-        )
-
     @staticmethod
     def _trivia_correct_answer(puzzle):
         detail = getattr(puzzle, "trivia_detail", None)
@@ -377,11 +270,6 @@ class TourProgressViewSet(
 
         if progress.status == TourProgress.COMPLETED:
             return Response({"error": "Tour is already completed"}, status=400)
-
-        current_step = progress.current_step
-        if current_step:
-            if not self._is_location_confirmed(progress, current_step):
-                return self._location_gate_error_response(progress)
 
         required_submission_type = (
             TourRewardService.requires_submission_before_completion(

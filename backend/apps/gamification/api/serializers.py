@@ -111,8 +111,6 @@ class TourProgressSerializer(serializers.ModelSerializer):
         allow_null=True,
     )
     step_attempt_counts = serializers.SerializerMethodField()
-    location_confirmed_step_ids = serializers.SerializerMethodField()
-
     class Meta:
         model = TourProgress
         fields = [
@@ -130,7 +128,6 @@ class TourProgressSerializer(serializers.ModelSerializer):
             "xp_awarded",
             "wrong_attempt_count",
             "step_attempt_counts",
-            "location_confirmed_step_ids",
         ]
         read_only_fields = ["user", "started_at", "completed_at", "xp_awarded"]
 
@@ -141,10 +138,3 @@ class TourProgressSerializer(serializers.ModelSerializer):
             .annotate(count=Count("id"))
         )
         return {str(row["puzzle__step__id"]): row["count"] for row in rows}
-
-    def get_location_confirmed_step_ids(self, obj):
-        return list(
-            obj.location_confirmations.values_list("step_id", flat=True).order_by(
-                "step_id"
-            )
-        )
