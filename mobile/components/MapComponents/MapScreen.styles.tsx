@@ -73,6 +73,22 @@ export default function getStyles(theme: ThemeName) {
       shadowRadius: 7,
       elevation: 5,
     },
+    focusStepButton: {
+      position: 'absolute',
+      top: 256,
+      right: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: color.cardSurface,
+      borderRadius: 18,
+      width: 36,
+      height: 36,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.16,
+      shadowRadius: 7,
+      elevation: 5,
+    },
 
     legendCard: {
       position: 'absolute',

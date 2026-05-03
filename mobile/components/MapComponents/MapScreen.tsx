@@ -100,7 +100,9 @@ export default function MapScreen() {
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [animateToRegion, setAnimateToRegion] = useState<Region | undefined>();
-  const [centerOnUserRequestKey, setCenterOnUserRequestKey] = useState(0);
+  const [centerOnUserRequestKey, setCenterOnUserRequestKey] = useState<number | undefined>(
+    undefined
+  );
 
   const [isZoomedOut, setIsZoomedOut] = useState(false);
   const [isCoolingDown, setIsCoolingDown] = useState(false);
@@ -437,8 +439,21 @@ export default function MapScreen() {
   }, []);
 
   const handleCenterOnUser = useCallback(() => {
-    setCenterOnUserRequestKey((prev) => prev + 1);
+    setCenterOnUserRequestKey((prev) => (prev ?? 0) + 1);
   }, []);
+
+  const handleFocusCurrentStep = useCallback(() => {
+    if (!tour || !isActive) return;
+    const currentStep = tour.steps[currentStepIndex];
+    if (!currentStep) return;
+
+    setAnimateToRegion({
+      latitude: currentStep.coordinate.latitude,
+      longitude: currentStep.coordinate.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    });
+  }, [tour, isActive, currentStepIndex]);
 
   const handleSortChange = useCallback((sort: InBoundsSort) => {
     if (sort === nearbySortRef.current) return;
@@ -525,6 +540,14 @@ export default function MapScreen() {
     () => nearbyToursForMap.map((tour) => tour.id),
     [nearbyToursForMap]
   );
+
+  const activeLegendToggleTop = insets.top + 12;
+  const activeLegendPanelTop = activeLegendToggleTop + 42;
+  const activeLocateTop = isLegendOpen
+    ? activeLegendPanelTop + legendPanelHeight + 8
+    : activeLegendToggleTop + 44;
+  const activeStepTop = activeLocateTop + 44;
+
   const legendToggleTop = insets.top + 12;
   const legendPanelTop = legendToggleTop + 42;
   const locateTopInExplore = isLegendOpen
@@ -717,6 +740,28 @@ export default function MapScreen() {
                   </View>
                 ))}
               </View>
+
+              <Text style={styles.legendSectionTitle}>
+                {t('map.legend.controlsTitle', { defaultValue: 'Controls' })}
+              </Text>
+              <View style={styles.legendRow}>
+                <View style={styles.legendItem}>
+                  <View style={styles.legendIconBadge}>
+                    <MaterialCommunityIcons name="crosshairs-gps" size={12} color={colors.background} />
+                  </View>
+                  <Text style={styles.legendText}>
+                    {t('map.legend.controls.myLocation', { defaultValue: 'My location' })}
+                  </Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={styles.legendIconBadge}>
+                    <MaterialCommunityIcons name="magnify" size={12} color={colors.background} />
+                  </View>
+                  <Text style={styles.legendText}>
+                    {t('map.legend.controls.searchHere', { defaultValue: 'Search this area' })}
+                  </Text>
+                </View>
+              </View>
             </Animated.View>
           </>
         )}
@@ -749,14 +794,125 @@ export default function MapScreen() {
         initialRegion={initialRegion}
         currentStepIndex={currentStepIndex}
         tour={tour}
+        animateToRegion={animateToRegion}
         centerOnUserRequestKey={centerOnUserRequestKey}
       />
 
       <Pressable
-        style={[styles.locateMeButton, { top: insets.top + 12 }]}
+        style={[styles.legendToggleButton, { top: activeLegendToggleTop }]}
+        onPress={() => setIsLegendOpen((prev) => !prev)}
+      >
+        <MaterialCommunityIcons name="help-circle-outline" size={18} color={colors.primary} />
+      </Pressable>
+
+      <Animated.View
+        pointerEvents={isLegendOpen ? 'auto' : 'none'}
+        onLayout={(event) => {
+          const nextHeight = Math.ceil(event.nativeEvent.layout.height);
+          if (nextHeight > 0 && Math.abs(nextHeight - legendPanelHeight) > 1) {
+            setLegendPanelHeight(nextHeight);
+          }
+        }}
+        style={[
+          styles.legendCard,
+          { top: activeLegendPanelTop },
+          {
+            opacity: legendAnim,
+            transform: [
+              {
+                translateY: legendAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-8, 0],
+                }),
+              },
+              {
+                scale: legendAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.98, 1],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <Text style={styles.legendTitle}>
+          {t('map.activeTour.legend.title', { defaultValue: 'Tour legend' })}
+        </Text>
+
+        <Text style={styles.legendSectionTitle}>
+          {t('map.activeTour.legend.steps', { defaultValue: 'Step type' })}
+        </Text>
+        <View style={styles.legendRow}>
+          <View style={styles.legendItem}>
+            <View style={styles.legendIconBadge}>
+              <MaterialCommunityIcons name="book-outline" size={12} color="#fff" />
+            </View>
+            <Text style={styles.legendText}>
+              {t('map.activeTour.legend.story', { defaultValue: 'Story step' })}
+            </Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={styles.legendIconBadge}>
+              <MaterialCommunityIcons name="puzzle" size={12} color="#fff" />
+            </View>
+            <Text style={styles.legendText}>
+              {t('map.activeTour.legend.puzzle', { defaultValue: 'Puzzle step' })}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.legendSectionTitle}>
+          {t('map.activeTour.legend.status', { defaultValue: 'Marker status' })}
+        </Text>
+        <View style={styles.legendRow}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendColorDot, { backgroundColor: colors.primary }]} />
+            <Text style={styles.legendText}>
+              {t('map.activeTour.legend.current', { defaultValue: 'Current step (larger)' })}
+            </Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View
+              style={[styles.legendColorDot, { backgroundColor: colors.subText, opacity: 0.6 }]}
+            />
+            <Text style={styles.legendText}>
+              {t('map.activeTour.legend.upcoming', { defaultValue: 'Upcoming step (dimmed)' })}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.legendSectionTitle}>
+          {t('map.activeTour.legend.controlsTitle', { defaultValue: 'Controls' })}
+        </Text>
+        <View style={styles.legendRow}>
+          <View style={styles.legendItem}>
+            <View style={styles.legendIconBadge}>
+              <MaterialCommunityIcons name="crosshairs-gps" size={12} color={colors.background} />
+            </View>
+            <Text style={styles.legendText}>
+              {t('map.activeTour.legend.myLocation', { defaultValue: 'My location' })}
+            </Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={styles.legendIconBadge}>
+              <MaterialCommunityIcons name="map-marker" size={12} color={colors.background} />
+            </View>
+            <Text style={styles.legendText}>
+              {t('map.activeTour.legend.currentStep', { defaultValue: 'Go to current step' })}
+            </Text>
+          </View>
+        </View>
+      </Animated.View>
+
+      <Pressable
+        style={[styles.locateMeButton, { top: activeLocateTop }]}
         onPress={handleCenterOnUser}
       >
         <MaterialCommunityIcons name="crosshairs-gps" size={15} color={colors.primary} />
+      </Pressable>
+
+      <Pressable style={[styles.focusStepButton, { top: activeStepTop }]} onPress={handleFocusCurrentStep}>
+        <MaterialCommunityIcons name="map-marker" size={16} color={colors.primary} />
       </Pressable>
 
       <BottomSlider
