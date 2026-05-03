@@ -10,19 +10,24 @@ import Colors from '@/constants/Colors';
 
 function MapMarker({
   coordinate,
-  title,
   iconType,
   circleSize,
   circleColor,
   opacity = 1,
+  coverImage,
+  onPress,
+  selected = false,
 }: MapMarkerProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const colors = Colors[theme];
 
   const iconSize = Math.round(circleSize * 0.6);
+  const selectedBorder = selected ? { borderColor: colors.primary, borderWidth: 2.5 } : {};
+  void coverImage;
 
   return (
-    <Marker coordinate={coordinate} title={title} tracksViewChanges={false}>
+    <Marker coordinate={coordinate} tracksViewChanges={false} onPress={onPress}>
       <View style={[styles.container, { opacity }]}>
         <View
           style={[
@@ -33,12 +38,13 @@ function MapMarker({
               borderRadius: circleSize / 2,
               backgroundColor: circleColor,
             },
+            selectedBorder,
           ]}
         >
           <MaterialCommunityIcons
             name={getIconName(iconType)}
             size={iconSize}
-            color={Colors[theme].background}
+            color={colors.background}
           />
         </View>
       </View>
@@ -48,11 +54,12 @@ function MapMarker({
 
 function arePropsEqual(prev: MapMarkerProps, next: MapMarkerProps) {
   return (
-    prev.title === next.title &&
     prev.iconType === next.iconType &&
     prev.circleSize === next.circleSize &&
     prev.circleColor === next.circleColor &&
     prev.opacity === next.opacity &&
+    prev.coverImage === next.coverImage &&
+    prev.selected === next.selected &&
     prev.coordinate.latitude === next.coordinate.latitude &&
     prev.coordinate.longitude === next.coordinate.longitude
   );
