@@ -18,6 +18,7 @@ from rest_framework_simplejwt.tokens import RefreshToken  # login token
 from apps.gamification.api.serializers import UserBadgeSerializer
 from apps.gamification.models import TourProgress, UserBadge
 from apps.gamification.services import BadgeService
+from apps.notifications.utils import create_notification
 from apps.tours.api.serializers import TourSerializer
 from apps.tours.models import Tour
 from apps.users.models import Follow, PasswordResetOTP, SearchHistory, User
@@ -395,6 +396,13 @@ class FollowViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
         follow.following.refresh_from_db(fields=["follower_count", "following_count"])
         BadgeService.evaluate_user_badges(follow.follower)
         BadgeService.evaluate_user_badges(follow.following)
+
+        create_notification(
+            user=follow.following,
+            title="New Follower!",
+            body=f"{follow.follower.username} is now following you!",
+            data={"follower_id": follow.follower.id, "type": "new_follower"},
+        )
 
     def perform_destroy(self, instance):
         # decrement counters safely on unfollow

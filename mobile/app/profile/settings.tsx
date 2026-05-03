@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -9,16 +9,29 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  Switch,
 } from 'react-native';
 import { User, Bell, Globe, Palette, Check, LogOut } from 'lucide-react-native';
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import * as Notifications from 'expo-notifications';
+import * as Linking from 'expo-linking';
 import BackButton from '@/components/common/BackButton';
 import { SettingsRowItem } from '@/components/SettingComponents/SettingsRowItem';
 import { SettingsRowGroup } from '@/components/SettingComponents/SettingsRowGroup';
 import type { SettingsItemConfig } from '@/components/SettingComponents/SettingsRowItem.config';
-import { getMe, partialUpdateUser } from '@/api/users';
+import {
+  getMe,
+  partialUpdateUser,
+  registerDeviceToken,
+  deregisterDeviceToken,
+  getNotificationPreferences,
+  updateNotificationPreferences,
+  NotificationPreferences,
+} from '@/api/users';
 import { setProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { Spacing } from '@/constants/Spacing';
 import { useTranslation } from 'react-i18next';
@@ -55,6 +68,7 @@ export default function SettingsScreen({
   const colorTheme = useColorTheme();
   const colors = Colors[colorTheme];
   const editProfileSurfaceColor = colors.background;
+
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showAppearanceModal, setShowAppearanceModal] = useState(false);
   const [popupView, setPopupView] = useState<PopupView>('settings');
@@ -64,12 +78,106 @@ export default function SettingsScreen({
     last_name: '',
     email: '',
   });
+
   const [editProfileErrors, setEditProfileErrors] = useState<Partial<EditProfileForm>>({});
   const [editProfileGeneralError, setEditProfileGeneralError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [isLoadingProfileData, setIsLoadingProfileData] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  const [pushToken, setPushToken] = useState<string | null>(null);
+  const [isCheckingNotifications, setIsCheckingNotifications] = useState(true);
+  const [isTogglingNotifications, setIsTogglingNotifications] = useState(false);
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  const [systemNotificationsEnabled, setSystemNotificationsEnabled] = useState(false);
+  const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
+
   const isEditProfileView = popupView === 'edit-profile';
+
+  useEffect(() => {
+    async function loadNotificationSettings() {
+      if (!showNotificationsModal) return;
+      setIsCheckingNotifications(true);
+      try {
+        const { status } = await Notifications.getPermissionsAsync();
+        setSystemNotificationsEnabled(status === 'granted');
+        const prefs = await getNotificationPreferences();
+        setPreferences(prefs);
+      } catch (error) {
+        console.warn('Failed to load notification settings:', error);
+      } finally {
+        setIsCheckingNotifications(false);
+      }
+    }
+    loadNotificationSettings();
+  }, [showNotificationsModal]);
+
+  const toggleSinglePreference = async (key: keyof NotificationPreferences, value: boolean) => {
+    setPreferences((prev) => (prev ? { ...prev, [key]: value } : prev));
+    try {
+      await updateNotificationPreferences({ [key]: value });
+    } catch (error) {
+      setPreferences((prev) => (prev ? { ...prev, [key]: !value } : prev));
+    }
+  };
+
+  const toggleNotifications = async () => {
+    if (isTogglingNotifications) return;
+    setIsTogglingNotifications(true);
+
+    try {
+      if (pushToken) {
+        await deregisterDeviceToken({ device_token: pushToken });
+        await SecureStore.deleteItemAsync('devicePushToken');
+        setPushToken(null);
+      } else {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+
+        if (existingStatus === 'denied') {
+          Alert.alert(
+            t('settings.notifications.deniedTitle'),
+            t('settings.notifications.deniedMessage'),
+            [
+              { text: t('common.cancel'), style: 'cancel' },
+              {
+                text: t('settings.notifications.openSettings'),
+                onPress: () => Linking.openSettings(),
+              },
+            ]
+          );
+          setIsTogglingNotifications(false);
+          return;
+        }
+
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+
+        if (finalStatus === 'granted') {
+          const tokenData = await Notifications.getDevicePushTokenAsync();
+          const token = tokenData.data;
+
+          await registerDeviceToken({
+            device_token: token,
+            platform: Platform.OS === 'ios' ? 'ios' : 'android',
+          });
+
+          await SecureStore.setItemAsync('devicePushToken', token);
+          setPushToken(token);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert(
+        t('settings.items.notifications.errorTitle'),
+        t('settings.items.notifications.errorMessage')
+      );
+    } finally {
+      setIsTogglingNotifications(false);
+    }
+  };
 
   const settingsGroups: SettingsGroup[] = [
     {
@@ -88,7 +196,11 @@ export default function SettingsScreen({
           icon: Bell,
           label: t('settings.items.notifications.label'),
           labelKey: 'settings.items.notifications.label',
-          description: t('settings.items.notifications.description'),
+          description: isCheckingNotifications
+            ? '...'
+            : pushToken
+              ? t('settings.notifications.statusOn')
+              : t('settings.notifications.statusOff'),
           descriptionKey: 'settings.items.notifications.description',
         },
         {
@@ -246,6 +358,11 @@ export default function SettingsScreen({
   const handleItemPress = (_groupTitle: string, item: SettingsItemConfig) => {
     if (item.key === 'edit_profile') {
       void openEditProfileView();
+      return;
+    }
+
+    if (item.key === 'notifications') {
+      setShowNotificationsModal(true);
       return;
     }
 
@@ -535,6 +652,85 @@ export default function SettingsScreen({
                 {themePreference === mode && <Check size={18} color={colors.primary} />}
               </Pressable>
             ))}
+          </RNView>
+        </RNView>
+      </Modal>
+
+      <Modal visible={showNotificationsModal} transparent animationType="fade">
+        <RNView style={styles.modalOverlay}>
+          <RNView style={[styles.modalCard, { backgroundColor: colors.foreground }]}>
+            <View style={styles.editModalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text, marginBottom: 0 }]}>
+                {t('settings.items.notifications.label')}
+              </Text>
+              <Pressable onPress={() => setShowNotificationsModal(false)}>
+                <Ionicons name="close" size={24} color={colors.subText} />
+              </Pressable>
+            </View>
+
+            {isCheckingNotifications ? (
+              <View style={styles.loaderWrap}>
+                <ActivityIndicator size="large" color={colors.primary} />
+              </View>
+            ) : (
+              <ScrollView style={{ marginTop: Spacing.md }}>
+                {!systemNotificationsEnabled && (
+                  <View
+                    style={[
+                      styles.errorBanner,
+                      { backgroundColor: `${colors.error}12`, borderColor: `${colors.error}35` },
+                    ]}
+                  >
+                    <Ionicons name="warning-outline" size={20} color={colors.error} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: colors.error, fontSize: 13, fontWeight: '500' }}>
+                        {t('settings.notifications.systemDisabled')}
+                      </Text>
+                      <Pressable onPress={() => Linking.openSettings()}>
+                        <Text
+                          style={{
+                            color: colors.primary,
+                            fontSize: 13,
+                            fontWeight: '700',
+                            marginTop: 4,
+                          }}
+                        >
+                          {t('settings.notifications.openSettings')}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                )}
+
+                {preferences && (
+                  <>
+                    {(Object.keys(preferences) as (keyof NotificationPreferences)[]).map((key) => (
+                      <View
+                        key={key}
+                        style={[
+                          styles.languageOption,
+                          {
+                            borderColor: colors.border,
+                            opacity: systemNotificationsEnabled ? 1 : 0.5,
+                          },
+                        ]}
+                      >
+                        <Text style={[styles.languageLabel, { color: colors.text }]}>
+                          {t(`settings.items.notifications.types.${key}`)}
+                        </Text>
+                        <Switch
+                          value={preferences[key]}
+                          onValueChange={(val) => toggleSinglePreference(key, val)}
+                          disabled={!systemNotificationsEnabled}
+                          trackColor={{ false: colors.border, true: colors.primary }}
+                          thumbColor={Platform.OS === 'ios' ? '#FFFFFF' : colors.background}
+                        />
+                      </View>
+                    ))}
+                  </>
+                )}
+              </ScrollView>
+            )}
           </RNView>
         </RNView>
       </Modal>
