@@ -704,31 +704,29 @@ export default function SettingsScreen({
 
                 {preferences && (
                   <>
-                    {(Object.keys(preferences) as (keyof NotificationPreferences)[]).map(
-                      (key) => (
-                        <View
-                          key={key}
-                          style={[
-                            styles.languageOption,
-                            {
-                              borderColor: colors.border,
-                              opacity: systemNotificationsEnabled ? 1 : 0.5,
-                            },
-                          ]}
-                        >
-                          <Text style={[styles.languageLabel, { color: colors.text }]}>
-                            {t(`settings.items.notifications.types.${key}`)}
-                          </Text>
-                          <Switch
-                            value={preferences[key]}
-                            onValueChange={(val) => toggleSinglePreference(key, val)}
-                            disabled={!systemNotificationsEnabled}
-                            trackColor={{ false: colors.border, true: colors.primary }}
-                            thumbColor={Platform.OS === 'ios' ? '#FFFFFF' : colors.background}
-                          />
-                        </View>
-                      )
-                    )}
+                    {(Object.keys(preferences) as (keyof NotificationPreferences)[]).map((key) => (
+                      <View
+                        key={key}
+                        style={[
+                          styles.languageOption,
+                          {
+                            borderColor: colors.border,
+                            opacity: systemNotificationsEnabled ? 1 : 0.5,
+                          },
+                        ]}
+                      >
+                        <Text style={[styles.languageLabel, { color: colors.text }]}>
+                          {t(`settings.items.notifications.types.${key}`)}
+                        </Text>
+                        <Switch
+                          value={preferences[key]}
+                          onValueChange={(val) => toggleSinglePreference(key, val)}
+                          disabled={!systemNotificationsEnabled}
+                          trackColor={{ false: colors.border, true: colors.primary }}
+                          thumbColor={Platform.OS === 'ios' ? '#FFFFFF' : colors.background}
+                        />
+                      </View>
+                    ))}
                   </>
                 )}
               </ScrollView>
