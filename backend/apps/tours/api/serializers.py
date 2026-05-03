@@ -269,11 +269,23 @@ class PuzzleSerializer(serializers.ModelSerializer):
             return None
         return PictureComparePuzzleDetailSerializer(detail, context=self.context).data
 
-    @staticmethod
-    def get_open_ended(obj):
+    def get_open_ended(self, obj):
         if obj.puzzle_type != Puzzle.OPEN_ENDED:
             return None
-        return {"answer_type": "text"}
+        payload = {"answer_type": "text"}
+        request = self.context.get("request")
+        if request is None:
+            return payload
+
+        user = getattr(request, "user", None)
+        is_creator_or_staff = bool(
+            user
+            and user.is_authenticated
+            and (user.is_staff or obj.step.tour.creator_id == user.id)
+        )
+        if is_creator_or_staff:
+            payload["correct_answer"] = obj.correct_answer
+        return payload
 
     def get_ar(self, obj):
         detail = getattr(obj, "ar_detail", None)
@@ -383,6 +395,7 @@ class TourSerializer(serializers.ModelSerializer):
             "status",
             "review_status",
             "generation_source",
+            "submission_type",
             "created_at",
             "updated_at",
             "steps",
@@ -407,6 +420,7 @@ class TourSerializer(serializers.ModelSerializer):
             "metrics_calculated",
             "generation_source",
             "review_status",
+            "submission_type",
         ]
 
     def validate(self, attrs):

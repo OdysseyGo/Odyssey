@@ -227,6 +227,14 @@ class AdminTourViewSet(ModelViewSet):
     def approve(self, request, pk=None):
         tour = self.get_object()
 
+        if tour.submission_type == Tour.DELETE:
+            tour_id = tour.id
+            tour_title = tour.title
+            tour.delete()
+            return Response(
+                {"detail": f'Tour "{tour_title}" (#{tour_id}) approved for deletion.'}
+            )
+
         if not tour.city or not tour.country:
             return Response(
                 {"location": "City and Country are required before publishing a tour."},
@@ -257,7 +265,10 @@ class AdminTourViewSet(ModelViewSet):
 
         tour.status = Tour.PUBLISHED
         tour.review_status = None
-        tour.save(update_fields=["status", "review_status"])
+        tour.submission_type = Tour.CREATE
+        tour.save(
+            update_fields=["status", "review_status", "submission_type", "updated_at"]
+        )
 
         try:
             send_mail(
@@ -280,9 +291,18 @@ class AdminTourViewSet(ModelViewSet):
     def reject(self, request, pk=None):
         tour = self.get_object()
         reason = request.data.get("reason", "").strip()
+        if tour.submission_type == Tour.DELETE:
+            tour.status = Tour.PUBLISHED
+            tour.review_status = None
+            tour.submission_type = Tour.CREATE
+            tour.save(
+                update_fields=["status", "review_status", "submission_type", "updated_at"]
+            )
+            return Response({"detail": "Delete request rejected and tour restored to published."})
+
         tour.status = Tour.PENDING
         tour.review_status = Tour.REJECTED
-        tour.save(update_fields=["status", "review_status"])
+        tour.save(update_fields=["status", "review_status", "updated_at"])
 
         try:
             reason_block = f'\nReason from our team:\n"{reason}"\n' if reason else ""

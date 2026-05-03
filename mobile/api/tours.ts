@@ -7,6 +7,7 @@ export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type TourStatus = 'PENDING' | 'PUBLISHED' | 'ARCHIVED';
 export type TourReviewStatus = 'IN_REVIEW' | 'REJECTED';
 export type TourGenerationSource = 'USER' | 'AI';
+export type TourSubmissionType = 'CREATE' | 'EDIT' | 'DELETE';
 
 export type TriviaPuzzleDetail = {
   options: string[];
@@ -59,6 +60,7 @@ export type CompassPuzzleDetail = {
 
 export type OpenEndedPuzzleDetail = {
   answer_type: 'text' | string;
+  correct_answer?: string;
 };
 
 export type Puzzle = {
@@ -94,7 +96,7 @@ export type OpenEndedPuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
 };
 
 export type PictureComparePuzzleUpsertPayload = PuzzleBaseUpsertPayload & {
-  referenceImageUri: string;
+  referenceImageUri?: string;
   similarity_threshold?: number;
 };
 
@@ -157,6 +159,7 @@ export type Tour = {
   status: TourStatus;
   review_status?: TourReviewStatus | null;
   generation_source: TourGenerationSource;
+  submission_type: TourSubmissionType;
   created_at: string;
   updated_at: string;
   steps: TourStep[];
@@ -219,8 +222,7 @@ function isUploadableAssetUri(value: unknown): value is string {
     value.startsWith('file://') ||
     value.startsWith('content://') ||
     value.startsWith('ph://') ||
-    value.startsWith('assets-library://') ||
-    value.startsWith('/')
+    value.startsWith('assets-library://')
   );
 }
 
@@ -416,6 +418,24 @@ export async function updateTour(
   });
 }
 
+export async function requestTourEdit(tourId: number, signal?: AbortSignal): Promise<Tour> {
+  return apiRequest<Tour>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/request-edit/`,
+    auth: true,
+    signal,
+  });
+}
+
+export async function requestTourDelete(tourId: number, signal?: AbortSignal): Promise<Tour> {
+  return apiRequest<Tour>({
+    method: 'POST',
+    url: `/api/tours/${tourId}/request-delete/`,
+    auth: true,
+    signal,
+  });
+}
+
 /**
  * Delete a tour (requires authentication)
  */
@@ -557,8 +577,9 @@ export async function createTourStep(
   signal?: AbortSignal
 ): Promise<TourStep> {
   let data: Partial<TourStep> | FormData = stepData;
+  const hasUploadableImage = isUploadableAssetUri(stepData.image);
 
-  if (stepData.image && stepData.image.startsWith('file://')) {
+  if (hasUploadableImage) {
     const formData = new FormData();
     Object.keys(stepData).forEach((key) => {
       const k = key as keyof TourStep;
@@ -575,9 +596,9 @@ export async function createTourStep(
       }
     });
     data = formData;
-  } else if (!stepData.image) {
-    // If image is empty string or undefined/null, ensure we don't send it to avoid backend validation error (400)
-    // because Django ImageField doesn't like empty strings.
+  } else {
+    // Do not send non-file image strings (e.g. existing /media/... URLs) back to ImageField.
+    // Keep existing image unless a new local file is selected.
     const { image, ...rest } = stepData;
     data = rest;
   }
@@ -586,6 +607,73 @@ export async function createTourStep(
     method: 'POST',
     url: `/api/tours/${tourId}/steps/`,
     data,
+    auth: true,
+    signal,
+  });
+}
+
+export async function updateTourStep(
+  tourId: number,
+  stepId: number,
+  stepData: Partial<TourStep>,
+  signal?: AbortSignal
+): Promise<TourStep> {
+  let data: Partial<TourStep> | FormData = stepData;
+  const hasUploadableImage = isUploadableAssetUri(stepData.image);
+
+  if (hasUploadableImage) {
+    const formData = new FormData();
+    Object.keys(stepData).forEach((key) => {
+      const k = key as keyof TourStep;
+      if (stepData[k] !== undefined && stepData[k] !== null) {
+        if (k === 'image') {
+          formData.append('image', {
+            uri: stepData.image,
+            name: `step_image_tour-${tourId}_step-${stepId}.jpg`,
+            type: 'image/jpeg',
+          } as any);
+        } else {
+          formData.append(k, String(stepData[k]));
+        }
+      }
+    });
+    data = formData;
+  } else {
+    // Do not send non-file image strings to ImageField during PATCH.
+    const { image, ...rest } = stepData;
+    data = rest;
+  }
+
+  return apiRequest<TourStep, typeof data>({
+    method: 'PATCH',
+    url: `/api/tours/${tourId}/steps/${stepId}/`,
+    data,
+    auth: true,
+    signal,
+  });
+}
+
+export async function deleteTourStep(
+  tourId: number,
+  stepId: number,
+  signal?: AbortSignal
+): Promise<void> {
+  return apiRequest<void>({
+    method: 'DELETE',
+    url: `/api/tours/${tourId}/steps/${stepId}/`,
+    auth: true,
+    signal,
+  });
+}
+
+export async function deleteStepPuzzle(
+  tourId: number,
+  stepId: number,
+  signal?: AbortSignal
+): Promise<void> {
+  return apiRequest<void>({
+    method: 'DELETE',
+    url: `/api/tours/${tourId}/steps/${stepId}/puzzle/`,
     auth: true,
     signal,
   });
@@ -643,11 +731,13 @@ export async function setStepPictureComparePuzzle(
   if (payload.similarity_threshold !== undefined) {
     formData.append('similarity_threshold', String(payload.similarity_threshold));
   }
-  formData.append('reference_image', {
-    uri: payload.referenceImageUri,
-    name: 'reference_image.jpg',
-    type: 'image/jpeg',
-  } as any);
+  if (payload.referenceImageUri && isUploadableAssetUri(payload.referenceImageUri)) {
+    formData.append('reference_image', {
+      uri: payload.referenceImageUri,
+      name: 'reference_image.jpg',
+      type: 'image/jpeg',
+    } as any);
+  }
 
   return apiRequest<Puzzle, FormData>({
     method: 'POST',

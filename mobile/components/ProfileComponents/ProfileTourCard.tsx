@@ -19,7 +19,12 @@ const TYPE_ICONS: Record<string, string> = {
   HYBRID: 'layers-outline',
 };
 
-export default function ProfileTourCard({ tour, onPress, containerStyle }: ProfileTourCardProps) {
+export default function ProfileTourCard({
+  tour,
+  onPress,
+  onEditPress,
+  containerStyle,
+}: ProfileTourCardProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => profileTourCardStyles(theme), [theme]);
   const color = Colors[theme];
@@ -100,6 +105,17 @@ export default function ProfileTourCard({ tour, onPress, containerStyle }: Profi
       <View style={styles.arrowContainer}>
         <Ionicons name="chevron-forward" size={16} color={color.subText} />
       </View>
+      {onEditPress ? (
+        <Pressable
+          style={styles.editButton}
+          onPress={(event) => {
+            event.stopPropagation();
+            onEditPress();
+          }}
+        >
+          <Ionicons name="create-outline" size={14} color={color.primary} />
+        </Pressable>
+      ) : null}
     </Pressable>
   );
 }

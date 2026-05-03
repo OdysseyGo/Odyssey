@@ -90,5 +90,16 @@ export const profileTourCardStyles = (theme: ThemeName) => {
       marginLeft: Spacing.sm,
       opacity: 0.35,
     },
+    editButton: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: Spacing.sm,
+      backgroundColor: color.primaryMuted,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: isLight ? color.borderLight : color.foregroundSecondary,
+    },
   });
 };

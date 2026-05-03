@@ -5,13 +5,17 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   createTour,
   createTourStep,
+  deleteStepPuzzle,
   deleteTour,
+  deleteTourStep,
+  requestTourEdit,
   setStepArPuzzle,
   setStepCompassPuzzle,
   setStepOpenEndedPuzzle,
   setStepPictureComparePuzzle,
   setStepTriviaPuzzle,
   updateTour,
+  updateTourStep,
 } from '@/api/tours';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -50,9 +54,24 @@ function isTransientSubmissionError(error: unknown) {
   return false;
 }
 
+function normalizeForChangeDetection(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeForChangeDetection(item));
+  }
+  if (value && typeof value === 'object') {
+    const objectValue = value as Record<string, unknown>;
+    const normalizedEntries = Object.entries(objectValue)
+      .filter(([, v]) => v !== undefined)
+      .map(([k, v]) => [k, normalizeForChangeDetection(v)] as const)
+      .sort(([a], [b]) => a.localeCompare(b));
+    return Object.fromEntries(normalizedEntries);
+  }
+  if (typeof value === 'string') return value.trim();
+  return value;
+}
+
 async function withRetry<T>(operation: () => Promise<T>, maxRetries: number): Promise<T> {
   let attempt = 0;
-  // Retry only transient errors. Non-transient errors fail fast.
   while (true) {
     try {
       return await operation();
@@ -66,10 +85,7 @@ async function withRetry<T>(operation: () => Promise<T>, maxRetries: number): Pr
   }
 }
 
-async function runWithConcurrency(
-  tasks: (() => Promise<void>)[],
-  concurrency: number
-): Promise<void> {
+async function runWithConcurrency(tasks: (() => Promise<void>)[], concurrency: number): Promise<void> {
   let nextIndex = 0;
   let firstError: unknown = null;
 
@@ -96,25 +112,32 @@ async function runWithConcurrency(
 export default function TourReviewScreen() {
   const theme = useColorTheme();
   const color = Colors[theme];
-  const { tourData, resetTourData } = useTourCreation();
+  const { tourData, mode, originalSnapshot, resetTourData } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [submitProgress, setSubmitProgress] = React.useState<{
-    completed: number;
-    total: number;
-  } | null>(null);
+  const [submitProgress, setSubmitProgress] = React.useState<{ completed: number; total: number } | null>(
+    null
+  );
   const [showUnderReviewNotice, setShowUnderReviewNotice] = React.useState(false);
   const { t } = useTranslation();
+
   const isReadyToSubmit =
     !!tourData.coverImage &&
-    tourData.locations.every((location) =>
-      doesLocationMeetTourRequirements(location, tourData.tourType)
-    );
+    tourData.locations.every((location) => doesLocationMeetTourRequirements(location, tourData.tourType));
   const hasValidSelectedLocation =
     tourData.country.trim().length > 0 &&
     tourData.countryCode.trim().length > 0 &&
     tourData.state.trim().length > 0 &&
-    Number.isFinite(tourData.stateLatitude) &&
-    Number.isFinite(tourData.stateLongitude);
+    (mode === 'edit' ||
+      (Number.isFinite(tourData.stateLatitude) && Number.isFinite(tourData.stateLongitude)));
+
+  const isEditMode = mode === 'edit' && !!tourData.sourceTourId;
+  const shouldRequestEditTransition = isEditMode && tourData.sourceTourStatus === 'PUBLISHED';
+  const hasMeaningfulChanges = React.useMemo(() => {
+    if (!isEditMode || !originalSnapshot) return true;
+    const currentNormalized = JSON.stringify(normalizeForChangeDetection(tourData));
+    const originalNormalized = JSON.stringify(normalizeForChangeDetection(originalSnapshot));
+    return currentNormalized !== originalNormalized;
+  }, [isEditMode, originalSnapshot, tourData]);
 
   const handleSubmitTour = async () => {
     if (!isReadyToSubmit) {
@@ -126,6 +149,7 @@ export default function TourReviewScreen() {
       );
       return;
     }
+
     if (!hasValidSelectedLocation) {
       Alert.alert(
         t('creation.incompleteLocationTitle', { defaultValue: 'Complete location details' }),
@@ -136,190 +160,256 @@ export default function TourReviewScreen() {
       return;
     }
 
-    Alert.alert(t('creation.submitTitle'), t('creation.submitMessage'), [
-      { text: t('creation.cancel'), style: 'cancel' },
-      {
-        text: t('creation.submitConfirm'),
-        onPress: async () => {
-          setIsSubmitting(true);
-          setSubmitProgress({ completed: 0, total: tourData.locations.length });
+    if (isEditMode && !hasMeaningfulChanges) {
+      Alert.alert(
+        t('creation.noChangesTitle', { defaultValue: 'No changes detected' }),
+        t('creation.noChangesMessage', {
+          defaultValue: 'Make at least one change before confirming your edit request.',
+        })
+      );
+      return;
+    }
 
-          let createdTourId: number | null = null;
+    Alert.alert(
+      isEditMode
+        ? t('creation.editSubmitTitle', { defaultValue: 'Submit edit request' })
+        : t('creation.submitTitle'),
+      isEditMode
+        ? t('creation.editSubmitMessage', {
+            defaultValue: 'Your tour will be moved to pending review for approval.',
+          })
+        : t('creation.submitMessage'),
+      [
+        { text: t('creation.cancel'), style: 'cancel' },
+        {
+          text: isEditMode
+            ? t('creation.confirmEdit', { defaultValue: 'Confirm Edit' })
+            : t('creation.submitConfirm'),
+          onPress: async () => {
+            setIsSubmitting(true);
+            setSubmitProgress({ completed: 0, total: tourData.locations.length });
 
-          try {
-            const tour = await createTour({
-              title: sanitizeSingleLineText(tourData.title).trim() || 'Untitled Tour',
-              description:
-                sanitizeMultiLineText(tourData.description).trim() || 'No description provided.',
-              cover_image: tourData.coverImage,
-              tour_type: tourData.tourType,
-              category: tourData.category || 'General',
-              difficulty: tourData.difficulty,
-              duration_minutes: tourData.estimatedDuration,
-              city: sanitizeSingleLineText(tourData.state).trim(),
-              country: sanitizeSingleLineText(tourData.country).trim(),
-              country_code: sanitizeSingleLineText(tourData.countryCode).trim(),
-              city_latitude: tourData.stateLatitude,
-              city_longitude: tourData.stateLongitude,
-              is_premium: false,
-            });
+            let createdTourId: number | null = null;
 
-            createdTourId = tour.id;
-            console.log('Tour created:', createdTourId);
-            const submittingTourId = createdTourId;
+            try {
+              let submittingTourId: number;
+              if (isEditMode && tourData.sourceTourId) {
+                submittingTourId = tourData.sourceTourId;
+                if (shouldRequestEditTransition) {
+                  await requestTourEdit(submittingTourId);
+                }
+                await updateTour(submittingTourId, {
+                  title: sanitizeSingleLineText(tourData.title).trim() || 'Untitled Tour',
+                  description:
+                    sanitizeMultiLineText(tourData.description).trim() || 'No description provided.',
+                  cover_image: tourData.coverImage,
+                  tour_type: tourData.tourType,
+                  category: tourData.category || 'General',
+                  difficulty: tourData.difficulty,
+                  duration_minutes: tourData.estimatedDuration,
+                  city: sanitizeSingleLineText(tourData.state).trim(),
+                  country: sanitizeSingleLineText(tourData.country).trim(),
+                  country_code: sanitizeSingleLineText(tourData.countryCode).trim(),
+                  city_latitude: tourData.stateLatitude,
+                  city_longitude: tourData.stateLongitude,
+                });
+              } else {
+                const tour = await createTour({
+                  title: sanitizeSingleLineText(tourData.title).trim() || 'Untitled Tour',
+                  description:
+                    sanitizeMultiLineText(tourData.description).trim() || 'No description provided.',
+                  cover_image: tourData.coverImage,
+                  tour_type: tourData.tourType,
+                  category: tourData.category || 'General',
+                  difficulty: tourData.difficulty,
+                  duration_minutes: tourData.estimatedDuration,
+                  city: sanitizeSingleLineText(tourData.state).trim(),
+                  country: sanitizeSingleLineText(tourData.country).trim(),
+                  country_code: sanitizeSingleLineText(tourData.countryCode).trim(),
+                  city_latitude: tourData.stateLatitude,
+                  city_longitude: tourData.stateLongitude,
+                  is_premium: false,
+                });
+                createdTourId = tour.id;
+                submittingTourId = tour.id;
+              }
 
-            const stepTasks = tourData.locations.map((loc, index) => async () => {
-              const createdStep = await withRetry(
-                () =>
-                  createTourStep(submittingTourId, {
-                    title: sanitizeSingleLineText(loc.title).trim() || `Stop ${index + 1}`,
-                    description: sanitizeMultiLineText(loc.story),
-                    latitude: Number(loc.latitude).toFixed(8),
-                    longitude: Number(loc.longitude).toFixed(8),
-                    order: loc.order,
-                    image: loc.image,
-                  }),
-                STEP_UPLOAD_MAX_RETRIES
-              );
+              const syncOneLocation = async (
+                loc: (typeof tourData.locations)[number],
+                index: number
+              ): Promise<void> => {
+                const baseStepPayload = {
+                  title: sanitizeSingleLineText(loc.title).trim() || `Stop ${index + 1}`,
+                  description: sanitizeMultiLineText(loc.story),
+                  latitude: Number(loc.latitude).toFixed(8),
+                  longitude: Number(loc.longitude).toFixed(8),
+                  order: loc.order,
+                  image: loc.image,
+                };
 
-              if (!loc.puzzle) {
+                const step = loc.serverStepId
+                  ? await withRetry(
+                      () => updateTourStep(submittingTourId, loc.serverStepId as number, baseStepPayload),
+                      STEP_UPLOAD_MAX_RETRIES
+                    )
+                  : await withRetry(
+                      () => createTourStep(submittingTourId, baseStepPayload),
+                      STEP_UPLOAD_MAX_RETRIES
+                    );
+
+                if (!loc.puzzle) {
+                  await withRetry(
+                    () => deleteStepPuzzle(submittingTourId, step.id),
+                    STEP_UPLOAD_MAX_RETRIES
+                  );
+                  return;
+                }
+
+                const puzzle = loc.puzzle;
+                const basePayload = {
+                  question: sanitizeMultiLineText(puzzle.question).trim(),
+                  hint: sanitizeMultiLineText(puzzle.hint),
+                };
+
+                if (puzzle.puzzle_type === 'TRIVIA') {
+                  await withRetry(
+                    () =>
+                      setStepTriviaPuzzle(submittingTourId, step.id, {
+                        ...basePayload,
+                        options: puzzle.options.map((opt) => sanitizeSingleLineText(opt)),
+                        correct_answer: sanitizeSingleLineText(puzzle.correctAnswer),
+                      }),
+                    STEP_UPLOAD_MAX_RETRIES
+                  );
+                } else if (puzzle.puzzle_type === 'OPEN_ENDED') {
+                  await withRetry(
+                    () =>
+                      setStepOpenEndedPuzzle(submittingTourId, step.id, {
+                        ...basePayload,
+                        correct_answer: sanitizeSingleLineText(puzzle.correctAnswer),
+                      }),
+                    STEP_UPLOAD_MAX_RETRIES
+                  );
+                } else if (puzzle.puzzle_type === 'PICTURE_COMPARE') {
+                  await withRetry(
+                    () =>
+                      setStepPictureComparePuzzle(submittingTourId, step.id, {
+                        ...basePayload,
+                        referenceImageUri: puzzle.referenceImage,
+                      }),
+                    STEP_UPLOAD_MAX_RETRIES
+                  );
+                } else if (puzzle.puzzle_type === 'AR') {
+                  const arConfig = puzzle.arConfig;
+                  if (!arConfig) {
+                    throw new Error('AR puzzles require a selected model, code, and anchor.');
+                  }
+
+                  await withRetry(
+                    () =>
+                      setStepArPuzzle(submittingTourId, step.id, {
+                        ...basePayload,
+                        scene_asset_url: arConfig.sceneAssetUrl,
+                        metadata: {
+                          version: 1,
+                          model_id: arConfig.modelId,
+                          anchor_id: arConfig.anchorId,
+                          placement_mode: arConfig.placementMode,
+                          secret_code: arConfig.secretCode,
+                          model_scale_meters: arConfig.modelScaleMeters,
+                          anchor_position: {
+                            x: arConfig.anchorPosition.x,
+                            y: arConfig.anchorPosition.y,
+                            z: arConfig.anchorPosition.z,
+                          },
+                        },
+                      }),
+                    STEP_UPLOAD_MAX_RETRIES
+                  );
+                } else if (puzzle.puzzle_type === 'COMPASS') {
+                  const targetHeadingDegrees = puzzle.targetHeadingDegrees;
+                  if (
+                    typeof targetHeadingDegrees !== 'number' ||
+                    !Number.isInteger(targetHeadingDegrees)
+                  ) {
+                    throw new Error('COMPASS puzzles require a valid integer target heading.');
+                  }
+
+                  await withRetry(
+                    () =>
+                      setStepCompassPuzzle(submittingTourId, step.id, {
+                        ...basePayload,
+                        target_heading_degrees: ((targetHeadingDegrees % 360) + 360) % 360,
+                      }),
+                    STEP_UPLOAD_MAX_RETRIES
+                  );
+                }
+              };
+
+              const stepTasks = tourData.locations.map((loc, index) => async () => {
+                await syncOneLocation(loc, index);
                 setSubmitProgress((prev) => {
                   if (!prev) return prev;
                   return { ...prev, completed: Math.min(prev.total, prev.completed + 1) };
                 });
-                return;
-              }
-              const puzzle = loc.puzzle;
-
-              const basePayload = {
-                question: sanitizeMultiLineText(puzzle.question).trim(),
-                hint: sanitizeMultiLineText(puzzle.hint),
-              };
-
-              if (puzzle.puzzle_type === 'TRIVIA') {
-                await withRetry(
-                  () =>
-                    setStepTriviaPuzzle(submittingTourId, createdStep.id, {
-                      ...basePayload,
-                      options: puzzle.options.map((opt) => sanitizeSingleLineText(opt)),
-                      correct_answer: sanitizeSingleLineText(puzzle.correctAnswer),
-                    }),
-                  STEP_UPLOAD_MAX_RETRIES
-                );
-              } else if (puzzle.puzzle_type === 'OPEN_ENDED') {
-                await withRetry(
-                  () =>
-                    setStepOpenEndedPuzzle(submittingTourId, createdStep.id, {
-                      ...basePayload,
-                      correct_answer: sanitizeSingleLineText(puzzle.correctAnswer),
-                    }),
-                  STEP_UPLOAD_MAX_RETRIES
-                );
-              } else if (puzzle.puzzle_type === 'PICTURE_COMPARE') {
-                const referenceImageUri = puzzle.referenceImage;
-                if (!referenceImageUri || !referenceImageUri.startsWith('file://')) {
-                  throw new Error('PICTURE_COMPARE puzzles require a local reference image.');
-                }
-
-                await withRetry(
-                  () =>
-                    setStepPictureComparePuzzle(submittingTourId, createdStep.id, {
-                      ...basePayload,
-                      referenceImageUri,
-                    }),
-                  STEP_UPLOAD_MAX_RETRIES
-                );
-              } else if (puzzle.puzzle_type === 'AR') {
-                const arConfig = puzzle.arConfig;
-                if (!arConfig) {
-                  throw new Error('AR puzzles require a selected model, code, and anchor.');
-                }
-
-                await withRetry(
-                  () =>
-                    setStepArPuzzle(submittingTourId, createdStep.id, {
-                      ...basePayload,
-                      scene_asset_url: arConfig.sceneAssetUrl,
-                      metadata: {
-                        version: 1,
-                        model_id: arConfig.modelId,
-                        anchor_id: arConfig.anchorId,
-                        placement_mode: arConfig.placementMode,
-                        secret_code: arConfig.secretCode,
-                        model_scale_meters: arConfig.modelScaleMeters,
-                        anchor_position: {
-                          x: arConfig.anchorPosition.x,
-                          y: arConfig.anchorPosition.y,
-                          z: arConfig.anchorPosition.z,
-                        },
-                      },
-                    }),
-                  STEP_UPLOAD_MAX_RETRIES
-                );
-              } else if (puzzle.puzzle_type === 'COMPASS') {
-                const targetHeadingDegrees = puzzle.targetHeadingDegrees;
-                if (
-                  typeof targetHeadingDegrees !== 'number' ||
-                  !Number.isInteger(targetHeadingDegrees)
-                ) {
-                  throw new Error('COMPASS puzzles require a valid integer target heading.');
-                }
-
-                await withRetry(
-                  () =>
-                    setStepCompassPuzzle(submittingTourId, createdStep.id, {
-                      ...basePayload,
-                      target_heading_degrees: ((targetHeadingDegrees % 360) + 360) % 360,
-                    }),
-                  STEP_UPLOAD_MAX_RETRIES
-                );
-              }
-
-              setSubmitProgress((prev) => {
-                if (!prev) return prev;
-                return { ...prev, completed: Math.min(prev.total, prev.completed + 1) };
               });
-            });
+              await runWithConcurrency(stepTasks, STEP_UPLOAD_CONCURRENCY);
 
-            await runWithConcurrency(stepTasks, STEP_UPLOAD_CONCURRENCY);
-
-            // 3. Finalize tour metadata after all steps are created.
-            await updateTour(tour.id, {
-              city: sanitizeSingleLineText(tourData.state).trim(),
-              country: sanitizeSingleLineText(tourData.country).trim(),
-              country_code: sanitizeSingleLineText(tourData.countryCode).trim(),
-              city_latitude: tourData.stateLatitude,
-              city_longitude: tourData.stateLongitude,
-            });
-
-            setShowUnderReviewNotice(true);
-          } catch (error) {
-            console.error('Submit failed:', error);
-
-            if (createdTourId) {
-              try {
-                console.log(`Hata oluştu! Yarım kalan tur (${createdTourId}) siliniyor...`);
-                await deleteTour(createdTourId);
-              } catch (deleteError) {
-                console.error('Error on deleting tour', deleteError);
+              if (isEditMode && originalSnapshot) {
+                const keptIds = new Set(
+                  tourData.locations
+                    .map((location) => location.serverStepId)
+                    .filter((stepId): stepId is number => typeof stepId === 'number')
+                );
+                const removedStepIds = originalSnapshot.locations
+                  .map((location) => location.serverStepId)
+                  .filter(
+                    (stepId): stepId is number => typeof stepId === 'number' && !keptIds.has(stepId)
+                  );
+                for (const removedStepId of removedStepIds) {
+                  await withRetry(
+                    () => deleteTourStep(submittingTourId, removedStepId),
+                    STEP_UPLOAD_MAX_RETRIES
+                  );
+                }
               }
-            }
 
-            Alert.alert(
-              t('creation.errorTitle'),
-              getSubmitErrorMessage(error, t('creation.errorMessage'))
-            );
-          } finally {
-            setIsSubmitting(false);
-            setSubmitProgress(null);
-          }
+              await updateTour(submittingTourId, {
+                city: sanitizeSingleLineText(tourData.state).trim(),
+                country: sanitizeSingleLineText(tourData.country).trim(),
+                country_code: sanitizeSingleLineText(tourData.countryCode).trim(),
+                city_latitude: tourData.stateLatitude,
+                city_longitude: tourData.stateLongitude,
+              });
+
+              setShowUnderReviewNotice(true);
+            } catch (error) {
+              console.error('Submit failed:', error);
+
+              if (createdTourId) {
+                try {
+                  await deleteTour(createdTourId);
+                } catch (deleteError) {
+                  console.error('Error on deleting tour', deleteError);
+                }
+              }
+
+              Alert.alert(
+                t('creation.errorTitle'),
+                getSubmitErrorMessage(error, t('creation.errorMessage'))
+              );
+            } finally {
+              setIsSubmitting(false);
+              setSubmitProgress(null);
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: color.foreground }]}>
+    <View style={[styles.container, { backgroundColor: color.foreground }]}> 
       {showUnderReviewNotice ? (
         <View style={styles.noticeContainer}>
           <View style={[styles.noticeCard, { backgroundColor: color.background }]}>
@@ -329,7 +419,7 @@ export default function TourReviewScreen() {
             <Text style={[styles.noticeTitle, { color: color.text }]}>
               {t('creation.underReviewTitle', { defaultValue: 'Your tour is under review' })}
             </Text>
-            <Text style={[styles.noticeMessage, { color: color.subText }]}>
+            <Text style={[styles.noticeMessage, { color: color.subText }]}> 
               {t('creation.underReviewMessage', {
                 defaultValue:
                   'Thanks for submitting your tour. Our team is reviewing it now and it will be published soon.',
@@ -364,10 +454,14 @@ export default function TourReviewScreen() {
               })
             : isSubmitting
               ? t('creation.submitting')
-              : t('creation.submit')
+              : isEditMode
+                ? t('creation.confirmEdit', { defaultValue: 'Confirm Edit' })
+                : t('creation.submit')
         }
         onPress={handleSubmitTour}
-        disabled={isSubmitting || !isReadyToSubmit || !hasValidSelectedLocation}
+        disabled={
+          isSubmitting || !isReadyToSubmit || !hasValidSelectedLocation || (isEditMode && !hasMeaningfulChanges)
+        }
       />
     </View>
   );
