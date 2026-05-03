@@ -747,7 +747,11 @@ export default function MapScreen() {
               <View style={styles.legendRow}>
                 <View style={styles.legendItem}>
                   <View style={styles.legendIconBadge}>
-                    <MaterialCommunityIcons name="crosshairs-gps" size={12} color={colors.background} />
+                    <MaterialCommunityIcons
+                      name="crosshairs-gps"
+                      size={12}
+                      color={colors.background}
+                    />
                   </View>
                   <Text style={styles.legendText}>
                     {t('map.legend.controls.myLocation', { defaultValue: 'My location' })}
@@ -911,7 +915,10 @@ export default function MapScreen() {
         <MaterialCommunityIcons name="crosshairs-gps" size={15} color={colors.primary} />
       </Pressable>
 
-      <Pressable style={[styles.focusStepButton, { top: activeStepTop }]} onPress={handleFocusCurrentStep}>
+      <Pressable
+        style={[styles.focusStepButton, { top: activeStepTop }]}
+        onPress={handleFocusCurrentStep}
+      >
         <MaterialCommunityIcons name="map-marker" size={16} color={colors.primary} />
       </Pressable>
 
