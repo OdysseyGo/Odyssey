@@ -105,11 +105,6 @@ function toModelWorldPoint(
 
 function ARSelectionScene(props: any) {
   const viro = getViroModule();
-  if (!viro) {
-    return null;
-  }
-
-  const { Viro3DObject, ViroARScene, ViroAmbientLight, ViroPolyline, ViroSphere, ViroText } = viro;
   const appProps = props.sceneNavigator.viroAppProps as SelectionSceneAppProps;
   const sceneAssetUrl = appProps?.sceneAssetUrl ?? '';
   const secretCode = appProps?.secretCode?.trim() || 'Code';
@@ -185,6 +180,12 @@ function ARSelectionScene(props: any) {
     anchorWorldPosition[1] + HIGHLIGHT_HEIGHT,
     anchorWorldPosition[2],
   ];
+
+  if (!viro) {
+    return null;
+  }
+
+  const { Viro3DObject, ViroARScene, ViroAmbientLight, ViroPolyline, ViroSphere, ViroText } = viro;
 
   return (
     <ViroARScene>

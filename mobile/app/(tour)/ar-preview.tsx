@@ -42,11 +42,6 @@ function toModelWorldPoint(
 
 function PreviewScene(props: any) {
   const viro = getViroModule();
-  if (!viro) {
-    return null;
-  }
-
-  const { Viro3DObject, ViroARScene, ViroAmbientLight, ViroText } = viro;
   const appProps = props.sceneNavigator.viroAppProps;
   const sceneAssetUrl = appProps?.sceneAssetUrl as string;
   const secretCode = appProps?.secretCode as string;
@@ -118,6 +113,12 @@ function PreviewScene(props: any) {
     },
     [scheduleCodeReveal]
   );
+
+  if (!viro) {
+    return null;
+  }
+
+  const { Viro3DObject, ViroARScene, ViroAmbientLight, ViroText } = viro;
 
   return (
     <ViroARScene>
