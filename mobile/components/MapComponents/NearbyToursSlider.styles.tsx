@@ -91,6 +91,18 @@ export default function getStyles(theme: ThemeName) {
       paddingTop: Spacing.sm,
       paddingBottom: 2,
     },
+    filtersContainer: {
+      paddingBottom: 4,
+    },
+    filterSectionTitle: {
+      color: color.subText,
+      fontSize: 10,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.3,
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.sm,
+    },
     sortChip: {
       borderWidth: 1,
       borderColor: color.borderLight,

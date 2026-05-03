@@ -160,6 +160,10 @@ class TourViewSet(viewsets.ModelViewSet):
         sort = request.query_params.get("sort", "rating").strip().lower()
         fields = request.query_params.get("fields", "full").strip().lower()
         limit_param = request.query_params.get("limit")
+        category = request.query_params.get("category")
+        difficulty = request.query_params.get("difficulty")
+        tour_type = request.query_params.get("tour_type")
+        is_premium = request.query_params.get("is_premium")
 
         limit = None
         if limit_param is not None:
@@ -194,6 +198,48 @@ class TourViewSet(viewsets.ModelViewSet):
                 first_lng__lte=east,
             )
         )
+
+        if category:
+            tours = tours.filter(category__iexact=category.strip())
+
+        if difficulty:
+            normalized_difficulty = difficulty.strip().upper()
+            valid_difficulties = {choice[0] for choice in Tour.DIFFICULTY_CHOICES}
+            if normalized_difficulty not in valid_difficulties:
+                return Response(
+                    {
+                        "error": (
+                            "difficulty must be one of: "
+                            + ", ".join(sorted(valid_difficulties))
+                        )
+                    },
+                    status=400,
+                )
+            tours = tours.filter(difficulty=normalized_difficulty)
+
+        if tour_type:
+            normalized_tour_type = tour_type.strip().upper()
+            valid_tour_types = {choice[0] for choice in Tour.TOUR_TYPE_CHOICES}
+            if normalized_tour_type not in valid_tour_types:
+                return Response(
+                    {
+                        "error": (
+                            "tour_type must be one of: "
+                            + ", ".join(sorted(valid_tour_types))
+                        )
+                    },
+                    status=400,
+                )
+            tours = tours.filter(tour_type=normalized_tour_type)
+
+        if is_premium is not None:
+            normalized_is_premium = is_premium.strip().lower()
+            if normalized_is_premium not in {"true", "false"}:
+                return Response(
+                    {"error": "is_premium must be either 'true' or 'false'."},
+                    status=400,
+                )
+            tours = tours.filter(is_premium=(normalized_is_premium == "true"))
 
         if sort == "name":
             tours = tours.order_by("title", "-average_rating", "-review_count", "-id")

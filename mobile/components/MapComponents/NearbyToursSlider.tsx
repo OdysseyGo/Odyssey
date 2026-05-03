@@ -20,8 +20,7 @@ import { Animations } from '@/constants/Animations';
 import { Spacing } from '@/constants/Spacing';
 import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
 import getStyles from './NearbyToursSlider.styles';
-import type { InBoundsSort } from '@/api/tours';
-import type { Tour, Difficulty, TourType } from '@/api/tours';
+import type { Difficulty, InBoundsSort, Tour, TourType } from '@/api/tours';
 
 const ANIM_DURATION = 550;
 const DEFAULT_COLLAPSED_VISIBLE_HEIGHT = 120;
@@ -74,6 +73,7 @@ export interface NearbyToursSliderProps {
   loading: boolean;
   onTourPress: (tourId: number) => void;
   onTourView: (tourId: number) => void;
+  onInteraction?: () => void;
   mapVisibleTourIds: number[];
   sortBy: InBoundsSort;
   onSortChange: (sort: InBoundsSort) => void;
@@ -85,6 +85,7 @@ export default function NearbyToursSlider({
   loading,
   onTourPress,
   onTourView,
+  onInteraction,
   mapVisibleTourIds,
   sortBy,
   onSortChange,
@@ -316,7 +317,7 @@ export default function NearbyToursSlider({
       pointerEvents={hidden ? 'none' : 'box-none'}
     >
       <View style={styles.sheetShadow}>
-        <View style={styles.bottomPanel}>
+        <View style={styles.bottomPanel} onTouchStart={onInteraction}>
           <View
             onLayout={(event) => {
               if (hasMeasuredCollapsedHeightRef.current) return;
@@ -327,7 +328,13 @@ export default function NearbyToursSlider({
             }}
           >
             <View {...panResponder.panHandlers}>
-              <Pressable onPress={toggle} style={styles.grabberPressable}>
+              <Pressable
+                onPress={() => {
+                  onInteraction?.();
+                  toggle();
+                }}
+                style={styles.grabberPressable}
+              >
                 <View style={styles.handleBar} />
                 <View style={styles.sheetHeaderContent}>
                   <View style={styles.headerIconBox}>
@@ -372,6 +379,7 @@ export default function NearbyToursSlider({
               maxToRenderPerBatch={14}
               windowSize={9}
               removeClippedSubviews
+              ListHeaderComponentStyle={{ paddingBottom: 8 }}
               ListHeaderComponent={renderSortRow}
               renderItem={({ item: tour }) => {
                 const iconBg = difficultyColor(tour.difficulty, colors);
@@ -381,7 +389,11 @@ export default function NearbyToursSlider({
                   <Pressable
                     key={tour.id}
                     style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-                    onPress={() => (isVisibleOnMap ? onTourPress(tour.id) : onTourView(tour.id))}
+                    onPress={() => {
+                      onInteraction?.();
+                      if (isVisibleOnMap) onTourPress(tour.id);
+                      else onTourView(tour.id);
+                    }}
                   >
                     {tour.cover_image ? (
                       <Image source={{ uri: tour.cover_image }} style={styles.cardThumbnail} />

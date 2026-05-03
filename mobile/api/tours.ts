@@ -165,6 +165,12 @@ export type Tour = {
 };
 
 export type InBoundsSort = 'rating' | 'name' | 'reviews' | 'newest';
+export type InBoundsFilters = {
+  category?: string;
+  difficulty?: Difficulty;
+  tour_type?: TourType;
+  is_premium?: boolean;
+};
 
 export function getTourImageUri(tour: Pick<Tour, 'id' | 'cover_image' | 'creator'>): string {
   return tour.cover_image || '';
@@ -543,6 +549,7 @@ export async function getToursInBounds(
     sort?: InBoundsSort;
     limit?: number;
     fields?: 'full' | 'map';
+    filters?: InBoundsFilters;
   },
   signal?: AbortSignal
 ): Promise<Tour[]> {
@@ -550,6 +557,12 @@ export async function getToursInBounds(
   if (options?.sort) params.sort = options.sort;
   if (options?.limit) params.limit = options.limit;
   if (options?.fields) params.fields = options.fields;
+  if (options?.filters?.category) params.category = options.filters.category;
+  if (options?.filters?.difficulty) params.difficulty = options.filters.difficulty;
+  if (options?.filters?.tour_type) params.tour_type = options.filters.tour_type;
+  if (typeof options?.filters?.is_premium === 'boolean') {
+    params.is_premium = options.filters.is_premium;
+  }
 
   return apiRequest<Tour[]>({
     method: 'GET',

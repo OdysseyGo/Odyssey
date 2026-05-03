@@ -19,12 +19,13 @@ import { useActiveTour } from '@/contexts/ActiveTourContext';
 import Colors from '@/constants/Colors';
 import { isLoggedIn } from '@/api/auth';
 import { getToursInBounds } from '@/api/tours';
-import type { InBoundsSort, Tour } from '@/api/tours';
+import type { Difficulty, InBoundsFilters, InBoundsSort, Tour, TourType } from '@/api/tours';
 import { deleteTourProgress } from '@/api/tourProgress';
 import type { MapMarkerProps } from './MapMarker.config';
 import type { Region } from './TourMap.config';
 import type { UserBadge } from '@/api/profile';
 import { useInterstitial } from '@/components/Ads/useInterstitial';
+import { TOUR_CATEGORIES } from '@/components/TourCreation';
 
 const MAX_SEARCH_DELTA = 0.5;
 const MAX_NEARBY_TOURS_TO_RENDER = 10;
@@ -97,6 +98,7 @@ export default function MapScreen() {
   const [nearbyTours, setNearbyTours] = useState<Tour[]>([]);
   const [nearbyToursForMap, setNearbyToursForMap] = useState<Tour[]>([]);
   const [nearbySort, setNearbySort] = useState<InBoundsSort>('rating');
+  const [nearbyFilters, setNearbyFilters] = useState<InBoundsFilters>({});
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [animateToRegion, setAnimateToRegion] = useState<Region | undefined>();
@@ -108,10 +110,12 @@ export default function MapScreen() {
   const [isCoolingDown, setIsCoolingDown] = useState(false);
   const [isDraggingMap, setIsDraggingMap] = useState(false);
   const [showSearchButton, setShowSearchButton] = useState(false);
+  const [showCategoryFilters, setShowCategoryFilters] = useState(false);
   const [isLegendOpen, setIsLegendOpen] = useState(false);
 
   const currentRegionRef = useRef<Region | null>(null);
   const nearbySortRef = useRef<InBoundsSort>('rating');
+  const nearbyFiltersRef = useRef<InBoundsFilters>({});
   const regionBeforeSelectionRef = useRef<Region | null>(null);
   const isDraggingMapRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -129,6 +133,11 @@ export default function MapScreen() {
   const initialSearchDoneRef = useRef(false);
   const lastSortTapAtRef = useRef(0);
   const [legendPanelHeight, setLegendPanelHeight] = useState(168);
+  const filterPanelAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    nearbyFiltersRef.current = nearbyFilters;
+  }, [nearbyFilters]);
 
   useFocusEffect(
     useCallback(() => {
@@ -189,7 +198,11 @@ export default function MapScreen() {
         south,
         east,
         west,
-        { sort: nearbySortRef.current, fields: 'full' },
+        {
+          sort: nearbySortRef.current,
+          fields: 'full',
+          filters: nearbyFiltersRef.current,
+        },
         controller.signal
       )
         .then((tours) => {
@@ -297,7 +310,6 @@ export default function MapScreen() {
       spinLoop.current?.stop();
       spinAnim.setValue(0);
       setIsCoolingDown(false);
-      setShowSearchButton(false);
     }, 2500);
 
     const north = region.latitude + region.latitudeDelta / 2;
@@ -311,7 +323,11 @@ export default function MapScreen() {
         south,
         east,
         west,
-        { sort: nearbySortRef.current, fields: 'full' },
+        {
+          sort: nearbySortRef.current,
+          fields: 'full',
+          filters: nearbyFiltersRef.current,
+        },
         controller.signal
       );
       if (!controller.signal.aborted) {
@@ -370,7 +386,11 @@ export default function MapScreen() {
         south,
         east,
         west,
-        { sort: nearbySortRef.current, fields: 'full' },
+        {
+          sort: nearbySortRef.current,
+          fields: 'full',
+          filters: nearbyFiltersRef.current,
+        },
         controller.signal
       );
       if (!controller.signal.aborted) {
@@ -406,6 +426,7 @@ export default function MapScreen() {
 
       lastMarkerPressAtRef.current = Date.now();
       setSelectedTour(targetTour);
+      setShowCategoryFilters(false);
       setAnimateToRegion({
         latitude: lat,
         longitude: lng,
@@ -428,6 +449,7 @@ export default function MapScreen() {
   const handlePreviewViewTour = useCallback(
     (tourId: number) => {
       setSelectedTour(null);
+      setShowCategoryFilters(false);
       router.push(`/tour/${tourId}`);
     },
     [router]
@@ -464,6 +486,13 @@ export default function MapScreen() {
     setNearbySort(sort);
     nearbySortRef.current = sort;
     setNearbyTours((prev) => sortNearbyTours(prev, sort));
+  }, []);
+
+  const handleFiltersChange = useCallback((nextFilters: InBoundsFilters) => {
+    setNearbyFilters(nextFilters);
+    nearbyFiltersRef.current = nextFilters;
+    setShowSearchButton(true);
+    setSelectedTour(null);
   }, []);
 
   const defaultRegion = useMemo(
@@ -503,6 +532,7 @@ export default function MapScreen() {
           }
           lastMarkerPressAtRef.current = Date.now();
           setSelectedTour(tour);
+          setShowCategoryFilters(false);
           setAnimateToRegion({
             latitude: lat,
             longitude: lng,
@@ -540,6 +570,35 @@ export default function MapScreen() {
     () => nearbyToursForMap.map((tour) => tour.id),
     [nearbyToursForMap]
   );
+  const nearbyCategoryOptions = useMemo(() => {
+    const knownCategories = new Set(TOUR_CATEGORIES.map((value) => value.trim()).filter(Boolean));
+    nearbyTours.forEach((tour) => {
+      const category = tour.category?.trim();
+      if (category) knownCategories.add(category);
+    });
+    return Array.from(knownCategories).sort((a, b) => a.localeCompare(b));
+  }, [nearbyTours]);
+  const nearbyDifficultyOptions = useMemo(
+    () =>
+      [
+        { value: 'EASY' as Difficulty, label: t('tourDetail.easy', { defaultValue: 'Easy' }) },
+        { value: 'MEDIUM' as Difficulty, label: t('tourDetail.medium', { defaultValue: 'Medium' }) },
+        { value: 'HARD' as Difficulty, label: t('tourDetail.hard', { defaultValue: 'Hard' }) },
+      ] as const,
+    [t]
+  );
+  const nearbyTourTypeOptions = useMemo(
+    () =>
+      [
+        { value: 'STORY' as TourType, label: t('tour.story', { defaultValue: 'Story' }) },
+        { value: 'PUZZLE' as TourType, label: t('tour.puzzle', { defaultValue: 'Puzzle' }) },
+        { value: 'HYBRID' as TourType, label: t('tour.hybrid', { defaultValue: 'Hybrid' }) },
+      ] as const,
+    [t]
+  );
+  const hasActiveExploreFilters = Boolean(
+    nearbyFilters.category || nearbyFilters.difficulty || nearbyFilters.tour_type
+  );
 
   const activeLegendToggleTop = insets.top + 12;
   const activeLegendPanelTop = activeLegendToggleTop + 42;
@@ -561,6 +620,14 @@ export default function MapScreen() {
       useNativeDriver: true,
     }).start();
   }, [isLegendOpen, legendAnim]);
+
+  useEffect(() => {
+    Animated.timing(filterPanelAnim, {
+      toValue: showCategoryFilters ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [showCategoryFilters, filterPanelAnim]);
 
   const difficultyLegendItems = useMemo(
     () => [
@@ -608,64 +675,255 @@ export default function MapScreen() {
         </Pressable>
 
         {showSearchButton && (
-          <Pressable
-            style={[
-              styles.searchHereButton,
-              (isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown) &&
-                styles.searchHereButtonDisabled,
-            ]}
-            onPress={
-              isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown
-                ? undefined
-                : handleSearchHere
-            }
-          >
-            {isZoomedOut ? (
-              <MaterialCommunityIcons
-                name="magnify-minus-outline"
-                size={16}
-                color={colors.subText}
-              />
-            ) : (
-              <Animated.View
-                style={{
+          <>
+            <View style={styles.searchControlsRow}>
+              <Pressable
+                style={[
+                  styles.searchHereButton,
+                  (isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown) &&
+                    styles.searchHereButtonDisabled,
+                ]}
+                onPress={
+                  isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown
+                    ? undefined
+                    : handleSearchHere
+                }
+              >
+                {isZoomedOut ? (
+                  <MaterialCommunityIcons
+                    name="magnify-minus-outline"
+                    size={16}
+                    color={colors.subText}
+                  />
+                ) : (
+                  <Animated.View
+                    style={{
+                      transform: [
+                        {
+                          rotate: spinAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0deg', '360deg'],
+                          }),
+                        },
+                      ],
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="magnify"
+                      size={16}
+                      color={
+                        isDraggingMap || nearbyLoading || isCoolingDown
+                          ? colors.subText
+                          : colors.primary
+                      }
+                    />
+                  </Animated.View>
+                )}
+                <Text
+                  style={[
+                    styles.searchHereText,
+                    (isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown) &&
+                      styles.searchHereTextDisabled,
+                  ]}
+                >
+                  {nearbyLoading
+                    ? t('map.nearby.searching')
+                    : isDraggingMap
+                      ? t('map.searchMode.stopDragging')
+                      : isZoomedOut
+                        ? t('map.searchMode.zoomIn')
+                        : t('map.searchMode.searchHere')}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[
+                  styles.searchFilterButton,
+                  hasActiveExploreFilters && styles.searchFilterButtonActive,
+                ]}
+                onPress={() => setShowCategoryFilters((prev) => !prev)}
+              >
+                <MaterialCommunityIcons name="filter-variant" size={14} color={colors.primary} />
+                <Text style={styles.searchFilterButtonText} numberOfLines={1}>
+                  {hasActiveExploreFilters
+                    ? t('map.filters.active', { defaultValue: 'Filters active' })
+                    : t('map.filters.label', { defaultValue: 'Filters' })}
+                </Text>
+              </Pressable>
+            </View>
+
+            <Animated.View
+              pointerEvents={showCategoryFilters ? 'auto' : 'none'}
+              style={[
+                styles.searchFilterPanel,
+                {
+                  opacity: filterPanelAnim,
                   transform: [
                     {
-                      rotate: spinAnim.interpolate({
+                      translateY: filterPanelAnim.interpolate({
                         inputRange: [0, 1],
-                        outputRange: ['0deg', '360deg'],
+                        outputRange: [-8, 0],
+                      }),
+                    },
+                    {
+                      scale: filterPanelAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.98, 1],
                       }),
                     },
                   ],
-                }}
-              >
-                <MaterialCommunityIcons
-                  name="magnify"
-                  size={16}
-                  color={
-                    isDraggingMap || nearbyLoading || isCoolingDown
-                      ? colors.subText
-                      : colors.primary
-                  }
-                />
-              </Animated.View>
-            )}
-            <Text
-              style={[
-                styles.searchHereText,
-                (isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown) &&
-                  styles.searchHereTextDisabled,
+                },
               ]}
             >
-              {nearbyLoading
-                ? t('map.nearby.searching')
-                : isDraggingMap
-                  ? t('map.searchMode.stopDragging')
-                  : isZoomedOut
-                    ? t('map.searchMode.zoomIn')
-                    : t('map.searchMode.searchHere')}
-            </Text>
-          </Pressable>
+                <View style={styles.searchFilterHeaderRow}>
+                  <Text style={styles.searchFilterPanelTitle}>
+                    {t('map.filters.label', { defaultValue: 'Filters' })}
+                  </Text>
+                  <Pressable
+                    style={styles.searchFilterResetButton}
+                    onPress={() =>
+                      handleFiltersChange({
+                        ...nearbyFilters,
+                        category: undefined,
+                        difficulty: undefined,
+                        tour_type: undefined,
+                      })
+                    }
+                  >
+                    <Text style={styles.searchFilterResetButtonText}>
+                      {t('map.filters.reset', { defaultValue: 'Reset' })}
+                    </Text>
+                  </Pressable>
+                </View>
+
+                <Text style={styles.searchFilterSectionTitle}>
+                  {t('map.filters.type', { defaultValue: 'Tour type' })}
+                </Text>
+                <View style={styles.searchFilterChipsRow}>
+                  <Pressable
+                    style={[
+                      styles.searchFilterChip,
+                      !nearbyFilters.tour_type && styles.searchFilterChipActive,
+                    ]}
+                    onPress={() => handleFiltersChange({ ...nearbyFilters, tour_type: undefined })}
+                  >
+                    <Text
+                      style={[
+                        styles.searchFilterChipText,
+                        !nearbyFilters.tour_type && styles.searchFilterChipTextActive,
+                      ]}
+                    >
+                      {t('map.filters.all', { defaultValue: 'All' })}
+                    </Text>
+                  </Pressable>
+                  {nearbyTourTypeOptions.map((option) => (
+                    <Pressable
+                      key={option.value}
+                      style={[
+                        styles.searchFilterChip,
+                        nearbyFilters.tour_type === option.value && styles.searchFilterChipActive,
+                      ]}
+                      onPress={() => handleFiltersChange({ ...nearbyFilters, tour_type: option.value })}
+                    >
+                      <Text
+                        style={[
+                          styles.searchFilterChipText,
+                          nearbyFilters.tour_type === option.value &&
+                            styles.searchFilterChipTextActive,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+
+                <Text style={styles.searchFilterSectionTitle}>
+                  {t('map.filters.difficulty', { defaultValue: 'Difficulty' })}
+                </Text>
+                <View style={styles.searchFilterChipsRow}>
+                  <Pressable
+                    style={[
+                      styles.searchFilterChip,
+                      !nearbyFilters.difficulty && styles.searchFilterChipActive,
+                    ]}
+                    onPress={() =>
+                      handleFiltersChange({ ...nearbyFilters, difficulty: undefined })
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.searchFilterChipText,
+                        !nearbyFilters.difficulty && styles.searchFilterChipTextActive,
+                      ]}
+                    >
+                      {t('map.filters.all', { defaultValue: 'All' })}
+                    </Text>
+                  </Pressable>
+                  {nearbyDifficultyOptions.map((option) => (
+                    <Pressable
+                      key={option.value}
+                      style={[
+                        styles.searchFilterChip,
+                        nearbyFilters.difficulty === option.value && styles.searchFilterChipActive,
+                      ]}
+                      onPress={() => handleFiltersChange({ ...nearbyFilters, difficulty: option.value })}
+                    >
+                      <Text
+                        style={[
+                          styles.searchFilterChipText,
+                          nearbyFilters.difficulty === option.value &&
+                            styles.searchFilterChipTextActive,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+
+                <Text style={styles.searchFilterSectionTitle}>
+                  {t('map.filters.category', { defaultValue: 'Category' })}
+                </Text>
+                <View style={styles.searchFilterChipsRow}>
+                  <Pressable
+                    style={[
+                      styles.searchFilterChip,
+                      !nearbyFilters.category && styles.searchFilterChipActive,
+                    ]}
+                    onPress={() => handleFiltersChange({ ...nearbyFilters, category: undefined })}
+                  >
+                    <Text
+                      style={[
+                        styles.searchFilterChipText,
+                        !nearbyFilters.category && styles.searchFilterChipTextActive,
+                      ]}
+                    >
+                      {t('map.filters.all', { defaultValue: 'All' })}
+                    </Text>
+                  </Pressable>
+                  {nearbyCategoryOptions.map((category) => (
+                    <Pressable
+                      key={category}
+                      style={[
+                        styles.searchFilterChip,
+                        nearbyFilters.category === category && styles.searchFilterChipActive,
+                      ]}
+                      onPress={() => handleFiltersChange({ ...nearbyFilters, category })}
+                    >
+                      <Text
+                        style={[
+                          styles.searchFilterChipText,
+                          nearbyFilters.category === category && styles.searchFilterChipTextActive,
+                        ]}
+                      >
+                        {category}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+            </Animated.View>
+          </>
         )}
 
         {!selectedTour && (
@@ -781,6 +1039,7 @@ export default function MapScreen() {
           loading={nearbyLoading}
           onTourPress={handleNearbyTourPress}
           onTourView={handlePreviewViewTour}
+          onInteraction={() => setShowCategoryFilters(false)}
           mapVisibleTourIds={mapVisibleTourIds}
           sortBy={nearbySort}
           onSortChange={handleSortChange}
