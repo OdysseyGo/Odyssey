@@ -26,6 +26,7 @@ import Colors from '@/constants/Colors';
 import BackButton from '@/components/common/BackButton';
 import { followingFeedStyles } from './FollowingFeedScreen.styles';
 import { FeedCardProps } from './FollowingFeedScreen.config';
+import { getApiBaseUrl } from '@/utils/getApiBaseUrl';
 
 function getDifficultyColor(difficulty: string, color: (typeof Colors)['light']): string {
   const d = difficulty?.toLowerCase();
@@ -44,10 +45,21 @@ function formatCompletedAt(dateString: string, t: FeedCardProps['t']): string {
   return date.toLocaleDateString();
 }
 
+function resolveImageUri(uri?: string | null): string | undefined {
+  if (!uri) return undefined;
+  if (/^https?:\/\//i.test(uri)) return uri;
+  try {
+    return new URL(uri, getApiBaseUrl()).toString();
+  } catch {
+    return undefined;
+  }
+}
+
 const FeedCard = React.memo(function FeedCard({ item, styles, color, t }: FeedCardProps) {
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   const [avatarError, setAvatarError] = useState(false);
+  const coverImageUri = resolveImageUri(item.tour.cover_image);
 
   const handlePressIn = () => (scale.value = withSpring(0.96, { damping: 15, stiffness: 200 }));
   const handlePressOut = () => (scale.value = withSpring(1, { damping: 10, stiffness: 100 }));
@@ -63,8 +75,8 @@ const FeedCard = React.memo(function FeedCard({ item, styles, color, t }: FeedCa
         style={styles.card}
         activeOpacity={1}
       >
-        {item.tour.cover_image ? (
-          <Image source={{ uri: item.tour.cover_image }} style={styles.image} />
+        {coverImageUri ? (
+          <Image source={{ uri: coverImageUri }} style={styles.image} />
         ) : (
           <View style={styles.imagePlaceholder}>
             <Ionicons name="map-outline" size={52} color={color.subText} />

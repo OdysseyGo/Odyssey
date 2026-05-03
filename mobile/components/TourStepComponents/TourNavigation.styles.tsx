@@ -106,10 +106,18 @@ export default function getStyles(theme: ThemeName) {
     actionButtonPressed: {
       backgroundColor: color.primaryMuted,
     },
+    actionButtonDisabled: {
+      backgroundColor: color.foregroundSecondary,
+      borderColor: color.borderLight,
+      opacity: 0.55,
+    },
     actionLabel: {
       color: color.primary,
       fontSize: 12,
       fontWeight: '800',
+    },
+    actionLabelDisabled: {
+      color: color.subText,
     },
     closeTourButton: {
       width: 42,

@@ -25,6 +25,7 @@ import { logout } from '@/api/auth';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { useActiveTour } from '@/contexts/ActiveTourContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.28 : SCREEN_HEIGHT * 0.32;
@@ -35,6 +36,7 @@ export default function TermsUpdateScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const navigation = useNavigation();
+  const { endTour } = useActiveTour();
 
   const [agreed, setAgreed] = useState(false);
   const [agreedError, setAgreedError] = useState(false);
@@ -92,6 +94,7 @@ export default function TermsUpdateScreen() {
   const handleLogout = async () => {
     isNavigatingAway.current = true;
     await logout();
+    endTour();
     router.replace('/(tabs)/map');
   };
 

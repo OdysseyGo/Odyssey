@@ -115,6 +115,14 @@ class FollowingFeedSerializer(serializers.Serializer):
     def get_tour(self, obj):
         """Get basic tour information for the feed."""
         tour = obj.tour
+        request = self.context.get("request")
+        cover_image = None
+        if tour.cover_image:
+            cover_image = (
+                request.build_absolute_uri(tour.cover_image.url)
+                if request is not None
+                else tour.cover_image.url
+            )
         return {
             "id": tour.id,
             "title": tour.title,
@@ -126,7 +134,7 @@ class FollowingFeedSerializer(serializers.Serializer):
             "country": tour.country,
             "country_code": tour.country_code,
             "generation_source": tour.generation_source,
-            "cover_image": tour.cover_image.url if tour.cover_image else None,
+            "cover_image": cover_image,
             "cover_image_attribution": tour.cover_image_attribution,
             "created_at": tour.created_at,
         }

@@ -16,10 +16,12 @@ export const puzzleEditorStyles = () => {
     },
     typeContainer: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: 8,
     },
     typeButton: {
-      flex: 1,
+      flexGrow: 1,
+      flexBasis: '48%',
       paddingVertical: 12,
       paddingHorizontal: 16,
       borderRadius: 12,

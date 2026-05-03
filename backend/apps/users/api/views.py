@@ -186,10 +186,14 @@ class UserViewSet(ModelViewSet):
         page = self.paginate_queryset(completed_progress)
 
         if page is not None:
-            serializer = FollowingFeedSerializer(page, many=True)
+            serializer = FollowingFeedSerializer(
+                page, many=True, context={"request": request}
+            )
             return self.get_paginated_response(serializer.data)
 
-        serializer = FollowingFeedSerializer(completed_progress, many=True)
+        serializer = FollowingFeedSerializer(
+            completed_progress, many=True, context={"request": request}
+        )
         return Response(serializer.data)
 
     @action(

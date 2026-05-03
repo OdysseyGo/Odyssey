@@ -231,6 +231,11 @@ export default function TourNavigation({
           solvedSteps,
           locationConfirmedSteps
         );
+  const canSkipCurrentStep =
+    currentStep.type === 'puzzle' &&
+    !isSolved &&
+    !hasAnsweredWrong &&
+    currentStepIndex >= highestStepIndex;
   const TIER_COLORS = {
     gold: '#F59E0B',
     silver: '#94A3B8',
@@ -407,11 +412,22 @@ export default function TourNavigation({
             </View>
           </View>
           <Pressable
-            style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
+            style={({ pressed }) => [
+              styles.actionButton,
+              !canSkipCurrentStep && styles.actionButtonDisabled,
+              canSkipCurrentStep && pressed && styles.actionButtonPressed,
+            ]}
             onPress={onSkipStep}
+            disabled={!canSkipCurrentStep}
           >
-            <MaterialCommunityIcons name="skip-forward" size={19} color={Colors[theme].primary} />
-            <Text style={styles.actionLabel}>{t('map.activeTour.skip')}</Text>
+            <MaterialCommunityIcons
+              name="skip-forward"
+              size={19}
+              color={canSkipCurrentStep ? Colors[theme].primary : Colors[theme].subText}
+            />
+            <Text style={[styles.actionLabel, !canSkipCurrentStep && styles.actionLabelDisabled]}>
+              {t('map.activeTour.skip')}
+            </Text>
           </Pressable>
           <Pressable
             style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
