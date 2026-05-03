@@ -924,7 +924,7 @@ class GeminiService:
 
         mode_instructions = {
             "STORY": "Focus on rich narrative storytelling. Each step should have detailed historical or thematic descriptions that immerse the user in the story. No puzzles needed.",
-            "PUZZLE": f"Focus on interactive challenges, but every step still needs a short story/narrative description before the puzzle. Each step MUST have a puzzle ({kinds_phrase}). Mix multiple-choice trivia with short-answer open-ended riddles where appropriate.",
+            "PUZZLE": f"Focus on interactive challenges, but every step still needs a short story/narrative description before the puzzle. Each step MUST have a puzzle ({kinds_phrase}). Mix multiple-choice trivia with open-ended riddles whose answers are limited to 1-2 words.",
             "HYBRID": f"Balance storytelling with puzzles. Each step should have both a narrative description AND a puzzle challenge. Use a mix of {kinds_phrase} puzzles.",
         }
 
@@ -1048,7 +1048,7 @@ CRITICAL RULES:
 5. Write engaging, theme-connected narrative content for each selected location.
 6. For trivia puzzles, keep the question text separate from the choices. Do NOT put answer choices or labels like "A)", "B)", "C)", or "D)" inside the "question" field. Put choices only in the "options" array, without letter prefixes.
 7. For PUZZLE and HYBRID modes, every step must include both a non-empty "description" story and a "puzzle" challenge in the same step.
-8. Regular puzzle "type" must be {supported_regular_types}. For OPEN_ENDED, do not include an "options" array, and keep "answer" to one short canonical answer that users can reasonably type.
+8. Regular puzzle "type" must be {supported_regular_types}. For OPEN_ENDED, do not include an "options" array. The "answer" MUST be exactly one word or two words maximum, short and canonical, with no punctuation and no full sentences.
 
 OUTPUT FORMAT (strict JSON):
 {{
