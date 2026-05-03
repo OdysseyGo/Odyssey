@@ -106,6 +106,7 @@ export default function LoginScreen() {
       const response = await login(credentials);
       SecureStore.setItem('userToken', response.access);
       SecureStore.setItem('refreshToken', response.refresh);
+     
       setProfileNeedsRefresh();
       if (response.terms_update_required) {
         router.dismissTo('/terms-update');
@@ -128,6 +129,7 @@ export default function LoginScreen() {
             device_token: token,
             platform: Platform.OS === 'ios' ? 'ios' : 'android',
           });
+           await SecureStore.setItemAsync('devicePushToken', token);
         }
       } catch (pushError) {
         console.warn('Push token registration failed:', pushError);

@@ -36,6 +36,30 @@ class DeviceTokenViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
 
+    @action(detail=False, methods=["post"])
+    def deregister_token(self, request):
+        """
+        Delete the device token when the user logs out
+        to prevent sending notifications to the wrong device.
+        """
+        device_token_str = request.data.get("device_token")
+        
+        if not device_token_str:
+            return Response(
+                {"detail": "Device token is required."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        deleted_count, _ = DeviceToken.objects.filter(
+            user=request.user, 
+            device_token=device_token_str
+        ).delete()
+
+        if deleted_count > 0:
+            return Response({"detail": "Token deleted successfully."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Token not found."}, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=["post"])
     def test_push(self, request, pk=None):
         """Trigger a test push notification to a specific saved token"""

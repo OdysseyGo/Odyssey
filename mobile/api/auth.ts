@@ -1,5 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
-import { getMe, User } from './users';
+import { getMe, User, deregisterDeviceToken } from './users';
 
 /**
  * Check if user is currently logged in by checking for stored token
@@ -59,6 +59,7 @@ export async function removeAuthToken(): Promise<void> {
   await Promise.all([
     SecureStore.deleteItemAsync('userToken'),
     SecureStore.deleteItemAsync('refreshToken'),
+    SecureStore.deleteItemAsync('devicePushToken'),
   ]);
 }
 
@@ -67,6 +68,15 @@ export async function removeAuthToken(): Promise<void> {
  * Call this when login fails or user explicitly logs out
  */
 export async function logout(): Promise<void> {
-  await removeAuthToken();
-  // You can add additional cleanup here (clear cache, etc.)
+  try {
+    const pushToken = await SecureStore.getItemAsync('devicePushToken');
+    
+    if (pushToken) {
+       await deregisterDeviceToken({ device_token: pushToken });
+    }
+  } catch (error) {
+    console.warn('Failed to deregister push token on logout:', error);
+  } finally {
+    await removeAuthToken();
+  }
 }

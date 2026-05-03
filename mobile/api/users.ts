@@ -355,3 +355,14 @@ export const registerDeviceToken = (payload: DeviceTokenRegistrationPayload) =>
     url: '/api/notifications/device-tokens/register_token/',
     data: payload,
   });
+
+/**
+ * POST /api/notifications/device-tokens/deregister_token/
+ * Deletes the device token from the backend when the user logs out.
+ */
+export const deregisterDeviceToken = (payload: { device_token: string }) =>
+  apiRequest<void, { device_token: string }>({
+    method: 'post',
+    url: '/api/notifications/device-tokens/deregister_token/',
+    data: payload,
+  });
