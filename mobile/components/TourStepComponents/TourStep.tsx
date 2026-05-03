@@ -810,6 +810,8 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
+  const instanceIdRef = useRef(`ar-step-${Math.random().toString(36).slice(2, 8)}`);
+  const isMountedRef = useRef(true);
 
   const [codeInput, setCodeInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -819,6 +821,29 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
   const [maxAttempts, setMaxAttempts] = useState(MAX_ATTEMPTS);
   const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
   const isExhausted = attemptCount >= maxAttempts;
+
+  useEffect(() => {
+    if (__DEV__) {
+      console.log('[ArCodeView] mount', {
+        instanceId: instanceIdRef.current,
+        stepId: stepId ?? 'unknown',
+        puzzleId: stepId ?? 'unknown',
+        modelUri: puzzle.sceneAssetUrl ?? 'none',
+      });
+    }
+    return () => {
+      isMountedRef.current = false;
+      if (__DEV__) {
+        console.log('[ArCodeView] unmount', {
+          instanceId: instanceIdRef.current,
+          stepId: stepId ?? 'unknown',
+          puzzleId: stepId ?? 'unknown',
+          modelUri: puzzle.sceneAssetUrl ?? 'none',
+          cleanupRan: true,
+        });
+      }
+    };
+  }, [puzzle.sceneAssetUrl, stepId]);
 
   const ensureArPermissions = async () => {
     const locationPerm = await Location.getForegroundPermissionsAsync();
@@ -856,6 +881,15 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
     setIsPreparingAr(true);
     try {
       const hasPermissions = await ensureArPermissions();
+      if (!isMountedRef.current) {
+        if (__DEV__) {
+          console.log('[ArCodeView] ignored_permission_result_after_unmount', {
+            instanceId: instanceIdRef.current,
+            stepId: stepId ?? 'unknown',
+          });
+        }
+        return;
+      }
       if (!hasPermissions) {
         return;
       }
@@ -869,13 +903,22 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
           anchorY: String(puzzle.anchorPosition?.y ?? 0.3),
           anchorZ: String(puzzle.anchorPosition?.z ?? -1.2),
           modelScaleMeters: String(puzzle.modelScaleMeters ?? 1),
+          stepId: stepId ?? '',
+          puzzleId: stepId ?? '',
         },
       });
     } catch (error) {
       console.error('Failed to prepare AR permissions', error);
       Alert.alert('AR unavailable', 'Could not prepare the AR puzzle view right now.');
     } finally {
-      setIsPreparingAr(false);
+      if (isMountedRef.current) {
+        setIsPreparingAr(false);
+      } else if (__DEV__) {
+        console.log('[ArCodeView] skipped_set_isPreparing_after_unmount', {
+          instanceId: instanceIdRef.current,
+          stepId: stepId ?? 'unknown',
+        });
+      }
     }
   };
 
