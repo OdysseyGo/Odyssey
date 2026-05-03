@@ -93,7 +93,12 @@ export default function TourDetailsScreen() {
                 t('creation.deleteUnderReviewMessage', {
                   defaultValue: 'Delete request submitted. The tour is now pending admin review.',
                 }),
-                [{ text: t('creation.ok', { defaultValue: 'OK' }), onPress: () => router.dismissAll() }]
+                [
+                  {
+                    text: t('creation.ok', { defaultValue: 'OK' }),
+                    onPress: () => router.dismissAll(),
+                  },
+                ]
               );
             } catch (error) {
               console.error('Delete request failed:', error);

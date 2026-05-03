@@ -85,7 +85,10 @@ async function withRetry<T>(operation: () => Promise<T>, maxRetries: number): Pr
   }
 }
 
-async function runWithConcurrency(tasks: (() => Promise<void>)[], concurrency: number): Promise<void> {
+async function runWithConcurrency(
+  tasks: (() => Promise<void>)[],
+  concurrency: number
+): Promise<void> {
   let nextIndex = 0;
   let firstError: unknown = null;
 
@@ -114,15 +117,18 @@ export default function TourReviewScreen() {
   const color = Colors[theme];
   const { tourData, mode, originalSnapshot, resetTourData } = useTourCreation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [submitProgress, setSubmitProgress] = React.useState<{ completed: number; total: number } | null>(
-    null
-  );
+  const [submitProgress, setSubmitProgress] = React.useState<{
+    completed: number;
+    total: number;
+  } | null>(null);
   const [showUnderReviewNotice, setShowUnderReviewNotice] = React.useState(false);
   const { t } = useTranslation();
 
   const isReadyToSubmit =
     !!tourData.coverImage &&
-    tourData.locations.every((location) => doesLocationMeetTourRequirements(location, tourData.tourType));
+    tourData.locations.every((location) =>
+      doesLocationMeetTourRequirements(location, tourData.tourType)
+    );
   const hasValidSelectedLocation =
     tourData.country.trim().length > 0 &&
     tourData.countryCode.trim().length > 0 &&
@@ -201,7 +207,8 @@ export default function TourReviewScreen() {
                 await updateTour(submittingTourId, {
                   title: sanitizeSingleLineText(tourData.title).trim() || 'Untitled Tour',
                   description:
-                    sanitizeMultiLineText(tourData.description).trim() || 'No description provided.',
+                    sanitizeMultiLineText(tourData.description).trim() ||
+                    'No description provided.',
                   cover_image: tourData.coverImage,
                   tour_type: tourData.tourType,
                   category: tourData.category || 'General',
@@ -217,7 +224,8 @@ export default function TourReviewScreen() {
                 const tour = await createTour({
                   title: sanitizeSingleLineText(tourData.title).trim() || 'Untitled Tour',
                   description:
-                    sanitizeMultiLineText(tourData.description).trim() || 'No description provided.',
+                    sanitizeMultiLineText(tourData.description).trim() ||
+                    'No description provided.',
                   cover_image: tourData.coverImage,
                   tour_type: tourData.tourType,
                   category: tourData.category || 'General',
@@ -249,7 +257,12 @@ export default function TourReviewScreen() {
 
                 const step = loc.serverStepId
                   ? await withRetry(
-                      () => updateTourStep(submittingTourId, loc.serverStepId as number, baseStepPayload),
+                      () =>
+                        updateTourStep(
+                          submittingTourId,
+                          loc.serverStepId as number,
+                          baseStepPayload
+                        ),
                       STEP_UPLOAD_MAX_RETRIES
                     )
                   : await withRetry(
@@ -409,7 +422,7 @@ export default function TourReviewScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: color.foreground }]}> 
+    <View style={[styles.container, { backgroundColor: color.foreground }]}>
       {showUnderReviewNotice ? (
         <View style={styles.noticeContainer}>
           <View style={[styles.noticeCard, { backgroundColor: color.background }]}>
@@ -419,7 +432,7 @@ export default function TourReviewScreen() {
             <Text style={[styles.noticeTitle, { color: color.text }]}>
               {t('creation.underReviewTitle', { defaultValue: 'Your tour is under review' })}
             </Text>
-            <Text style={[styles.noticeMessage, { color: color.subText }]}> 
+            <Text style={[styles.noticeMessage, { color: color.subText }]}>
               {t('creation.underReviewMessage', {
                 defaultValue:
                   'Thanks for submitting your tour. Our team is reviewing it now and it will be published soon.',
@@ -460,7 +473,10 @@ export default function TourReviewScreen() {
         }
         onPress={handleSubmitTour}
         disabled={
-          isSubmitting || !isReadyToSubmit || !hasValidSelectedLocation || (isEditMode && !hasMeaningfulChanges)
+          isSubmitting ||
+          !isReadyToSubmit ||
+          !hasValidSelectedLocation ||
+          (isEditMode && !hasMeaningfulChanges)
         }
       />
     </View>

@@ -127,7 +127,11 @@ class TourViewSet(viewsets.ModelViewSet):
 
     @staticmethod
     def _user_can_manage_tour(user, tour):
-        return bool(user and user.is_authenticated and (tour.creator_id == user.id or user.is_staff))
+        return bool(
+            user
+            and user.is_authenticated
+            and (tour.creator_id == user.id or user.is_staff)
+        )
 
     @action(
         detail=False,
@@ -374,7 +378,9 @@ class TourViewSet(viewsets.ModelViewSet):
         tour.status = Tour.PENDING
         tour.review_status = Tour.IN_REVIEW
         tour.submission_type = Tour.EDIT
-        tour.save(update_fields=["status", "review_status", "submission_type", "updated_at"])
+        tour.save(
+            update_fields=["status", "review_status", "submission_type", "updated_at"]
+        )
         serializer = self.get_serializer(tour)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -397,7 +403,9 @@ class TourViewSet(viewsets.ModelViewSet):
         tour.status = Tour.PENDING
         tour.review_status = Tour.IN_REVIEW
         tour.submission_type = Tour.DELETE
-        tour.save(update_fields=["status", "review_status", "submission_type", "updated_at"])
+        tour.save(
+            update_fields=["status", "review_status", "submission_type", "updated_at"]
+        )
         serializer = self.get_serializer(tour)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -426,14 +434,18 @@ class TourStepViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         step_instance = self.get_object()
         if not (
-            self.request.user.is_staff or step_instance.tour.creator_id == self.request.user.id
+            self.request.user.is_staff
+            or step_instance.tour.creator_id == self.request.user.id
         ):
             raise PermissionDenied("Only the tour creator can update tour steps.")
         step = serializer.save()
         recalculate_tour_metrics(step.tour)
 
     def perform_destroy(self, instance):
-        if not (self.request.user.is_staff or instance.tour.creator_id == self.request.user.id):
+        if not (
+            self.request.user.is_staff
+            or instance.tour.creator_id == self.request.user.id
+        ):
             raise PermissionDenied("Only the tour creator can delete tour steps.")
         tour = instance.tour
         instance.delete()

@@ -75,12 +75,15 @@ export function TourCreationProvider({ children }: { children: ReactNode }) {
         ...mappedBase,
         options: ['', ''],
         correctAnswer: '',
-        referenceImage: sourcePuzzle.picture_compare?.reference_image || sourcePuzzle.reference_image,
+        referenceImage:
+          sourcePuzzle.picture_compare?.reference_image || sourcePuzzle.reference_image,
       };
     }
     if (sourcePuzzle.puzzle_type === 'AR') {
       const metadata = sourcePuzzle.ar?.metadata || {};
-      const anchorPosition = metadata.anchor_position as ARPuzzleConfig['anchorPosition'] | undefined;
+      const anchorPosition = metadata.anchor_position as
+        | ARPuzzleConfig['anchorPosition']
+        | undefined;
       return {
         ...mappedBase,
         options: ['', ''],

@@ -47,15 +47,12 @@ export default function ProfileToursContainer(_props: ProfileToursContainerProps
     setActiveTab(tab.key);
   };
 
-  const handleEditPress = useCallback(
-    (tourId: number) => {
-      router.push({
-        pathname: '/tour-details',
-        params: { mode: 'edit', tourId: String(tourId) },
-      });
-    },
-    []
-  );
+  const handleEditPress = useCallback((tourId: number) => {
+    router.push({
+      pathname: '/tour-details',
+      params: { mode: 'edit', tourId: String(tourId) },
+    });
+  }, []);
 
   const getEmptyMessage = () => {
     switch (activeTab) {

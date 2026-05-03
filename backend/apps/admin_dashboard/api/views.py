@@ -296,9 +296,16 @@ class AdminTourViewSet(ModelViewSet):
             tour.review_status = None
             tour.submission_type = Tour.CREATE
             tour.save(
-                update_fields=["status", "review_status", "submission_type", "updated_at"]
+                update_fields=[
+                    "status",
+                    "review_status",
+                    "submission_type",
+                    "updated_at",
+                ]
             )
-            return Response({"detail": "Delete request rejected and tour restored to published."})
+            return Response(
+                {"detail": "Delete request rejected and tour restored to published."}
+            )
 
         tour.status = Tour.PENDING
         tour.review_status = Tour.REJECTED
