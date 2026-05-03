@@ -182,8 +182,33 @@ export default function TourNavigation({
   const colors = Colors[theme];
   const [isDirectionsModalVisible, setIsDirectionsModalVisible] = useState(false);
   const [hasAnsweredCurrentStep, setHasAnsweredCurrentStep] = useState(false);
+  const instanceIdRef = useRef(`tn-${Math.random().toString(36).slice(2, 8)}`);
+  const latestStepIdRef = useRef<string | null>(tour.steps[currentStepIndex]?.id ?? null);
   const { skipCount, wrongAnswerCount, highestStepIndex, stepAnswers, stepAttempts } =
     useActiveTour();
+
+  useEffect(() => {
+    latestStepIdRef.current = tour.steps[currentStepIndex]?.id ?? null;
+  }, [currentStepIndex, tour.steps]);
+
+  useEffect(() => {
+    if (__DEV__) {
+      console.log('[TourNavigation] mount', {
+        instanceId: instanceIdRef.current,
+        tourId: tour.id,
+        stepId: tour.steps[currentStepIndex]?.id ?? null,
+      });
+    }
+    return () => {
+      if (__DEV__) {
+        console.log('[TourNavigation] unmount', {
+          instanceId: instanceIdRef.current,
+          tourId: tour.id,
+          stepId: latestStepIdRef.current,
+        });
+      }
+    };
+  }, []);
 
   useEffect(() => {
     setHasAnsweredCurrentStep(false);

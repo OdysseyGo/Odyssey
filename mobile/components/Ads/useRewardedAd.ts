@@ -38,6 +38,7 @@ export function useRewardedAd(placementKey: string) {
     listener_attach: 0,
     listener_detach: 0,
   });
+  const instanceIdRef = useRef(`rw-${Math.random().toString(36).slice(2, 8)}`);
 
   const placement = getPlacement(placementKey);
 
@@ -46,6 +47,7 @@ export function useRewardedAd(placementKey: string) {
       if (!__DEV__) return;
       metricsRef.current[event] += 1;
       console.log(`[useRewardedAd:${placementKey}] ${event}`, {
+        hookInstanceId: instanceIdRef.current,
         count: metricsRef.current[event],
         ...details,
       });

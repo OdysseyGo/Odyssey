@@ -1548,6 +1548,31 @@ export default function TourStepComponent({
 }: TourStepProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const instanceIdRef = useRef(`ts-${Math.random().toString(36).slice(2, 8)}`);
+  const latestStepIdRef = useRef(step.id);
+
+  useEffect(() => {
+    latestStepIdRef.current = step.id;
+  }, [step.id]);
+
+  useEffect(() => {
+    if (__DEV__) {
+      console.log('[TourStep] mount', {
+        instanceId: instanceIdRef.current,
+        stepId: step.id,
+        stepType: step.type,
+      });
+    }
+    return () => {
+      if (__DEV__) {
+        console.log('[TourStep] unmount', {
+          instanceId: instanceIdRef.current,
+          stepId: latestStepIdRef.current,
+        });
+      }
+    };
+  }, []);
+
   return (
     <View style={styles.container}>
       {step.type === 'story' && <StoryStepView step={step} />}

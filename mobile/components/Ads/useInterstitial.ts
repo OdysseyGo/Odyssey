@@ -22,7 +22,7 @@ type DevMetric =
   | 'listener_attach'
   | 'listener_detach';
 
-export function useInterstitial(placementKey: string) {
+export function useInterstitial(placementKey: string, options?: { disabled?: boolean }) {
   const { isReady, getPlacement } = useAds();
   const adRef = useRef<InterstitialAd | null>(null);
   const loadedRef = useRef(false);
@@ -41,12 +41,15 @@ export function useInterstitial(placementKey: string) {
     listener_attach: 0,
     listener_detach: 0,
   });
+  const instanceIdRef = useRef(`is-${Math.random().toString(36).slice(2, 8)}`);
+  const disabled = options?.disabled ?? false;
 
   const logDev = useCallback(
     (event: DevMetric, details: Record<string, unknown> = {}) => {
       if (!__DEV__) return;
       metricsRef.current[event] += 1;
       console.log(`[useInterstitial:${placementKey}] ${event}`, {
+        hookInstanceId: instanceIdRef.current,
         count: metricsRef.current[event],
         ...details,
       });
@@ -83,6 +86,7 @@ export function useInterstitial(placementKey: string) {
 
   const loadAd = useCallback(() => {
     if (!mountedRef.current) return;
+    if (disabled) return;
     if (showInProgressRef.current || loadInProgressRef.current) return;
 
     const placement = isPlacementEligible();
@@ -123,19 +127,26 @@ export function useInterstitial(placementKey: string) {
     };
 
     ad.load();
-  }, [disposeCurrentAd, isPlacementEligible, logDev]);
+  }, [disabled, disposeCurrentAd, isPlacementEligible, logDev]);
 
   useEffect(() => {
     mountedRef.current = true;
-    loadAd();
+    if (!disabled) {
+      loadAd();
+    } else if (__DEV__) {
+      console.log(`[useInterstitial:${placementKey}] disabled_for_memory_profile`, {
+        hookInstanceId: instanceIdRef.current,
+      });
+    }
 
     return () => {
       mountedRef.current = false;
       disposeCurrentAd('unmount');
     };
-  }, [disposeCurrentAd, loadAd]);
+  }, [disabled, disposeCurrentAd, loadAd, placementKey]);
 
   const show = useCallback(async (): Promise<boolean> => {
+    if (disabled) return false;
     if (!adRef.current || !loadedRef.current || showInProgressRef.current) return false;
 
     const ad = adRef.current;
@@ -205,7 +216,7 @@ export function useInterstitial(placementKey: string) {
       showInProgressRef.current = false;
       return false;
     }
-  }, [disposeCurrentAd, isPlacementEligible, loadAd, logDev, placementKey]);
+  }, [disabled, disposeCurrentAd, isPlacementEligible, loadAd, logDev, placementKey]);
 
   return { show, isLoaded: () => loadedRef.current };
 }

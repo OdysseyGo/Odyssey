@@ -28,6 +28,7 @@ export interface TourMapProps {
   animateToRegion?: Region;
   centerOnUserRequestKey?: number;
   mapMode?: TourMapMode;
+  mapInstanceKey?: string;
 }
 
 export const exampleTourMap: TourMapProps = {
