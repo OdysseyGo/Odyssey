@@ -1,9 +1,10 @@
 import { View, Pressable, Text, Animated } from 'react-native';
-import { useMemo, useState, useCallback, useRef } from 'react';
+import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import getStyles from './MapScreen.styles';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -12,17 +13,59 @@ import TourMap from './TourMap';
 import TourCompleteModal from './TourCompleteModal';
 import EndTourConfirmModal from './EndTourConfirmModal';
 import NearbyToursSlider from './NearbyToursSlider';
+import TourPreviewPanel from './TourPreviewPanel';
 import { getVisibleMarkers, getVisibleRoute } from '../TourStepComponents/TourNavigation.config';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import Colors from '@/constants/Colors';
 import { isLoggedIn } from '@/api/auth';
 import { getToursInBounds } from '@/api/tours';
-import type { Tour } from '@/api/tours';
+import type { Difficulty, InBoundsFilters, InBoundsSort, Tour, TourType } from '@/api/tours';
 import { deleteTourProgress } from '@/api/tourProgress';
 import type { MapMarkerProps } from './MapMarker.config';
 import type { Region } from './TourMap.config';
 import type { UserBadge } from '@/api/profile';
 import { useInterstitial } from '@/components/Ads/useInterstitial';
+import { TOUR_CATEGORIES } from '@/components/TourCreation';
+
+const MAX_SEARCH_DELTA = 0.5;
+const MAX_NEARBY_TOURS_TO_RENDER = 10;
+
+function isValidRegion(region: Region | null | undefined): region is Region {
+  if (!region) return false;
+  return (
+    Number.isFinite(region.latitude) &&
+    Number.isFinite(region.longitude) &&
+    Number.isFinite(region.latitudeDelta) &&
+    Number.isFinite(region.longitudeDelta) &&
+    region.latitude >= -90 &&
+    region.latitude <= 90 &&
+    region.longitude >= -180 &&
+    region.longitude <= 180 &&
+    region.latitudeDelta > 0 &&
+    region.longitudeDelta > 0
+  );
+}
+
+const EMPTY_MARKERS: MapMarkerProps[] = [];
+
+function sortNearbyTours(tours: Tour[], sort: InBoundsSort): Tour[] {
+  return [...tours].sort((a, b) => {
+    if (sort === 'name') {
+      return a.title.localeCompare(b.title);
+    }
+    if (sort === 'reviews') {
+      const reviewDelta = (b.reviews?.length ?? 0) - (a.reviews?.length ?? 0);
+      if (reviewDelta !== 0) return reviewDelta;
+      return (b.average_rating ?? 0) - (a.average_rating ?? 0);
+    }
+    if (sort === 'newest') {
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+    const ratingDelta = (b.average_rating ?? 0) - (a.average_rating ?? 0);
+    if (ratingDelta !== 0) return ratingDelta;
+    return (b.reviews?.length ?? 0) - (a.reviews?.length ?? 0);
+  });
+}
 
 const LOCATION_CHECK_RADIUS_M = 100;
 
@@ -32,6 +75,7 @@ export default function MapScreen() {
   const colors = Colors[theme];
   const router = useRouter();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   const {
     tour,
@@ -53,24 +97,49 @@ export default function MapScreen() {
   const { show: showTourCompleteInterstitial } = useInterstitial('tour_complete_interstitial');
   const completingTourRef = useRef(false);
 
-  // Area search state
   const [nearbyTours, setNearbyTours] = useState<Tour[]>([]);
+  const [nearbyToursForMap, setNearbyToursForMap] = useState<Tour[]>([]);
+  const [nearbySort, setNearbySort] = useState<InBoundsSort>('rating');
+  const [nearbyFilters, setNearbyFilters] = useState<InBoundsFilters>({});
+  const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
   const [nearbyLoading, setNearbyLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [animateToRegion, setAnimateToRegion] = useState<Region | undefined>();
+  const [centerOnUserRequestKey, setCenterOnUserRequestKey] = useState<number | undefined>(
+    undefined
+  );
+
   const [isZoomedOut, setIsZoomedOut] = useState(false);
   const [isCoolingDown, setIsCoolingDown] = useState(false);
   const [isDraggingMap, setIsDraggingMap] = useState(false);
   const [showSearchButton, setShowSearchButton] = useState(false);
+  const [showCategoryFilters, setShowCategoryFilters] = useState(false);
+  const [isLegendOpen, setIsLegendOpen] = useState(false);
+
   const currentRegionRef = useRef<Region | null>(null);
+  const nearbySortRef = useRef<InBoundsSort>('rating');
+  const nearbyFiltersRef = useRef<InBoundsFilters>({});
+  const regionBeforeSelectionRef = useRef<Region | null>(null);
   const isDraggingMapRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const cooldownRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastFetchedBboxRef = useRef<{
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  } | null>(null);
+  const lastMarkerPressAtRef = useRef<number>(0);
   const spinAnim = useRef(new Animated.Value(0)).current;
+  const legendAnim = useRef(new Animated.Value(0)).current;
   const spinLoop = useRef<Animated.CompositeAnimation | null>(null);
   const initialSearchDoneRef = useRef(false);
+  const lastSortTapAtRef = useRef(0);
+  const [legendPanelHeight, setLegendPanelHeight] = useState(168);
+  const filterPanelAnim = useRef(new Animated.Value(0)).current;
 
-  // ~55 km visible height — beyond this the results would be overwhelming
-  const MAX_SEARCH_DELTA = 0.5;
+  useEffect(() => {
+    nearbyFiltersRef.current = nearbyFilters;
+  }, [nearbyFilters]);
 
   useFocusEffect(
     useCallback(() => {
@@ -91,11 +160,29 @@ export default function MapScreen() {
       setIsCoolingDown(false);
       setIsDraggingMap(false);
       isDraggingMapRef.current = false;
-      initialSearchDoneRef.current = false;
       setShowSearchButton(false);
 
       const region = currentRegionRef.current;
-      if (!region || region.latitudeDelta > MAX_SEARCH_DELTA) return;
+      if (!isValidRegion(region) || region.latitudeDelta > MAX_SEARCH_DELTA) return;
+
+      const cached = lastFetchedBboxRef.current;
+      if (cached) {
+        const north = region.latitude + region.latitudeDelta / 2;
+        const south = region.latitude - region.latitudeDelta / 2;
+        const east = region.longitude + region.longitudeDelta / 2;
+        const west = region.longitude - region.longitudeDelta / 2;
+        if (
+          north <= cached.north &&
+          south >= cached.south &&
+          east <= cached.east &&
+          west >= cached.west
+        ) {
+          initialSearchDoneRef.current = true;
+          return;
+        }
+      }
+
+      initialSearchDoneRef.current = false;
 
       abortControllerRef.current?.abort();
       const controller = new AbortController();
@@ -103,17 +190,30 @@ export default function MapScreen() {
 
       setNearbyLoading(true);
 
+      const north = region.latitude + region.latitudeDelta / 2;
+      const south = region.latitude - region.latitudeDelta / 2;
+      const east = region.longitude + region.longitudeDelta / 2;
+      const west = region.longitude - region.longitudeDelta / 2;
+
       getToursInBounds(
-        region.latitude + region.latitudeDelta / 2,
-        region.latitude - region.latitudeDelta / 2,
-        region.longitude + region.longitudeDelta / 2,
-        region.longitude - region.longitudeDelta / 2,
+        north,
+        south,
+        east,
+        west,
+        {
+          sort: nearbySortRef.current,
+          fields: 'full',
+          filters: nearbyFiltersRef.current,
+        },
         controller.signal
       )
         .then((tours) => {
           if (!controller.signal.aborted) {
-            setNearbyTours(tours);
-            setHasSearched(true);
+            setNearbyTours(sortNearbyTours(tours, nearbySortRef.current));
+            setNearbyToursForMap(
+              sortNearbyTours(tours, 'rating').slice(0, MAX_NEARBY_TOURS_TO_RENDER)
+            );
+            lastFetchedBboxRef.current = { north, south, east, west };
           }
         })
         .catch(() => {})
@@ -125,7 +225,7 @@ export default function MapScreen() {
         });
 
       return () => controller.abort();
-    }, [MAX_SEARCH_DELTA, spinAnim])
+    }, [spinAnim])
   );
 
   const visibleMarkers = useMemo(() => {
@@ -164,23 +264,15 @@ export default function MapScreen() {
 
   const completedStepsForModal = useMemo(() => {
     if (!tour || tour.steps.length === 0) return 0;
-
-    if (showCompleteModal) {
-      return tour.steps.length;
-    }
-
-    // Highest reached index represents the current active step on backend;
-    // completed steps are those before it.
+    if (showCompleteModal) return tour.steps.length;
     return Math.max(0, Math.min(highestStepIndex, tour.steps.length));
   }, [tour, highestStepIndex, showCompleteModal]);
 
-  // Active tour handlers
   const handleTourComplete = useCallback(
     async (awardedXP: number, awardedBadges?: UserBadge[]) => {
       if (completingTourRef.current) return;
       completingTourRef.current = true;
 
-      // Backend is source of truth: replay completions return awarded_xp=0.
       setFinalXP(Math.max(0, awardedXP ?? 0));
       setCompletionBadges(awardedBadges ?? []);
       await showTourCompleteInterstitial();
@@ -213,8 +305,7 @@ export default function MapScreen() {
 
   const handleSearchHere = useCallback(async () => {
     const region = currentRegionRef.current;
-    if (!region) return;
-    if (region.latitudeDelta > MAX_SEARCH_DELTA) return;
+    if (!isValidRegion(region) || region.latitudeDelta > MAX_SEARCH_DELTA) return;
 
     abortControllerRef.current?.abort();
     const controller = new AbortController();
@@ -228,41 +319,53 @@ export default function MapScreen() {
     spinLoop.current.start();
     setIsCoolingDown(true);
     setNearbyLoading(true);
-    setHasSearched(true);
 
     cooldownRef.current = setTimeout(() => {
       spinLoop.current?.stop();
       spinAnim.setValue(0);
       setIsCoolingDown(false);
-      setShowSearchButton(false);
     }, 2500);
+
+    const north = region.latitude + region.latitudeDelta / 2;
+    const south = region.latitude - region.latitudeDelta / 2;
+    const east = region.longitude + region.longitudeDelta / 2;
+    const west = region.longitude - region.longitudeDelta / 2;
 
     try {
       const tours = await getToursInBounds(
-        region.latitude + region.latitudeDelta / 2,
-        region.latitude - region.latitudeDelta / 2,
-        region.longitude + region.longitudeDelta / 2,
-        region.longitude - region.longitudeDelta / 2,
+        north,
+        south,
+        east,
+        west,
+        {
+          sort: nearbySortRef.current,
+          fields: 'full',
+          filters: nearbyFiltersRef.current,
+        },
         controller.signal
       );
-      if (!controller.signal.aborted) setNearbyTours(tours);
+      if (!controller.signal.aborted) {
+        setNearbyTours(sortNearbyTours(tours, nearbySortRef.current));
+        setNearbyToursForMap(sortNearbyTours(tours, 'rating').slice(0, MAX_NEARBY_TOURS_TO_RENDER));
+        lastFetchedBboxRef.current = { north, south, east, west };
+      }
     } catch (e) {
-      if (e instanceof Error && e.name !== 'AbortError') setNearbyTours([]);
+      if (e instanceof Error && e.name !== 'AbortError') {
+        setNearbyTours([]);
+        setNearbyToursForMap([]);
+      }
     } finally {
       setNearbyLoading(false);
     }
-  }, [MAX_SEARCH_DELTA, spinAnim]);
+  }, [spinAnim]);
 
-  const handleRegionChangeComplete = useCallback(
-    (region: Region) => {
-      currentRegionRef.current = region;
-      isDraggingMapRef.current = false;
-      setIsDraggingMap(false);
-      setIsZoomedOut(region.latitudeDelta > MAX_SEARCH_DELTA);
-      if (initialSearchDoneRef.current) setShowSearchButton(true);
-    },
-    [MAX_SEARCH_DELTA]
-  );
+  const handleRegionChangeComplete = useCallback((region: Region) => {
+    currentRegionRef.current = region;
+    isDraggingMapRef.current = false;
+    setIsDraggingMap(false);
+    setIsZoomedOut(region.latitudeDelta > MAX_SEARCH_DELTA);
+    if (initialSearchDoneRef.current) setShowSearchButton(true);
+  }, []);
 
   const handleRegionChange = useCallback((region: Region) => {
     currentRegionRef.current = region;
@@ -274,83 +377,296 @@ export default function MapScreen() {
     setShowSearchButton(true);
   }, []);
 
-  const handleUserLocationReady = useCallback(
-    async (region: Region) => {
-      currentRegionRef.current = region;
-      setIsZoomedOut(region.latitudeDelta > MAX_SEARCH_DELTA);
+  const handleUserLocationReady = useCallback(async (region: Region) => {
+    currentRegionRef.current = region;
+    setIsZoomedOut(region.latitudeDelta > MAX_SEARCH_DELTA);
 
-      if (initialSearchDoneRef.current || region.latitudeDelta > MAX_SEARCH_DELTA) return;
+    if (initialSearchDoneRef.current || region.latitudeDelta > MAX_SEARCH_DELTA) return;
 
-      abortControllerRef.current?.abort();
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
-      setNearbyLoading(true);
+    setNearbyLoading(true);
 
-      try {
-        const tours = await getToursInBounds(
-          region.latitude + region.latitudeDelta / 2,
-          region.latitude - region.latitudeDelta / 2,
-          region.longitude + region.longitudeDelta / 2,
-          region.longitude - region.longitudeDelta / 2,
-          controller.signal
-        );
-        if (!controller.signal.aborted) {
-          setNearbyTours(tours);
-          setHasSearched(true);
-        }
-      } catch {
-        if (!controller.signal.aborted) setNearbyTours([]);
-      } finally {
-        if (!controller.signal.aborted) {
-          setNearbyLoading(false);
-          initialSearchDoneRef.current = true;
-        }
+    const north = region.latitude + region.latitudeDelta / 2;
+    const south = region.latitude - region.latitudeDelta / 2;
+    const east = region.longitude + region.longitudeDelta / 2;
+    const west = region.longitude - region.longitudeDelta / 2;
+
+    try {
+      const tours = await getToursInBounds(
+        north,
+        south,
+        east,
+        west,
+        {
+          sort: nearbySortRef.current,
+          fields: 'full',
+          filters: nearbyFiltersRef.current,
+        },
+        controller.signal
+      );
+      if (!controller.signal.aborted) {
+        setNearbyTours(sortNearbyTours(tours, nearbySortRef.current));
+        setNearbyToursForMap(sortNearbyTours(tours, 'rating').slice(0, MAX_NEARBY_TOURS_TO_RENDER));
+        lastFetchedBboxRef.current = { north, south, east, west };
       }
-    },
-    [MAX_SEARCH_DELTA]
-  );
+    } catch {
+      if (!controller.signal.aborted) {
+        setNearbyTours([]);
+        setNearbyToursForMap([]);
+      }
+    } finally {
+      if (!controller.signal.aborted) {
+        setNearbyLoading(false);
+        initialSearchDoneRef.current = true;
+      }
+    }
+  }, []);
 
   const handleNearbyTourPress = useCallback(
     (tourId: number) => {
+      const targetTour = nearbyTours.find((item) => item.id === tourId);
+      if (!targetTour || targetTour.steps.length === 0) return;
+
+      const lng = parseFloat(targetTour.steps[0].longitude);
+      const lat = parseFloat(targetTour.steps[0].latitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+      if (isValidRegion(currentRegionRef.current)) {
+        regionBeforeSelectionRef.current = { ...currentRegionRef.current };
+      }
+
+      lastMarkerPressAtRef.current = Date.now();
+      setSelectedTour(targetTour);
+      setShowCategoryFilters(false);
+      setAnimateToRegion({
+        latitude: lat,
+        longitude: lng,
+        latitudeDelta: 0.002,
+        longitudeDelta: 0.002,
+      });
+    },
+    [nearbyTours]
+  );
+
+  const handlePreviewClose = useCallback(() => {
+    const previousRegion = regionBeforeSelectionRef.current;
+    setSelectedTour(null);
+    if (isValidRegion(previousRegion)) {
+      setAnimateToRegion(previousRegion);
+    }
+    regionBeforeSelectionRef.current = null;
+  }, []);
+
+  const handlePreviewViewTour = useCallback(
+    (tourId: number) => {
+      setSelectedTour(null);
+      setShowCategoryFilters(false);
       router.push(`/tour/${tourId}`);
     },
     [router]
   );
+
+  const handleMapPress = useCallback(() => {
+    if (Date.now() - lastMarkerPressAtRef.current < 250) return;
+    setSelectedTour(null);
+  }, []);
+
+  const handleCenterOnUser = useCallback(() => {
+    setCenterOnUserRequestKey((prev) => (prev ?? 0) + 1);
+  }, []);
+
+  const handleFocusCurrentStep = useCallback(() => {
+    if (!tour || !isActive) return;
+    const currentStep = tour.steps[currentStepIndex];
+    if (!currentStep) return;
+
+    setAnimateToRegion({
+      latitude: currentStep.coordinate.latitude,
+      longitude: currentStep.coordinate.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    });
+  }, [tour, isActive, currentStepIndex]);
+
+  const handleSortChange = useCallback((sort: InBoundsSort) => {
+    if (sort === nearbySortRef.current) return;
+    const now = Date.now();
+    if (now - lastSortTapAtRef.current < 180) return;
+    lastSortTapAtRef.current = now;
+
+    setNearbySort(sort);
+    nearbySortRef.current = sort;
+    setNearbyTours((prev) => sortNearbyTours(prev, sort));
+  }, []);
+
+  const handleFiltersChange = useCallback((nextFilters: InBoundsFilters) => {
+    setNearbyFilters(nextFilters);
+    nearbyFiltersRef.current = nextFilters;
+    setShowSearchButton(true);
+    setSelectedTour(null);
+  }, []);
 
   const defaultRegion = useMemo(
     () => ({ latitude: 41.0082, longitude: 28.9784, latitudeDelta: 0.05, longitudeDelta: 0.05 }),
     []
   );
 
-  const nearbyMarkersForMap = useMemo<MapMarkerProps[]>(() => {
-    return nearbyTours
-      .filter((t) => t.steps.length > 0)
-      .map((t) => {
-        const lat = parseFloat(t.steps[0].latitude);
-        const lng = parseFloat(t.steps[0].longitude);
-        const difficultyKey = (t.difficulty || '').toLowerCase() as 'easy' | 'medium' | 'hard';
-        const circleColor = colors[difficultyKey] ?? colors.medium;
-        return {
-          id: `nearby-${t.id}`,
-          coordinate: { latitude: lat, longitude: lng },
-          title: t.title,
-          iconType: (t.tour_type === 'PUZZLE'
-            ? 'puzzle'
-            : t.tour_type === 'HYBRID'
-              ? 'story-puzzle'
-              : 'story') as MapMarkerProps['iconType'],
-          circleSize: 38,
-          circleColor,
-          opacity: 0.9,
-        };
-      })
-      .filter(
-        (m) => Number.isFinite(m.coordinate.latitude) && Number.isFinite(m.coordinate.longitude)
-      );
-  }, [nearbyTours, colors]);
+  const nearbyMarkersForMap = useMemo(() => {
+    if (nearbyToursForMap.length === 0) return EMPTY_MARKERS;
+    const selectedId = selectedTour ? `nearby-${selectedTour.id}` : null;
+    const individualMarkers: MapMarkerProps[] = [];
 
-  // No active tour — area search map
+    for (const tour of nearbyToursForMap) {
+      if (tour.steps.length === 0) continue;
+      const lng = parseFloat(tour.steps[0].longitude);
+      const lat = parseFloat(tour.steps[0].latitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+      if (lat < -85 || lat > 85 || lng < -180 || lng > 180) continue;
+      const difficultyKey = (tour.difficulty || '').toLowerCase() as 'easy' | 'medium' | 'hard';
+      const circleColor = colors[difficultyKey] ?? colors.medium;
+      individualMarkers.push({
+        id: `nearby-${tour.id}`,
+        coordinate: { latitude: lat, longitude: lng },
+        title: tour.title,
+        iconType: (tour.tour_type === 'PUZZLE'
+          ? 'puzzle'
+          : tour.tour_type === 'HYBRID'
+            ? 'story-puzzle'
+            : 'story') as MapMarkerProps['iconType'],
+        circleSize: 38,
+        circleColor,
+        opacity: 0.9,
+        selected: selectedId !== null && `nearby-${tour.id}` === selectedId,
+        onPress: () => {
+          if (isValidRegion(currentRegionRef.current)) {
+            regionBeforeSelectionRef.current = { ...currentRegionRef.current };
+          }
+          lastMarkerPressAtRef.current = Date.now();
+          setSelectedTour(tour);
+          setShowCategoryFilters(false);
+          setAnimateToRegion({
+            latitude: lat,
+            longitude: lng,
+            latitudeDelta: 0.002,
+            longitudeDelta: 0.002,
+          });
+        },
+      });
+    }
+
+    return individualMarkers;
+  }, [nearbyToursForMap, colors, selectedTour]);
+
+  const markerLegendItems = useMemo(
+    () => [
+      {
+        key: 'story',
+        icon: 'book-outline' as const,
+        label: t('tour.story', { defaultValue: 'Story' }),
+      },
+      {
+        key: 'puzzle',
+        icon: 'puzzle' as const,
+        label: t('tour.puzzle', { defaultValue: 'Puzzle' }),
+      },
+      {
+        key: 'hybrid',
+        icon: 'book-play' as const,
+        label: t('tour.hybrid', { defaultValue: 'Hybrid' }),
+      },
+    ],
+    [t]
+  );
+  const mapVisibleTourIds = useMemo(
+    () => nearbyToursForMap.map((tour) => tour.id),
+    [nearbyToursForMap]
+  );
+  const nearbyCategoryOptions = useMemo(() => {
+    const knownCategories = new Set(TOUR_CATEGORIES.map((value) => value.trim()).filter(Boolean));
+    nearbyTours.forEach((tour) => {
+      const category = tour.category?.trim();
+      if (category) knownCategories.add(category);
+    });
+    return Array.from(knownCategories).sort((a, b) => a.localeCompare(b));
+  }, [nearbyTours]);
+  const nearbyDifficultyOptions = useMemo(
+    () =>
+      [
+        { value: 'EASY' as Difficulty, label: t('tourDetail.easy', { defaultValue: 'Easy' }) },
+        {
+          value: 'MEDIUM' as Difficulty,
+          label: t('tourDetail.medium', { defaultValue: 'Medium' }),
+        },
+        { value: 'HARD' as Difficulty, label: t('tourDetail.hard', { defaultValue: 'Hard' }) },
+      ] as const,
+    [t]
+  );
+  const nearbyTourTypeOptions = useMemo(
+    () =>
+      [
+        { value: 'STORY' as TourType, label: t('tour.story', { defaultValue: 'Story' }) },
+        { value: 'PUZZLE' as TourType, label: t('tour.puzzle', { defaultValue: 'Puzzle' }) },
+        { value: 'HYBRID' as TourType, label: t('tour.hybrid', { defaultValue: 'Hybrid' }) },
+      ] as const,
+    [t]
+  );
+  const hasActiveExploreFilters = Boolean(
+    nearbyFilters.category || nearbyFilters.difficulty || nearbyFilters.tour_type
+  );
+
+  const activeLegendToggleTop = insets.top + 12;
+  const activeLegendPanelTop = activeLegendToggleTop + 42;
+  const activeLocateTop = isLegendOpen
+    ? activeLegendPanelTop + legendPanelHeight + 8
+    : activeLegendToggleTop + 44;
+  const activeStepTop = activeLocateTop + 44;
+
+  const legendToggleTop = insets.top + 12;
+  const legendPanelTop = legendToggleTop + 42;
+  const locateTopInExplore = isLegendOpen
+    ? legendPanelTop + legendPanelHeight + 8
+    : legendToggleTop + 44;
+
+  useEffect(() => {
+    Animated.timing(legendAnim, {
+      toValue: isLegendOpen ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [isLegendOpen, legendAnim]);
+
+  useEffect(() => {
+    Animated.timing(filterPanelAnim, {
+      toValue: showCategoryFilters ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [showCategoryFilters, filterPanelAnim]);
+
+  const difficultyLegendItems = useMemo(
+    () => [
+      {
+        key: 'easy',
+        color: colors.easy,
+        label: t('tourDetail.easy', { defaultValue: 'Easy' }),
+      },
+      {
+        key: 'medium',
+        color: colors.medium,
+        label: t('tourDetail.medium', { defaultValue: 'Medium' }),
+      },
+      {
+        key: 'hard',
+        color: colors.hard,
+        label: t('tourDetail.hard', { defaultValue: 'Hard' }),
+      },
+    ],
+    [colors.easy, colors.hard, colors.medium, t]
+  );
+
   if (!isActive || !tour) {
     return (
       <View style={styles.container}>
@@ -361,79 +677,393 @@ export default function MapScreen() {
           currentStepIndex={0}
           onRegionChange={handleRegionChange}
           onRegionChangeComplete={handleRegionChangeComplete}
+          onMapPress={handleMapPress}
           onUserLocationReady={handleUserLocationReady}
           nearbyMarkers={nearbyMarkersForMap}
+          animateToRegion={animateToRegion}
+          centerOnUserRequestKey={centerOnUserRequestKey}
         />
 
-        {/* Search Here — visible only after initial load when user moves the map */}
+        <Pressable
+          style={[styles.locateMeButton, { top: locateTopInExplore }]}
+          onPress={handleCenterOnUser}
+        >
+          <MaterialCommunityIcons name="crosshairs-gps" size={15} color={colors.primary} />
+        </Pressable>
+
         {showSearchButton && (
-          <Pressable
-            style={[
-              styles.searchHereButton,
-              (isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown) &&
-                styles.searchHereButtonDisabled,
-            ]}
-            onPress={
-              isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown
-                ? undefined
-                : handleSearchHere
-            }
-          >
-            {isZoomedOut ? (
-              <MaterialCommunityIcons
-                name="magnify-minus-outline"
-                size={16}
-                color={colors.subText}
-              />
-            ) : (
-              <Animated.View
-                style={{
+          <>
+            <View style={styles.searchControlsRow}>
+              <Pressable
+                style={[
+                  styles.searchHereButton,
+                  (isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown) &&
+                    styles.searchHereButtonDisabled,
+                ]}
+                onPress={
+                  isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown
+                    ? undefined
+                    : handleSearchHere
+                }
+              >
+                {isZoomedOut ? (
+                  <MaterialCommunityIcons
+                    name="magnify-minus-outline"
+                    size={16}
+                    color={colors.subText}
+                  />
+                ) : (
+                  <Animated.View
+                    style={{
+                      transform: [
+                        {
+                          rotate: spinAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0deg', '360deg'],
+                          }),
+                        },
+                      ],
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="magnify"
+                      size={16}
+                      color={
+                        isDraggingMap || nearbyLoading || isCoolingDown
+                          ? colors.subText
+                          : colors.primary
+                      }
+                    />
+                  </Animated.View>
+                )}
+                <Text
+                  style={[
+                    styles.searchHereText,
+                    (isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown) &&
+                      styles.searchHereTextDisabled,
+                  ]}
+                >
+                  {nearbyLoading
+                    ? t('map.nearby.searching')
+                    : isDraggingMap
+                      ? t('map.searchMode.stopDragging')
+                      : isZoomedOut
+                        ? t('map.searchMode.zoomIn')
+                        : t('map.searchMode.searchHere')}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[
+                  styles.searchFilterButton,
+                  hasActiveExploreFilters && styles.searchFilterButtonActive,
+                ]}
+                onPress={() => setShowCategoryFilters((prev) => !prev)}
+              >
+                <MaterialCommunityIcons name="filter-variant" size={14} color={colors.primary} />
+                <Text style={styles.searchFilterButtonText} numberOfLines={1}>
+                  {hasActiveExploreFilters
+                    ? t('map.filters.active', { defaultValue: 'Filters active' })
+                    : t('map.filters.label', { defaultValue: 'Filters' })}
+                </Text>
+              </Pressable>
+            </View>
+
+            <Animated.View
+              pointerEvents={showCategoryFilters ? 'auto' : 'none'}
+              style={[
+                styles.searchFilterPanel,
+                {
+                  opacity: filterPanelAnim,
                   transform: [
                     {
-                      rotate: spinAnim.interpolate({
+                      translateY: filterPanelAnim.interpolate({
                         inputRange: [0, 1],
-                        outputRange: ['0deg', '360deg'],
+                        outputRange: [-8, 0],
+                      }),
+                    },
+                    {
+                      scale: filterPanelAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.98, 1],
                       }),
                     },
                   ],
-                }}
-              >
-                <MaterialCommunityIcons
-                  name="magnify"
-                  size={16}
-                  color={
-                    isDraggingMap || nearbyLoading || isCoolingDown
-                      ? colors.subText
-                      : colors.primary
-                  }
-                />
-              </Animated.View>
-            )}
-            <Text
-              style={[
-                styles.searchHereText,
-                (isDraggingMap || isZoomedOut || nearbyLoading || isCoolingDown) &&
-                  styles.searchHereTextDisabled,
+                },
               ]}
             >
-              {nearbyLoading
-                ? t('map.nearby.searching')
-                : isDraggingMap
-                  ? t('map.searchMode.stopDragging')
-                  : isZoomedOut
-                    ? t('map.searchMode.zoomIn')
-                    : t('map.searchMode.searchHere')}
-            </Text>
-          </Pressable>
+              <View style={styles.searchFilterHeaderRow}>
+                <Text style={styles.searchFilterPanelTitle}>
+                  {t('map.filters.label', { defaultValue: 'Filters' })}
+                </Text>
+                <Pressable
+                  style={styles.searchFilterResetButton}
+                  onPress={() =>
+                    handleFiltersChange({
+                      ...nearbyFilters,
+                      category: undefined,
+                      difficulty: undefined,
+                      tour_type: undefined,
+                    })
+                  }
+                >
+                  <Text style={styles.searchFilterResetButtonText}>
+                    {t('map.filters.reset', { defaultValue: 'Reset' })}
+                  </Text>
+                </Pressable>
+              </View>
+
+              <Text style={styles.searchFilterSectionTitle}>
+                {t('map.filters.type', { defaultValue: 'Tour type' })}
+              </Text>
+              <View style={styles.searchFilterChipsRow}>
+                <Pressable
+                  style={[
+                    styles.searchFilterChip,
+                    !nearbyFilters.tour_type && styles.searchFilterChipActive,
+                  ]}
+                  onPress={() => handleFiltersChange({ ...nearbyFilters, tour_type: undefined })}
+                >
+                  <Text
+                    style={[
+                      styles.searchFilterChipText,
+                      !nearbyFilters.tour_type && styles.searchFilterChipTextActive,
+                    ]}
+                  >
+                    {t('map.filters.all', { defaultValue: 'All' })}
+                  </Text>
+                </Pressable>
+                {nearbyTourTypeOptions.map((option) => (
+                  <Pressable
+                    key={option.value}
+                    style={[
+                      styles.searchFilterChip,
+                      nearbyFilters.tour_type === option.value && styles.searchFilterChipActive,
+                    ]}
+                    onPress={() =>
+                      handleFiltersChange({ ...nearbyFilters, tour_type: option.value })
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.searchFilterChipText,
+                        nearbyFilters.tour_type === option.value &&
+                          styles.searchFilterChipTextActive,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <Text style={styles.searchFilterSectionTitle}>
+                {t('map.filters.difficulty', { defaultValue: 'Difficulty' })}
+              </Text>
+              <View style={styles.searchFilterChipsRow}>
+                <Pressable
+                  style={[
+                    styles.searchFilterChip,
+                    !nearbyFilters.difficulty && styles.searchFilterChipActive,
+                  ]}
+                  onPress={() => handleFiltersChange({ ...nearbyFilters, difficulty: undefined })}
+                >
+                  <Text
+                    style={[
+                      styles.searchFilterChipText,
+                      !nearbyFilters.difficulty && styles.searchFilterChipTextActive,
+                    ]}
+                  >
+                    {t('map.filters.all', { defaultValue: 'All' })}
+                  </Text>
+                </Pressable>
+                {nearbyDifficultyOptions.map((option) => (
+                  <Pressable
+                    key={option.value}
+                    style={[
+                      styles.searchFilterChip,
+                      nearbyFilters.difficulty === option.value && styles.searchFilterChipActive,
+                    ]}
+                    onPress={() =>
+                      handleFiltersChange({ ...nearbyFilters, difficulty: option.value })
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.searchFilterChipText,
+                        nearbyFilters.difficulty === option.value &&
+                          styles.searchFilterChipTextActive,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <Text style={styles.searchFilterSectionTitle}>
+                {t('map.filters.category', { defaultValue: 'Category' })}
+              </Text>
+              <View style={styles.searchFilterChipsRow}>
+                <Pressable
+                  style={[
+                    styles.searchFilterChip,
+                    !nearbyFilters.category && styles.searchFilterChipActive,
+                  ]}
+                  onPress={() => handleFiltersChange({ ...nearbyFilters, category: undefined })}
+                >
+                  <Text
+                    style={[
+                      styles.searchFilterChipText,
+                      !nearbyFilters.category && styles.searchFilterChipTextActive,
+                    ]}
+                  >
+                    {t('map.filters.all', { defaultValue: 'All' })}
+                  </Text>
+                </Pressable>
+                {nearbyCategoryOptions.map((category) => (
+                  <Pressable
+                    key={category}
+                    style={[
+                      styles.searchFilterChip,
+                      nearbyFilters.category === category && styles.searchFilterChipActive,
+                    ]}
+                    onPress={() => handleFiltersChange({ ...nearbyFilters, category })}
+                  >
+                    <Text
+                      style={[
+                        styles.searchFilterChipText,
+                        nearbyFilters.category === category && styles.searchFilterChipTextActive,
+                      ]}
+                    >
+                      {category}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </Animated.View>
+          </>
         )}
 
-        {hasSearched && (
-          <NearbyToursSlider
-            tours={nearbyTours}
-            loading={nearbyLoading}
-            onTourPress={handleNearbyTourPress}
-          />
+        {!selectedTour && (
+          <>
+            <Pressable
+              style={[styles.legendToggleButton, { top: legendToggleTop }]}
+              onPress={() => setIsLegendOpen((prev) => !prev)}
+            >
+              <MaterialCommunityIcons name="help-circle-outline" size={18} color={colors.primary} />
+            </Pressable>
+
+            <Animated.View
+              pointerEvents={isLegendOpen ? 'auto' : 'none'}
+              onLayout={(event) => {
+                const nextHeight = Math.ceil(event.nativeEvent.layout.height);
+                if (nextHeight > 0 && Math.abs(nextHeight - legendPanelHeight) > 1) {
+                  setLegendPanelHeight(nextHeight);
+                }
+              }}
+              style={[
+                styles.legendCard,
+                { top: legendPanelTop },
+                {
+                  opacity: legendAnim,
+                  transform: [
+                    {
+                      translateY: legendAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [-8, 0],
+                      }),
+                    },
+                    {
+                      scale: legendAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.98, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              <Text style={styles.legendTitle}>
+                {t('map.legend.title', { defaultValue: 'Marker legend' })}
+              </Text>
+
+              <Text style={styles.legendSectionTitle}>
+                {t('map.legend.typeTitle', { defaultValue: 'Tour type' })}
+              </Text>
+              <View style={styles.legendRow}>
+                {markerLegendItems.map((item) => (
+                  <View key={item.key} style={styles.legendItem}>
+                    <View style={styles.legendIconBadge}>
+                      <MaterialCommunityIcons
+                        name={item.icon}
+                        size={12}
+                        color={colors.background}
+                      />
+                    </View>
+                    <Text style={styles.legendText}>{item.label}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <Text style={styles.legendSectionTitle}>
+                {t('map.legend.difficultyTitle', { defaultValue: 'Difficulty color' })}
+              </Text>
+              <View style={styles.legendRow}>
+                {difficultyLegendItems.map((item) => (
+                  <View key={item.key} style={styles.legendItem}>
+                    <View style={[styles.legendColorDot, { backgroundColor: item.color }]} />
+                    <Text style={styles.legendText}>{item.label}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <Text style={styles.legendSectionTitle}>
+                {t('map.legend.controlsTitle', { defaultValue: 'Controls' })}
+              </Text>
+              <View style={styles.legendRow}>
+                <View style={styles.legendItem}>
+                  <View style={styles.legendIconBadge}>
+                    <MaterialCommunityIcons
+                      name="crosshairs-gps"
+                      size={12}
+                      color={colors.background}
+                    />
+                  </View>
+                  <Text style={styles.legendText}>
+                    {t('map.legend.controls.myLocation', { defaultValue: 'My location' })}
+                  </Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={styles.legendIconBadge}>
+                    <MaterialCommunityIcons name="magnify" size={12} color={colors.background} />
+                  </View>
+                  <Text style={styles.legendText}>
+                    {t('map.legend.controls.searchHere', { defaultValue: 'Search this area' })}
+                  </Text>
+                </View>
+              </View>
+            </Animated.View>
+          </>
         )}
+
+        <TourPreviewPanel
+          tour={selectedTour}
+          onClose={handlePreviewClose}
+          onViewTour={handlePreviewViewTour}
+        />
+
+        <NearbyToursSlider
+          tours={nearbyTours}
+          loading={nearbyLoading}
+          onTourPress={handleNearbyTourPress}
+          onTourView={handlePreviewViewTour}
+          onInteraction={() => setShowCategoryFilters(false)}
+          mapVisibleTourIds={mapVisibleTourIds}
+          sortBy={nearbySort}
+          onSortChange={handleSortChange}
+          hidden={!!selectedTour}
+        />
       </View>
     );
   }
@@ -447,7 +1077,129 @@ export default function MapScreen() {
         currentStepIndex={currentStepIndex}
         tour={tour}
         acceptedArea={acceptedArea}
+        animateToRegion={animateToRegion}
+        centerOnUserRequestKey={centerOnUserRequestKey}
       />
+
+      <Pressable
+        style={[styles.legendToggleButton, { top: activeLegendToggleTop }]}
+        onPress={() => setIsLegendOpen((prev) => !prev)}
+      >
+        <MaterialCommunityIcons name="help-circle-outline" size={18} color={colors.primary} />
+      </Pressable>
+
+      <Animated.View
+        pointerEvents={isLegendOpen ? 'auto' : 'none'}
+        onLayout={(event) => {
+          const nextHeight = Math.ceil(event.nativeEvent.layout.height);
+          if (nextHeight > 0 && Math.abs(nextHeight - legendPanelHeight) > 1) {
+            setLegendPanelHeight(nextHeight);
+          }
+        }}
+        style={[
+          styles.legendCard,
+          { top: activeLegendPanelTop },
+          {
+            opacity: legendAnim,
+            transform: [
+              {
+                translateY: legendAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-8, 0],
+                }),
+              },
+              {
+                scale: legendAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.98, 1],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <Text style={styles.legendTitle}>
+          {t('map.activeTour.legend.title', { defaultValue: 'Tour legend' })}
+        </Text>
+
+        <Text style={styles.legendSectionTitle}>
+          {t('map.activeTour.legend.steps', { defaultValue: 'Step type' })}
+        </Text>
+        <View style={styles.legendRow}>
+          <View style={styles.legendItem}>
+            <View style={styles.legendIconBadge}>
+              <MaterialCommunityIcons name="book-outline" size={12} color="#fff" />
+            </View>
+            <Text style={styles.legendText}>
+              {t('map.activeTour.legend.story', { defaultValue: 'Story step' })}
+            </Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={styles.legendIconBadge}>
+              <MaterialCommunityIcons name="puzzle" size={12} color="#fff" />
+            </View>
+            <Text style={styles.legendText}>
+              {t('map.activeTour.legend.puzzle', { defaultValue: 'Puzzle step' })}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.legendSectionTitle}>
+          {t('map.activeTour.legend.status', { defaultValue: 'Marker status' })}
+        </Text>
+        <View style={styles.legendRow}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendColorDot, { backgroundColor: colors.primary }]} />
+            <Text style={styles.legendText}>
+              {t('map.activeTour.legend.current', { defaultValue: 'Current step (larger)' })}
+            </Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View
+              style={[styles.legendColorDot, { backgroundColor: colors.subText, opacity: 0.6 }]}
+            />
+            <Text style={styles.legendText}>
+              {t('map.activeTour.legend.upcoming', { defaultValue: 'Upcoming step (dimmed)' })}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.legendSectionTitle}>
+          {t('map.activeTour.legend.controlsTitle', { defaultValue: 'Controls' })}
+        </Text>
+        <View style={styles.legendRow}>
+          <View style={styles.legendItem}>
+            <View style={styles.legendIconBadge}>
+              <MaterialCommunityIcons name="crosshairs-gps" size={12} color={colors.background} />
+            </View>
+            <Text style={styles.legendText}>
+              {t('map.activeTour.legend.myLocation', { defaultValue: 'My location' })}
+            </Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={styles.legendIconBadge}>
+              <MaterialCommunityIcons name="map-marker" size={12} color={colors.background} />
+            </View>
+            <Text style={styles.legendText}>
+              {t('map.activeTour.legend.currentStep', { defaultValue: 'Go to current step' })}
+            </Text>
+          </View>
+        </View>
+      </Animated.View>
+
+      <Pressable
+        style={[styles.locateMeButton, { top: activeLocateTop }]}
+        onPress={handleCenterOnUser}
+      >
+        <MaterialCommunityIcons name="crosshairs-gps" size={15} color={colors.primary} />
+      </Pressable>
+
+      <Pressable
+        style={[styles.focusStepButton, { top: activeStepTop }]}
+        onPress={handleFocusCurrentStep}
+      >
+        <MaterialCommunityIcons name="map-marker" size={16} color={colors.primary} />
+      </Pressable>
 
       <BottomSlider
         tour={tour}

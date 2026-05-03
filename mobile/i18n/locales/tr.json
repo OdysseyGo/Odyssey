@@ -200,7 +200,10 @@
       "oceania": "Okyanusya",
       "antarctica": "Antarktika",
       "other": "Diğer"
-    }
+    },
+    "story": "Hikaye",
+    "puzzle": "Bulmaca",
+    "hybrid": "Karma"
   },
   "search": {
     "placeholder": "Tur, destinasyon ara...",
@@ -711,7 +714,10 @@
       "emptyTitle": "Burada tur yok",
       "emptySubtitle": "Farklı bir yere dokunmayı ya da daha kalabalık bir bölgeyi keşfetmeyi deneyin.",
       "duration_one": "{{count}} dk",
-      "duration_other": "{{count}} dk"
+      "duration_other": "{{count}} dk",
+      "viewTour": "Tura Git",
+      "stops_one": "{{count}} durak",
+      "stops_other": "{{count}} durak"
     },
     "searchMode": {
       "searchHere": "Burada ara",

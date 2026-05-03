@@ -27,8 +27,11 @@ export interface TourMapProps {
   acceptedArea?: AcceptedArea;
   onRegionChange?: (region: Region) => void;
   onRegionChangeComplete?: (region: Region) => void;
+  onMapPress?: () => void;
   onUserLocationReady?: (region: Region) => void;
   nearbyMarkers?: MapMarkerProps[];
+  animateToRegion?: Region;
+  centerOnUserRequestKey?: number;
 }
 
 export const exampleTourMap: TourMapProps = {
