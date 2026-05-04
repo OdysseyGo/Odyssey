@@ -1,9 +1,11 @@
 import logging
 import secrets
+from collections.abc import Iterable
 
 from django.conf import settings
 from django.contrib.auth import authenticate  # login direkt
 from django.core.mail import send_mail
+from django.db import transaction
 from django.db.models import Avg, F, QuerySet  # F dbden çıkarmadan yazıyon
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
@@ -20,7 +22,7 @@ from apps.gamification.models import TourProgress, UserBadge
 from apps.gamification.services import BadgeService
 from apps.notifications.utils import create_notification
 from apps.tours.api.serializers import TourSerializer
-from apps.tours.models import Tour
+from apps.tours.models import PictureComparePuzzleDetail, Puzzle, Tour, TourStep
 from apps.users.models import Follow, PasswordResetOTP, SearchHistory, User
 
 from .serializers import (
@@ -34,6 +36,47 @@ from .serializers import (
 from .throttles import PasswordResetConfirmThrottle, PasswordResetRequestThrottle
 
 logger = logging.getLogger(__name__)
+
+
+def _collect_user_owned_media_files(user: User) -> list[tuple[object, str]]:
+    files: list[tuple[object, str]] = []
+
+    for tour in Tour.objects.filter(creator=user).only("cover_image"):
+        if tour.cover_image and tour.cover_image.name:
+            files.append((tour.cover_image.storage, tour.cover_image.name))
+
+    for step in TourStep.objects.filter(tour__creator=user).only("image", "audio"):
+        if step.image and step.image.name:
+            files.append((step.image.storage, step.image.name))
+        if step.audio and step.audio.name:
+            files.append((step.audio.storage, step.audio.name))
+
+    for puzzle in Puzzle.objects.filter(step__tour__creator=user).only(
+        "reference_image"
+    ):
+        if puzzle.reference_image and puzzle.reference_image.name:
+            files.append((puzzle.reference_image.storage, puzzle.reference_image.name))
+
+    for detail in PictureComparePuzzleDetail.objects.filter(
+        puzzle__step__tour__creator=user
+    ).only("reference_image"):
+        if detail.reference_image and detail.reference_image.name:
+            files.append((detail.reference_image.storage, detail.reference_image.name))
+
+    return files
+
+
+def _delete_media_files(file_refs: Iterable[tuple[object, str]]) -> None:
+    seen: set[tuple[int, str]] = set()
+    for storage, name in file_refs:
+        key = (id(storage), name)
+        if key in seen:
+            continue
+        seen.add(key)
+        try:
+            storage.delete(name)
+        except Exception as exc:
+            logger.warning("Failed to delete media file %s: %s", name, exc)
 
 
 class UserViewSet(ModelViewSet):
@@ -102,11 +145,18 @@ class UserViewSet(ModelViewSet):
 
     @action(
         detail=False,
-        methods=["get"],
+        methods=["get", "delete"],
         url_path="me",
         permission_classes=[IsAuthenticated],
     )
     def me(self, request):
+        if request.method == "DELETE":
+            media_files = _collect_user_owned_media_files(request.user)
+            with transaction.atomic():
+                request.user.delete()
+            _delete_media_files(media_files)
+            return Response(status=204)
+
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 

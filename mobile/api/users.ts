@@ -232,6 +232,15 @@ export const deleteUser = (id: string) =>
     url: `/api/users/${id}/`,
   });
 
+/**
+ * DELETE /api/users/me/ - Delete current authenticated user account
+ */
+export const deleteMyAccount = () =>
+  apiRequest<void>({
+    method: 'delete',
+    url: '/api/users/me/',
+  });
+
 export const login = (payload: UserCredentials) =>
   apiRequest<LoginResponse>({
     method: 'post',

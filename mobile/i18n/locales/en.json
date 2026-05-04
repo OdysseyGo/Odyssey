@@ -373,6 +373,11 @@
         "label": "Logout",
         "description": "Sign out of your account"
       },
+      "deleteAccount": {
+        "label": "Delete Account",
+        "description": "Permanently delete your account and all tours",
+        "deleting": "Deleting account..."
+      },
       "privacy": {
         "label": "Privacy",
         "description": "Control your privacy settings"
@@ -420,6 +425,13 @@
         "label": "Help & Support",
         "description": "Get help with the app"
       }
+    },
+    "deleteAccount": {
+      "confirmTitle": "Delete account?",
+      "confirmMessage": "Are you sure? This action is irreversible. Your account, tours, and related data will be permanently deleted.",
+      "confirmAction": "Delete",
+      "errorTitle": "Could not delete account",
+      "errorMessage": "Please try again later."
     }
   },
   "tourId": {
