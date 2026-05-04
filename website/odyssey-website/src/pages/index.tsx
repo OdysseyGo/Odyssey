@@ -1,6 +1,32 @@
 import React, { JSX, useEffect } from 'react';
 import Layout from '@theme/Layout';
 import useBaseUrl from '@docusaurus/useBaseUrl';
+import {
+  Atom,
+  BookOpenText,
+  Bot,
+  Compass,
+  FileText,
+  Globe2,
+  Handshake,
+  Languages,
+  Map,
+  MapPinned,
+  Mic,
+  Puzzle,
+  Search,
+  ServerCog,
+  Sparkles,
+  Star,
+  Target,
+  Trophy,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
+
+type IconItem = {
+  icon: LucideIcon;
+};
 
 const TEAM = [
   { initials: 'CT', name: 'Cem Tarkan Tekcan',    id: '22201590', role: 'Mobile',       color: '#D97706', colorEnd: '#F59E0B', roleColor: '#D97706', roleBg: 'rgba(217,119,6,0.10)',  logbook: 'https://docs.google.com/document/d/e/2PACX-1vRmTFPUNB5G4rQAH3C_pDiPgRTgZtddu_ubVj7JhcHj55Qmx8XzMnbYA1Y0iFvo-45qNjcpT9nCKZxx/pub' },
@@ -10,32 +36,32 @@ const TEAM = [
   { initials: 'MR', name: 'Mehmet Rodi Aydoğdu',  id: '22201856', role: 'AI / Backend', color: '#DC2626', colorEnd: '#F87171', roleColor: '#DC2626', roleBg: 'rgba(220,38,38,0.10)',  logbook: 'https://docs.google.com/document/d/e/2PACX-1vR19606XWW8aQ5tx8dDKzFS95B7G3KZPc7KWGUgKdR68qPwz_b9oKvoq2UGS8XCPO9JJgESI2lUf_oK/pub' },
 ];
 
-const REPORTS = [
-  { icon: '📋', title: 'Analysis & Requirements Report', desc: 'Scope definition, user personas, functional and non-functional requirements.', pdf: '/Odyssey/documents/Analysis_and_Requirements_Report_Odyssey.pdf' },
-  { icon: '🏗️', title: 'Detailed Design Report',         desc: 'Database schema, API routing, system architecture, and component design.',   pdf: '/Odyssey/documents/Detailed_Design_Report_Odyssey.pdf' },
-  { icon: '🎤', title: 'CS491 Demo Slides',              desc: 'First public demo presentation showcasing the original project scope.',       pdf: '/Odyssey/documents/cs491_demo_presentatio.pdf' },
+const REPORTS: Array<IconItem & { title: string; desc: string; pdf: string }> = [
+  { icon: FileText, title: 'Analysis & Requirements Report', desc: 'Scope definition, user personas, functional and non-functional requirements.', pdf: '/Odyssey/documents/Analysis_and_Requirements_Report_Odyssey.pdf' },
+  { icon: MapPinned, title: 'Detailed Design Report',         desc: 'Database schema, API routing, system architecture, and component design.',   pdf: '/Odyssey/documents/Detailed_Design_Report_Odyssey.pdf' },
+  { icon: Mic, title: 'CS491 Demo Slides',                    desc: 'First public demo presentation showcasing the original project scope.',       pdf: '/Odyssey/documents/cs491_demo_presentatio.pdf' },
 ];
 
-const FEATURES = [
-  { icon: '🤖', bg: 'rgba(2,132,199,0.10)',   title: 'AI Tour Creator',      desc: 'Describe any theme or city and let Gemini instantly generate a complete multi-stop walking tour with trivia and stories.' },
-  { icon: '🧩', bg: 'rgba(217,119,6,0.10)',   title: 'Interactive Quizzes',  desc: 'At every stop, answer location-specific trivia questions to deepen your understanding of the place.' },
-  { icon: '🗺️', bg: 'rgba(22,163,74,0.10)',   title: 'Live Maps',            desc: 'Google Maps integration shows your route, current location, and nearby tour stops in real time.' },
-  { icon: '⭐', bg: 'rgba(245,158,11,0.10)',   title: 'Reviews & Ratings',   desc: 'Rate completed tours, leave detailed reviews, and help other explorers find the best adventures.' },
-  { icon: '🔍', bg: 'rgba(2,132,199,0.10)',   title: 'Smart Search',         desc: 'Search tours by city, category, difficulty, duration, or continent — and find other explorers by username.' },
-  { icon: '🌐', bg: 'rgba(217,119,6,0.10)',   title: 'Multi-language',       desc: 'Full English and Turkish support with device locale detection. More languages coming soon.' },
+const FEATURES: Array<IconItem & { bg: string; title: string; desc: string }> = [
+  { icon: Bot, bg: 'rgba(2,132,199,0.10)',       title: 'AI Tour Creator',      desc: 'Describe any theme or city and let Gemini instantly generate a complete multi-stop walking tour with trivia and stories.' },
+  { icon: Puzzle, bg: 'rgba(217,119,6,0.10)',    title: 'Interactive Quizzes',  desc: 'At every stop, answer location-specific trivia questions to deepen your understanding of the place.' },
+  { icon: Map, bg: 'rgba(22,163,74,0.10)',       title: 'Live Maps',            desc: 'Google Maps integration shows your route, current location, and nearby tour stops in real time.' },
+  { icon: Star, bg: 'rgba(245,158,11,0.10)',     title: 'Reviews & Ratings',   desc: 'Rate completed tours, leave detailed reviews, and help other explorers find the best adventures.' },
+  { icon: Search, bg: 'rgba(2,132,199,0.10)',    title: 'Smart Search',         desc: 'Search tours by city, category, difficulty, duration, or continent — and find other explorers by username.' },
+  { icon: Languages, bg: 'rgba(217,119,6,0.10)', title: 'Multi-language',       desc: 'Full English and Turkish support with device locale detection. More languages coming soon.' },
 ];
 
-const TECH = [
-  { icon: '⚛️', name: 'React Native + Expo', desc: 'Cross-platform mobile with file-based routing via Expo Router' },
-  { icon: '🐍', name: 'Django + DRF',        desc: 'REST API backend with JWT auth, PostgreSQL, and Docker' },
-  { icon: '✨', name: 'Google Gemini',        desc: 'Gemini 2.5 Flash powers AI tour and quiz generation' },
-  { icon: '🗺️', name: 'Google Maps',          desc: 'Live navigation, route metrics, and location services' },
+const TECH: Array<IconItem & { name: string; desc: string }> = [
+  { icon: Atom, name: 'React Native + Expo', desc: 'Cross-platform mobile with file-based routing via Expo Router' },
+  { icon: ServerCog, name: 'Django + DRF',   desc: 'REST API backend with JWT auth, PostgreSQL, and Docker' },
+  { icon: Sparkles, name: 'Google Gemini',   desc: 'Gemini 2.5 Flash powers AI tour and quiz generation' },
+  { icon: MapPinned, name: 'Google Maps',    desc: 'Live navigation, route metrics, and location services' },
 ];
 
-const MISSION_CARDS = [
-  { icon: '🎯', title: 'Purposeful Design',  desc: 'Every feature is built to deepen engagement with a place, not distract from it.' },
-  { icon: '🤝', title: 'Community First',    desc: 'Local experts and passionate travelers are the best tour guides. We give them the tools.' },
-  { icon: '🌍', title: 'Built for Everyone', desc: 'Multi-language support, accessible UI, and tours for every pace and interest.' },
+const MISSION_CARDS: Array<IconItem & { title: string; desc: string }> = [
+  { icon: Target, title: 'Purposeful Design',  desc: 'Every feature is built to deepen engagement with a place, not distract from it.' },
+  { icon: Handshake, title: 'Community First', desc: 'Local experts and passionate travelers are the best tour guides. We give them the tools.' },
+  { icon: Globe2, title: 'Built for Everyone', desc: 'Multi-language support, accessible UI, and tours for every pace and interest.' },
 ];
 
 const SCREENSHOTS = [
@@ -113,14 +139,14 @@ export default function Home(): JSX.Element {
                 discover hidden gems, and let AI generate unique quests — all guided through your phone.
               </p>
               <div className="lp-hero-actions">
-                <a href="#screenshots" className="lp-btn-primary">📱 See the App</a>
+                <a href="#screenshots" className="lp-btn-primary"><Map className="lp-icon" />See the App</a>
                 <a href="#about" className="lp-btn-ghost">Learn More →</a>
               </div>
               <div className="lp-hero-stats">
                 <div><div className="lp-stat-val">AI</div><div className="lp-stat-label">Generated Tours</div></div>
                 <div><div className="lp-stat-val">∞</div><div className="lp-stat-label">Unique Quests</div></div>
                 <div><div className="lp-stat-val">2</div><div className="lp-stat-label">Languages</div></div>
-                <div><div className="lp-stat-val">🌍</div><div className="lp-stat-label">Any City</div></div>
+                <div><div className="lp-stat-val"><Globe2 className="lp-icon" /></div><div className="lp-stat-label">Any City</div></div>
               </div>
             </div>
 
@@ -200,23 +226,23 @@ export default function Home(): JSX.Element {
               </p>
             </div>
             <div className="lp-about-illustration">
-              <div className="lp-ai-badge">✨ Powered by Gemini AI</div>
+              <div className="lp-ai-badge"><Sparkles className="lp-icon" />Powered by Gemini AI</div>
               <div className="lp-feature-row">
-                <div className="lp-feature-icon lp-feature-icon--blue">🗺️</div>
+                <div className="lp-feature-icon lp-feature-icon--blue"><MapPinned className="lp-icon" /></div>
                 <div>
                   <h4>AI Tour Generation</h4>
                   <p>Gemini 2.5 Flash generates unique, story-driven walking tours for any city in seconds.</p>
                 </div>
               </div>
               <div className="lp-feature-row">
-                <div className="lp-feature-icon lp-feature-icon--amber">🏆</div>
+                <div className="lp-feature-icon lp-feature-icon--amber"><Trophy className="lp-icon" /></div>
                 <div>
                   <h4>Gamification & Quizzes</h4>
                   <p>Complete challenges, answer location-based questions, and earn rewards at every stop.</p>
                 </div>
               </div>
               <div className="lp-feature-row">
-                <div className="lp-feature-icon lp-feature-icon--green">👥</div>
+                <div className="lp-feature-icon lp-feature-icon--green"><Users className="lp-icon" /></div>
                 <div>
                   <h4>Community Created</h4>
                   <p>Any user can create and share their own tour, turning local knowledge into adventures.</p>
@@ -237,7 +263,7 @@ export default function Home(): JSX.Element {
             <div className="lp-features-grid">
               {FEATURES.map((f) => (
                 <div key={f.title} className="lp-feature-card">
-                  <div className="lp-feature-card-icon" style={{ background: f.bg }}>{f.icon}</div>
+                  <div className="lp-feature-card-icon" style={{ background: f.bg }}><f.icon className="lp-icon" /></div>
                   <h3>{f.title}</h3>
                   <p>{f.desc}</p>
                 </div>
@@ -287,7 +313,7 @@ export default function Home(): JSX.Element {
               {REPORTS.map((r) => (
                 <div key={r.title} className="lp-report-embed">
                   <div className="lp-report-embed-header">
-                    <span className="lp-report-icon">{r.icon}</span>
+                    <span className="lp-report-icon"><r.icon className="lp-icon" /></span>
                     <div>
                       <h3 className="lp-report-title">{r.title}</h3>
                       <p className="lp-report-desc">{r.desc}</p>
@@ -324,7 +350,7 @@ export default function Home(): JSX.Element {
                   <div className="lp-team-name">{m.name}</div>
                   <div className="lp-team-id">{m.id}</div>
                   <a href={m.logbook} target="_blank" rel="noopener noreferrer" className="lp-logbook-btn" style={{ background: m.color }}>
-                    📖 Read Weekly Logbook
+                    <BookOpenText className="lp-icon" />Read Weekly Logbook
                   </a>
                 </div>
               ))}
@@ -336,7 +362,7 @@ export default function Home(): JSX.Element {
         <section className="lp-mission" id="mission">
           <div className="lp-container lp-mission-inner">
             <div>
-              <div className="lp-mission-tag">🧭 Our Mission</div>
+              <div className="lp-mission-tag"><Compass className="lp-icon" />Our Mission</div>
               <h2>Making Every City an Adventure</h2>
               <p>
                 We started Odyssey because we believe the best way to understand a city is to experience it —
@@ -353,7 +379,7 @@ export default function Home(): JSX.Element {
             <div className="lp-mission-cards">
               {MISSION_CARDS.map((c) => (
                 <div key={c.title} className="lp-mission-card">
-                  <div className="lp-mission-card-icon">{c.icon}</div>
+                  <div className="lp-mission-card-icon"><c.icon className="lp-icon" /></div>
                   <div>
                     <h4>{c.title}</h4>
                     <p>{c.desc}</p>
@@ -375,7 +401,7 @@ export default function Home(): JSX.Element {
             <div className="lp-tech-grid">
               {TECH.map((t) => (
                 <div key={t.name} className="lp-tech-card">
-                  <div className="lp-tech-icon">{t.icon}</div>
+                  <div className="lp-tech-icon"><t.icon className="lp-icon" /></div>
                   <div className="lp-tech-name">{t.name}</div>
                   <div className="lp-tech-desc">{t.desc}</div>
                 </div>

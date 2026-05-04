@@ -56,6 +56,13 @@
   background: var(--lp-bg);
 }
 
+.lp-icon {
+  display: block;
+  width: 1em;
+  height: 1em;
+  stroke-width: 2;
+}
+
 .lp-container {
   max-width: 1120px;
   margin: 0 auto;
@@ -127,13 +134,7 @@
   pointer-events: none;
 }
 .lp-hero::after {
-  content: '';
-  position: absolute;
-  bottom: -80px; left: -80px;
-  width: 360px; height: 360px;
-  border-radius: 50%;
-  background: rgba(217,119,6,0.18);
-  pointer-events: none;
+  content: none;
 }
 
 .lp-hero-inner {
@@ -209,6 +210,7 @@
   text-decoration: none;
   color: var(--lp-primary);
 }
+.lp-btn-primary .lp-icon { width: 16px; height: 16px; }
 
 .lp-btn-ghost {
   color: rgba(255,255,255,0.88);
@@ -237,8 +239,29 @@
   padding-top: 28px;
   border-top: 1px solid rgba(255,255,255,0.15);
 }
-.lp-stat-val   { font-size: 26px; font-weight: 800; color: #fff; }
-.lp-stat-label { font-size: 12px; color: rgba(255,255,255,0.65); font-weight: 500; margin-top: 2px; }
+.lp-hero-stats > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.lp-stat-val {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+.lp-stat-val .lp-icon { width: 24px; height: 24px; margin: 0 auto; }
+.lp-stat-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.65);
+  font-weight: 500;
+  margin-top: 2px;
+  text-align: center;
+}
 
 /* Phone mockup cluster */
 .lp-hero-visual {
@@ -394,6 +417,7 @@
   padding: 6px 14px; border-radius: 100px;
   width: fit-content;
 }
+.lp-ai-badge .lp-icon { width: 14px; height: 14px; }
 .lp-feature-row {
   display: flex; align-items: flex-start; gap: 14px;
   padding: 16px;
@@ -410,6 +434,7 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 18px;
 }
+.lp-feature-icon .lp-icon { width: 18px; height: 18px; }
 .lp-feature-icon--blue  { background: rgba(2,132,199,0.10); }
 .lp-feature-icon--amber { background: rgba(217,119,6,0.10); }
 .lp-feature-icon--green { background: rgba(22,163,74,0.10); }
@@ -434,6 +459,7 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 24px; margin-bottom: 20px;
 }
+.lp-feature-card-icon .lp-icon { width: 24px; height: 24px; }
 .lp-feature-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; color: var(--lp-text); }
 .lp-feature-card p  { font-size: 14px; color: var(--lp-subtext); line-height: 1.65; margin: 0; }
 
@@ -597,6 +623,7 @@
   font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.9);
   margin-bottom: 16px;
 }
+.lp-mission-tag .lp-icon { width: 14px; height: 14px; }
 .lp-mission-inner h2 {
   font-size: clamp(28px, 4vw, 40px);
   font-weight: 800; line-height: 1.15;
@@ -614,7 +641,11 @@
   padding: 20px 22px;
   display: flex; gap: 14px; align-items: flex-start;
 }
-.lp-mission-card-icon { font-size: 24px; flex-shrink: 0; }
+.lp-mission-card-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.lp-mission-card-icon .lp-icon { width: 24px; height: 24px; }
 .lp-mission-card h4 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
 .lp-mission-card p  { font-size: 13px; color: rgba(255,255,255,0.72); line-height: 1.55; margin: 0; }
 
@@ -632,7 +663,13 @@
   padding: 24px 20px;
   text-align: center;
 }
-.lp-tech-icon { font-size: 32px; margin-bottom: 10px; }
+.lp-tech-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.lp-tech-icon .lp-icon { width: 32px; height: 32px; }
 .lp-tech-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--lp-text); }
 .lp-tech-desc { font-size: 12px; color: var(--lp-subtext); }
 
@@ -679,7 +716,13 @@
   padding: 20px 28px;
   border-bottom: 1px solid var(--lp-border);
 }
-.lp-report-icon { font-size: 28px; flex-shrink: 0; }
+.lp-report-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lp-report-icon .lp-icon { width: 28px; height: 28px; }
 .lp-report-title { font-size: 16px; font-weight: 700; color: var(--lp-text); margin: 0 0 2px; }
 .lp-report-desc  { font-size: 13px; color: var(--lp-subtext); line-height: 1.5; margin: 0; }
 .lp-report-btn {
@@ -701,7 +744,10 @@
 
 /* ─── Logbook button on team card ────────────────────────────── */
 .lp-logbook-btn {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
   margin-top: 8px;
   font-size: 13px;
@@ -713,6 +759,7 @@
   text-decoration: none;
   transition: opacity 0.15s, transform 0.15s;
 }
+.lp-logbook-btn .lp-icon { width: 22px; height: 22px; }
 .lp-logbook-btn:hover {
   opacity: 0.85;
   transform: translateY(-1px);
