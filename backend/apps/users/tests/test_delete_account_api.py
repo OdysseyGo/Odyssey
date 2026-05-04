@@ -1,4 +1,3 @@
-import os
 import shutil
 import tempfile
 
@@ -94,15 +93,21 @@ class DeleteMyAccountApiTests(APITestCase):
         )
         Notification.objects.create(user=owner, title="Hi", body="Hello")
 
-        media_paths = [
-            tour.cover_image.path,
-            step.image.path,
-            step.audio.path,
-            picture_compare_puzzle.reference_image.path,
-            picture_compare_detail.reference_image.path,
+        media_files = [
+            (tour.cover_image.storage, tour.cover_image.name),
+            (step.image.storage, step.image.name),
+            (step.audio.storage, step.audio.name),
+            (
+                picture_compare_puzzle.reference_image.storage,
+                picture_compare_puzzle.reference_image.name,
+            ),
+            (
+                picture_compare_detail.reference_image.storage,
+                picture_compare_detail.reference_image.name,
+            ),
         ]
-        for media_path in media_paths:
-            self.assertTrue(os.path.exists(media_path))
+        for storage, name in media_files:
+            self.assertTrue(storage.exists(name))
 
         self.client.force_authenticate(user=owner)
         response = self.client.delete("/api/users/me/")
@@ -128,5 +133,5 @@ class DeleteMyAccountApiTests(APITestCase):
         self.assertFalse(SearchHistory.objects.filter(user_id=owner.id).exists())
         self.assertFalse(Notification.objects.filter(user_id=owner.id).exists())
 
-        for media_path in media_paths:
-            self.assertFalse(os.path.exists(media_path))
+        for storage, name in media_files:
+            self.assertFalse(storage.exists(name))
