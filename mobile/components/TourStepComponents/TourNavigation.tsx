@@ -19,6 +19,7 @@ import { openExternalMapsDirections, type ExternalMapsProvider } from '@/utils/e
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { DEFAULT_MAX_FAILED_ATTEMPTS } from '@/api/tourProgress';
 import { isDevelopmentEnvMode } from '@/utils/envMode';
+import { isLocationCheckBypassUser } from '@/api/auth';
 
 function NavigationArrows({
   canGoBack,
@@ -370,11 +371,23 @@ export default function TourNavigation({
 
     try {
       if (isDevelopmentEnvMode()) {
-        await onLocationConfirm(
+        const devResult = await onLocationConfirm(
           currentStep.id,
           currentStep.coordinate.latitude,
           currentStep.coordinate.longitude
         );
+        if (!devResult.accepted) {
+          Alert.alert(
+            t('tourStep.locationCheckFailedTitle', 'Location check failed'),
+            t('tourStep.locationCheckOutsideArea', {
+              defaultValue:
+                'You are outside the accepted area ({{distance}}m away, allowed: {{radius}}m).',
+              distance: Number(devResult.distance_m ?? 0).toFixed(1),
+              radius: Number(devResult.radius_m ?? 100).toFixed(0),
+            })
+          );
+          return;
+        }
         showLocationConfirmedToast();
         return;
       }
@@ -390,24 +403,50 @@ export default function TourNavigation({
         return;
       }
 
+      const bypassLocationCheck = await isLocationCheckBypassUser();
+      if (bypassLocationCheck) {
+        const bypassResult = await onLocationConfirm(
+          currentStep.id,
+          currentStep.coordinate.latitude,
+          currentStep.coordinate.longitude
+        );
+        if (!bypassResult.accepted) {
+          Alert.alert(
+            t('tourStep.locationCheckFailedTitle', 'Location check failed'),
+            t('tourStep.locationCheckOutsideArea', {
+              defaultValue:
+                'You are outside the accepted area ({{distance}}m away, allowed: {{radius}}m).',
+              distance: Number(bypassResult.distance_m ?? 0).toFixed(1),
+              radius: Number(bypassResult.radius_m ?? 100).toFixed(0),
+            })
+          );
+          return;
+        }
+        showLocationConfirmedToast();
+        return;
+      }
+
       const location = await Location.getCurrentPositionAsync({});
-      await onLocationConfirm(currentStep.id, location.coords.latitude, location.coords.longitude);
-      showLocationConfirmedToast();
-    } catch (error) {
-      console.error('Failed to get location:', error);
-      if (error instanceof Error && error.message.startsWith('OUTSIDE_AREA:')) {
-        const [, distance, radius] = error.message.split(':');
+      const result = await onLocationConfirm(
+        currentStep.id,
+        location.coords.latitude,
+        location.coords.longitude
+      );
+      if (!result.accepted) {
         Alert.alert(
           t('tourStep.locationCheckFailedTitle', 'Location check failed'),
           t('tourStep.locationCheckOutsideArea', {
             defaultValue:
               'You are outside the accepted area ({{distance}}m away, allowed: {{radius}}m).',
-            distance: Number(distance).toFixed(1),
-            radius: Number(radius).toFixed(0),
+            distance: Number(result.distance_m ?? 0).toFixed(1),
+            radius: Number(result.radius_m ?? 100).toFixed(0),
           })
         );
         return;
       }
+      showLocationConfirmedToast();
+    } catch (error) {
+      console.error('Failed to get location:', error);
       Alert.alert(
         t('tourStep.locationCheckFailedTitle', 'Location check failed'),
         t(

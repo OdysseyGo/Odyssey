@@ -285,7 +285,9 @@ export default function BottomSlider({
     async (stepId: string, latitude: number, longitude: number) => {
       const currentStep = tour?.steps.find((step) => step.id === stepId);
       if (!currentStep) {
-        throw new Error('MISSING_STEP');
+        return {
+          accepted: false,
+        };
       }
 
       const result = checkStepLocationLocal({
@@ -296,9 +298,16 @@ export default function BottomSlider({
         stepLongitude: currentStep.coordinate.longitude,
       });
       if (!result.accepted) {
-        throw new Error(`OUTSIDE_AREA:${result.distance_m}:${result.radius_m}`);
+        return {
+          accepted: false,
+          distance_m: result.distance_m,
+          radius_m: result.radius_m,
+        };
       }
       confirmLocation(stepId);
+      return {
+        accepted: true,
+      };
     },
     [confirmLocation, tour?.steps]
   );
