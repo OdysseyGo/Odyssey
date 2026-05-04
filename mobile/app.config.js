@@ -49,7 +49,37 @@ export default {
     plugins: [
       './scripts/newArchEnabled.js',
       'expo-router',
-      'expo-camera',
+      [
+        'expo-location',
+        {
+          locationWhenInUsePermission:
+            'Odyssey uses your location while the app is open to show nearby tours, guide tour navigation, and verify location-based steps.',
+          locationAlwaysAndWhenInUsePermission: false,
+          locationAlwaysPermission: false,
+          isIosBackgroundLocationEnabled: false,
+          isAndroidBackgroundLocationEnabled: false,
+          isAndroidForegroundServiceEnabled: false,
+        },
+      ],
+      [
+        'expo-camera',
+        {
+          cameraPermission:
+            'Odyssey uses your camera for AR puzzle views and photo-based tour challenges.',
+          microphonePermission: false,
+          recordAudioAndroid: false,
+        },
+      ],
+      [
+        'expo-image-picker',
+        {
+          photosPermission:
+            'Odyssey needs photo library access so you can pick images when creating picture-based tour puzzles.',
+          cameraPermission:
+            'Odyssey uses your camera for AR puzzle views and photo-based tour challenges.',
+          microphonePermission: false,
+        },
+      ],
       [
         '@reactvision/react-viro',
         {
