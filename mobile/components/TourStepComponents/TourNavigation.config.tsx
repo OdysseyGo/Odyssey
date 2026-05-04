@@ -10,7 +10,15 @@ export interface TourNavigationProps {
   onNavigateNext: () => void;
   onNavigatePrev: () => void;
   onStepSolved: (stepId: string) => void;
-  onLocationConfirm: (stepId: string, latitude: number, longitude: number) => Promise<void>;
+  onLocationConfirm: (
+    stepId: string,
+    latitude: number,
+    longitude: number
+  ) => Promise<{
+    accepted: boolean;
+    distance_m?: number;
+    radius_m?: number;
+  }>;
   onEndTour?: () => void;
   onSkipStep?: () => void;
 }

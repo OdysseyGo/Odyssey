@@ -1,6 +1,8 @@
 import * as SecureStore from 'expo-secure-store';
 import { getMe, User, deregisterDeviceToken } from './users';
 
+const LOCATION_CHECK_BYPASS_USERNAME = 'apple';
+
 /**
  * Check if user is currently logged in by checking for stored token
  */
@@ -32,6 +34,16 @@ export async function getCurrentUser(): Promise<User | null> {
     }
     return null;
   }
+}
+
+/**
+ * Returns whether the current account should bypass local step GPS distance checks.
+ * This is intentionally scoped to a single username for privacy-sensitive testing.
+ */
+export async function isLocationCheckBypassUser(): Promise<boolean> {
+  const user = await getCurrentUser();
+  const normalizedUsername = user?.username?.trim().toLowerCase();
+  return normalizedUsername === LOCATION_CHECK_BYPASS_USERNAME;
 }
 
 /**

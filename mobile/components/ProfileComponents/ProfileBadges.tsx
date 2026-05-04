@@ -6,6 +6,7 @@ import { Spacing } from '@/constants/Spacing';
 import { profileBadgesStyles } from './ProfileBadges.styles';
 import { ProfileBadgesProps } from './ProfileBadges.config';
 import { useTranslation } from 'react-i18next';
+import { getLocalizedBadgeDescription, getLocalizedBadgeName } from '@/lib/badgeI18n';
 
 export default function ProfileBadges({ badges = [], size = 'medium' }: ProfileBadgesProps) {
   const theme = useColorTheme();
@@ -40,8 +41,12 @@ export default function ProfileBadges({ badges = [], size = 'medium' }: ProfileB
               </View>
             )}
           </View>
-          <Text style={styles.nameText}>{badge.name}</Text>
-          {badge.description && <Text style={styles.descriptionText}>{badge.description}</Text>}
+          <Text style={styles.nameText}>{getLocalizedBadgeName(t, badge.code, badge.name)}</Text>
+          {getLocalizedBadgeDescription(t, badge.code, badge.description) ? (
+            <Text style={styles.descriptionText}>
+              {getLocalizedBadgeDescription(t, badge.code, badge.description)}
+            </Text>
+          ) : null}
         </View>
       ))}
     </>

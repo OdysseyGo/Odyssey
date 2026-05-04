@@ -20,17 +20,21 @@ export const puzzleEditorStyles = () => {
       gap: 8,
     },
     typeButton: {
-      flexGrow: 1,
       flexBasis: '48%',
+      flexGrow: 1,
+      minHeight: 48,
       paddingVertical: 12,
-      paddingHorizontal: 16,
+      paddingHorizontal: 10,
       borderRadius: 12,
       borderWidth: 1,
       alignItems: 'center',
+      justifyContent: 'center',
     },
     typeButtonText: {
       fontSize: 13,
       fontWeight: '600',
+      textAlign: 'center',
+      lineHeight: 17,
     },
     xpInput: {
       fontSize: 16,

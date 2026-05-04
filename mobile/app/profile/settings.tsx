@@ -207,11 +207,9 @@ export default function SettingsScreen({
         {
           key: 'logout',
           icon: LogOut,
-          label: t('settings.items.logout.label', { defaultValue: 'Logout' }),
+          label: t('settings.items.logout.label'),
           labelKey: 'settings.items.logout.label',
-          description: t('settings.items.logout.description', {
-            defaultValue: 'Sign out of your account',
-          }),
+          description: t('settings.items.logout.description'),
           descriptionKey: 'settings.items.logout.description',
           showChevron: false,
           destructive: true,
@@ -275,17 +273,13 @@ export default function SettingsScreen({
     const emailRegex = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
 
     if (!editProfileForm.username.trim()) {
-      nextErrors.username = t('auth.errors.usernameRequired', {
-        defaultValue: 'Username is required',
-      });
+      nextErrors.username = t('auth.errors.usernameRequired');
     }
 
     if (!editProfileForm.email.trim()) {
-      nextErrors.email = t('auth.errors.emailRequired', { defaultValue: 'Email is required' });
+      nextErrors.email = t('auth.errors.emailRequired');
     } else if (!emailRegex.test(editProfileForm.email.trim())) {
-      nextErrors.email = t('auth.errors.emailFormat', {
-        defaultValue: 'Please enter a valid email',
-      });
+      nextErrors.email = t('auth.errors.emailFormat');
     }
 
     setEditProfileErrors(nextErrors);
@@ -308,11 +302,7 @@ export default function SettingsScreen({
         email: me.email ?? '',
       });
     } catch {
-      setEditProfileGeneralError(
-        t('settings.editProfile.loadError', {
-          defaultValue: 'Could not load your profile details.',
-        })
-      );
+      setEditProfileGeneralError(t('settings.editProfile.loadError'));
     } finally {
       setIsLoadingProfileData(false);
     }
@@ -327,11 +317,7 @@ export default function SettingsScreen({
   const submitEditProfile = async () => {
     if (!validateEditProfileForm()) return;
     if (!currentUserId) {
-      setEditProfileGeneralError(
-        t('settings.editProfile.loadError', {
-          defaultValue: 'Could not load your profile details.',
-        })
-      );
+      setEditProfileGeneralError(t('settings.editProfile.loadError'));
       return;
     }
 
@@ -361,7 +347,7 @@ export default function SettingsScreen({
         error?.originalError?.response?.data?.username?.[0] ||
         error?.originalError?.response?.data?.email?.[0] ||
         error?.message ||
-        t('settings.editProfile.saveError', { defaultValue: 'Could not update profile.' });
+        t('settings.editProfile.saveError');
 
       setEditProfileGeneralError(String(serverError));
     } finally {
@@ -423,15 +409,13 @@ export default function SettingsScreen({
             )}
 
             <Text style={[styles.popupTitle, { color: colors.text }]}>
-              {isEditProfileView
-                ? t('settings.items.editProfile.label', { defaultValue: 'Edit Profile' })
-                : t('tabs.settings')}
+              {isEditProfileView ? t('settings.items.editProfile.label') : t('tabs.settings')}
             </Text>
 
             <Pressable
               onPress={() => (onClose ? onClose() : router.back())}
               accessibilityRole="button"
-              accessibilityLabel={t('common.close', { defaultValue: 'Close' })}
+              accessibilityLabel={t('common.close')}
               style={styles.closeButton}
             >
               <Ionicons name="close" size={20} color={colors.text} />
@@ -468,7 +452,9 @@ export default function SettingsScreen({
                   ) : null}
 
                   <RNView style={[styles.formFields, { backgroundColor: editProfileSurfaceColor }]}>
-                    <Text style={[styles.inputLabel, { color: colors.subText }]}>Username</Text>
+                    <Text style={[styles.inputLabel, { color: colors.subText }]}>
+                      {t('auth.username')}
+                    </Text>
                     <TextInput
                       value={editProfileForm.username}
                       onChangeText={(text) => {
@@ -484,7 +470,7 @@ export default function SettingsScreen({
                           backgroundColor: editProfileSurfaceColor,
                         },
                       ]}
-                      placeholder="username"
+                      placeholder={t('auth.usernamePlaceholder')}
                       placeholderTextColor={colors.subText}
                     />
                     {editProfileErrors.username ? (
@@ -493,7 +479,9 @@ export default function SettingsScreen({
                       </Text>
                     ) : null}
 
-                    <Text style={[styles.inputLabel, { color: colors.subText }]}>First name</Text>
+                    <Text style={[styles.inputLabel, { color: colors.subText }]}>
+                      {t('auth.firstName')}
+                    </Text>
                     <TextInput
                       value={editProfileForm.first_name}
                       onChangeText={(text) =>
@@ -508,11 +496,13 @@ export default function SettingsScreen({
                           backgroundColor: editProfileSurfaceColor,
                         },
                       ]}
-                      placeholder="First name"
+                      placeholder={t('auth.firstNamePlaceholder')}
                       placeholderTextColor={colors.subText}
                     />
 
-                    <Text style={[styles.inputLabel, { color: colors.subText }]}>Last name</Text>
+                    <Text style={[styles.inputLabel, { color: colors.subText }]}>
+                      {t('auth.lastName')}
+                    </Text>
                     <TextInput
                       value={editProfileForm.last_name}
                       onChangeText={(text) =>
@@ -527,11 +517,13 @@ export default function SettingsScreen({
                           backgroundColor: editProfileSurfaceColor,
                         },
                       ]}
-                      placeholder="Last name"
+                      placeholder={t('auth.lastNamePlaceholder')}
                       placeholderTextColor={colors.subText}
                     />
 
-                    <Text style={[styles.inputLabel, { color: colors.subText }]}>Email</Text>
+                    <Text style={[styles.inputLabel, { color: colors.subText }]}>
+                      {t('auth.email')}
+                    </Text>
                     <TextInput
                       value={editProfileForm.email}
                       onChangeText={(text) => {
@@ -549,7 +541,7 @@ export default function SettingsScreen({
                           backgroundColor: editProfileSurfaceColor,
                         },
                       ]}
-                      placeholder="name@example.com"
+                      placeholder={t('auth.emailPlaceholder')}
                       placeholderTextColor={colors.subText}
                     />
                     {editProfileErrors.email ? (
@@ -567,7 +559,7 @@ export default function SettingsScreen({
                       style={[styles.secondaryAction, { borderColor: colors.border }]}
                     >
                       <Text style={[styles.secondaryActionText, { color: colors.text }]}>
-                        {t('common.cancel', { defaultValue: 'Cancel' })}
+                        {t('common.cancel')}
                       </Text>
                     </Pressable>
 
@@ -584,7 +576,7 @@ export default function SettingsScreen({
                         <ActivityIndicator color={colors.white} />
                       ) : (
                         <Text style={[styles.primaryActionText, { color: colors.white }]}>
-                          {t('common.save', { defaultValue: 'Save' })}
+                          {t('common.save')}
                         </Text>
                       )}
                     </Pressable>

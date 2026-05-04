@@ -8,6 +8,7 @@ import Colors from '@/constants/Colors';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { useMemo, useRef } from 'react';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import TourImagePlaceholder from '@/components/common/TourImagePlaceholder';
 
 export default function TourDisplayComp({
@@ -22,6 +23,7 @@ export default function TourDisplayComp({
   const theme = useColorTheme();
   const color = Colors[theme];
   const styles = useMemo(() => tourDisplayCompStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -62,7 +64,7 @@ export default function TourDisplayComp({
         {image ? (
           <Image source={{ uri: image }} style={styles.image} />
         ) : (
-          <TourImagePlaceholder style={styles.imagePlaceholder} label="No tour image" />
+          <TourImagePlaceholder style={styles.imagePlaceholder} />
         )}
 
         {/* Bottom gradient for text readability */}
@@ -81,7 +83,7 @@ export default function TourDisplayComp({
         {/* Rating badge — top right */}
         <View style={styles.ratingBadge}>
           <Ionicons name="star" size={11} color={color.star} />
-          <Text style={styles.ratingText}>{rating || '0.0'}</Text>
+          <Text style={styles.ratingText}>{rating || t('search.notAvailable')}</Text>
         </View>
 
         {/* Bottom info overlay */}

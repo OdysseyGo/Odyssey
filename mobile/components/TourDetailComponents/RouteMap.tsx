@@ -1,6 +1,7 @@
 import { View, Text, Pressable } from 'react-native';
 import { useMemo, useState } from 'react';
 import MapView, { Marker, Polyline, Callout } from 'react-native-maps';
+import { useTranslation } from 'react-i18next';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { RouteMapProps, calculateRegion, getRouteCoordinates } from './RouteMap.config';
@@ -10,6 +11,7 @@ export default function RouteMap({ stops }: RouteMapProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => routeMapStyles(theme), [theme]);
   const colors = Colors[theme];
+  const { t } = useTranslation();
   const [interactive, setInteractive] = useState(false);
 
   const region = useMemo(() => calculateRegion(stops), [stops]);
@@ -72,11 +74,11 @@ export default function RouteMap({ stops }: RouteMapProps) {
 
       {!interactive ? (
         <Pressable style={styles.overlay} onPress={() => setInteractive(true)}>
-          <Text style={styles.overlayHint}>Tap to interact with map</Text>
+          <Text style={styles.overlayHint}>{t('tourDetail.tapToInteractMap')}</Text>
         </Pressable>
       ) : (
         <Pressable style={styles.doneButton} onPress={() => setInteractive(false)}>
-          <Text style={styles.doneButtonText}>Done</Text>
+          <Text style={styles.doneButtonText}>{t('common.done')}</Text>
         </Pressable>
       )}
     </View>

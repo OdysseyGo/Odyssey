@@ -39,24 +39,8 @@ export default function TourMap({
   const colors = Colors[theme];
   const mapRef = useRef<MapView>(null);
   const onUserLocationReadyRef = useRef(onUserLocationReady);
-  const instanceIdRef = useRef(`tm-${Math.random().toString(36).slice(2, 8)}`);
   const isMountedRef = useRef(true);
   const resolvedMapMode: TourMapMode = mapMode ?? (tour ? 'active-tour' : 'explore');
-  const mountMetaRef = useRef({
-    instanceId: instanceIdRef.current,
-    mapMode: resolvedMapMode,
-    mapInstanceKey: mapInstanceKey ?? 'unknown',
-    markerCount: markers.length,
-    routePointCount: route.length,
-  });
-
-  mountMetaRef.current = {
-    instanceId: instanceIdRef.current,
-    mapMode: resolvedMapMode,
-    mapInstanceKey: mapInstanceKey ?? 'unknown',
-    markerCount: markers.length,
-    routePointCount: route.length,
-  };
 
   useEffect(() => {
     onUserLocationReadyRef.current = onUserLocationReady;
@@ -64,14 +48,8 @@ export default function TourMap({
 
   useEffect(() => {
     isMountedRef.current = true;
-    if (__DEV__) {
-      console.log('[TourMap] mount', mountMetaRef.current);
-    }
     return () => {
       isMountedRef.current = false;
-      if (__DEV__) {
-        console.log('[TourMap] unmount', mountMetaRef.current);
-      }
     };
   }, []);
 
@@ -81,14 +59,6 @@ export default function TourMap({
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (cancelled || !isMountedRef.current) {
-        if (__DEV__) {
-          console.log('[TourMap] async_location_ignored', {
-            instanceId: instanceIdRef.current,
-            reason: 'permission_after_unmount',
-            mapMode: resolvedMapMode,
-            mapInstanceKey: mapInstanceKey ?? 'unknown',
-          });
-        }
         return;
       }
       if (status !== 'granted') {
@@ -97,14 +67,6 @@ export default function TourMap({
 
       const currentLocation = await Location.getCurrentPositionAsync({});
       if (cancelled || !isMountedRef.current) {
-        if (__DEV__) {
-          console.log('[TourMap] async_location_ignored', {
-            instanceId: instanceIdRef.current,
-            reason: 'location_after_unmount',
-            mapMode: resolvedMapMode,
-            mapInstanceKey: mapInstanceKey ?? 'unknown',
-          });
-        }
         return;
       }
 
@@ -139,28 +101,12 @@ export default function TourMap({
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (cancelled || !isMountedRef.current) {
-        if (__DEV__) {
-          console.log('[TourMap] async_location_ignored', {
-            instanceId: instanceIdRef.current,
-            reason: 'center_permission_after_unmount',
-            mapMode: resolvedMapMode,
-            mapInstanceKey: mapInstanceKey ?? 'unknown',
-          });
-        }
         return;
       }
       if (status !== 'granted') return;
 
       const currentLocation = await Location.getCurrentPositionAsync({});
       if (cancelled || !isMountedRef.current) {
-        if (__DEV__) {
-          console.log('[TourMap] async_location_ignored', {
-            instanceId: instanceIdRef.current,
-            reason: 'center_location_after_unmount',
-            mapMode: resolvedMapMode,
-            mapInstanceKey: mapInstanceKey ?? 'unknown',
-          });
-        }
         return;
       }
       const userRegion = {

@@ -2,6 +2,7 @@ import { View, Text, Image, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { useMemo } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useTranslation } from 'react-i18next';
 
 import { SearchResultItemProps } from './SearchResult.config';
 import { searchResultStyles } from './SearchResult.styles';
@@ -23,6 +24,7 @@ export default function SearchResult({
   const theme = useColorTheme();
   const styles = useMemo(() => searchResultStyles(theme), [theme]);
   const colors = Colors[theme];
+  const { t } = useTranslation();
 
   const handlePress = () => {
     onPress?.();
@@ -42,13 +44,15 @@ export default function SearchResult({
       {image ? (
         <Image source={{ uri: image }} style={styles.image} />
       ) : (
-        <TourImagePlaceholder style={styles.imagePlaceholder} iconSize={24} label="No image" />
+        <TourImagePlaceholder style={styles.imagePlaceholder} iconSize={24} />
       )}
       <View style={styles.infoContainer}>
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
-        <Text style={styles.author}>by {author}</Text>
+        <Text style={styles.author}>
+          {t('tour.by')} {author}
+        </Text>
         <View style={styles.locationRow}>
           <FontAwesome name="map-marker" size={12} color={colors.subText} />
           <Text style={styles.locationText}>{location}</Text>

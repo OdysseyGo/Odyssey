@@ -26,11 +26,7 @@ export default function TourDetailCover({
       {coverImage ? (
         <Image source={{ uri: coverImage }} style={styles.coverImage} resizeMode="cover" />
       ) : (
-        <TourImagePlaceholder
-          style={styles.coverImagePlaceholder}
-          iconSize={42}
-          label="No tour image"
-        />
+        <TourImagePlaceholder style={styles.coverImagePlaceholder} iconSize={42} />
       )}
 
       {/* Top gradient: dark → transparent (keeps white header icons readable) */}
@@ -61,7 +57,7 @@ export default function TourDetailCover({
         </View>
         {coverImageAttribution ? (
           <Text style={styles.overlayAttribution} numberOfLines={1}>
-            Photo: {coverImageAttribution}
+            {t('tourDetail.photoCredit', { attribution: coverImageAttribution })}
           </Text>
         ) : null}
       </View>

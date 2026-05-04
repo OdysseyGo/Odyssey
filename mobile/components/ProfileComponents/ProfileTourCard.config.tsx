@@ -15,14 +15,14 @@ export const STATUS_COLORS: Record<TourStatus, { bg: string; text: string }> = {
 };
 
 export const STATUS_LABELS: Record<TourStatus, string> = {
-  PUBLISHED: 'Published',
-  PENDING: 'Pending',
-  ARCHIVED: 'Archived',
+  PUBLISHED: 'profile.tabs.published',
+  PENDING: 'profile.tabs.pending',
+  ARCHIVED: 'profile.tabs.archived',
 };
 
 export const REVIEW_STATUS_PILL_LABELS: Record<TourReviewStatus, string> = {
-  IN_REVIEW: 'review',
-  REJECTED: 'rejected',
+  IN_REVIEW: 'creation.reviewStatus.review',
+  REJECTED: 'creation.reviewStatus.rejected',
 };
 
 export const REVIEW_STATUS_PILL_COLORS: Record<

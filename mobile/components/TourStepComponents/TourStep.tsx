@@ -22,6 +22,7 @@ import * as Haptics from 'expo-haptics';
 import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 
 import getStyles from './TourStep.styles';
 import {
@@ -114,56 +115,62 @@ function getGemStatusText({
   solved,
   alignmentProgress,
   resonanceLevel,
+  t,
 }: {
   solved: boolean;
   alignmentProgress: number;
   resonanceLevel: number;
+  t: TFunction;
 }) {
-  if (solved) return 'Waypoint found';
-  if (alignmentProgress > 0.72) return 'Signal locked';
-  if (alignmentProgress > 0.18) return 'Hold steady';
-  if (resonanceLevel > 0.72) return 'Strong signal';
-  if (resonanceLevel > 0.38) return 'Signal found';
-  if (resonanceLevel > 0.12) return 'Faint signal';
-  return 'Turn slowly';
+  if (solved) return t('tourStep.compass.status.waypointFound');
+  if (alignmentProgress > 0.72) return t('tourStep.compass.status.signalLocked');
+  if (alignmentProgress > 0.18) return t('tourStep.compass.status.holdSteady');
+  if (resonanceLevel > 0.72) return t('tourStep.compass.status.strongSignal');
+  if (resonanceLevel > 0.38) return t('tourStep.compass.status.signalFound');
+  if (resonanceLevel > 0.12) return t('tourStep.compass.status.faintSignal');
+  return t('tourStep.compass.status.turnSlowly');
 }
 
 function getGemInstructionText({
   solved,
   alignmentProgress,
   resonanceLevel,
+  t,
 }: {
   solved: boolean;
   alignmentProgress: number;
   resonanceLevel: number;
+  t: TFunction;
 }) {
-  if (solved) return 'The tour waypoint is locked in.';
-  if (alignmentProgress > 0.18) return 'Keep the phone still until the beacon fills.';
-  if (resonanceLevel > 0.12) return 'Move gently and follow the stronger signal.';
-  return 'Rotate the phone slowly to search for the waypoint.';
+  if (solved) return t('tourStep.compass.instruction.locked');
+  if (alignmentProgress > 0.18) return t('tourStep.compass.instruction.keepStill');
+  if (resonanceLevel > 0.12) return t('tourStep.compass.instruction.followSignal');
+  return t('tourStep.compass.instruction.searchWaypoint');
 }
 
-function getSignalStrengthText(resonanceLevel: number, solved: boolean) {
-  if (solved) return 'Locked';
-  if (resonanceLevel > 0.72) return 'Strong';
-  if (resonanceLevel > 0.38) return 'Good';
-  if (resonanceLevel > 0.12) return 'Weak';
-  return 'Searching';
+function getSignalStrengthText(resonanceLevel: number, solved: boolean, t: TFunction) {
+  if (solved) return t('tourStep.compass.signalStrength.locked');
+  if (resonanceLevel > 0.72) return t('tourStep.compass.signalStrength.strong');
+  if (resonanceLevel > 0.38) return t('tourStep.compass.signalStrength.good');
+  if (resonanceLevel > 0.12) return t('tourStep.compass.signalStrength.weak');
+  return t('tourStep.compass.signalStrength.searching');
 }
 
 function getBeaconActionText({
   solved,
   aligned,
   hasHeading,
+  t,
 }: {
   solved: boolean;
   aligned: boolean;
   hasHeading: boolean;
+  t: TFunction;
 }) {
-  if (solved) return 'Waypoint locked';
-  if (aligned) return 'Hold steady';
-  if (!hasHeading) return 'Move gently';
-  return 'Scan slowly';
+  if (solved) return t('tourStep.compass.action.waypointLocked');
+  if (aligned) return t('tourStep.compass.action.holdSteady');
+  if (!hasHeading) return t('tourStep.compass.action.moveGently');
+  return t('tourStep.compass.action.scanSlowly');
 }
 
 interface StoryStepViewProps {
@@ -173,6 +180,7 @@ interface StoryStepViewProps {
 function StoryStepView({ step }: StoryStepViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   return (
     <ScrollView
@@ -187,7 +195,7 @@ function StoryStepView({ step }: StoryStepViewProps) {
             size={22}
             color={Colors[theme].primary}
           />
-          <Text style={styles.storyHeroHeaderText}>Story</Text>
+          <Text style={styles.storyHeroHeaderText}>{t('tourStep.story')}</Text>
         </View>
       </View>
 
@@ -201,7 +209,7 @@ function StoryStepView({ step }: StoryStepViewProps) {
 
       {step.images && step.images.length > 0 && (
         <View style={styles.storyImagesContainer}>
-          <Text style={styles.sectionLabel}>Scenes from this stop</Text>
+          <Text style={styles.sectionLabel}>{t('tourStep.scenesFromStop')}</Text>
           {step.images.map((imageUri, index) => (
             <Image
               key={index}
@@ -281,10 +289,7 @@ function MultipleChoiceView({
           if (!selectedOption) return;
 
           if (!progressId) {
-            Alert.alert(
-              'Progress missing',
-              'Could not verify puzzle without active tour progress.'
-            );
+            Alert.alert(t('tourStep.progressMissingTitle'), t('tourStep.progressMissingMessage'));
             return;
           }
 
@@ -347,7 +352,7 @@ function MultipleChoiceView({
   return (
     <View style={styles.puzzleBody}>
       <View style={styles.questionCard}>
-        <Text style={styles.questionLabel}>Question</Text>
+        <Text style={styles.questionLabel}>{t('tourStep.question')}</Text>
         <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
       </View>
 
@@ -390,9 +395,7 @@ function MultipleChoiceView({
 
       {(hasPersistedWrongAttempt || isFinished) && !isSolved && (
         <Text style={styles.exhaustedHint}>
-          {isFinished
-            ? 'This question is finished. The correct answer is revealed.'
-            : 'You have already answered this question.'}
+          {isFinished ? t('tourStep.questionFinishedReveal') : t('tourStep.alreadyAnswered')}
         </Text>
       )}
     </View>
@@ -418,6 +421,7 @@ function PictureCompareView({
 }: PictureCompareViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
   const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
 
   const [previewUri, setPreviewUri] = useState<string | null>(null);
@@ -451,7 +455,7 @@ function PictureCompareView({
 
   const handleCapturedImage = async (photoUri: string) => {
     if (!progressId) {
-      Alert.alert('Progress missing', 'Could not verify puzzle without active tour progress.');
+      Alert.alert(t('tourStep.progressMissingTitle'), t('tourStep.progressMissingMessage'));
       await safeDeleteTemporaryFile(photoUri);
       return;
     }
@@ -463,7 +467,7 @@ function PictureCompareView({
 
     setPreviewUri(photoUri);
     setIsSubmitting(true);
-    setFeedback('Checking similarity...');
+    setFeedback(t('tourStep.picture.checkingSimilarity'));
 
     try {
       const response = await submitPictureCompare(progressId, photoUri);
@@ -473,18 +477,21 @@ function PictureCompareView({
       const similarityPercent = Math.round((response.similarity_score || 0) * 100);
 
       if (response.accepted) {
-        setFeedback(`Matched (${similarityPercent}%).`);
+        setFeedback(t('tourStep.picture.matched', { similarity: similarityPercent }));
         onSolve();
       } else {
         if (stepId) recordAttempt(stepId);
         const newCount = response.attempt_count ?? attemptCount + 1;
         if (newCount >= maxAttempts) {
-          setFeedback(`Not close enough (${similarityPercent}%). No attempts remaining.`);
+          setFeedback(t('tourStep.picture.notCloseNoAttempts', { similarity: similarityPercent }));
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
-            `Not close enough (${similarityPercent}%). ${maxAttempts - newCount} attempt${maxAttempts - newCount === 1 ? '' : 's'} remaining.`
+            t('tourStep.picture.notCloseAttemptsRemaining', {
+              similarity: similarityPercent,
+              count: MAX_ATTEMPTS - newCount,
+            })
           );
         }
       }
@@ -501,7 +508,7 @@ function PictureCompareView({
         }
       }
       console.error('submit picture compare failed', error);
-      setFeedback('Could not verify image right now. Please try again.');
+      setFeedback(t('tourStep.picture.verifyError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -510,17 +517,17 @@ function PictureCompareView({
   return (
     <View style={styles.puzzleBody}>
       <View style={styles.questionCard}>
-        <Text style={styles.questionLabel}>Photo challenge</Text>
+        <Text style={styles.questionLabel}>{t('tourStep.picture.photoChallenge')}</Text>
         <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
       </View>
 
-      <Text style={styles.sectionLabel}>Look around and try to find this!</Text>
+      <Text style={styles.sectionLabel}>{t('tourStep.picture.findThis')}</Text>
       {referenceImageUri ? (
         <Pressable
           style={styles.referenceImageButton}
           onPress={() => setFullscreenImageUri(referenceImageUri)}
           accessibilityRole="button"
-          accessibilityLabel="Open reference image full screen"
+          accessibilityLabel={t('tourStep.picture.openReferenceAccessibilityLabel')}
         >
           <Image
             source={{ uri: referenceImageUri }}
@@ -528,23 +535,27 @@ function PictureCompareView({
             resizeMode="cover"
           />
           <View style={styles.referenceImageOverlay}>
-            <Text style={styles.referenceImageOverlayText}>Tap to view full image</Text>
+            <Text style={styles.referenceImageOverlayText}>
+              {t('tourStep.picture.tapToViewFullImage')}
+            </Text>
           </View>
         </Pressable>
       ) : (
         <View style={styles.referenceImageMissing}>
-          <Text style={styles.referenceImageMissingText}>Reference image is not available.</Text>
+          <Text style={styles.referenceImageMissingText}>
+            {t('tourStep.picture.referenceMissing')}
+          </Text>
         </View>
       )}
 
       {previewUri && (
         <>
-          <Text style={styles.sectionLabel}>Your latest attempt</Text>
+          <Text style={styles.sectionLabel}>{t('tourStep.picture.latestAttempt')}</Text>
           <Pressable
             style={styles.referenceImageButton}
             onPress={() => setFullscreenImageUri(previewUri)}
             accessibilityRole="button"
-            accessibilityLabel="Open latest attempt full screen"
+            accessibilityLabel={t('tourStep.picture.openLatestAttemptAccessibilityLabel')}
           >
             <Image
               source={{ uri: previewUri }}
@@ -552,7 +563,9 @@ function PictureCompareView({
               resizeMode="cover"
             />
             <View style={styles.referenceImageOverlay}>
-              <Text style={styles.referenceImageOverlayText}>Tap to view full image</Text>
+              <Text style={styles.referenceImageOverlayText}>
+                {t('tourStep.picture.tapToViewFullImage')}
+              </Text>
             </View>
           </Pressable>
         </>
@@ -560,7 +573,7 @@ function PictureCompareView({
 
       {!isSolved && (
         <View style={styles.attemptsRow}>
-          <Text style={styles.attemptsLabel}>Attempts</Text>
+          <Text style={styles.attemptsLabel}>{t('tourStep.attempts')}</Text>
           {Array.from({ length: maxAttempts }, (_, i) => (
             <MaterialCommunityIcons
               key={i}
@@ -583,7 +596,9 @@ function PictureCompareView({
         {isSubmitting ? (
           <ActivityIndicator color={Colors[theme].white} />
         ) : (
-          <Text style={styles.captureButtonText}>{isSolved ? 'Solved' : 'Capture and Check'}</Text>
+          <Text style={styles.captureButtonText}>
+            {isSolved ? t('tourStep.solved') : t('tourStep.picture.captureAndCheck')}
+          </Text>
         )}
       </Pressable>
 
@@ -591,16 +606,16 @@ function PictureCompareView({
         <Text style={[styles.feedbackText, isExhausted && styles.exhaustedText]}>{feedback}</Text>
       ) : null}
       {isExhausted && !isSolved && (
-        <Text style={styles.exhaustedHint}>Confirm your location and press Next to continue.</Text>
+        <Text style={styles.exhaustedHint}>{t('tourStep.confirmLocationToContinue')}</Text>
       )}
 
       <SquareCameraOverlayCapture
         visible={isCameraVisible}
         onClose={() => setIsCameraVisible(false)}
         onCapture={handleCapturedImage}
-        title="Align your view with the target"
-        subtitle="Only the center square is analyzed for matching."
-        captureLabel="Check Match"
+        title={t('tourStep.picture.captureTitle')}
+        subtitle={t('tourStep.picture.captureSubtitle')}
+        captureLabel={t('tourStep.picture.checkMatch')}
       />
 
       <Modal
@@ -637,6 +652,7 @@ interface OpenEndedViewProps {
 function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEndedViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
   const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
 
   const [answerInput, setAnswerInput] = useState('');
@@ -651,19 +667,19 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
     if (isSolved || isSubmitting || isExhausted) return;
 
     if (!progressId) {
-      Alert.alert('Progress missing', 'Could not verify puzzle without active tour progress.');
+      Alert.alert(t('tourStep.progressMissingTitle'), t('tourStep.progressMissingMessage'));
       return;
     }
 
     const trimmedAnswer = answerInput.trim();
     if (!trimmedAnswer) {
-      setFeedback('Enter an answer first.');
+      setFeedback(t('tourStep.openEnded.enterAnswerFirst'));
       setFeedbackTone('error');
       return;
     }
 
     setIsSubmitting(true);
-    setFeedback('Checking answer...');
+    setFeedback(t('tourStep.openEnded.checkingAnswer'));
     setFeedbackTone('neutral');
     try {
       const response = await submitOpenEndedAnswer(progressId, trimmedAnswer);
@@ -671,7 +687,7 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
         typeof response.max_attempts === 'number' ? response.max_attempts : maxAttempts;
       setMaxAttempts(responseMaxAttempts);
       if (response.accepted) {
-        setFeedback('That matches. This step is unlocked.');
+        setFeedback(t('tourStep.openEnded.matchedUnlocked'));
         setFeedbackTone('success');
         onSolve();
       } else {
@@ -681,13 +697,15 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
           if (response.revealed_answer) {
             setAnswerInput(response.revealed_answer);
           }
-          setFeedback('Answer is not close enough. No attempts remaining.');
+          setFeedback(t('tourStep.openEnded.notCloseNoAttempts'));
           setFeedbackTone('error');
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
-            `Answer is not close enough. ${responseMaxAttempts - newCount} attempt${responseMaxAttempts - newCount === 1 ? '' : 's'} remaining.`
+            t('tourStep.openEnded.notCloseAttemptsRemaining', {
+              count: responseMaxAttempts - newCount,
+            })
           );
           setFeedbackTone('error');
         }
@@ -709,9 +727,7 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
         setAnswerInput(revealedAnswer);
       }
       console.error('submit open ended answer failed', error);
-      setFeedback(
-        error?.response?.data?.error || 'Could not verify answer right now. Please try again.'
-      );
+      setFeedback(error?.response?.data?.error || t('tourStep.openEnded.verifyError'));
       setFeedbackTone('error');
     } finally {
       setIsSubmitting(false);
@@ -721,13 +737,13 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
   return (
     <View style={styles.puzzleBody}>
       <View style={styles.questionCard}>
-        <Text style={styles.questionLabel}>Open ended</Text>
+        <Text style={styles.questionLabel}>{t('tourStep.openEnded.title')}</Text>
         <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
       </View>
 
       {!isSolved && (
         <View style={styles.attemptsRow}>
-          <Text style={styles.attemptsLabel}>Attempts</Text>
+          <Text style={styles.attemptsLabel}>{t('tourStep.attempts')}</Text>
           {Array.from({ length: maxAttempts }, (_, i) => (
             <MaterialCommunityIcons
               key={i}
@@ -744,7 +760,7 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
         value={answerInput}
         onChangeText={setAnswerInput}
         editable={!isSolved && !isSubmitting && !isExhausted}
-        placeholder="Type your answer"
+        placeholder={t('tourStep.openEnded.placeholder')}
         autoCapitalize="none"
       />
 
@@ -759,7 +775,7 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
         {isSubmitting ? (
           <ActivityIndicator size="small" color={Colors[theme].white} />
         ) : (
-          <Text style={styles.captureButtonText}>Submit answer</Text>
+          <Text style={styles.captureButtonText}>{t('tourStep.openEnded.submitAnswer')}</Text>
         )}
       </Pressable>
 
@@ -792,7 +808,7 @@ function OpenEndedView({ puzzle, isSolved, onSolve, onAnswered, stepId }: OpenEn
       ) : null}
 
       {isExhausted && !isSolved && (
-        <Text style={styles.exhaustedHint}>No attempts remaining. You can skip this step.</Text>
+        <Text style={styles.exhaustedHint}>{t('tourStep.openEnded.noAttemptsRemainingSkip')}</Text>
       )}
     </View>
   );
@@ -809,8 +825,8 @@ interface ArCodeViewProps {
 function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
   const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
-  const instanceIdRef = useRef(`ar-step-${Math.random().toString(36).slice(2, 8)}`);
   const isMountedRef = useRef(true);
 
   const [codeInput, setCodeInput] = useState('');
@@ -823,27 +839,10 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
   const isExhausted = attemptCount >= maxAttempts;
 
   useEffect(() => {
-    if (__DEV__) {
-      console.log('[ArCodeView] mount', {
-        instanceId: instanceIdRef.current,
-        stepId: stepId ?? 'unknown',
-        puzzleId: stepId ?? 'unknown',
-        modelUri: puzzle.sceneAssetUrl ?? 'none',
-      });
-    }
     return () => {
       isMountedRef.current = false;
-      if (__DEV__) {
-        console.log('[ArCodeView] unmount', {
-          instanceId: instanceIdRef.current,
-          stepId: stepId ?? 'unknown',
-          puzzleId: stepId ?? 'unknown',
-          modelUri: puzzle.sceneAssetUrl ?? 'none',
-          cleanupRan: true,
-        });
-      }
     };
-  }, [puzzle.sceneAssetUrl, stepId]);
+  }, []);
 
   const ensureArPermissions = async () => {
     const locationPerm = await Location.getForegroundPermissionsAsync();
@@ -851,8 +850,8 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
       const nextLocationPerm = await Location.requestForegroundPermissionsAsync();
       if (nextLocationPerm.status !== 'granted') {
         Alert.alert(
-          'Location permission needed',
-          'Location permission is required to continue with AR puzzle mode.'
+          t('tourStep.ar.locationPermissionTitle'),
+          t('tourStep.ar.locationPermissionMessage')
         );
         return false;
       }
@@ -862,10 +861,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
     if (cameraPerm.status !== 'granted') {
       const nextCameraPerm = await Camera.requestCameraPermissionsAsync();
       if (nextCameraPerm.status !== 'granted') {
-        Alert.alert(
-          'Camera permission needed',
-          'Camera permission is required to open the AR puzzle view.'
-        );
+        Alert.alert(t('camera.permissionTitle'), t('tourStep.ar.cameraPermissionMessage'));
         return false;
       }
     }
@@ -882,12 +878,6 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
     try {
       const hasPermissions = await ensureArPermissions();
       if (!isMountedRef.current) {
-        if (__DEV__) {
-          console.log('[ArCodeView] ignored_permission_result_after_unmount', {
-            instanceId: instanceIdRef.current,
-            stepId: stepId ?? 'unknown',
-          });
-        }
         return;
       }
       if (!hasPermissions) {
@@ -909,15 +899,10 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
       });
     } catch (error) {
       console.error('Failed to prepare AR permissions', error);
-      Alert.alert('AR unavailable', 'Could not prepare the AR puzzle view right now.');
+      Alert.alert(t('tourStep.ar.unavailableTitle'), t('tourStep.ar.prepareError'));
     } finally {
       if (isMountedRef.current) {
         setIsPreparingAr(false);
-      } else if (__DEV__) {
-        console.log('[ArCodeView] skipped_set_isPreparing_after_unmount', {
-          instanceId: instanceIdRef.current,
-          stepId: stepId ?? 'unknown',
-        });
       }
     }
   };
@@ -928,19 +913,19 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
     }
 
     if (!progressId) {
-      Alert.alert('Progress missing', 'Could not verify puzzle without active tour progress.');
+      Alert.alert(t('tourStep.progressMissingTitle'), t('tourStep.progressMissingMessage'));
       return;
     }
 
     const trimmedCode = codeInput.trim();
     if (!trimmedCode) {
-      setFeedback('Enter the secret code first.');
+      setFeedback(t('tourStep.ar.enterCodeFirst'));
       setFeedbackTone('error');
       return;
     }
 
     setIsSubmitting(true);
-    setFeedback('Checking code...');
+    setFeedback(t('tourStep.ar.checkingCode'));
     setFeedbackTone('neutral');
     try {
       const response = await submitArCode(progressId, trimmedCode);
@@ -948,20 +933,19 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
         setMaxAttempts(response.max_attempts);
       }
       if (response.accepted) {
-        setFeedback('Code accepted. This AR challenge is complete.');
-        setFeedbackTone('success');
+        setFeedback(t('tourStep.ar.codeVerified'));
         onSolve();
       } else {
         if (stepId) recordAttempt(stepId);
         const newCount = response.attempt_count ?? attemptCount + 1;
         if (newCount >= maxAttempts) {
-          setFeedback('Code is not correct. No attempts remaining.');
+          setFeedback(t('tourStep.ar.incorrectNoAttempts'));
           setFeedbackTone('error');
           recordWrongAnswer();
           onAnswered?.();
         } else {
           setFeedback(
-            `Code is not correct. ${maxAttempts - newCount} attempt${maxAttempts - newCount === 1 ? '' : 's'} remaining.`
+            t('tourStep.ar.incorrectAttemptsRemaining', { count: MAX_ATTEMPTS - newCount })
           );
           setFeedbackTone('error');
         }
@@ -979,7 +963,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
         }
       }
       console.error('submit ar code failed', error);
-      setFeedback('Could not verify code right now. Please try again.');
+      setFeedback(t('tourStep.ar.verifyError'));
       setFeedbackTone('error');
     } finally {
       setIsSubmitting(false);
@@ -991,7 +975,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
       <View style={styles.questionCard}>
         <View style={styles.storyHeroHeader}>
           <MaterialCommunityIcons name="cube-scan" size={22} color={Colors[theme].primary} />
-          <Text style={styles.storyHeroHeaderText}>AR Challenge</Text>
+          <Text style={styles.storyHeroHeaderText}>{t('tourStep.ar.challenge')}</Text>
         </View>
         <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
       </View>
@@ -1012,16 +996,16 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
               <MaterialCommunityIcons name="cube-scan" size={20} color={Colors[theme].primary} />
             )}
           </View>
-          <Text style={styles.optionText}>Open AR View</Text>
+          <Text style={styles.optionText}>{t('tourStep.ar.openArView')}</Text>
           <MaterialCommunityIcons name="chevron-right" size={18} color={Colors[theme].subText} />
         </Pressable>
       </View>
 
-      <Text style={styles.sectionLabel}>Enter the secret code</Text>
+      <Text style={styles.sectionLabel}>{t('tourStep.ar.enterSecretCode')}</Text>
 
       {!isSolved && (
         <View style={styles.attemptsRow}>
-          <Text style={styles.attemptsLabel}>Attempts</Text>
+          <Text style={styles.attemptsLabel}>{t('tourStep.attempts')}</Text>
           {Array.from({ length: maxAttempts }, (_, i) => (
             <MaterialCommunityIcons
               key={i}
@@ -1037,7 +1021,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
         value={codeInput}
         onChangeText={setCodeInput}
         style={styles.secretCodeInput}
-        placeholder="Enter secret code"
+        placeholder={t('tourStep.ar.enterSecretCodePlaceholder')}
         autoCapitalize="none"
         autoCorrect={false}
         editable={!isSolved && !isSubmitting && !isExhausted}
@@ -1054,7 +1038,9 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
         {isSubmitting ? (
           <ActivityIndicator color={Colors[theme].white} />
         ) : (
-          <Text style={styles.captureButtonText}>{isSolved ? 'Solved' : 'Check Code'}</Text>
+          <Text style={styles.captureButtonText}>
+            {isSolved ? t('tourStep.solved') : t('tourStep.ar.checkCode')}
+          </Text>
         )}
       </Pressable>
 
@@ -1086,7 +1072,7 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
         </View>
       ) : null}
       {isExhausted && !isSolved && (
-        <Text style={styles.exhaustedHint}>Confirm your location and press Next to continue.</Text>
+        <Text style={styles.exhaustedHint}>{t('tourStep.confirmLocationToContinue')}</Text>
       )}
     </View>
   );
@@ -1109,6 +1095,7 @@ interface CompassViewProps {
 function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
   const solvedRef = useRef(isSolved);
   const nextPulseAtMsRef = useRef(0);
   const holdStartedAtMsRef = useRef<number | null>(null);
@@ -1276,23 +1263,28 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
   const absoluteDelta = heading === null ? null : circularDeltaDegrees(heading, targetHeading);
   const isAligned =
     solved || (absoluteDelta !== null && absoluteDelta <= COMPASS_SOLVE_TOLERANCE_DEGREES);
-  const signalStrengthText = getSignalStrengthText(resonance, solved);
+  const signalStrengthText = getSignalStrengthText(resonance, solved, t);
   const beaconActionText = getBeaconActionText({
     solved,
     aligned: isAligned,
     hasHeading: heading !== null,
+    t,
   });
-  const guidanceText = isAligned ? 'Hold to lock' : 'Rotate slowly';
+  const guidanceText = isAligned
+    ? t('tourStep.compass.guidance.holdToLock')
+    : t('tourStep.compass.guidance.rotateSlowly');
   const holdPercent = Math.round(progress * 100);
   const statusText = getGemStatusText({
     solved,
     alignmentProgress: progress,
     resonanceLevel: resonance,
+    t,
   });
   const instructionText = getGemInstructionText({
     solved,
     alignmentProgress: progress,
     resonanceLevel: resonance,
+    t,
   });
 
   const glowOpacity = solved ? 0.42 : 0.04 + resonance * 0.22 + progress * 0.16;
@@ -1314,8 +1306,8 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
       <Text style={styles.puzzleQuestion}>{puzzle.question}</Text>
       <View style={styles.gemPuzzleFrame}>
         <View style={styles.gemHeader}>
-          <Text style={styles.gemTitle}>Find the Waypoint</Text>
-          <Text style={styles.gemSubtitle}>Rotate your phone until the tour beacon locks on.</Text>
+          <Text style={styles.gemTitle}>{t('tourStep.compass.title')}</Text>
+          <Text style={styles.gemSubtitle}>{t('tourStep.compass.subtitle')}</Text>
         </View>
 
         <View style={styles.gemGuideCard}>
@@ -1328,7 +1320,7 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
               />
             </View>
             <View style={styles.gemCueCopy}>
-              <Text style={styles.gemCueLabel}>Beacon status</Text>
+              <Text style={styles.gemCueLabel}>{t('tourStep.compass.beaconStatus')}</Text>
               <Text style={styles.gemCueText}>{beaconActionText}</Text>
             </View>
             <Text style={styles.gemAccuracyText}>{signalStrengthText}</Text>
@@ -1336,12 +1328,12 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
 
           <View style={styles.gemReadoutRow}>
             <View style={styles.gemReadoutItem}>
-              <Text style={styles.gemReadoutLabel}>Signal</Text>
+              <Text style={styles.gemReadoutLabel}>{t('tourStep.compass.signal')}</Text>
               <Text style={styles.gemReadoutValue}>{signalStrengthText}</Text>
             </View>
             <View style={styles.gemReadoutDivider} />
             <View style={styles.gemReadoutItem}>
-              <Text style={styles.gemReadoutLabel}>Goal</Text>
+              <Text style={styles.gemReadoutLabel}>{t('tourStep.compass.goal')}</Text>
               <Text style={styles.gemReadoutValue}>{guidanceText}</Text>
             </View>
           </View>
@@ -1479,7 +1471,7 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
         <Text style={styles.gemInstruction}>{instructionText}</Text>
         <View style={styles.gemHoldCard}>
           <View style={styles.gemHoldHeader}>
-            <Text style={styles.gemHoldLabel}>Hold progress</Text>
+            <Text style={styles.gemHoldLabel}>{t('tourStep.compass.holdProgress')}</Text>
             <Text style={styles.gemHoldValue}>{holdPercent}%</Text>
           </View>
           <View style={styles.gemHoldTrack}>
@@ -1494,6 +1486,7 @@ function CompassView({ puzzle, isSolved, onSolve }: CompassViewProps) {
 function PuzzleStepView({ step, isSolved, isFinished, onSolve, onAnswered }: PuzzleStepViewProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   return (
     <ScrollView
@@ -1504,7 +1497,7 @@ function PuzzleStepView({ step, isSolved, isFinished, onSolve, onAnswered }: Puz
       <View style={styles.stepTypeRow}>
         <View style={styles.puzzleHeader}>
           <MaterialCommunityIcons name="puzzle" size={22} color={Colors[theme].primary} />
-          <Text style={styles.puzzleHeaderText}>Puzzle</Text>
+          <Text style={styles.puzzleHeaderText}>{t('tourStep.puzzle')}</Text>
         </View>
         {isSolved && (
           <View style={styles.solvedPill}>
@@ -1513,7 +1506,7 @@ function PuzzleStepView({ step, isSolved, isFinished, onSolve, onAnswered }: Puz
               size={14}
               color={Colors[theme].background}
             />
-            <Text style={styles.solvedText}>Solved</Text>
+            <Text style={styles.solvedText}>{t('tourStep.solved')}</Text>
           </View>
         )}
       </View>
@@ -1526,7 +1519,7 @@ function PuzzleStepView({ step, isSolved, isFinished, onSolve, onAnswered }: Puz
               size={13}
               color={Colors[theme].primary}
             />
-            <Text style={styles.storyMiniHeaderText}>Story</Text>
+            <Text style={styles.storyMiniHeaderText}>{t('tourStep.story')}</Text>
           </View>
           <View style={styles.contentCard}>
             <Text style={styles.puzzleDescription}>{step.description}</Text>
@@ -1591,31 +1584,6 @@ export default function TourStepComponent({
 }: TourStepProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
-  const instanceIdRef = useRef(`ts-${Math.random().toString(36).slice(2, 8)}`);
-  const latestStepIdRef = useRef(step.id);
-
-  useEffect(() => {
-    latestStepIdRef.current = step.id;
-  }, [step.id]);
-
-  useEffect(() => {
-    if (__DEV__) {
-      console.log('[TourStep] mount', {
-        instanceId: instanceIdRef.current,
-        stepId: step.id,
-        stepType: step.type,
-      });
-    }
-    return () => {
-      if (__DEV__) {
-        console.log('[TourStep] unmount', {
-          instanceId: instanceIdRef.current,
-          stepId: latestStepIdRef.current,
-        });
-      }
-    };
-  }, []);
-
   return (
     <View style={styles.container}>
       {step.type === 'story' && <StoryStepView step={step} />}

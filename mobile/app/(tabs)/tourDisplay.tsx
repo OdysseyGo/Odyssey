@@ -60,9 +60,11 @@ function mapTourToDisplayProps(
     id: tour.id.toString(),
     image: getTourImageUri(tour),
     title: tour.title,
-    author: tour.creator?.username || 'Unknown',
+    author: tour.creator?.username || t('search.unknownAuthor'),
     duration: `${tour.duration_minutes} ${t('tourId.min')}`,
-    length: tour.steps?.length ? `${tour.steps.length} ${t('tourId.stops')}` : 'N/A',
+    length: tour.steps?.length
+      ? `${tour.steps.length} ${t('tourId.stops')}`
+      : t('search.notAvailable'),
     reviewCount: `${tour.reviews?.length || 0} ${t('tourId.review')}`,
     rating: tour.average_rating?.toFixed(1) || '0',
     city: tour.city,
@@ -325,7 +327,7 @@ function TourDisplayContent() {
         hasFetchedRef.current = true;
       } catch (err: any) {
         if (signal?.aborted) return;
-        setError(err.message || 'Failed to load tours');
+        setError(err.message || t('tour.loadError'));
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -391,7 +393,7 @@ function TourDisplayContent() {
 
   const sectionTabs: { key: string; label: string; icon: string }[] = useMemo(
     () => [
-      { key: 'all', label: t('tour.all', { defaultValue: 'All' }), icon: 'compass' },
+      { key: 'all', label: t('tour.all'), icon: 'compass' },
       { key: 'popular', label: t('tour.popular'), icon: 'flame' },
     ],
     [t]
@@ -401,19 +403,19 @@ function TourDisplayContent() {
     () => [
       {
         key: 'any' as const,
-        label: t('tour.filters.durationAny', { defaultValue: 'Any length' }),
+        label: t('tour.filters.durationAny'),
       },
       {
         key: 'short' as const,
-        label: t('tour.filters.durationShort', { defaultValue: 'Under 1 hour' }),
+        label: t('tour.filters.durationShort'),
       },
       {
         key: 'medium' as const,
-        label: t('tour.filters.durationMedium', { defaultValue: '1 to 2 hours' }),
+        label: t('tour.filters.durationMedium'),
       },
       {
         key: 'long' as const,
-        label: t('tour.filters.durationLong', { defaultValue: '2+ hours' }),
+        label: t('tour.filters.durationLong'),
       },
     ],
     [t]
@@ -561,9 +563,7 @@ function TourDisplayContent() {
           <View style={[styles.errorIconWrap, { backgroundColor: `${theme.error}15` }]}>
             <Ionicons name="cloud-offline-outline" size={40} color={theme.error} />
           </View>
-          <Text style={[styles.errorTitle, { color: theme.text }]}>
-            {t('tour.errorTitle', { defaultValue: 'Something went wrong' })}
-          </Text>
+          <Text style={[styles.errorTitle, { color: theme.text }]}>{t('tour.errorTitle')}</Text>
           <Text style={[styles.errorMessage, { color: theme.subText }]}>{error}</Text>
           <TouchableOpacity
             style={[styles.retryButton, { backgroundColor: theme.primary }]}
@@ -632,7 +632,7 @@ function TourDisplayContent() {
 
         {hasActiveFilters && filteredTourCards.length > 0 && (
           <TourScrollerComp
-            title={t('tour.filters.resultsTitle', { defaultValue: 'Matching tours' })}
+            title={t('tour.filters.resultsTitle')}
             data={filteredTourCards}
             accentColor={theme.secondary}
           />
@@ -645,12 +645,10 @@ function TourDisplayContent() {
               <Ionicons name="funnel-outline" size={38} color={theme.primary} />
             </View>
             <Text style={[styles.emptyTitle, { color: theme.text }]}>
-              {t('tour.filters.emptyTitle', { defaultValue: 'No tours match these filters' })}
+              {t('tour.filters.emptyTitle')}
             </Text>
             <Text style={[styles.emptySubText, { color: theme.subText }]}>
-              {t('tour.filters.emptySubtitle', {
-                defaultValue: 'Try broadening your category or length selection.',
-              })}
+              {t('tour.filters.emptySubtitle')}
             </Text>
             <TouchableOpacity
               style={[styles.retryButton, { backgroundColor: theme.primary }]}
@@ -658,9 +656,7 @@ function TourDisplayContent() {
               activeOpacity={0.8}
             >
               <Ionicons name="refresh" size={16} color={theme.white} />
-              <Text style={styles.retryText}>
-                {t('tour.filters.clearAll', { defaultValue: 'Clear filters' })}
-              </Text>
+              <Text style={styles.retryText}>{t('tour.filters.clearAll')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -670,13 +666,9 @@ function TourDisplayContent() {
             <View style={[styles.emptyIconWrap, { backgroundColor: `${theme.primary}12` }]}>
               <Ionicons name="map-outline" size={38} color={theme.primary} />
             </View>
-            <Text style={[styles.emptyTitle, { color: theme.text }]}>
-              {t('tour.emptyTitle', { defaultValue: 'No tours here yet' })}
-            </Text>
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>{t('tour.emptyTitle')}</Text>
             <Text style={[styles.emptySubText, { color: theme.subText }]}>
-              {t('tour.emptySubtitle', {
-                defaultValue: 'Be the first to create a tour in this region!',
-              })}
+              {t('tour.emptySubtitle')}
             </Text>
           </View>
         )}
@@ -693,10 +685,10 @@ function TourDisplayContent() {
         <View style={styles.pageHeader}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.headerEyebrow, { color: theme.primary }]}>
-              {t('tour.headerEyebrow', { defaultValue: 'Ready to explore?' })}
+              {t('tour.headerEyebrow')}
             </Text>
             <Text style={[styles.headerHeadline, { color: theme.text }]}>
-              {t('tour.headerTitle', { defaultValue: 'Discover Tours' })}
+              {t('tour.headerTitle')}
             </Text>
           </View>
 
@@ -753,7 +745,7 @@ function TourDisplayContent() {
             >
               <Ionicons name="close-circle-outline" size={14} color={theme.subText} />
               <Text style={[styles.clearFilterText, { color: theme.subText }]}>
-                {t('tour.filters.clearAll', { defaultValue: 'Clear filters' })}
+                {t('tour.filters.clearAll')}
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -852,12 +844,10 @@ function TourDisplayContent() {
               <View style={styles.filterSheetHeader}>
                 <View>
                   <Text style={[styles.filterSheetTitle, { color: theme.text }]}>
-                    {t('tour.filters.title', { defaultValue: 'Filter tours' })}
+                    {t('tour.filters.title')}
                   </Text>
                   <Text style={[styles.filterSheetSubtitle, { color: theme.subText }]}>
-                    {t('tour.filters.subtitle', {
-                      defaultValue: 'Refine by category, length, and tour style.',
-                    })}
+                    {t('tour.filters.subtitle')}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -874,7 +864,7 @@ function TourDisplayContent() {
               >
                 <View style={styles.filterSection}>
                   <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
-                    {t('tour.filters.category', { defaultValue: 'Category' })}
+                    {t('tour.filters.category')}
                   </Text>
                   <View style={styles.filterOptionsWrap}>
                     <TouchableOpacity
@@ -893,7 +883,7 @@ function TourDisplayContent() {
                           { color: draftFilters.category === 'all' ? theme.white : theme.text },
                         ]}
                       >
-                        {t('tour.filters.anyCategory', { defaultValue: 'Any category' })}
+                        {t('tour.filters.anyCategory')}
                       </Text>
                     </TouchableOpacity>
                     {uniqueCategories.map((category) => {
@@ -926,7 +916,7 @@ function TourDisplayContent() {
 
                 <View style={styles.filterSection}>
                   <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
-                    {t('tour.filters.continent', { defaultValue: 'Continent' })}
+                    {t('tour.filters.continent')}
                   </Text>
                   <View style={styles.filterOptionsWrap}>
                     <TouchableOpacity
@@ -945,7 +935,7 @@ function TourDisplayContent() {
                           { color: draftFilters.continent === 'all' ? theme.white : theme.text },
                         ]}
                       >
-                        {t('tour.filters.anyContinent', { defaultValue: 'Any continent' })}
+                        {t('tour.filters.anyContinent')}
                       </Text>
                     </TouchableOpacity>
                     {availableContinents.map((continent) => {
@@ -978,7 +968,7 @@ function TourDisplayContent() {
 
                 <View style={styles.filterSection}>
                   <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
-                    {t('tour.filters.duration', { defaultValue: 'Length' })}
+                    {t('tour.filters.duration')}
                   </Text>
                   <View style={styles.filterOptionsWrap}>
                     {durationOptions.map((option) => {
@@ -1011,7 +1001,7 @@ function TourDisplayContent() {
 
                 <View style={styles.filterSection}>
                   <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
-                    {t('tour.filters.difficulty', { defaultValue: 'Difficulty' })}
+                    {t('tour.filters.difficulty')}
                   </Text>
                   <View style={styles.filterOptionsWrap}>
                     {['all', 'EASY', 'MEDIUM', 'HARD'].map((difficulty) => {
@@ -1035,7 +1025,7 @@ function TourDisplayContent() {
                             ]}
                           >
                             {difficulty === 'all'
-                              ? t('tour.filters.anyDifficulty', { defaultValue: 'Any difficulty' })
+                              ? t('tour.filters.anyDifficulty')
                               : t(`tourDetail.${difficulty.toLowerCase()}`, {
                                   defaultValue: difficulty,
                                 })}
@@ -1048,7 +1038,7 @@ function TourDisplayContent() {
 
                 <View style={styles.filterSection}>
                   <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
-                    {t('tour.filters.tourType', { defaultValue: 'Tour type' })}
+                    {t('tour.filters.tourType')}
                   </Text>
                   <View style={styles.filterOptionsWrap}>
                     {['all', 'STORY', 'PUZZLE', 'HYBRID'].map((tourType) => {
@@ -1072,7 +1062,7 @@ function TourDisplayContent() {
                             ]}
                           >
                             {tourType === 'all'
-                              ? t('tour.filters.anyTourType', { defaultValue: 'Any type' })
+                              ? t('tour.filters.anyTourType')
                               : t(`creation.tourType.${tourType.toLowerCase()}`, {
                                   defaultValue: tourType,
                                 })}
@@ -1090,7 +1080,7 @@ function TourDisplayContent() {
                   onPress={() => setDraftFilters(EMPTY_FILTERS)}
                 >
                   <Text style={[styles.filterSecondaryText, { color: theme.text }]}>
-                    {t('tour.filters.reset', { defaultValue: 'Reset' })}
+                    {t('tour.filters.reset')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -1099,11 +1089,8 @@ function TourDisplayContent() {
                 >
                   <Text style={styles.filterPrimaryText}>
                     {hasDraftChanges
-                      ? t('tour.filters.apply', { defaultValue: 'Apply filters' })
-                      : t('tour.filters.showResults', {
-                          defaultValue: 'Show {{count}} tours',
-                          count: matchingToursCount,
-                        })}
+                      ? t('tour.filters.apply')
+                      : t('tour.filters.showResults', { count: matchingToursCount })}
                   </Text>
                 </TouchableOpacity>
               </View>

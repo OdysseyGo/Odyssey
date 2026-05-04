@@ -25,9 +25,14 @@ export default {
       bundleIdentifier: bundleIdentifier,
       supportsTablet: true,
       infoPlist: {
-        NSCameraUsageDescription: 'Odyssey needs camera access for AR exploration.',
-        NSLocationWhenInUseUsageDescription: 'Odyssey uses location to persist AR objects.',
-        NSPhotoLibraryUsageDescription: 'Allow saving AR captures.',
+        NSCameraUsageDescription:
+          'Odyssey uses your camera for AR puzzle views and photo-based tour challenges.',
+        NSLocationWhenInUseUsageDescription:
+          'Odyssey uses your location while the app is open to show nearby tours, guide tour navigation, and verify location-based steps.',
+        NSPhotoLibraryUsageDescription:
+          'Odyssey needs photo library access so you can pick images when creating picture-based tour puzzles.',
+        NSMotionUsageDescription:
+          'Odyssey uses motion sensors to align AR content and support compass-style puzzle interactions.',
         NSUserTrackingUsageDescription:
           'Odyssey uses tracking to show ads relevant to your interests. You can decline and still use the app.',
       },
@@ -44,13 +49,45 @@ export default {
     plugins: [
       './scripts/newArchEnabled.js',
       'expo-router',
-      'expo-camera',
+      [
+        'expo-location',
+        {
+          locationWhenInUsePermission:
+            'Odyssey uses your location while the app is open to show nearby tours, guide tour navigation, and verify location-based steps.',
+          locationAlwaysAndWhenInUsePermission: false,
+          locationAlwaysPermission: false,
+          isIosBackgroundLocationEnabled: false,
+          isAndroidBackgroundLocationEnabled: false,
+          isAndroidForegroundServiceEnabled: false,
+        },
+      ],
+      [
+        'expo-camera',
+        {
+          cameraPermission:
+            'Odyssey uses your camera for AR puzzle views and photo-based tour challenges.',
+          microphonePermission: false,
+          recordAudioAndroid: false,
+        },
+      ],
+      [
+        'expo-image-picker',
+        {
+          photosPermission:
+            'Odyssey needs photo library access so you can pick images when creating picture-based tour puzzles.',
+          cameraPermission:
+            'Odyssey uses your camera for AR puzzle views and photo-based tour challenges.',
+          microphonePermission: false,
+        },
+      ],
       [
         '@reactvision/react-viro',
         {
           newArchEnabled: true,
-          photosPermission: 'Allow access to photos to save AR captures.',
-          cameraPermission: 'Allow access to the camera for the AR experience.',
+          photosPermission:
+            'Odyssey can save captured puzzle and AR images to your photo library when you choose to keep them.',
+          cameraPermission:
+            'Odyssey uses your camera for AR puzzle views and photo-based tour challenges.',
         },
       ],
       [
@@ -67,7 +104,7 @@ export default {
         'expo-tracking-transparency',
         {
           userTrackingPermissionText:
-            'Odyssey uses tracking to show ads relevant to your interests.',
+            'Odyssey uses app tracking to measure ad performance and show more relevant ads. You can decline and still use the app.',
         },
       ],
     ],
