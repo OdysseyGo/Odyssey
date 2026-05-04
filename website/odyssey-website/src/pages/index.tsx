@@ -38,6 +38,16 @@ const MISSION_CARDS = [
   { icon: '🌍', title: 'Built for Everyone', desc: 'Multi-language support, accessible UI, and tours for every pace and interest.' },
 ];
 
+const SCREENSHOTS = [
+  { src: '/img/app-route-progress.png', label: 'Route Progress', alt: 'Odyssey active route progress screen' },
+  { src: '/img/app-following-feed.png', label: 'Following Feed', alt: 'Odyssey following feed screen' },
+  { src: '/img/app-create-tour.png', label: 'Create Tour', alt: 'Odyssey tour creation method selection screen' },
+  { src: '/img/app-profile.png', label: 'Profile', alt: 'Odyssey profile and badges screen' },
+  { src: '/img/app-map-explore.png', label: 'Explore Map', alt: 'Odyssey map screen with nearby tours' },
+  { src: '/img/app-tour-puzzle.png', label: 'Interactive Puzzle', alt: 'Odyssey puzzle challenge screen' },
+  { src: '/img/app-discover-tours.png', label: 'Tour Discovery', alt: 'Odyssey Discover Tours screen' },
+];
+
 export default function Home(): JSX.Element {
   const iconSrc      = useBaseUrl('/img/icon.jpeg');
   const groupPhoto   = useBaseUrl('/img/group_photo.jpg');
@@ -114,85 +124,42 @@ export default function Home(): JSX.Element {
               </div>
             </div>
 
-            {/* Phone mockup cluster */}
+            {/* Phone screenshot cluster */}
             <div className="lp-hero-visual">
-              {/* Left: Map */}
               <div className="lp-phone lp-phone-left">
-                <div className="lp-phone-screen">
-                  <div className="lp-phone-header">
-                    <div className="lp-phone-header-title">🗺 Explore</div>
-                    <div className="lp-phone-header-sub">Istanbul, Turkey</div>
-                  </div>
-                  <div className="lp-phone-map">
-                    <div className="lp-map-grid" />
-                    <span className="lp-map-pin">📍</span>
-                  </div>
-                  <div className="lp-tab-bar">
-                    <span className="lp-tab">🏠</span>
-                    <span className="lp-tab lp-tab--active">🗺</span>
-                    <span className="lp-tab">👤</span>
-                    <span className="lp-tab">⚙️</span>
-                  </div>
-                </div>
+                <img
+                  className="lp-phone-image"
+                  src={useBaseUrl('/img/app-tour-puzzle.png')}
+                  alt="Odyssey puzzle screen preview"
+                  loading="lazy"
+                  decoding="async"
+                  width={1290}
+                  height={2796}
+                />
               </div>
 
-              {/* Center: Tour List */}
               <div className="lp-phone lp-phone-main">
-                <div className="lp-phone-screen">
-                  <div className="lp-phone-header">
-                    <div className="lp-phone-header-title">Odyssey</div>
-                    <div className="lp-phone-header-sub">Discover your next adventure</div>
-                  </div>
-                  <div className="lp-phone-card">
-                    <div className="lp-phone-card-img" style={{ background: 'linear-gradient(135deg,#0284C7,#0369A1)' }}>🏛️</div>
-                    <div className="lp-phone-card-body">
-                      <div className="lp-phone-card-title">Historic Istanbul Walk</div>
-                      <div className="lp-phone-card-meta">⏱ 90 min · 8 stops · ⭐ 4.8</div>
-                      <div className="lp-phone-pill">Featured</div>
-                    </div>
-                  </div>
-                  <div className="lp-phone-card">
-                    <div className="lp-phone-card-img" style={{ background: 'linear-gradient(135deg,#D97706,#F59E0B)' }}>🍜</div>
-                    <div className="lp-phone-card-body">
-                      <div className="lp-phone-card-title">Street Food Adventure</div>
-                      <div className="lp-phone-card-meta">⏱ 60 min · 5 stops · ⭐ 4.6</div>
-                      <div className="lp-phone-pill">AI Generated</div>
-                    </div>
-                  </div>
-                  <div className="lp-phone-map" style={{ height: '80px' }}>
-                    <div className="lp-map-grid" />
-                    <span className="lp-map-pin" style={{ fontSize: '16px' }}>🧭</span>
-                  </div>
-                  <div className="lp-tab-bar">
-                    <span className="lp-tab lp-tab--active">🏠</span>
-                    <span className="lp-tab">🗺</span>
-                    <span className="lp-tab">👤</span>
-                    <span className="lp-tab">⚙️</span>
-                  </div>
-                </div>
+                <img
+                  className="lp-phone-image"
+                  src={useBaseUrl('/img/app-discover-tours.png')}
+                  alt="Odyssey discover tours screen preview"
+                  loading="lazy"
+                  decoding="async"
+                  width={1290}
+                  height={2796}
+                />
               </div>
 
-              {/* Right: Quiz */}
               <div className="lp-phone lp-phone-right">
-                <div className="lp-phone-screen lp-phone-screen--light">
-                  <div className="lp-quiz-header">
-                    <div style={{ fontSize: '13px', fontWeight: 700 }}>Step 3 of 8</div>
-                    <div className="lp-quiz-prog"><div className="lp-quiz-fill" /></div>
-                  </div>
-                  <div className="lp-quiz-q">What year was the Hagia Sophia originally built as a cathedral?</div>
-                  <div className="lp-quiz-options">
-                    <div className="lp-quiz-opt">324 AD</div>
-                    <div className="lp-quiz-opt lp-quiz-opt--correct">537 AD ✓</div>
-                    <div className="lp-quiz-opt">800 AD</div>
-                    <div className="lp-quiz-opt">1054 AD</div>
-                  </div>
-                  <div className="lp-tab-bar lp-tab-bar--light" style={{ marginTop: 'auto' }}>
-                    <span className="lp-tab">🏠</span>
-                    <span className="lp-tab">🗺</span>
-                    <span className="lp-tab lp-tab--active">🎯</span>
-                    <span className="lp-tab">👤</span>
-                  </div>
-                </div>
+                <img
+                  className="lp-phone-image"
+                  src={useBaseUrl('/img/app-following-feed.png')}
+                  alt="Odyssey following feed screen preview"
+                  loading="lazy"
+                  decoding="async"
+                  width={1290}
+                  height={2796}
+                />
               </div>
             </div>
           </div>
@@ -288,167 +255,22 @@ export default function Home(): JSX.Element {
               <p className="lp-section-sub">A peek at the screens you'll be exploring on your next adventure.</p>
             </div>
             <div className="lp-screenshots-track">
-
-              {/* Screen 1: Tour List */}
-              <div className="lp-screenshot-item">
-                <div className="lp-screenshot-phone">
-                  <div className="lp-screen-mock" style={{ background: '#0C1A2E' }}>
-                    <div className="lp-s-header">
-                      <div className="lp-s-header-title">Discover</div>
-                      <div className="lp-s-header-sub">Find your next adventure</div>
-                    </div>
-                    <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-                      {[
-                        { img: '🏛️', bg: 'linear-gradient(135deg,#0284C7,#0369A1)', title: 'Historic Istanbul Walk', meta: '90 min · 8 stops · Istanbul', stars: '★★★★★' },
-                        { img: '🍜', bg: 'linear-gradient(135deg,#D97706,#F59E0B)', title: 'Parisian Street Food',   meta: '60 min · 5 stops · Paris',    stars: '★★★★☆' },
-                        { img: '🌿', bg: 'linear-gradient(135deg,#16A34A,#22C55E)', title: 'Tokyo Garden Walk',     meta: '45 min · 4 stops · Tokyo',    stars: '★★★★★' },
-                        { img: '🏰', bg: 'linear-gradient(135deg,#7C3AED,#A78BFA)', title: 'Medieval Prague',       meta: '120 min · 10 stops · Prague', stars: '★★★★☆' },
-                      ].map((t) => (
-                        <div key={t.title} className="lp-s-tour-card">
-                          <div className="lp-s-tour-img" style={{ background: t.bg }}>{t.img}</div>
-                          <div className="lp-s-tour-body">
-                            <div className="lp-s-tour-title">{t.title}</div>
-                            <div className="lp-s-tour-meta">{t.meta}</div>
-                            <div className="lp-s-tour-stars">{t.stars}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="lp-tab-bar">
-                      <span className="lp-tab lp-tab--active">🏠</span>
-                      <span className="lp-tab">🗺</span>
-                      <span className="lp-tab">👤</span>
-                      <span className="lp-tab">⚙️</span>
-                    </div>
+              {SCREENSHOTS.map((screenshot) => (
+                <div key={screenshot.src} className="lp-screenshot-item">
+                  <div className="lp-screenshot-phone">
+                    <img
+                      className="lp-screenshot-image"
+                      src={useBaseUrl(screenshot.src)}
+                      alt={screenshot.alt}
+                      loading="lazy"
+                      decoding="async"
+                      width={1290}
+                      height={2796}
+                    />
                   </div>
+                  <div className="lp-screenshot-label">{screenshot.label}</div>
                 </div>
-                <div className="lp-screenshot-label">Tour Discovery</div>
-              </div>
-
-              {/* Screen 2: Map */}
-              <div className="lp-screenshot-item">
-                <div className="lp-screenshot-phone">
-                  <div className="lp-screen-mock" style={{ background: '#0C1A2E' }}>
-                    <div className="lp-s-header">
-                      <div className="lp-s-header-title">🗺 Live Map</div>
-                      <div className="lp-s-header-sub">3 stops remaining</div>
-                    </div>
-                    <div className="lp-s-map-full">
-                      <div className="lp-s-map-grid" />
-                      <span className="lp-s-pin" style={{ top: '20%', left: '30%' }}>📍</span>
-                      <span className="lp-s-pin" style={{ top: '45%', left: '55%' }}>📍</span>
-                      <span className="lp-s-pin" style={{ top: '60%', left: '25%', opacity: 0.5 }}>📍</span>
-                      <span className="lp-s-pin" style={{ top: '35%', left: '65%', fontSize: '26px' }}>🔵</span>
-                      <div className="lp-s-map-card">
-                        <div className="lp-s-map-card-title">Next: Hagia Sophia</div>
-                        <div className="lp-s-map-card-sub">280m · ~4 min walk</div>
-                      </div>
-                    </div>
-                    <div className="lp-tab-bar">
-                      <span className="lp-tab">🏠</span>
-                      <span className="lp-tab lp-tab--active">🗺</span>
-                      <span className="lp-tab">👤</span>
-                      <span className="lp-tab">⚙️</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="lp-screenshot-label">Live Navigation</div>
-              </div>
-
-              {/* Screen 3: Quiz */}
-              <div className="lp-screenshot-item">
-                <div className="lp-screenshot-phone">
-                  <div className="lp-screen-mock" style={{ background: '#F8FAFC' }}>
-                    <div className="lp-quiz-header">
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>Step 4 of 8 — Hagia Sophia</div>
-                      <div className="lp-quiz-prog"><div className="lp-quiz-fill" style={{ width: '50%' }} /></div>
-                    </div>
-                    <div className="lp-quiz-q" style={{ color: '#1E293B' }}>Which empire converted Hagia Sophia into a mosque in 1453?</div>
-                    <div className="lp-quiz-options">
-                      <div className="lp-quiz-opt" style={{ background: '#F8FAFC', color: '#1E293B', borderColor: 'rgba(30,41,59,0.10)' }}>Byzantine Empire</div>
-                      <div className="lp-quiz-opt" style={{ background: '#F8FAFC', color: '#1E293B', borderColor: 'rgba(30,41,59,0.10)' }}>Roman Empire</div>
-                      <div className="lp-quiz-opt lp-quiz-opt--correct">Ottoman Empire ✓</div>
-                      <div className="lp-quiz-opt" style={{ background: '#F8FAFC', color: '#1E293B', borderColor: 'rgba(30,41,59,0.10)' }}>Mongolian Empire</div>
-                    </div>
-                    <div style={{ padding: '14px', marginTop: 'auto' }}>
-                      <div style={{ background: 'rgba(22,163,74,0.12)', border: '1px solid #16A34A', borderRadius: '10px', padding: '10px 12px' }}>
-                        <div style={{ fontSize: '11px', fontWeight: 700, color: '#16A34A' }}>✓ Correct! +10 pts</div>
-                        <div style={{ fontSize: '10px', color: '#64748B', marginTop: '3px' }}>The Ottoman Sultan Mehmed II conquered Constantinople in 1453.</div>
-                      </div>
-                    </div>
-                    <div className="lp-tab-bar lp-tab-bar--light" style={{ marginTop: 'auto' }}>
-                      <span className="lp-tab">🏠</span>
-                      <span className="lp-tab">🗺</span>
-                      <span className="lp-tab lp-tab--active">🎯</span>
-                      <span className="lp-tab">👤</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="lp-screenshot-label">Interactive Quiz</div>
-              </div>
-
-              {/* Screen 4: Profile */}
-              <div className="lp-screenshot-item">
-                <div className="lp-screenshot-phone">
-                  <div className="lp-screen-mock" style={{ background: '#F8FAFC' }}>
-                    <div className="lp-s-profile-header">
-                      <div className="lp-s-avatar">🧭</div>
-                    </div>
-                    <div className="lp-s-profile-body">
-                      <div className="lp-s-profile-name">Ege Ertem</div>
-                      <div className="lp-s-profile-sub">Istanbul, Turkey</div>
-                      <div className="lp-s-stats-row">
-                        <div className="lp-s-stat"><div className="lp-s-stat-val">12</div><div className="lp-s-stat-lbl">Tours Done</div></div>
-                        <div className="lp-s-stat"><div className="lp-s-stat-val">3</div><div className="lp-s-stat-lbl">Created</div></div>
-                        <div className="lp-s-stat"><div className="lp-s-stat-val">340</div><div className="lp-s-stat-lbl">Points</div></div>
-                      </div>
-                      <div className="lp-s-menu-item">🎯 My Tours</div>
-                      <div className="lp-s-menu-item">⭐ Reviews</div>
-                      <div className="lp-s-menu-item">🏆 Achievements</div>
-                      <div className="lp-s-menu-item">⚙️ Settings</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="lp-screenshot-label">Profile</div>
-              </div>
-
-              {/* Screen 5: Search */}
-              <div className="lp-screenshot-item">
-                <div className="lp-screenshot-phone">
-                  <div className="lp-screen-mock" style={{ background: '#F8FAFC' }}>
-                    <div className="lp-s-header">
-                      <div className="lp-s-header-title">Search</div>
-                    </div>
-                    <div style={{ padding: '10px' }}>
-                      <div style={{ background: '#fff', border: '1.5px solid rgba(30,41,59,0.10)', borderRadius: '10px', padding: '9px 12px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-                        <span>🔍</span>
-                        <span style={{ fontSize: '12px', color: '#64748B' }}>Search tours or users...</span>
-                      </div>
-                      <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Suggestions</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
-                        {['Istanbul', 'Food Tour', 'History', 'Walking'].map((tag) => (
-                          <span key={tag} style={{ background: 'rgba(2,132,199,0.08)', color: '#0284C7', fontSize: '11px', fontWeight: 600, padding: '4px 10px', borderRadius: '100px' }}>{tag}</span>
-                        ))}
-                      </div>
-                      <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Recent</div>
-                      {['Paris food spots', 'Tokyo gardens', 'creator'].map((item) => (
-                        <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', borderBottom: '1px solid rgba(30,41,59,0.10)' }}>
-                          <span style={{ fontSize: '14px' }}>🕐</span>
-                          <span style={{ fontSize: '12px', color: '#1E293B' }}>{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="lp-tab-bar lp-tab-bar--light" style={{ marginTop: 'auto' }}>
-                      <span className="lp-tab">🏠</span>
-                      <span className="lp-tab lp-tab--active">🔍</span>
-                      <span className="lp-tab">🗺</span>
-                      <span className="lp-tab">👤</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="lp-screenshot-label">Search</div>
-              </div>
-
+              ))}
             </div>
           </div>
         </section>

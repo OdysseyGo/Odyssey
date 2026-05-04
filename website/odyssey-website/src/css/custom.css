@@ -248,6 +248,7 @@
 .lp-phone {
   border-radius: 32px;
   border: 3px solid rgba(255,255,255,0.35);
+  background: #fff;
   box-shadow: 0 24px 60px rgba(0,0,0,0.35);
   overflow: hidden;
   position: absolute;
@@ -258,6 +259,11 @@
 .lp-phone-left  { width: 190px; left: calc(50% - 170px); bottom: 30px; z-index: 2; opacity: 0.85; }
 .lp-phone-right { width: 190px; left: calc(50% + 50px);  bottom: 30px; z-index: 2; opacity: 0.85; }
 .lp-phone-main:hover  { transform: translateX(-50%) translateY(-8px); }
+.lp-phone-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
 
 .lp-phone-screen {
   background: var(--lp-bg-dark);
@@ -449,10 +455,16 @@
   border-radius: 32px;
   border: 2px solid var(--lp-border);
   overflow: hidden;
+  background: #fff;
   box-shadow: var(--lp-shadow-md);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .lp-screenshot-phone:hover { transform: translateY(-6px); box-shadow: var(--lp-shadow-lg); }
+.lp-screenshot-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
 .lp-screen-mock {
   height: 420px;
   display: flex;
