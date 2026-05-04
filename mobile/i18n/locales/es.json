@@ -449,6 +449,11 @@
       "logout": {
         "label": "Cerrar sesión",
         "description": "Salir de tu cuenta"
+      },
+      "deleteAccount": {
+        "label": "Eliminar cuenta",
+        "description": "Elimina permanentemente tu cuenta y todos tus tours",
+        "deleting": "Eliminando cuenta..."
       }
     },
     "appearance": {
@@ -493,6 +498,13 @@
         "label": "Ayuda y Soporte",
         "description": "Obtén ayuda con la aplicación"
       }
+    },
+    "deleteAccount": {
+      "confirmTitle": "¿Eliminar cuenta?",
+      "confirmMessage": "¿Estás seguro? Esta acción es irreversible. Tu cuenta, tus tours y los datos relacionados se eliminarán de forma permanente.",
+      "confirmAction": "Eliminar",
+      "errorTitle": "No se pudo eliminar la cuenta",
+      "errorMessage": "Inténtalo de nuevo más tarde."
     },
     "editProfile": {
       "loadError": "No se pudieron cargar los detalles de tu perfil.",

@@ -446,6 +446,11 @@
         "label": "Çıkış Yap",
         "description": "Hesabından çıkış yap"
       },
+      "deleteAccount": {
+        "label": "Hesabı Sil",
+        "description": "Hesabını ve tüm turlarını kalıcı olarak sil",
+        "deleting": "Hesap siliniyor..."
+      },
       "privacy": {
         "label": "Gizlilik",
         "description": "Gizlilik ayarlarını yönet"
@@ -493,6 +498,13 @@
         "label": "Yardım ve Destek",
         "description": "Uygulama ile ilgili yardım alın"
       }
+    },
+    "deleteAccount": {
+      "confirmTitle": "Hesap silinsin mi?",
+      "confirmMessage": "Emin misin? Bu işlem geri alınamaz. Hesabın, turların ve ilişkili verilerin kalıcı olarak silinecek.",
+      "confirmAction": "Sil",
+      "errorTitle": "Hesap silinemedi",
+      "errorMessage": "Lütfen daha sonra tekrar dene."
     },
     "editProfile": {
       "loadError": "Profil bilgileriniz yüklenemedi.",

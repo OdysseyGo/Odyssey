@@ -12,7 +12,16 @@ import {
   Alert,
   Switch,
 } from 'react-native';
-import { User, Bell, Globe, Palette, Check, LogOut, CircleHelp } from 'lucide-react-native';
+import {
+  User,
+  Bell,
+  Globe,
+  Palette,
+  Check,
+  LogOut,
+  CircleHelp,
+  TriangleAlert,
+} from 'lucide-react-native';
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -31,6 +40,7 @@ import {
   getNotificationPreferences,
   updateNotificationPreferences,
   NotificationPreferences,
+  deleteMyAccount,
 } from '@/api/users';
 import { setProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { Spacing } from '@/constants/Spacing';
@@ -59,9 +69,11 @@ const FAQ_URL = 'https://odysseygo.github.io/Odyssey/faq';
 export default function SettingsScreen({
   onClose,
   onLogout,
+  onSessionCleared,
 }: {
   onClose?: () => void;
   onLogout?: () => void;
+  onSessionCleared?: () => void;
 }) {
   const { t } = useTranslation();
   const { language, languagePreference, setLanguage } = useLanguage();
@@ -92,6 +104,7 @@ export default function SettingsScreen({
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [systemNotificationsEnabled, setSystemNotificationsEnabled] = useState(false);
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const isEditProfileView = popupView === 'edit-profile';
 
@@ -264,6 +277,25 @@ export default function SettingsScreen({
           description: t('settings.support.help.description'),
           descriptionKey: 'settings.support.help.description',
         },
+        {
+          key: 'delete_account',
+          icon: TriangleAlert,
+          label: t('settings.items.deleteAccount.label', { defaultValue: 'Delete Account' }),
+          labelKey: 'settings.items.deleteAccount.label',
+          description: isDeletingAccount
+            ? t('settings.items.deleteAccount.deleting', { defaultValue: 'Deleting account...' })
+            : t('settings.items.deleteAccount.description', {
+                defaultValue: 'Permanently delete your account and all tours',
+              }),
+          descriptionKey: isDeletingAccount
+            ? 'settings.items.deleteAccount.deleting'
+            : 'settings.items.deleteAccount.description',
+          showChevron: false,
+          destructive: true,
+          rightContent: isDeletingAccount ? (
+            <ActivityIndicator size="small" color={colors.error} />
+          ) : undefined,
+        },
       ],
     },
   ];
@@ -355,6 +387,50 @@ export default function SettingsScreen({
     }
   };
 
+  const performDeleteAccount = async () => {
+    if (isDeletingAccount) return;
+    setIsDeletingAccount(true);
+
+    try {
+      await deleteMyAccount();
+      await SecureStore.deleteItemAsync('userToken');
+      await SecureStore.deleteItemAsync('refreshToken');
+      await SecureStore.deleteItemAsync('devicePushToken');
+      setProfileNeedsRefresh();
+      onClose?.();
+      setTimeout(() => onSessionCleared?.(), 0);
+    } catch {
+      Alert.alert(
+        t('settings.deleteAccount.errorTitle', { defaultValue: 'Could not delete account' }),
+        t('settings.deleteAccount.errorMessage', {
+          defaultValue: 'Please try again later.',
+        })
+      );
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
+  const confirmDeleteAccount = () => {
+    Alert.alert(
+      t('settings.deleteAccount.confirmTitle', { defaultValue: 'Delete account?' }),
+      t('settings.deleteAccount.confirmMessage', {
+        defaultValue:
+          'Are you sure? This action is irreversible. Your account, tours, and related data will be permanently deleted.',
+      }),
+      [
+        { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+        {
+          text: t('settings.deleteAccount.confirmAction', { defaultValue: 'Delete' }),
+          style: 'destructive',
+          onPress: () => {
+            void performDeleteAccount();
+          },
+        },
+      ]
+    );
+  };
+
   const handleItemPress = (_groupTitle: string, item: SettingsItemConfig) => {
     if (item.key === 'edit_profile') {
       void openEditProfileView();
@@ -379,6 +455,12 @@ export default function SettingsScreen({
     if (item.key === 'logout') {
       onClose?.();
       setTimeout(() => onLogout?.(), 0);
+      return;
+    }
+
+    if (item.key === 'delete_account') {
+      if (isDeletingAccount) return;
+      confirmDeleteAccount();
       return;
     }
 

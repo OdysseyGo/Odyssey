@@ -624,6 +624,12 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
     );
   };
 
+  const handleSessionCleared = () => {
+    endTour();
+    setHasToken(false);
+    setCurUser(null);
+  };
+
   // ─── Not logged in ────────────────────────────────────
 
   if (hasToken === false) {
@@ -819,7 +825,11 @@ function ProfileContent({ disableCopilot = false }: { disableCopilot?: boolean }
         animationType="fade"
         onRequestClose={() => setShowSettings(false)}
       >
-        <SettingsScreen onClose={() => setShowSettings(false)} onLogout={handleLogout} />
+        <SettingsScreen
+          onClose={() => setShowSettings(false)}
+          onLogout={handleLogout}
+          onSessionCleared={handleSessionCleared}
+        />
       </Modal>
 
       <Modal visible={showTutorials} transparent animationType="fade">
