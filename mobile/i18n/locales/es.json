@@ -223,7 +223,8 @@
     },
     "helpMini": "Ayuda",
     "helpDescription": "Consulta preguntas frecuentes y la guía básica de la app.",
-    "openFaq": "Abrir FAQ"
+    "openFaq": "Abrir FAQ",
+    "badgeMistakes": "{{count}} errores"
   },
   "tour": {
     "featured": "Destacado",
@@ -496,6 +497,14 @@
     "editProfile": {
       "loadError": "No se pudieron cargar los detalles de tu perfil.",
       "saveError": "No se pudo actualizar el perfil."
+    },
+    "notifications": {
+      "deniedMessage": "Activa las notificaciones en los ajustes del dispositivo para recibir alertas.",
+      "deniedTitle": "Notificaciones desactivadas",
+      "openSettings": "Abrir ajustes",
+      "statusOff": "Desactivadas",
+      "statusOn": "Activadas",
+      "systemDisabled": "Las notificaciones están desactivadas a nivel del sistema. Actívalas en Ajustes."
     }
   },
   "tourId": {
@@ -752,7 +761,16 @@
     "reviewStatus": {
       "review": "En revisión",
       "rejected": "Rechazado"
-    }
+    },
+    "confirmEdit": "Confirmar edición",
+    "deleteRequestConfirm": "Solicitar eliminación",
+    "deleteRequestMessage": "Este tour ya está publicado. ¿Quieres solicitar su eliminación? Se archivará tras la revisión.",
+    "deleteRequestTitle": "¿Solicitar eliminación del tour?",
+    "deleteUnderReviewMessage": "Tu solicitud de eliminación se envió para revisión.",
+    "editSubmitMessage": "Tus cambios se revisarán antes de publicarse. ¿Enviar solicitud de edición ahora?",
+    "editSubmitTitle": "Enviar solicitud de edición",
+    "noChangesMessage": "Actualiza al menos un campo antes de enviar.",
+    "noChangesTitle": "No se detectaron cambios"
   },
   "aiTour": {
     "state": "Estado",
@@ -879,7 +897,8 @@
       "verifyError": "No se pudo verificar la respuesta ahora mismo. Inténtalo de nuevo.",
       "placeholder": "Escribe tu respuesta",
       "submitAnswer": "Enviar respuesta",
-      "noAttemptsRemainingSkip": "No quedan intentos. Puedes saltar este paso."
+      "noAttemptsRemainingSkip": "No quedan intentos. Puedes saltar este paso.",
+      "notCloseAttemptsRemaining": "La respuesta no es lo bastante cercana. Quedan {{count}} intentos."
     },
     "compass": {
       "title": "Encuentra el punto de referencia",
@@ -1012,7 +1031,8 @@
         "reviews": "Más reseñados",
         "name": "Nombre",
         "newest": "Más recientes"
-      }
+      },
+      "stops": "{{count}} paradas"
     },
     "searchMode": {
       "searchHere": "Buscar aquí",

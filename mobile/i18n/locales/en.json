@@ -223,7 +223,8 @@
     "helpButton": "Help & FAQ",
     "helpMini": "Help",
     "helpDescription": "Read frequently asked questions and core app guidance.",
-    "openFaq": "Open FAQ"
+    "openFaq": "Open FAQ",
+    "badgeMistakes": "{{count}} mistakes"
   },
   "tour": {
     "featured": "Featured",
@@ -496,6 +497,14 @@
     "editProfile": {
       "loadError": "Could not load your profile details.",
       "saveError": "Could not update profile."
+    },
+    "notifications": {
+      "deniedMessage": "Please enable notifications in your device settings to receive alerts.",
+      "deniedTitle": "Notifications Disabled",
+      "openSettings": "Open Settings",
+      "statusOff": "Off",
+      "statusOn": "On",
+      "systemDisabled": "Notifications are disabled at the system level. Enable them in Settings."
     }
   },
   "tourId": {
@@ -752,7 +761,16 @@
     "reviewStatus": {
       "review": "Review",
       "rejected": "Rejected"
-    }
+    },
+    "confirmEdit": "Confirm Edit",
+    "deleteRequestConfirm": "Request Delete",
+    "deleteRequestMessage": "This tour is already published. Do you want to request deletion? It will be archived after review.",
+    "deleteRequestTitle": "Request tour deletion?",
+    "deleteUnderReviewMessage": "Your deletion request has been submitted for review.",
+    "editSubmitMessage": "Your changes will be reviewed before they go live. Submit edit request now?",
+    "editSubmitTitle": "Submit edit request",
+    "noChangesMessage": "Update at least one field before submitting.",
+    "noChangesTitle": "No changes detected"
   },
   "aiTour": {
     "state": "State",
@@ -879,7 +897,8 @@
       "verifyError": "Could not verify answer right now. Please try again.",
       "placeholder": "Type your answer",
       "submitAnswer": "Submit answer",
-      "noAttemptsRemainingSkip": "No attempts remaining. You can skip this step."
+      "noAttemptsRemainingSkip": "No attempts remaining. You can skip this step.",
+      "notCloseAttemptsRemaining": "Answer is not close enough. {{count}} attempts remaining."
     },
     "compass": {
       "title": "Find the Waypoint",
@@ -1012,7 +1031,8 @@
         "reviews": "Most reviewed",
         "name": "Name",
         "newest": "Newest"
-      }
+      },
+      "stops": "{{count}} stops"
     },
     "searchMode": {
       "searchHere": "Search here",

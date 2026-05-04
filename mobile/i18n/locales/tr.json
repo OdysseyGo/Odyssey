@@ -223,7 +223,8 @@
     "helpButton": "Yardım ve SSS",
     "helpMini": "Yardım",
     "helpDescription": "Sık sorulan soruları ve temel uygulama kullanımını inceleyin.",
-    "openFaq": "SSS'yi Aç"
+    "openFaq": "SSS'yi Aç",
+    "badgeMistakes": "{{count}} hata"
   },
   "tour": {
     "featured": "Öne Çıkan",
@@ -496,6 +497,14 @@
     "editProfile": {
       "loadError": "Profil bilgileriniz yüklenemedi.",
       "saveError": "Profil güncellenemedi."
+    },
+    "notifications": {
+      "deniedMessage": "Uyarıları almak için cihaz ayarlarından bildirimleri etkinleştirin.",
+      "deniedTitle": "Bildirimler Kapalı",
+      "openSettings": "Ayarları Aç",
+      "statusOff": "Kapalı",
+      "statusOn": "Açık",
+      "systemDisabled": "Bildirimler sistem düzeyinde kapalı. Ayarlar'dan etkinleştirin."
     }
   },
   "tourId": {
@@ -752,7 +761,16 @@
     "reviewStatus": {
       "review": "İncelemede",
       "rejected": "Reddedildi"
-    }
+    },
+    "confirmEdit": "Düzenlemeyi Onayla",
+    "deleteRequestConfirm": "Silme Talep Et",
+    "deleteRequestMessage": "Bu tur zaten yayınlandı. Silme talebinde bulunmak istiyor musunuz? İnceleme sonrası arşivlenecek.",
+    "deleteRequestTitle": "Tur silme talebi gönderilsin mi?",
+    "deleteUnderReviewMessage": "Silme talebiniz incelemeye gönderildi.",
+    "editSubmitMessage": "Değişiklikleriniz yayına alınmadan önce incelenecek. Düzenleme talebi şimdi gönderilsin mi?",
+    "editSubmitTitle": "Düzenleme talebi gönder",
+    "noChangesMessage": "Göndermeden önce en az bir alanı güncelleyin.",
+    "noChangesTitle": "Değişiklik tespit edilmedi"
   },
   "aiTour": {
     "state": "Şehir",
@@ -879,7 +897,8 @@
       "verifyError": "Cevap şu anda doğrulanamadı. Lütfen tekrar deneyin.",
       "placeholder": "Cevabını yaz",
       "submitAnswer": "Cevabı gönder",
-      "noAttemptsRemainingSkip": "Deneme hakkı kalmadı. Bu adımı atlayabilirsiniz."
+      "noAttemptsRemainingSkip": "Deneme hakkı kalmadı. Bu adımı atlayabilirsiniz.",
+      "notCloseAttemptsRemaining": "Cevap yeterince yakın değil. {{count}} deneme hakkı kaldı."
     },
     "compass": {
       "title": "İşaret Noktasını Bul",
@@ -1012,7 +1031,8 @@
         "reviews": "En çok yorum",
         "name": "Ada göre",
         "newest": "En yeni"
-      }
+      },
+      "stops": "{{count}} durak"
     },
     "searchMode": {
       "searchHere": "Burada ara",
