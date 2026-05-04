@@ -8,6 +8,7 @@ import {
   Dimensions,
   Alert,
   Modal,
+  Linking,
 } from 'react-native';
 import SettingsScreen from '@/app/profile/settings';
 import { useFocusEffect } from '@react-navigation/native';
@@ -48,6 +49,7 @@ import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/Odyssey
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = 240;
 const GUEST_HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEIGHT * 0.35;
+const FAQ_URL = 'https://odysseygo.github.io/Odyssey/faq';
 
 async function getAccessToken() {
   return await SecureStore.getItemAsync('userToken');
@@ -175,6 +177,7 @@ function GuestScreen({
 }) {
   const cardY = useRef(new Animated.Value(40)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
+  const [helpModalVisible, setHelpModalVisible] = useState(false);
 
   useEffect(() => {
     Animated.parallel([
@@ -215,6 +218,18 @@ function GuestScreen({
           },
         ]}
       >
+        <TouchableOpacity
+          style={[guestStyles.heroHelpButton, { top: insets.top + 12 }]}
+          onPress={() => setHelpModalVisible(true)}
+          activeOpacity={0.82}
+          accessibilityRole="button"
+          accessibilityLabel={t('profile.helpButton', { defaultValue: 'Help & FAQ' })}
+        >
+          <Ionicons name="help-circle-outline" size={16} color={theme.white} />
+          <Text style={[guestStyles.heroHelpButtonText, { color: theme.white }]}>
+            {t('profile.helpMini', { defaultValue: 'Help' })}
+          </Text>
+        </TouchableOpacity>
         <AuthLanguageSelector style={{ top: insets.top + 12 }} />
         <AuthLogo variant="compact" />
         <Text style={[guestStyles.appName, { color: theme.white }]}>ODYSSEY</Text>
@@ -235,6 +250,19 @@ function GuestScreen({
           },
         ]}
       >
+        <TouchableOpacity
+          style={[guestStyles.helpMiniButton, { borderColor: theme.primaryMuted }]}
+          onPress={() => setHelpModalVisible(true)}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={t('profile.helpButton', { defaultValue: 'Help & FAQ' })}
+        >
+          <Ionicons name="help-circle-outline" size={16} color={theme.primary} />
+          <Text style={[guestStyles.helpMiniText, { color: theme.primary }]}>
+            {t('profile.helpMini', { defaultValue: 'Help' })}
+          </Text>
+        </TouchableOpacity>
+
         <Text style={[guestStyles.cardTitle, { color: theme.text }]}>
           {t('profile.signInToUnlock')}
         </Text>
@@ -276,6 +304,49 @@ function GuestScreen({
           </TouchableOpacity>
         </View>
       </Animated.View>
+
+      <Modal
+        transparent
+        visible={helpModalVisible}
+        animationType="fade"
+        onRequestClose={() => setHelpModalVisible(false)}
+      >
+        <View style={guestStyles.helpModalBackdrop}>
+          <View style={[guestStyles.helpModalCard, { backgroundColor: theme.background }]}>
+            <Text style={[guestStyles.helpModalTitle, { color: theme.text }]}>
+              {t('profile.helpButton', { defaultValue: 'Help & FAQ' })}
+            </Text>
+            <Text style={[guestStyles.helpModalDescription, { color: theme.subText }]}>
+              {t('profile.helpDescription', {
+                defaultValue: 'Read frequently asked questions and core app guidance.',
+              })}
+            </Text>
+
+            <TouchableOpacity
+              style={[guestStyles.helpModalPrimaryButton, { backgroundColor: theme.primary }]}
+              onPress={() => {
+                setHelpModalVisible(false);
+                Linking.openURL(FAQ_URL);
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={guestStyles.helpModalPrimaryButtonText}>
+                {t('profile.openFaq', { defaultValue: 'Open FAQ' })}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={guestStyles.helpModalSecondaryButton}
+              onPress={() => setHelpModalVisible(false)}
+              activeOpacity={0.75}
+            >
+              <Text style={[guestStyles.helpModalSecondaryButtonText, { color: theme.subText }]}>
+                {t('common.cancel', { defaultValue: 'Cancel' })}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -288,6 +359,25 @@ const guestStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingBottom: Spacing.xxl,
+  },
+  heroHelpButton: {
+    position: 'absolute',
+    left: Spacing.lg,
+    minWidth: 82,
+    height: Spacing.iconButtonSmall,
+    borderRadius: Spacing.borderRadiusFull,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.24)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+  },
+  heroHelpButtonText: {
+    fontSize: 13,
+    fontWeight: '800',
   },
   appName: {
     fontSize: 28,
@@ -305,6 +395,21 @@ const guestStyles = StyleSheet.create({
     borderTopRightRadius: 32,
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.xxl,
+  },
+  helpMiniButton: {
+    alignSelf: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    marginBottom: Spacing.md,
+  },
+  helpMiniText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   cardTitle: {
     fontSize: 24,
@@ -362,6 +467,49 @@ const guestStyles = StyleSheet.create({
   signUpLink: {
     fontSize: 14,
     fontWeight: '700',
+  },
+  helpModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xl,
+  },
+  helpModalCard: {
+    width: '100%',
+    borderRadius: 16,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.md,
+  },
+  helpModalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  helpModalDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.lg,
+  },
+  helpModalPrimaryButton: {
+    borderRadius: 999,
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+  },
+  helpModalPrimaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  helpModalSecondaryButton: {
+    marginTop: Spacing.sm,
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  helpModalSecondaryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

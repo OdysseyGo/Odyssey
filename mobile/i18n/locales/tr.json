@@ -182,7 +182,11 @@
     "signInSubtitle": "Odyssey'deki binlerce kaşife katıl.",
     "feature1": "Rehberli turlar oluştur ve katıl",
     "feature2": "Rozet ve XP kazan",
-    "feature3": "Diğer gezginlerle bağlantı kur"
+    "feature3": "Diğer gezginlerle bağlantı kur",
+    "helpButton": "Yardım ve SSS",
+    "helpMini": "Yardım",
+    "helpDescription": "Sık sorulan soruları ve temel uygulama kullanımını inceleyin.",
+    "openFaq": "SSS'yi Aç"
   },
   "tour": {
     "featured": "Öne Çıkan",
