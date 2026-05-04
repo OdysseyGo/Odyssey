@@ -331,7 +331,22 @@
       },
       "notifications": {
         "label": "Notificaciones",
-        "description": "Gestiona tus preferencias de notificaciones"
+        "description": "Gestiona tus preferencias de notificaciones",
+        "statusOn": "Activadas",
+        "statusOff": "Desactivadas",
+        "enablePush": "Habilitar Notificaciones Push",
+        "deniedTitle": "Notificaciones Desactivadas",
+        "deniedMessage": "Por favor, habilita las notificaciones en los ajustes de tu dispositivo para recibir alertas.",
+        "openSettings": "Abrir Ajustes",
+        "errorTitle": "Error",
+        "errorMessage": "No se pudieron actualizar las preferencias de notificación. Por favor, inténtalo de nuevo.",
+        "types": {
+          "new_tour": "Nuevos Tours de a quien Sigues",
+          "tour_approved": "Aprobaciones de Tours",
+          "new_review": "Nuevas Reseñas en tus Tours",
+          "new_follower": "Nuevos Seguidores",
+          "friend_level_up": "Tus amigos suben de nivel"
+        }
       },
       "privacy": {
         "label": "Privacidad",
@@ -632,7 +647,12 @@
     "finish": "Finalizar",
     "answerConfirmTitle": "¿Confirmar esta respuesta?",
     "answerConfirmMessage": "¿Seguro? Las respuestas incorrectas pueden reducir el progreso de tu insignia.",
-    "answerConfirmAction": "Responder"
+    "answerConfirmAction": "Responder",
+    "locationCheckSuccessTitle": "Ubicación confirmada",
+    "locationCheckSuccessMessage": "Perfecto, estás en el lugar correcto. Este paso ya está desbloqueado.",
+    "locationCheckFailedTitle": "¡No estás en el punto!",
+    "locationCheckOutsideArea": "Ve al paso actual del tour que se muestra en el mapa (dentro de 100m).",
+    "locationCheckUnavailable": "No pudimos verificar tu ubicación en este momento. Inténtalo de nuevo."
   },
   "map": {
     "noActiveTour": {

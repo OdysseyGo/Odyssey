@@ -64,6 +64,7 @@ from apps.gamification.visuals import (
     GameBadgeVisualService,
     derive_game_type_key_from_badge_code,
 )
+from apps.notifications.utils import create_notification
 from apps.tours.models import ARModel, Review, Tour
 from apps.tours.utils import GoogleMapsFacade
 from apps.users.models import User
@@ -286,6 +287,21 @@ class AdminTourViewSet(ModelViewSet):
             logger.error("Failed to send approval email for tour %s: %s", tour.id, e)
 
         return Response({"detail": "Tour approved and published."})
+
+        create_notification(
+            user=tour.creator,
+            title="Your tour has been approved!",
+            body=f"Congratulations, your tour named '{tour.title}' was published .",
+            data={"tour_id": tour.id, "type": "tour_approved"},
+        )
+
+        for follow_obj in tour.creator.followers.select_related("follower").all():
+            create_notification(
+                user=follow_obj.follower,
+                title="New Adventure!",
+                body=f"One of your followed user '{tour.creator.username}' published a new tour in {tour.state}.",
+                data={"tour_id": tour.id, "type": "new_tour"},
+            )
 
     @action(detail=True, methods=["post"], url_path="reject")
     def reject(self, request, pk=None):

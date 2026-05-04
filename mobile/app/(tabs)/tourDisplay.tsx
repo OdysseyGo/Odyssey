@@ -338,7 +338,11 @@ function TourDisplayContent() {
     useCallback(() => {
       const controller = new AbortController();
       fetchTours(false, controller.signal);
-      return () => controller.abort();
+      return () => {
+        controller.abort();
+        setAllTours([]);
+        setCatalogTours([]);
+      };
     }, [fetchTours])
   );
 

@@ -348,7 +348,22 @@
       },
       "notifications": {
         "label": "Notifications",
-        "description": "Manage notification preferences"
+        "description": "Manage notification preferences",
+        "statusOn": "On",
+        "statusOff": "Off",
+        "enablePush": "Enable Push Notifications",
+        "deniedTitle": "Notifications Disabled",
+        "deniedMessage": "Please enable notifications in your device settings to receive alerts.",
+        "openSettings": "Open Settings",
+        "errorTitle": "Error",
+        "errorMessage": "Could not update notification preferences. Please try again.",
+        "types": {
+          "new_tour": "New Tours from Following",
+          "tour_approved": "Tour Approvals",
+          "new_review": "New Reviews on Your Tours",
+          "new_follower": "New Followers",
+          "friend_level_up": "Friend Level Ups"
+        }
       },
       "logout": {
         "label": "Logout",
@@ -649,7 +664,12 @@
     "finish": "Finish",
     "answerConfirmTitle": "Lock this answer?",
     "answerConfirmMessage": "Are you sure? Wrong answers can reduce your badge progress.",
-    "answerConfirmAction": "Answer"
+    "answerConfirmAction": "Answer",
+    "locationCheckSuccessTitle": "Location confirmed",
+    "locationCheckSuccessMessage": "Great, you're at the right spot. This step is now unlocked.",
+    "locationCheckFailedTitle": "You are not in the spot!",
+    "locationCheckOutsideArea": "Go to the current tour step shown on the map (within 100m).",
+    "locationCheckUnavailable": "We couldn't verify your location right now. Please try again."
   },
   "map": {
     "noActiveTour": {

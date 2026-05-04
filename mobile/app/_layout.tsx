@@ -4,7 +4,9 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Notifications from 'expo-notifications';
 import React, { useEffect } from 'react';
+import { useRouter } from 'expo-router';
 import 'react-native-reanimated';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -26,6 +28,16 @@ export const unstable_settings = {
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -57,6 +69,36 @@ function RootLayoutNav() {
 function RootLayoutNavigator() {
   const colorTheme = useColorTheme();
   const themeKey = colorTheme;
+  const router = useRouter();
+
+  useEffect(() => {
+    const responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as {
+        type?: string;
+        tour_id?: string | number;
+        follower_id?: string | number;
+        user_id?: string | number;
+      };
+
+      if (
+        data?.type &&
+        ['new_tour', 'tour_approved', 'new_review'].includes(data.type) &&
+        data?.tour_id
+      ) {
+        router.push(`/tour/${data.tour_id}`);
+      } else if (data?.type === 'new_follower' && data?.follower_id) {
+        router.push(`/profile?userId=${data.follower_id}`);
+      } else if (data?.type === 'friend_level_up' && data?.user_id) {
+        router.push({
+          pathname: '/profile/[userId]',
+          params: { userId: data.user_id.toString() },
+        });
+      }
+    });
+    return () => {
+      responseListener.remove();
+    };
+  }, []);
 
   return (
     <TutorialProvider>

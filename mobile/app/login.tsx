@@ -18,13 +18,14 @@ import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { useTranslation } from 'react-i18next';
+import * as Notifications from 'expo-notifications';
 
 import AuthTextInput from '@/components/LoginComponents/AuthTextInput';
 import AuthButton from '@/components/LoginComponents/AuthButton';
 import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelector';
 import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import BackButton from '@/components/common/BackButton';
-import { login, UserCredentials } from '@/api/users';
+import { login, UserCredentials, registerDeviceToken } from '@/api/users';
 import { setProfileNeedsRefresh } from '@/lib/profileRefresh';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -103,16 +104,37 @@ export default function LoginScreen() {
     try {
       const credentials: UserCredentials = { username: username.trim(), password };
       const response = await login(credentials);
-      await Promise.all([
-        SecureStore.setItemAsync('userToken', response.access),
-        SecureStore.setItemAsync('refreshToken', response.refresh),
-      ]);
+      SecureStore.setItem('userToken', response.access);
+      SecureStore.setItem('refreshToken', response.refresh);
+
       setProfileNeedsRefresh();
       if (response.terms_update_required) {
         router.dismissTo('/terms-update');
       } else {
         router.dismissTo('/(tabs)/profile');
       }
+      try {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+
+        if (finalStatus === 'granted') {
+          const tokenData = await Notifications.getDevicePushTokenAsync();
+          const token = tokenData.data;
+          await registerDeviceToken({
+            device_token: token,
+            platform: Platform.OS === 'ios' ? 'ios' : 'android',
+          });
+          await SecureStore.setItemAsync('devicePushToken', token);
+        }
+      } catch (pushError) {
+        console.warn('Push token registration failed:', pushError);
+      }
+      router.replace('/(tabs)/profile');
     } catch (e) {
       console.error(e);
       setErrors({ general: t('auth.errors.loginFailed') });

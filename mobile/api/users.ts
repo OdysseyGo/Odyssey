@@ -115,6 +115,31 @@ export type FollowingFeedResponse = {
   results: FeedItem[];
 };
 
+// Notification related types
+export type DevicePlatform = 'ios' | 'android';
+
+export type DeviceTokenRegistrationPayload = {
+  device_token: string;
+  platform: DevicePlatform;
+};
+
+export type DeviceTokenResponse = {
+  id: number;
+  device_token: string;
+  platform: DevicePlatform;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type NotificationPreferences = {
+  new_tour: boolean;
+  tour_approved: boolean;
+  new_review: boolean;
+  new_follower: boolean;
+  friend_level_up: boolean;
+};
+
 // API functions
 
 /**
@@ -325,4 +350,40 @@ export const getFollowingFeed = (page: number = 1) =>
   apiRequest<FollowingFeedResponse>({
     url: `/api/users/following-feed/`,
     params: { page },
+  });
+
+/**
+ * POST /api/notifications/device-tokens/register_token/
+ * Registers or updates the push notification token for the current user.
+ *
+ */
+export const registerDeviceToken = (payload: DeviceTokenRegistrationPayload) =>
+  apiRequest<DeviceTokenResponse, DeviceTokenRegistrationPayload>({
+    method: 'post',
+    url: '/api/notifications/device-tokens/register_token/',
+    data: payload,
+  });
+
+/**
+ * POST /api/notifications/device-tokens/deregister_token/
+ * Deletes the device token from the backend when the user logs out.
+ */
+export const deregisterDeviceToken = (payload: { device_token: string }) =>
+  apiRequest<void, { device_token: string }>({
+    method: 'post',
+    url: '/api/notifications/device-tokens/deregister_token/',
+    data: payload,
+  });
+
+export const getNotificationPreferences = () =>
+  apiRequest<NotificationPreferences>({
+    method: 'get',
+    url: '/api/notifications/preferences/',
+  });
+
+export const updateNotificationPreferences = (payload: Partial<NotificationPreferences>) =>
+  apiRequest<NotificationPreferences>({
+    method: 'patch',
+    url: '/api/notifications/preferences/',
+    data: payload,
   });

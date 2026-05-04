@@ -10,6 +10,7 @@ from rest_framework.response import Response
 
 from apps.gamification.models import TourProgress
 from apps.gamification.services import BadgeService
+from apps.notifications.utils import create_notification
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
@@ -879,6 +880,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user, tour=tour)
         BadgeService.evaluate_user_badges(self.request.user)
         BadgeService.evaluate_user_badges(tour.creator)
+
+        create_notification(
+            user=tour.creator,
+            title="New Review on Your Tour! ⭐",
+            body=f"{self.request.user.username} gave a review to your tour '{tour.title}'.",
+            data={
+                "tour_id": tour.id,
+                "review_id": self.review.id,
+                "type": "new_review",
+            },
+        )
 
     def perform_update(self, serializer):
         if serializer.instance.tour.creator_id == self.request.user.id:
