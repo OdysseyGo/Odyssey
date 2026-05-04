@@ -16,6 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
 import { Camera } from 'expo-camera';
+import * as FileSystem from 'expo-file-system';
 import { Accelerometer, Magnetometer } from 'expo-sensors';
 import * as Haptics from 'expo-haptics';
 import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -91,6 +92,19 @@ const GEM_COLORS = {
   lightBackground2: '#E0F2FE',
   solvedGreen: '#30D158',
 } as const;
+
+async function safeDeleteTemporaryFile(uri?: string | null) {
+  if (!uri || !uri.startsWith('file://')) return;
+
+  try {
+    const info = await FileSystem.getInfoAsync(uri);
+    if (info.exists) {
+      await FileSystem.deleteAsync(uri, { idempotent: true });
+    }
+  } catch {
+    // Ignore cleanup failures.
+  }
+}
 
 function clamp01(value: number) {
   return Math.max(0, Math.min(1, value));
@@ -415,6 +429,17 @@ function PictureCompareView({
   const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
   const isExhausted = attemptCount >= maxAttempts;
   const referenceImageUri = puzzle.referenceImageUri;
+  const latestPreviewUriRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    latestPreviewUriRef.current = previewUri;
+  }, [previewUri]);
+
+  useEffect(() => {
+    return () => {
+      void safeDeleteTemporaryFile(latestPreviewUriRef.current);
+    };
+  }, []);
 
   const handleCaptureAndCheck = async () => {
     if (isSolved || isSubmitting) {
@@ -427,7 +452,13 @@ function PictureCompareView({
   const handleCapturedImage = async (photoUri: string) => {
     if (!progressId) {
       Alert.alert('Progress missing', 'Could not verify puzzle without active tour progress.');
+      await safeDeleteTemporaryFile(photoUri);
       return;
+    }
+
+    const previousPreviewUri = latestPreviewUriRef.current;
+    if (previousPreviewUri && previousPreviewUri !== photoUri) {
+      await safeDeleteTemporaryFile(previousPreviewUri);
     }
 
     setPreviewUri(photoUri);
@@ -779,6 +810,8 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
+  const instanceIdRef = useRef(`ar-step-${Math.random().toString(36).slice(2, 8)}`);
+  const isMountedRef = useRef(true);
 
   const [codeInput, setCodeInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -788,6 +821,29 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
   const [maxAttempts, setMaxAttempts] = useState(MAX_ATTEMPTS);
   const attemptCount = stepId ? (stepAttempts.get(stepId) ?? 0) : 0;
   const isExhausted = attemptCount >= maxAttempts;
+
+  useEffect(() => {
+    if (__DEV__) {
+      console.log('[ArCodeView] mount', {
+        instanceId: instanceIdRef.current,
+        stepId: stepId ?? 'unknown',
+        puzzleId: stepId ?? 'unknown',
+        modelUri: puzzle.sceneAssetUrl ?? 'none',
+      });
+    }
+    return () => {
+      isMountedRef.current = false;
+      if (__DEV__) {
+        console.log('[ArCodeView] unmount', {
+          instanceId: instanceIdRef.current,
+          stepId: stepId ?? 'unknown',
+          puzzleId: stepId ?? 'unknown',
+          modelUri: puzzle.sceneAssetUrl ?? 'none',
+          cleanupRan: true,
+        });
+      }
+    };
+  }, [puzzle.sceneAssetUrl, stepId]);
 
   const ensureArPermissions = async () => {
     const locationPerm = await Location.getForegroundPermissionsAsync();
@@ -825,6 +881,15 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
     setIsPreparingAr(true);
     try {
       const hasPermissions = await ensureArPermissions();
+      if (!isMountedRef.current) {
+        if (__DEV__) {
+          console.log('[ArCodeView] ignored_permission_result_after_unmount', {
+            instanceId: instanceIdRef.current,
+            stepId: stepId ?? 'unknown',
+          });
+        }
+        return;
+      }
       if (!hasPermissions) {
         return;
       }
@@ -838,13 +903,22 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
           anchorY: String(puzzle.anchorPosition?.y ?? 0.3),
           anchorZ: String(puzzle.anchorPosition?.z ?? -1.2),
           modelScaleMeters: String(puzzle.modelScaleMeters ?? 1),
+          stepId: stepId ?? '',
+          puzzleId: stepId ?? '',
         },
       });
     } catch (error) {
       console.error('Failed to prepare AR permissions', error);
       Alert.alert('AR unavailable', 'Could not prepare the AR puzzle view right now.');
     } finally {
-      setIsPreparingAr(false);
+      if (isMountedRef.current) {
+        setIsPreparingAr(false);
+      } else if (__DEV__) {
+        console.log('[ArCodeView] skipped_set_isPreparing_after_unmount', {
+          instanceId: instanceIdRef.current,
+          stepId: stepId ?? 'unknown',
+        });
+      }
     }
   };
 
@@ -1517,6 +1591,31 @@ export default function TourStepComponent({
 }: TourStepProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const instanceIdRef = useRef(`ts-${Math.random().toString(36).slice(2, 8)}`);
+  const latestStepIdRef = useRef(step.id);
+
+  useEffect(() => {
+    latestStepIdRef.current = step.id;
+  }, [step.id]);
+
+  useEffect(() => {
+    if (__DEV__) {
+      console.log('[TourStep] mount', {
+        instanceId: instanceIdRef.current,
+        stepId: step.id,
+        stepType: step.type,
+      });
+    }
+    return () => {
+      if (__DEV__) {
+        console.log('[TourStep] unmount', {
+          instanceId: instanceIdRef.current,
+          stepId: latestStepIdRef.current,
+        });
+      }
+    };
+  }, []);
+
   return (
     <View style={styles.container}>
       {step.type === 'story' && <StoryStepView step={step} />}

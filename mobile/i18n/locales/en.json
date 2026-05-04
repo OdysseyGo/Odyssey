@@ -667,7 +667,12 @@
     "finish": "Finish",
     "answerConfirmTitle": "Lock this answer?",
     "answerConfirmMessage": "Are you sure? Wrong answers can reduce your badge progress.",
-    "answerConfirmAction": "Answer"
+    "answerConfirmAction": "Answer",
+    "locationCheckSuccessTitle": "Location confirmed",
+    "locationCheckSuccessMessage": "Great, you're at the right spot. This step is now unlocked.",
+    "locationCheckFailedTitle": "You are not in the spot!",
+    "locationCheckOutsideArea": "Go to the current tour step shown on the map (within 100m).",
+    "locationCheckUnavailable": "We couldn't verify your location right now. Please try again."
   },
   "map": {
     "noActiveTour": {

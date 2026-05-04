@@ -1,9 +1,19 @@
-import React from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  AppState,
+  findNodeHandle,
+  NativeModules,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { getViroModule, isViroAvailable, VIRO_UNAVAILABLE_MESSAGE } from '@/utils/viro';
+import { useActiveTour } from '@/contexts/ActiveTourContext';
 
 const MODEL_POSITION: [number, number, number] = [0, 0, -1.2];
 const MODEL_SCALE: [number, number, number] = [0.25, 0.25, 0.25];
@@ -37,14 +47,11 @@ function toModelWorldPoint(
 
 function ARPuzzleScene(props: any) {
   const viro = getViroModule();
-  if (!viro) {
-    return null;
-  }
-
-  const { Viro3DObject, ViroARScene, ViroAmbientLight, ViroText } = viro;
-  const appProps = props.sceneNavigator.viroAppProps;
+  const appProps = props?.sceneNavigator?.viroAppProps ?? {};
   const sceneAssetUrl = appProps?.sceneAssetUrl as string;
   const secretCode = appProps?.secretCode as string;
+  const stepId = (appProps?.stepId as string | undefined) ?? 'unknown';
+  const puzzleId = (appProps?.puzzleId as string | undefined) ?? 'unknown';
   const anchorPosition = (appProps?.anchorPosition as [number, number, number]) ?? [0, 0.3, -1.2];
   const modelScaleMeters = clamp(
     Number(appProps?.modelScaleMeters ?? DEFAULT_MODEL_SCALE_METERS),
@@ -54,6 +61,31 @@ function ARPuzzleScene(props: any) {
   const modelScale = getScaledModelScale(modelScaleMeters);
   const anchorWorldPosition = toModelWorldPoint(anchorPosition, MODEL_POSITION, modelScale);
 
+  useEffect(() => {
+    if (__DEV__) {
+      console.log('[ARPuzzleScene] mount', {
+        stepId,
+        puzzleId,
+        modelUri: sceneAssetUrl || 'none',
+      });
+    }
+    return () => {
+      if (__DEV__) {
+        console.log('[ARPuzzleScene] unmount', {
+          stepId,
+          puzzleId,
+          modelUri: sceneAssetUrl || 'none',
+        });
+      }
+    };
+  }, [sceneAssetUrl, stepId, puzzleId]);
+
+  if (!viro) {
+    return null;
+  }
+
+  const { Viro3DObject, ViroARScene, ViroAmbientLight, ViroText } = viro;
+
   return (
     <ViroARScene>
       <ViroAmbientLight color="#ffffff" intensity={600} />
@@ -62,6 +94,34 @@ function ARPuzzleScene(props: any) {
         position={MODEL_POSITION}
         scale={modelScale}
         type="GLB"
+        onLoadStart={() => {
+          if (__DEV__) {
+            console.log('[ARPuzzleScene] model_load_started', {
+              stepId,
+              puzzleId,
+              modelUri: sceneAssetUrl || 'none',
+            });
+          }
+        }}
+        onLoadEnd={() => {
+          if (__DEV__) {
+            console.log('[ARPuzzleScene] model_loaded', {
+              stepId,
+              puzzleId,
+              modelUri: sceneAssetUrl || 'none',
+            });
+          }
+        }}
+        onError={(event: any) => {
+          if (__DEV__) {
+            console.log('[ARPuzzleScene] model_error', {
+              stepId,
+              puzzleId,
+              modelUri: sceneAssetUrl || 'none',
+              error: event?.nativeEvent ?? event ?? null,
+            });
+          }
+        }}
       />
       <ViroText
         text={secretCode || 'Code'}
@@ -87,6 +147,11 @@ function ARPuzzleScene(props: any) {
 export default function ARPuzzleViewScreen() {
   const insets = useSafeAreaInsets();
   const viro = getViroModule();
+  const { isActive } = useActiveTour();
+  const instanceIdRef = useRef(`arv-${Math.random().toString(36).slice(2, 8)}`);
+  const isDisposedRef = useRef(false);
+  const navigatorRef = useRef<any>(null);
+  const [navigatorVisible, setNavigatorVisible] = useState(true);
   const params = useLocalSearchParams<{
     sceneAssetUrl?: string;
     secretCode?: string;
@@ -94,10 +159,14 @@ export default function ARPuzzleViewScreen() {
     anchorY?: string;
     anchorZ?: string;
     modelScaleMeters?: string;
+    stepId?: string;
+    puzzleId?: string;
   }>();
 
   const sceneAssetUrl = params.sceneAssetUrl ?? '';
   const secretCode = params.secretCode ?? '';
+  const stepId = params.stepId ?? 'unknown';
+  const puzzleId = params.puzzleId ?? 'unknown';
   const anchorPosition: [number, number, number] = [
     Number(params.anchorX ?? 0),
     Number(params.anchorY ?? 0.3),
@@ -109,12 +178,146 @@ export default function ARPuzzleViewScreen() {
     MAX_MODEL_SCALE_METERS
   );
 
+  const cleanupArResources = useCallback(
+    (reason: string, hideNavigator: boolean = true) => {
+      if (isDisposedRef.current) {
+        if (__DEV__) {
+          console.log('[ARPuzzleView] cleanup_skip_already_disposed', {
+            instanceId: instanceIdRef.current,
+            reason,
+            stepId,
+            puzzleId,
+            modelUri: sceneAssetUrl || 'none',
+          });
+        }
+        return;
+      }
+
+      isDisposedRef.current = true;
+      if (hideNavigator) {
+        setNavigatorVisible(false);
+      }
+
+      const navigator = navigatorRef.current as any;
+      let resetCalled = false;
+      let cleanupCalled = false;
+      let nodeHandle: number | null = null;
+
+      try {
+        if (typeof navigator?._resetARSession === 'function') {
+          navigator._resetARSession(true, true);
+          resetCalled = true;
+        } else if (typeof navigator?.arSceneNavigator?.resetARSession === 'function') {
+          navigator.arSceneNavigator.resetARSession(true, true);
+          resetCalled = true;
+        }
+      } catch (error) {
+        if (__DEV__) {
+          console.log('[ARPuzzleView] reset_error', {
+            instanceId: instanceIdRef.current,
+            reason,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+
+      try {
+        nodeHandle = navigator ? findNodeHandle(navigator) : null;
+        if (nodeHandle && NativeModules?.VRTARSceneNavigatorModule?.cleanup) {
+          NativeModules.VRTARSceneNavigatorModule.cleanup(nodeHandle);
+          cleanupCalled = true;
+        }
+      } catch (error) {
+        if (__DEV__) {
+          console.log('[ARPuzzleView] native_cleanup_error', {
+            instanceId: instanceIdRef.current,
+            reason,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+
+      if (__DEV__) {
+        console.log('[ARPuzzleView] cleanup', {
+          instanceId: instanceIdRef.current,
+          reason,
+          stepId,
+          puzzleId,
+          modelUri: sceneAssetUrl || 'none',
+          resetCalled,
+          cleanupCalled,
+          nodeHandle,
+        });
+      }
+    },
+    [puzzleId, sceneAssetUrl, stepId]
+  );
+
+  const closeWithCleanup = useCallback(
+    (reason: string) => {
+      cleanupArResources(reason);
+      if (typeof router.canGoBack === 'function' && router.canGoBack()) {
+        router.back();
+      }
+    },
+    [cleanupArResources]
+  );
+
+  useEffect(() => {
+    if (__DEV__) {
+      console.log('[ARPuzzleView] mount', {
+        instanceId: instanceIdRef.current,
+        stepId,
+        puzzleId,
+        modelUri: sceneAssetUrl || 'none',
+      });
+    }
+    return () => {
+      cleanupArResources('unmount', false);
+      if (__DEV__) {
+        console.log('[ARPuzzleView] unmount', {
+          instanceId: instanceIdRef.current,
+          stepId,
+          puzzleId,
+          modelUri: sceneAssetUrl || 'none',
+        });
+      }
+    };
+  }, [cleanupArResources, puzzleId, sceneAssetUrl, stepId]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'active') {
+        cleanupArResources(`app_state_${nextState}`);
+      }
+    });
+    return () => {
+      subscription.remove();
+    };
+  }, [cleanupArResources]);
+
+  useEffect(() => {
+    if (!isActive) {
+      if (__DEV__) {
+        console.log('[ARPuzzleView] active_tour_cleared_while_visible', {
+          instanceId: instanceIdRef.current,
+          stepId,
+          puzzleId,
+        });
+      }
+      closeWithCleanup('active_tour_cleared');
+    }
+  }, [closeWithCleanup, isActive, puzzleId, stepId]);
+
   if (!viro) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorState}>
           <Text style={styles.errorText}>{VIRO_UNAVAILABLE_MESSAGE}</Text>
-          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => closeWithCleanup('manual_close_viro_unavailable')}
+          >
             <Text style={styles.closeButtonText}>Back</Text>
           </TouchableOpacity>
         </View>
@@ -129,7 +332,10 @@ export default function ARPuzzleViewScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorState}>
           <Text style={styles.errorText}>Missing AR model asset.</Text>
-          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => closeWithCleanup('manual_close_missing_asset')}
+          >
             <Text style={styles.closeButtonText}>Back</Text>
           </TouchableOpacity>
         </View>
@@ -142,7 +348,10 @@ export default function ARPuzzleViewScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorState}>
           <Text style={styles.errorText}>AR view is unavailable in this runtime.</Text>
-          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => closeWithCleanup('manual_close_runtime_unavailable')}
+          >
             <Text style={styles.closeButtonText}>Back</Text>
           </TouchableOpacity>
         </View>
@@ -153,18 +362,33 @@ export default function ARPuzzleViewScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={[styles.topBar, { top: insets.top + 12 }]}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => closeWithCleanup('manual_close')}
+        >
           <Ionicons name="arrow-back" size={20} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.topBarTitle}>View Puzzle</Text>
         <View style={styles.topBarSpacer} />
       </View>
-      <ViroARSceneNavigator
-        autofocus
-        initialScene={{ scene: ARPuzzleScene as any }}
-        viroAppProps={{ sceneAssetUrl, secretCode, anchorPosition, modelScaleMeters }}
-        style={styles.navigator}
-      />
+      {navigatorVisible ? (
+        <ViroARSceneNavigator
+          ref={navigatorRef}
+          autofocus
+          initialScene={{ scene: ARPuzzleScene as any }}
+          viroAppProps={{
+            sceneAssetUrl,
+            secretCode,
+            anchorPosition,
+            modelScaleMeters,
+            stepId,
+            puzzleId,
+          }}
+          style={styles.navigator}
+        />
+      ) : (
+        <View style={styles.navigator} />
+      )}
     </SafeAreaView>
   );
 }
