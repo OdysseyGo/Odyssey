@@ -15,17 +15,20 @@ class TourEditDeleteReviewFlowTests(APITestCase):
             username="creator",
             email="creator@example.com",
             password="password123",
+            level=5,
         )
         self.other_user = User.objects.create_user(
             username="other",
             email="other@example.com",
             password="password123",
+            level=5,
         )
         self.admin = User.objects.create_user(
             username="admin",
             email="admin@example.com",
             password="password123",
             is_staff=True,
+            level=5,
         )
         self.tour = Tour.objects.create(
             title="Published Tour",
@@ -73,6 +76,33 @@ class TourEditDeleteReviewFlowTests(APITestCase):
         self.client.force_authenticate(user=self.other_user)
         response = self.client.post(f"/api/tours/{self.tour.id}/request-edit/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_creator_below_level_threshold_cannot_request_edit_or_delete_review(self):
+        self.creator.level = 4
+        self.creator.save(update_fields=["level"])
+
+        self.client.force_authenticate(user=self.creator)
+        edit_response = self.client.post(f"/api/tours/{self.tour.id}/request-edit/")
+        delete_response = self.client.post(f"/api/tours/{self.tour.id}/request-delete/")
+
+        self.assertEqual(edit_response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(delete_response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("at least level", str(edit_response.data.get("detail", "")))
+        self.assertIn("at least level", str(delete_response.data.get("detail", "")))
+
+    def test_creator_below_level_threshold_cannot_update_personal_tour(self):
+        self.creator.level = 4
+        self.creator.save(update_fields=["level"])
+
+        self.client.force_authenticate(user=self.creator)
+        response = self.client.patch(
+            f"/api/tours/{self.tour.id}/",
+            {"title": "Updated title"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("at least level", str(response.data.get("detail", "")))
 
     def test_admin_approve_edit_publishes_tour(self):
         self.tour.status = Tour.PENDING

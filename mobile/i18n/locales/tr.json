@@ -466,6 +466,9 @@
       "personalDescription": "Konumları manuel olarak seçin, hikayeler ekleyin ve turunuzun her detayını özelleştirin",
       "ai": "Yapay Zeka ile Oluşturma",
       "aiDescription": "Yapay zekanın tercihlerinize göre tur içeriği, hikayeler ve öneriler oluşturmasına izin verin",
+      "personalUnlockLevel": "{{level}}. seviyede açılır",
+      "personalLockedTitle": "Kişisel Oluşturma {{level}}. Seviyede Açılır",
+      "personalLockedMessage": "Kişisel Oluşturma özelliği {{level}}. seviyede açılır. Şu an {{currentLevel}}. seviyedesin. Devam et, bol şans!",
       "skip": "Vazgeçtim, bir tur bulacağım",
       "comingSoon": "YAKINDA"
     },

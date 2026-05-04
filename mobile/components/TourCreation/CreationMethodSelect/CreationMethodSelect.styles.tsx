@@ -71,6 +71,23 @@ export const creationMethodStyles = (theme: ThemeName) => {
     disabledCard: {
       opacity: 0.5,
     },
+    lockedBadge: {
+      position: 'absolute',
+      top: Spacing.md,
+      right: Spacing.md,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      backgroundColor: color.primary,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs,
+      borderRadius: Spacing.sm,
+    },
+    lockedBadgeText: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: color.white,
+    },
     comingSoonBadge: {
       position: 'absolute',
       top: Spacing.md,
@@ -83,7 +100,7 @@ export const creationMethodStyles = (theme: ThemeName) => {
     comingSoonText: {
       fontSize: 10,
       fontWeight: '600',
-      color: color.primary,
+      color: color.white,
     },
     skipButton: {
       marginTop: Spacing.xl,

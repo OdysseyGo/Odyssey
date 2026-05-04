@@ -466,6 +466,9 @@
       "personalDescription": "Manually select locations, add stories, and customize every detail of your tour",
       "ai": "AI-Powered Creation",
       "aiDescription": "Let AI help you generate tour content, stories, and suggestions based on your preferences",
+      "personalUnlockLevel": "Unlocks at level {{level}}",
+      "personalLockedTitle": "Personal Creation Unlocks at Level {{level}}",
+      "personalLockedMessage": "Personal Creation unlocks at level {{level}}. You are level {{currentLevel}} now. Keep going, good luck!",
       "skip": "Nevermind, I'll find a tour",
       "comingSoon": "COMING SOON"
     },
