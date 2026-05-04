@@ -11,6 +11,12 @@ export interface RouteCoordinate {
   latitude: number;
   longitude: number;
 }
+export interface AcceptedArea {
+  latitude: number;
+  longitude: number;
+  radiusM: number;
+}
+export type TourMapMode = 'active-tour' | 'explore';
 
 export interface TourMapProps {
   markers: MapMarkerProps[];
@@ -18,6 +24,7 @@ export interface TourMapProps {
   initialRegion?: Region;
   currentStepIndex?: number;
   tour?: { steps: { coordinate: { latitude: number; longitude: number } }[] };
+  acceptedArea?: AcceptedArea;
   onRegionChange?: (region: Region) => void;
   onRegionChangeComplete?: (region: Region) => void;
   onMapPress?: () => void;
@@ -25,6 +32,8 @@ export interface TourMapProps {
   nearbyMarkers?: MapMarkerProps[];
   animateToRegion?: Region;
   centerOnUserRequestKey?: number;
+  mapMode?: TourMapMode;
+  mapInstanceKey?: string;
 }
 
 export const exampleTourMap: TourMapProps = {

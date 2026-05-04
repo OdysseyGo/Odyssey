@@ -75,7 +75,9 @@ export default function TourDetailPage() {
         const tourData = await getTour(tourIdNum);
         const progressResponse = await createTourProgress({ tour_id: tourIdNum });
         startTour(tourData, progressResponse.id);
-        router.replace('/(tabs)/map');
+        // Dismiss back to the existing tabs/map entry when present.
+        // This avoids creating a second tabs subtree on top of the current stack.
+        router.dismissTo('/(tabs)/map');
       }
     } catch (err: any) {
       console.error('Failed to start tour:', err);

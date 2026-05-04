@@ -46,6 +46,31 @@ export default function getStyles(theme: ThemeName) {
       fontSize: 13,
       fontWeight: '800',
     },
+    locationToast: {
+      position: 'absolute',
+      bottom: 96,
+      alignSelf: 'center',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: Spacing.lg,
+      backgroundColor: color.cardSurface,
+      borderWidth: 1,
+      borderColor: color.easy,
+      zIndex: 11,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.12,
+      shadowRadius: 8,
+      elevation: 5,
+    },
+    locationToastText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: color.text,
+    },
 
     headerRow: {
       flexDirection: 'row',
@@ -106,10 +131,18 @@ export default function getStyles(theme: ThemeName) {
     actionButtonPressed: {
       backgroundColor: color.primaryMuted,
     },
+    actionButtonDisabled: {
+      backgroundColor: color.foregroundSecondary,
+      borderColor: color.borderLight,
+      opacity: 0.55,
+    },
     actionLabel: {
       color: color.primary,
       fontSize: 12,
       fontWeight: '800',
+    },
+    actionLabelDisabled: {
+      color: color.subText,
     },
     closeTourButton: {
       width: 42,

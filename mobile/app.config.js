@@ -71,6 +71,9 @@ export default {
         },
       ],
     ],
+    extra: {
+      envMode: process.env.ENV_MODE || 'production',
+    },
     experiments: {
       typedRoutes: true,
     },

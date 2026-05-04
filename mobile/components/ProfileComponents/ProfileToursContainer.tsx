@@ -47,6 +47,13 @@ export default function ProfileToursContainer(_props: ProfileToursContainerProps
     setActiveTab(tab.key);
   };
 
+  const handleEditPress = useCallback((tourId: number) => {
+    router.push({
+      pathname: '/tour-details',
+      params: { mode: 'edit', tourId: String(tourId) },
+    });
+  }, []);
+
   const getEmptyMessage = () => {
     switch (activeTab) {
       case 'PUBLISHED':
@@ -103,7 +110,16 @@ export default function ProfileToursContainer(_props: ProfileToursContainerProps
       ) : (
         <View style={styles.toursList}>
           {tours.map((tour) => (
-            <ProfileTourCard key={tour.id} tour={tour} />
+            <ProfileTourCard
+              key={tour.id}
+              tour={tour}
+              onEditPress={
+                tour.status === 'PUBLISHED' ||
+                (tour.status === 'PENDING' && tour.review_status === 'REJECTED')
+                  ? () => handleEditPress(tour.id)
+                  : undefined
+              }
+            />
           ))}
         </View>
       )}

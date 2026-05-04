@@ -1,5 +1,6 @@
 import os
 
+from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Avg, Count, OuterRef, Subquery
 from django_filters.rest_framework import DjangoFilterBackend
@@ -10,6 +11,7 @@ from rest_framework.response import Response
 
 from apps.gamification.models import TourProgress
 from apps.gamification.services import BadgeService
+from apps.notifications.utils import create_notification
 from apps.tours.models import (
     ARModel,
     ArPuzzleDetail,
@@ -42,6 +44,25 @@ from .serializers import (
 )
 
 MAX_TOUR_STEPS = 150
+MIN_LEVEL_FOR_PERSONAL_TOUR_MUTATIONS = settings.PERSONAL_TOUR_MIN_LEVEL
+
+
+def enforce_personal_tour_level_requirement(*, user, tour=None):
+    if not user or not user.is_authenticated or user.is_staff:
+        return
+
+    # Only gate personal tours (USER). AI tours are intentionally out of scope.
+    if tour is not None and tour.generation_source != Tour.USER:
+        return
+
+    if user.level < MIN_LEVEL_FOR_PERSONAL_TOUR_MUTATIONS:
+        raise PermissionDenied(
+            (
+                "You need to be at least level "
+                f"{MIN_LEVEL_FOR_PERSONAL_TOUR_MUTATIONS} to create, edit, "
+                "or delete personal tours."
+            )
+        )
 
 
 @api_view(["GET"])
@@ -109,6 +130,8 @@ class TourViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
+        enforce_personal_tour_level_requirement(user=self.request.user)
+
         # Default to production-safe behavior when ENV_MODE is unset.
         env_mode = os.getenv("ENV_MODE", "production")
         if env_mode != "development":
@@ -121,8 +144,28 @@ class TourViewSet(viewsets.ModelViewSet):
             creator=self.request.user,
             status=status,
             review_status=review_status,
+            submission_type=Tour.CREATE,
         )
         BadgeService.evaluate_user_badges(tour.creator)
+
+    def perform_update(self, serializer):
+        enforce_personal_tour_level_requirement(
+            user=self.request.user,
+            tour=serializer.instance,
+        )
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        enforce_personal_tour_level_requirement(user=self.request.user, tour=instance)
+        instance.delete()
+
+    @staticmethod
+    def _user_can_manage_tour(user, tour):
+        return bool(
+            user
+            and user.is_authenticated
+            and (tour.creator_id == user.id or user.is_staff)
+        )
 
     @action(
         detail=False,
@@ -350,6 +393,58 @@ class TourViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="request-edit",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def request_edit(self, request, pk=None):
+        tour = self.get_object()
+        if not self._user_can_manage_tour(request.user, tour):
+            raise PermissionDenied("Only the tour creator can request an edit review.")
+        enforce_personal_tour_level_requirement(user=request.user, tour=tour)
+        if tour.status != Tour.PUBLISHED:
+            return Response(
+                {"error": "Only published tours can be sent for edit review."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        tour.status = Tour.PENDING
+        tour.review_status = Tour.IN_REVIEW
+        tour.submission_type = Tour.EDIT
+        tour.save(
+            update_fields=["status", "review_status", "submission_type", "updated_at"]
+        )
+        serializer = self.get_serializer(tour)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="request-delete",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def request_delete(self, request, pk=None):
+        tour = self.get_object()
+        if not self._user_can_manage_tour(request.user, tour):
+            raise PermissionDenied("Only the tour creator can request a delete review.")
+        enforce_personal_tour_level_requirement(user=request.user, tour=tour)
+        if tour.status != Tour.PUBLISHED:
+            return Response(
+                {"error": "Only published tours can be sent for delete review."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        tour.status = Tour.PENDING
+        tour.review_status = Tour.IN_REVIEW
+        tour.submission_type = Tour.DELETE
+        tour.save(
+            update_fields=["status", "review_status", "submission_type", "updated_at"]
+        )
+        serializer = self.get_serializer(tour)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class TourStepViewSet(viewsets.ModelViewSet):
     serializer_class = TourStepSerializer
@@ -360,6 +455,10 @@ class TourStepViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         tour_id = self.kwargs["tour_pk"]
+        tour = Tour.objects.only("id", "creator_id").get(pk=tour_id)
+        if not (self.request.user.is_staff or tour.creator_id == self.request.user.id):
+            raise PermissionDenied("Only the tour creator can create tour steps.")
+
         if TourStep.objects.filter(tour_id=tour_id).count() >= MAX_TOUR_STEPS:
             raise ValidationError(
                 {"steps": f"A tour can have at most {MAX_TOUR_STEPS} steps."}
@@ -369,10 +468,21 @@ class TourStepViewSet(viewsets.ModelViewSet):
         recalculate_tour_metrics(step.tour)
 
     def perform_update(self, serializer):
+        step_instance = self.get_object()
+        if not (
+            self.request.user.is_staff
+            or step_instance.tour.creator_id == self.request.user.id
+        ):
+            raise PermissionDenied("Only the tour creator can update tour steps.")
         step = serializer.save()
         recalculate_tour_metrics(step.tour)
 
     def perform_destroy(self, instance):
+        if not (
+            self.request.user.is_staff
+            or instance.tour.creator_id == self.request.user.id
+        ):
+            raise PermissionDenied("Only the tour creator can delete tour steps.")
         tour = instance.tour
         instance.delete()
         recalculate_tour_metrics(tour)
@@ -805,6 +915,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user, tour=tour)
         BadgeService.evaluate_user_badges(self.request.user)
         BadgeService.evaluate_user_badges(tour.creator)
+
+        create_notification(
+            user=tour.creator,
+            title="New Review on Your Tour! ⭐",
+            body=f"{self.request.user.username} gave a review to your tour '{tour.title}'.",
+            data={
+                "tour_id": tour.id,
+                "review_id": self.review.id,
+                "type": "new_review",
+            },
+        )
 
     def perform_update(self, serializer):
         if serializer.instance.tour.creator_id == self.request.user.id:

@@ -18,6 +18,7 @@ import HexBadge from '@/components/ProfileComponents/HexBadge';
 import { openExternalMapsDirections, type ExternalMapsProvider } from '@/utils/externalMaps';
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { DEFAULT_MAX_FAILED_ATTEMPTS } from '@/api/tourProgress';
+import { isDevelopmentEnvMode } from '@/utils/envMode';
 
 function NavigationArrows({
   canGoBack,
@@ -182,8 +183,33 @@ export default function TourNavigation({
   const colors = Colors[theme];
   const [isDirectionsModalVisible, setIsDirectionsModalVisible] = useState(false);
   const [hasAnsweredCurrentStep, setHasAnsweredCurrentStep] = useState(false);
+  const instanceIdRef = useRef(`tn-${Math.random().toString(36).slice(2, 8)}`);
+  const latestStepIdRef = useRef<string | null>(tour.steps[currentStepIndex]?.id ?? null);
   const { skipCount, wrongAnswerCount, highestStepIndex, stepAnswers, stepAttempts } =
     useActiveTour();
+
+  useEffect(() => {
+    latestStepIdRef.current = tour.steps[currentStepIndex]?.id ?? null;
+  }, [currentStepIndex, tour.steps]);
+
+  useEffect(() => {
+    if (__DEV__) {
+      console.log('[TourNavigation] mount', {
+        instanceId: instanceIdRef.current,
+        tourId: tour.id,
+        stepId: tour.steps[currentStepIndex]?.id ?? null,
+      });
+    }
+    return () => {
+      if (__DEV__) {
+        console.log('[TourNavigation] unmount', {
+          instanceId: instanceIdRef.current,
+          tourId: tour.id,
+          stepId: latestStepIdRef.current,
+        });
+      }
+    };
+  }, []);
 
   useEffect(() => {
     setHasAnsweredCurrentStep(false);
@@ -231,6 +257,11 @@ export default function TourNavigation({
           solvedSteps,
           locationConfirmedSteps
         );
+  const canSkipCurrentStep =
+    currentStep.type === 'puzzle' &&
+    !isSolved &&
+    !hasAnsweredWrong &&
+    currentStepIndex >= highestStepIndex;
   const TIER_COLORS = {
     gold: '#F59E0B',
     silver: '#94A3B8',
@@ -265,6 +296,18 @@ export default function TourNavigation({
   const popupOpacity = useRef(new Animated.Value(0)).current;
   const crossOpacity = useRef(new Animated.Value(0)).current;
   const crossScale = useRef(new Animated.Value(0.3)).current;
+  const [isLocationToastVisible, setIsLocationToastVisible] = useState(false);
+  const locationToastOpacity = useRef(new Animated.Value(0)).current;
+  const locationToastTranslateY = useRef(new Animated.Value(-10)).current;
+  const locationToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (locationToastTimerRef.current) {
+        clearTimeout(locationToastTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (prevTierRef.current === currentTier) return;
@@ -306,16 +349,109 @@ export default function TourNavigation({
     onStepSolved(currentStep.id);
   }, [currentStep.id, onStepSolved]);
 
+  const showLocationConfirmedToast = useCallback(() => {
+    if (locationToastTimerRef.current) {
+      clearTimeout(locationToastTimerRef.current);
+      locationToastTimerRef.current = null;
+    }
+
+    setIsLocationToastVisible(true);
+    locationToastOpacity.setValue(0);
+    locationToastTranslateY.setValue(-10);
+
+    Animated.parallel([
+      Animated.timing(locationToastOpacity, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(locationToastTranslateY, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      locationToastTimerRef.current = setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(locationToastOpacity, {
+            toValue: 0,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+          Animated.timing(locationToastTranslateY, {
+            toValue: -10,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          setIsLocationToastVisible(false);
+          locationToastTimerRef.current = null;
+        });
+      }, 700);
+    });
+  }, [locationToastOpacity, locationToastTranslateY]);
+
   const handleLocationConfirm = useCallback(async () => {
     if (!requiresLocation || isLocationConfirmed) return;
 
     try {
+      if (isDevelopmentEnvMode()) {
+        await onLocationConfirm(
+          currentStep.id,
+          currentStep.coordinate.latitude,
+          currentStep.coordinate.longitude
+        );
+        showLocationConfirmedToast();
+        return;
+      }
+
+      const permission = await Location.getForegroundPermissionsAsync();
+      const permissionStatus =
+        permission.status === 'granted'
+          ? permission.status
+          : (await Location.requestForegroundPermissionsAsync()).status;
+
+      if (permissionStatus !== 'granted') {
+        Alert.alert(t('tourId.locationRequiredTitle'), t('tourId.locationRequiredMessage'));
+        return;
+      }
+
       const location = await Location.getCurrentPositionAsync({});
       await onLocationConfirm(currentStep.id, location.coords.latitude, location.coords.longitude);
+      showLocationConfirmedToast();
     } catch (error) {
       console.error('Failed to get location:', error);
+      if (error instanceof Error && error.message.startsWith('OUTSIDE_AREA:')) {
+        const [, distance, radius] = error.message.split(':');
+        Alert.alert(
+          t('tourStep.locationCheckFailedTitle', 'Location check failed'),
+          t('tourStep.locationCheckOutsideArea', {
+            defaultValue:
+              'You are outside the accepted area ({{distance}}m away, allowed: {{radius}}m).',
+            distance: Number(distance).toFixed(1),
+            radius: Number(radius).toFixed(0),
+          })
+        );
+        return;
+      }
+      Alert.alert(
+        t('tourStep.locationCheckFailedTitle', 'Location check failed'),
+        t(
+          'tourStep.locationCheckUnavailable',
+          "We couldn't verify your current location. Please try again."
+        )
+      );
     }
-  }, [currentStep.id, isLocationConfirmed, onLocationConfirm, requiresLocation]);
+  }, [
+    currentStep.coordinate.latitude,
+    currentStep.coordinate.longitude,
+    currentStep.id,
+    isLocationConfirmed,
+    onLocationConfirm,
+    requiresLocation,
+    showLocationConfirmedToast,
+    t,
+  ]);
 
   const handleOpenDirections = useCallback(
     async (provider: ExternalMapsProvider) => {
@@ -395,6 +531,22 @@ export default function TourNavigation({
           </View>
         </Animated.View>
       )}
+      {isLocationToastVisible && (
+        <Animated.View
+          style={[
+            styles.locationToast,
+            {
+              opacity: locationToastOpacity,
+              transform: [{ translateY: locationToastTranslateY }],
+            },
+          ]}
+        >
+          <MaterialCommunityIcons name="check-circle" size={18} color={colors.easy} />
+          <Text style={styles.locationToastText}>
+            {t('tourStep.locationCheckSuccessTitle', 'Location confirmed')}
+          </Text>
+        </Animated.View>
+      )}
       <View style={styles.headerRow}>
         <View style={styles.actionGroup}>
           <View style={[styles.badgeStatusCard, { borderColor: skipBadgeColor }]}>
@@ -407,11 +559,22 @@ export default function TourNavigation({
             </View>
           </View>
           <Pressable
-            style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
+            style={({ pressed }) => [
+              styles.actionButton,
+              !canSkipCurrentStep && styles.actionButtonDisabled,
+              canSkipCurrentStep && pressed && styles.actionButtonPressed,
+            ]}
             onPress={onSkipStep}
+            disabled={!canSkipCurrentStep}
           >
-            <MaterialCommunityIcons name="skip-forward" size={19} color={Colors[theme].primary} />
-            <Text style={styles.actionLabel}>{t('map.activeTour.skip')}</Text>
+            <MaterialCommunityIcons
+              name="skip-forward"
+              size={19}
+              color={canSkipCurrentStep ? Colors[theme].primary : Colors[theme].subText}
+            />
+            <Text style={[styles.actionLabel, !canSkipCurrentStep && styles.actionLabelDisabled]}>
+              {t('map.activeTour.skip')}
+            </Text>
           </Pressable>
           <Pressable
             style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}

@@ -173,6 +173,7 @@
     "feature1": "Crea y únete a tours guiados",
     "feature2": "Gana insignias y XP",
     "feature3": "Conecta con otros viajeros",
+    "helpButton": "Ayuda y FAQ",
     "completedTours": "Tours completados",
     "emptyCompletedTour": "No se encontraron tours",
     "errorTitle": "Algo salió mal",
@@ -219,7 +220,10 @@
       "veteran": "Veterano",
       "expert": "Experto",
       "legend": "Leyenda"
-    }
+    },
+    "helpMini": "Ayuda",
+    "helpDescription": "Consulta preguntas frecuentes y la guía básica de la app.",
+    "openFaq": "Abrir FAQ"
   },
   "tour": {
     "featured": "Destacado",
@@ -420,7 +424,22 @@
       },
       "notifications": {
         "label": "Notificaciones",
-        "description": "Gestiona tus preferencias de notificaciones"
+        "description": "Gestiona tus preferencias de notificaciones",
+        "statusOn": "Activadas",
+        "statusOff": "Desactivadas",
+        "enablePush": "Habilitar Notificaciones Push",
+        "deniedTitle": "Notificaciones Desactivadas",
+        "deniedMessage": "Por favor, habilita las notificaciones en los ajustes de tu dispositivo para recibir alertas.",
+        "openSettings": "Abrir Ajustes",
+        "errorTitle": "Error",
+        "errorMessage": "No se pudieron actualizar las preferencias de notificación. Por favor, inténtalo de nuevo.",
+        "types": {
+          "new_tour": "Nuevos Tours de a quien Sigues",
+          "tour_approved": "Aprobaciones de Tours",
+          "new_review": "Nuevas Reseñas en tus Tours",
+          "new_follower": "Nuevos Seguidores",
+          "friend_level_up": "Tus amigos suben de nivel"
+        }
       },
       "privacy": {
         "label": "Privacidad",
@@ -523,6 +542,9 @@
       "personalDescription": "Selecciona ubicaciones manualmente, añade historias y personaliza cada detalle de tu tour",
       "ai": "Creación con IA",
       "aiDescription": "Deja que la IA te ayude a generar contenido de tour, historias y sugerencias basadas en tus preferencias",
+      "personalUnlockLevel": "Se desbloquea en el nivel {{level}}",
+      "personalLockedTitle": "La Creación Personal se desbloquea en el nivel {{level}}",
+      "personalLockedMessage": "La Creación Personal se desbloquea en el nivel {{level}}. Ahora estás en el nivel {{currentLevel}}. Sigue así, ¡buena suerte!",
       "skip": "No importa, buscaré un tour",
       "comingSoon": "PRÓXIMAMENTE"
     },
@@ -800,6 +822,11 @@
     "progressMissingMessage": "No se pudo verificar el puzle sin progreso de tour activo.",
     "alreadyAnswered": "Ya respondiste esta pregunta.",
     "confirmLocationToContinue": "Confirma tu ubicación y pulsa Siguiente para continuar.",
+    "locationCheckSuccessTitle": "Ubicación confirmada",
+    "locationCheckSuccessMessage": "Perfecto, estás en el lugar correcto. Este paso ya está desbloqueado.",
+    "locationCheckFailedTitle": "¡No estás en el punto!",
+    "locationCheckOutsideArea": "Ve al paso actual del tour que se muestra en el mapa (dentro de 100m).",
+    "locationCheckUnavailable": "No pudimos verificar tu ubicación en este momento. Inténtalo de nuevo.",
     "picture": {
       "checkingSimilarity": "Comprobando similitud...",
       "matched": "Coincidencia ({{similarity}}%).",

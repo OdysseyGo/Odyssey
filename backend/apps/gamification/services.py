@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.db.models import Avg, Count
 from django.utils import timezone
 
+from apps.notifications.utils import create_notification
 from apps.tours.models import Puzzle, PuzzleAttempt, Review, Tour
 
 from .level_service import LevelService
@@ -702,10 +703,23 @@ class TourRewardService:
         awarded_xp = 0
 
         if not progress.xp_awarded:
+            old_level = user.level
             if reward_eligible:
                 user.xp += progress.total_xp
                 user.level = LevelService.get_level(user.xp)
                 user.tour_count += 1
+            if user.level > old_level:
+                for follow_obj in user.followers.all():
+                    create_notification(
+                        user=follow_obj.follower,
+                        title="Your Friend Leveled Up!",
+                        body=f"{user.username} just leveled up and reached level {user.level}!",
+                        data={
+                            "user_id": user.id,
+                            "new_level": user.level,
+                            "type": "friend_level_up",
+                        },
+                    )
             progress.xp_awarded = True
             progress.save(update_fields=["xp_awarded"])
             if reward_eligible:

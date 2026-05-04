@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "apps.ai_content",
     "storages",
     "apps.admin_dashboard",
+    "apps.notifications",
     "apps.ads",
 ]
 
@@ -93,6 +94,7 @@ REST_FRAMEWORK = {
 }
 
 AI_GENERATION_MAX_ACTIVE_JOBS = int(os.getenv("AI_GENERATION_MAX_ACTIVE_JOBS", "1"))
+PERSONAL_TOUR_MIN_LEVEL = int(os.getenv("PERSONAL_TOUR_MIN_LEVEL", "1"))
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Odyssey API",
@@ -326,3 +328,10 @@ LOGGING = {
         },
     },
 }
+
+# Apple Push Notification Settings
+APPLE_TEAM_ID = os.getenv("APPLE_TEAM_ID")
+APPLE_KEY_ID = os.getenv("APPLE_KEY_ID")
+APPLE_AUTH_KEY_P8_B64 = os.getenv("APPLE_AUTH_KEY_P8_B64")
+APNS_BUNDLE_ID = os.getenv("APNS_BUNDLE_ID", "com.app.odyssey.bilkent")
+APNS_USE_SANDBOX = os.getenv("APNS_USE_SANDBOX", "True") == "True"

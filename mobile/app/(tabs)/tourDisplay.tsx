@@ -26,6 +26,7 @@ import Colors from '@/constants/Colors';
 import CreateTourButton from '@/components/TourCreation/CreateTourButton';
 import { useTranslation } from 'react-i18next';
 import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/OdysseyTabBar';
+import { useActiveTour } from '@/contexts/ActiveTourContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -260,6 +261,7 @@ function TourDisplayContent() {
   const colorScheme = useColorTheme();
   const theme = Colors[colorScheme];
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { isActive } = useActiveTour();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
@@ -338,7 +340,11 @@ function TourDisplayContent() {
     useCallback(() => {
       const controller = new AbortController();
       fetchTours(false, controller.signal);
-      return () => controller.abort();
+      return () => {
+        controller.abort();
+        setAllTours([]);
+        setCatalogTours([]);
+      };
     }, [fetchTours])
   );
 
@@ -1093,7 +1099,7 @@ function TourDisplayContent() {
         </Pressable>
       </Modal>
 
-      <CreateTourButton />
+      {!isActive ? <CreateTourButton /> : null}
     </View>
   );
 }

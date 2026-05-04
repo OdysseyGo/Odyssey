@@ -16,7 +16,10 @@ User = get_user_model()
 class TourCreationApiTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="testuser", email="test@example.com", password="testpassword123"
+            username="testuser",
+            email="test@example.com",
+            password="testpassword123",
+            level=5,
         )
         self.client.force_authenticate(user=self.user)
 
@@ -320,3 +323,73 @@ class TourCompletionVisibilityApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("generation_source", response.data["error"])
+
+
+class PersonalTourLevelGateApiTests(APITestCase):
+    @staticmethod
+    def _image_file(name="cover.gif"):
+        image_content = (
+            b"\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x05\x04\x04"
+            b"\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44"
+            b"\x01\x00\x3b"
+        )
+        return SimpleUploadedFile(name, image_content, content_type="image/gif")
+
+    def test_low_level_user_cannot_create_personal_tour(self):
+        user = User.objects.create_user(
+            username="lowlevel",
+            email="lowlevel@example.com",
+            password="testpassword123",
+            level=4,
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.post(
+            "/api/tours/",
+            {
+                "title": "Blocked Personal Tour",
+                "description": "desc",
+                "tour_type": "STORY",
+                "category": "History",
+                "difficulty": "EASY",
+                "duration_minutes": 60,
+                "city": "Paris",
+                "country": "France",
+                "country_code": "FR",
+                "is_premium": False,
+                "cover_image": self._image_file(),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("at least level", str(response.data.get("detail", "")))
+
+    def test_user_at_threshold_can_create_personal_tour(self):
+        user = User.objects.create_user(
+            username="minlevel",
+            email="minlevel@example.com",
+            password="testpassword123",
+            level=5,
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.post(
+            "/api/tours/",
+            {
+                "title": "Allowed Personal Tour",
+                "description": "desc",
+                "tour_type": "STORY",
+                "category": "History",
+                "difficulty": "EASY",
+                "duration_minutes": 60,
+                "city": "Paris",
+                "country": "France",
+                "country_code": "FR",
+                "is_premium": False,
+                "cover_image": self._image_file(),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)

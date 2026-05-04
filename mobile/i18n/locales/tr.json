@@ -219,7 +219,11 @@
       "veteran": "Usta",
       "expert": "Uzman",
       "legend": "Efsane"
-    }
+    },
+    "helpButton": "Yardım ve SSS",
+    "helpMini": "Yardım",
+    "helpDescription": "Sık sorulan soruları ve temel uygulama kullanımını inceleyin.",
+    "openFaq": "SSS'yi Aç"
   },
   "tour": {
     "featured": "Öne Çıkan",
@@ -420,7 +424,22 @@
       },
       "notifications": {
         "label": "Bildirimler",
-        "description": "Bildirim tercihlerini yönet"
+        "description": "Bildirim tercihlerini yönetin",
+        "statusOn": "Açık",
+        "statusOff": "Kapalı",
+        "enablePush": "Bildirimlere İzin Ver",
+        "deniedTitle": "Bildirimler Kapalı",
+        "deniedMessage": "Bildirim alabilmek için lütfen cihaz ayarlarından bildirimlere izin verin.",
+        "openSettings": "Ayarları Aç",
+        "errorTitle": "Hata",
+        "errorMessage": "Bildirim tercihleri güncellenemedi. Lütfen tekrar deneyin.",
+        "types": {
+          "new_tour": "Takip Ettiklerinden Yeni Turlar",
+          "tour_approved": "Tur Onayları",
+          "new_review": "Turlarına Gelen Yeni Yorumlar",
+          "new_follower": "Yeni Takipçiler",
+          "friend_level_up": "Arkadaş Seviye Atlamaları"
+        }
       },
       "logout": {
         "label": "Çıkış Yap",
@@ -525,6 +544,9 @@
       "personalDescription": "Konumları manuel olarak seçin, hikayeler ekleyin ve turunuzun her detayını özelleştirin",
       "ai": "Yapay Zeka ile Oluşturma",
       "aiDescription": "Yapay zekanın tercihlerinize göre tur içeriği, hikayeler ve öneriler oluşturmasına izin verin",
+      "personalUnlockLevel": "{{level}}. seviyede açılır",
+      "personalLockedTitle": "Kişisel Oluşturma {{level}}. Seviyede Açılır",
+      "personalLockedMessage": "Kişisel Oluşturma özelliği {{level}}. seviyede açılır. Şu an {{currentLevel}}. seviyedesin. Devam et, bol şans!",
       "skip": "Vazgeçtim, bir tur bulacağım",
       "comingSoon": "YAKINDA"
     },
@@ -800,6 +822,11 @@
     "progressMissingMessage": "Aktif tur ilerlemesi olmadan bulmaca doğrulanamadı.",
     "alreadyAnswered": "Bu soruyu zaten cevapladınız.",
     "confirmLocationToContinue": "Devam etmek için konumunuzu onaylayıp İleriye basın.",
+    "locationCheckSuccessTitle": "Konum doğrulandı",
+    "locationCheckSuccessMessage": "Harika, doğru noktadasın. Bu adımın kilidi açıldı.",
+    "locationCheckFailedTitle": "Doğru noktada değilsin!",
+    "locationCheckOutsideArea": "Haritada gösterilen mevcut tur adımına git (100m içinde).",
+    "locationCheckUnavailable": "Konumun şu anda doğrulanamadı. Lütfen tekrar dene.",
     "picture": {
       "checkingSimilarity": "Benzerlik kontrol ediliyor...",
       "matched": "Eşleşti (%{{similarity}}).",

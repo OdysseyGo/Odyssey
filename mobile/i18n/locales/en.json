@@ -219,7 +219,11 @@
       "veteran": "Veteran",
       "expert": "Expert",
       "legend": "Legend"
-    }
+    },
+    "helpButton": "Help & FAQ",
+    "helpMini": "Help",
+    "helpDescription": "Read frequently asked questions and core app guidance.",
+    "openFaq": "Open FAQ"
   },
   "tour": {
     "featured": "Featured",
@@ -420,7 +424,22 @@
       },
       "notifications": {
         "label": "Notifications",
-        "description": "Manage notification preferences"
+        "description": "Manage notification preferences",
+        "statusOn": "On",
+        "statusOff": "Off",
+        "enablePush": "Enable Push Notifications",
+        "deniedTitle": "Notifications Disabled",
+        "deniedMessage": "Please enable notifications in your device settings to receive alerts.",
+        "openSettings": "Open Settings",
+        "errorTitle": "Error",
+        "errorMessage": "Could not update notification preferences. Please try again.",
+        "types": {
+          "new_tour": "New Tours from Following",
+          "tour_approved": "Tour Approvals",
+          "new_review": "New Reviews on Your Tours",
+          "new_follower": "New Followers",
+          "friend_level_up": "Friend Level Ups"
+        }
       },
       "logout": {
         "label": "Logout",
@@ -525,6 +544,9 @@
       "personalDescription": "Manually select locations, add stories, and customize every detail of your tour",
       "ai": "AI-Powered Creation",
       "aiDescription": "Let AI help you generate tour content, stories, and suggestions based on your preferences",
+      "personalUnlockLevel": "Unlocks at level {{level}}",
+      "personalLockedTitle": "Personal Creation Unlocks at Level {{level}}",
+      "personalLockedMessage": "Personal Creation unlocks at level {{level}}. You are level {{currentLevel}} now. Keep going, good luck!",
       "skip": "Nevermind, I'll find a tour",
       "comingSoon": "COMING SOON"
     },
@@ -800,6 +822,11 @@
     "progressMissingMessage": "Could not verify puzzle without active tour progress.",
     "alreadyAnswered": "You have already answered this question.",
     "confirmLocationToContinue": "Confirm your location and press Next to continue.",
+    "locationCheckSuccessTitle": "Location confirmed",
+    "locationCheckSuccessMessage": "Great, you're at the right spot. This step is now unlocked.",
+    "locationCheckFailedTitle": "You are not in the spot!",
+    "locationCheckOutsideArea": "Go to the current tour step shown on the map (within 100m).",
+    "locationCheckUnavailable": "We couldn't verify your location right now. Please try again.",
     "picture": {
       "checkingSimilarity": "Checking similarity...",
       "matched": "Matched ({{similarity}}%).",
@@ -936,7 +963,7 @@
       "badgeStatusSilver": "Silver",
       "badgeStatusBronze": "Bronze",
       "badgeStatusLoss": "No Badge",
-      "route": "Get Directions",
+      "route": "Go",
       "directions": "Directions",
       "openIn": "Open this stop in",
       "appleMaps": "Apple Maps",

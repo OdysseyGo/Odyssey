@@ -38,7 +38,7 @@ const MODAL_GRADIENTS_DARK: Record<BadgeTier, readonly [string, string, string]>
 
 export default function TourCompleteModal({
   visible,
-  tour,
+  tourTitle,
   earnedXP,
   awardedBadges = [],
   completedSteps,
@@ -57,6 +57,9 @@ export default function TourCompleteModal({
 
   useEffect(() => {
     if (visible) {
+      if (__DEV__) {
+        console.log('[TourCompleteModal] visible', { hasFullTour: false });
+      }
       // Reset animations
       scaleAnim.setValue(0);
       rotateAnim.setValue(0);
@@ -138,7 +141,7 @@ export default function TourCompleteModal({
           {/* Title */}
           <Text style={styles.title}>{t('map.tourComplete.title')}</Text>
           <Text style={styles.subtitle}>
-            {t('map.tourComplete.subtitle', { tourName: tour.title })}
+            {t('map.tourComplete.subtitle', { tourName: tourTitle })}
           </Text>
 
           {earnedCityBadge ? (
