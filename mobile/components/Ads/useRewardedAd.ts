@@ -29,10 +29,7 @@ export function useRewardedAd(placementKey: string) {
   const mountedRef = useRef(false);
   const placement = getPlacement(placementKey);
 
-  const logDev = useCallback(
-    (_event: DevMetric, _details: Record<string, unknown> = {}) => {},
-    []
-  );
+  const logDev = useCallback((_event: DevMetric, _details: Record<string, unknown> = {}) => {}, []);
 
   const detachListeners = useCallback(() => {
     if (!cleanupRef.current) return;

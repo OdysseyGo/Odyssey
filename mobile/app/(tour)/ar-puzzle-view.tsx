@@ -205,37 +205,34 @@ export default function ARPuzzleViewScreen() {
     setIsSceneReady(true);
   }, []);
 
-  const cleanupArResources = useCallback(
-    (reason: string, hideNavigator: boolean = true) => {
-      if (isDisposedRef.current) {
-        return;
+  const cleanupArResources = useCallback((reason: string, hideNavigator: boolean = true) => {
+    if (isDisposedRef.current) {
+      return;
+    }
+
+    isDisposedRef.current = true;
+    setIsSceneReady(false);
+    if (hideNavigator) {
+      setNavigatorVisible(false);
+    }
+
+    const navigator = navigatorRef.current as any;
+
+    try {
+      if (typeof navigator?._resetARSession === 'function') {
+        navigator._resetARSession(true, true);
+      } else if (typeof navigator?.arSceneNavigator?.resetARSession === 'function') {
+        navigator.arSceneNavigator.resetARSession(true, true);
       }
+    } catch {}
 
-      isDisposedRef.current = true;
-      setIsSceneReady(false);
-      if (hideNavigator) {
-        setNavigatorVisible(false);
+    try {
+      const nodeHandle = navigator ? findNodeHandle(navigator) : null;
+      if (nodeHandle && NativeModules?.VRTARSceneNavigatorModule?.cleanup) {
+        NativeModules.VRTARSceneNavigatorModule.cleanup(nodeHandle);
       }
-
-      const navigator = navigatorRef.current as any;
-
-      try {
-        if (typeof navigator?._resetARSession === 'function') {
-          navigator._resetARSession(true, true);
-        } else if (typeof navigator?.arSceneNavigator?.resetARSession === 'function') {
-          navigator.arSceneNavigator.resetARSession(true, true);
-        }
-      } catch {}
-
-      try {
-        const nodeHandle = navigator ? findNodeHandle(navigator) : null;
-        if (nodeHandle && NativeModules?.VRTARSceneNavigatorModule?.cleanup) {
-          NativeModules.VRTARSceneNavigatorModule.cleanup(nodeHandle);
-        }
-      } catch {}
-    },
-    []
-  );
+    } catch {}
+  }, []);
 
   const closeWithCleanup = useCallback(
     (reason: string) => {

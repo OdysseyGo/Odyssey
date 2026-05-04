@@ -32,10 +32,7 @@ export function useInterstitial(placementKey: string, options?: { disabled?: boo
   const mountedRef = useRef(false);
   const disabled = options?.disabled ?? false;
 
-  const logDev = useCallback(
-    (_event: DevMetric, _details: Record<string, unknown> = {}) => {},
-    []
-  );
+  const logDev = useCallback((_event: DevMetric, _details: Record<string, unknown> = {}) => {}, []);
 
   const isPlacementEligible = useCallback(() => {
     if (!isReady) return null;
