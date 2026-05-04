@@ -90,7 +90,7 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
     <ScrollView
       style={styles.content}
       contentContainerStyle={styles.scrollContent}
-      keyboardShouldPersistTaps="always"
+      keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.sectionTitle}>{t('creation.details.title')}</Text>
       <Text style={styles.sectionSubtitle}>{t('creation.details.subtitle')}</Text>

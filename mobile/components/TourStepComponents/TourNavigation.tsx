@@ -258,10 +258,9 @@ export default function TourNavigation({
           locationConfirmedSteps
         );
   const canSkipCurrentStep =
-    currentStep.type === 'puzzle' &&
+    currentStepIndex >= highestStepIndex &&
     !isSolved &&
-    !hasAnsweredWrong &&
-    currentStepIndex >= highestStepIndex;
+    (currentStep.type === 'story' || (currentStep.type === 'puzzle' && !hasAnsweredWrong));
   const TIER_COLORS = {
     gold: '#F59E0B',
     silver: '#94A3B8',
