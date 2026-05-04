@@ -95,17 +95,8 @@ function ARPuzzleScene(props: any) {
       }
       readySentRef.current = true;
       onSceneReady?.();
-      if (__DEV__) {
-        console.log('[ARPuzzleScene] scene_ready', {
-          stepId,
-          puzzleId,
-          modelUri: sceneAssetUrl || 'none',
-          completedLoads: loadCompletedCountRef.current,
-          failedLoads: loadErrorCountRef.current,
-        });
-      }
     }, MODEL_LOAD_SETTLE_MS);
-  }, [clearSettleTimer, onSceneReady, puzzleId, sceneAssetUrl, stepId]);
+  }, [clearSettleTimer, onSceneReady]);
 
   useEffect(() => {
     readySentRef.current = false;
@@ -113,21 +104,7 @@ function ARPuzzleScene(props: any) {
     loadCompletedCountRef.current = 0;
     loadErrorCountRef.current = 0;
     clearSettleTimer();
-    if (__DEV__) {
-      console.log('[ARPuzzleScene] mount', {
-        stepId,
-        puzzleId,
-        modelUri: sceneAssetUrl || 'none',
-      });
-    }
     return () => {
-      if (__DEV__) {
-        console.log('[ARPuzzleScene] unmount', {
-          stepId,
-          puzzleId,
-          modelUri: sceneAssetUrl || 'none',
-        });
-      }
       clearSettleTimer();
     };
   }, [clearSettleTimer, puzzleId, sceneAssetUrl, stepId]);
@@ -149,14 +126,6 @@ function ARPuzzleScene(props: any) {
         onLoadStart={() => {
           loadsInFlightRef.current += 1;
           clearSettleTimer();
-          if (__DEV__) {
-            console.log('[ARPuzzleScene] model_load_started', {
-              stepId,
-              puzzleId,
-              modelUri: sceneAssetUrl || 'none',
-              inFlightLoads: loadsInFlightRef.current,
-            });
-          }
         }}
         onLoadEnd={() => {
           if (loadsInFlightRef.current > 0) {
@@ -164,14 +133,6 @@ function ARPuzzleScene(props: any) {
           }
           loadCompletedCountRef.current += 1;
           signalSceneReadyWhenSettled();
-          if (__DEV__) {
-            console.log('[ARPuzzleScene] model_loaded', {
-              stepId,
-              puzzleId,
-              modelUri: sceneAssetUrl || 'none',
-              inFlightLoads: loadsInFlightRef.current,
-            });
-          }
         }}
         onError={(event: any) => {
           if (loadsInFlightRef.current > 0) {
@@ -179,15 +140,6 @@ function ARPuzzleScene(props: any) {
           }
           loadErrorCountRef.current += 1;
           signalSceneReadyWhenSettled();
-          if (__DEV__) {
-            console.log('[ARPuzzleScene] model_error', {
-              stepId,
-              puzzleId,
-              modelUri: sceneAssetUrl || 'none',
-              error: event?.nativeEvent ?? event ?? null,
-              inFlightLoads: loadsInFlightRef.current,
-            });
-          }
         }}
       />
       <ViroText
@@ -216,7 +168,6 @@ export default function ARPuzzleViewScreen() {
   const viro = getViroModule();
   const { t } = useTranslation();
   const { isActive } = useActiveTour();
-  const instanceIdRef = useRef(`arv-${Math.random().toString(36).slice(2, 8)}`);
   const isDisposedRef = useRef(false);
   const navigatorRef = useRef<any>(null);
   const [navigatorVisible, setNavigatorVisible] = useState(true);
@@ -257,15 +208,6 @@ export default function ARPuzzleViewScreen() {
   const cleanupArResources = useCallback(
     (reason: string, hideNavigator: boolean = true) => {
       if (isDisposedRef.current) {
-        if (__DEV__) {
-          console.log('[ARPuzzleView] cleanup_skip_already_disposed', {
-            instanceId: instanceIdRef.current,
-            reason,
-            stepId,
-            puzzleId,
-            modelUri: sceneAssetUrl || 'none',
-          });
-        }
         return;
       }
 
@@ -276,58 +218,23 @@ export default function ARPuzzleViewScreen() {
       }
 
       const navigator = navigatorRef.current as any;
-      let resetCalled = false;
-      let cleanupCalled = false;
-      let nodeHandle: number | null = null;
 
       try {
         if (typeof navigator?._resetARSession === 'function') {
           navigator._resetARSession(true, true);
-          resetCalled = true;
         } else if (typeof navigator?.arSceneNavigator?.resetARSession === 'function') {
           navigator.arSceneNavigator.resetARSession(true, true);
-          resetCalled = true;
         }
-      } catch (error) {
-        if (__DEV__) {
-          console.log('[ARPuzzleView] reset_error', {
-            instanceId: instanceIdRef.current,
-            reason,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
-      }
+      } catch {}
 
       try {
-        nodeHandle = navigator ? findNodeHandle(navigator) : null;
+        const nodeHandle = navigator ? findNodeHandle(navigator) : null;
         if (nodeHandle && NativeModules?.VRTARSceneNavigatorModule?.cleanup) {
           NativeModules.VRTARSceneNavigatorModule.cleanup(nodeHandle);
-          cleanupCalled = true;
         }
-      } catch (error) {
-        if (__DEV__) {
-          console.log('[ARPuzzleView] native_cleanup_error', {
-            instanceId: instanceIdRef.current,
-            reason,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
-      }
-
-      if (__DEV__) {
-        console.log('[ARPuzzleView] cleanup', {
-          instanceId: instanceIdRef.current,
-          reason,
-          stepId,
-          puzzleId,
-          modelUri: sceneAssetUrl || 'none',
-          resetCalled,
-          cleanupCalled,
-          nodeHandle,
-        });
-      }
+      } catch {}
     },
-    [puzzleId, sceneAssetUrl, stepId]
+    []
   );
 
   const closeWithCleanup = useCallback(
@@ -345,25 +252,8 @@ export default function ARPuzzleViewScreen() {
   }, [sceneAssetUrl]);
 
   useEffect(() => {
-    const instanceId = instanceIdRef.current;
-    if (__DEV__) {
-      console.log('[ARPuzzleView] mount', {
-        instanceId,
-        stepId,
-        puzzleId,
-        modelUri: sceneAssetUrl || 'none',
-      });
-    }
     return () => {
       cleanupArResources('unmount', false);
-      if (__DEV__) {
-        console.log('[ARPuzzleView] unmount', {
-          instanceId,
-          stepId,
-          puzzleId,
-          modelUri: sceneAssetUrl || 'none',
-        });
-      }
     };
   }, [cleanupArResources, puzzleId, sceneAssetUrl, stepId]);
 
@@ -380,13 +270,6 @@ export default function ARPuzzleViewScreen() {
 
   useEffect(() => {
     if (!isActive) {
-      if (__DEV__) {
-        console.log('[ARPuzzleView] active_tour_cleared_while_visible', {
-          instanceId: instanceIdRef.current,
-          stepId,
-          puzzleId,
-        });
-      }
       closeWithCleanup('active_tour_cleared');
     }
   }, [closeWithCleanup, isActive, puzzleId, stepId]);

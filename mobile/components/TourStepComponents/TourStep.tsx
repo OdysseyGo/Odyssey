@@ -827,7 +827,6 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
   const styles = useMemo(() => getStyles(theme), [theme]);
   const { t } = useTranslation();
   const { progressId, recordWrongAnswer, recordAttempt, stepAttempts } = useActiveTour();
-  const instanceIdRef = useRef(`ar-step-${Math.random().toString(36).slice(2, 8)}`);
   const isMountedRef = useRef(true);
 
   const [codeInput, setCodeInput] = useState('');
@@ -840,27 +839,10 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
   const isExhausted = attemptCount >= maxAttempts;
 
   useEffect(() => {
-    if (__DEV__) {
-      console.log('[ArCodeView] mount', {
-        instanceId: instanceIdRef.current,
-        stepId: stepId ?? 'unknown',
-        puzzleId: stepId ?? 'unknown',
-        modelUri: puzzle.sceneAssetUrl ?? 'none',
-      });
-    }
     return () => {
       isMountedRef.current = false;
-      if (__DEV__) {
-        console.log('[ArCodeView] unmount', {
-          instanceId: instanceIdRef.current,
-          stepId: stepId ?? 'unknown',
-          puzzleId: stepId ?? 'unknown',
-          modelUri: puzzle.sceneAssetUrl ?? 'none',
-          cleanupRan: true,
-        });
-      }
     };
-  }, [puzzle.sceneAssetUrl, stepId]);
+  }, []);
 
   const ensureArPermissions = async () => {
     const locationPerm = await Location.getForegroundPermissionsAsync();
@@ -896,12 +878,6 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
     try {
       const hasPermissions = await ensureArPermissions();
       if (!isMountedRef.current) {
-        if (__DEV__) {
-          console.log('[ArCodeView] ignored_permission_result_after_unmount', {
-            instanceId: instanceIdRef.current,
-            stepId: stepId ?? 'unknown',
-          });
-        }
         return;
       }
       if (!hasPermissions) {
@@ -927,11 +903,6 @@ function ArCodeView({ puzzle, isSolved, onSolve, onAnswered, stepId }: ArCodeVie
     } finally {
       if (isMountedRef.current) {
         setIsPreparingAr(false);
-      } else if (__DEV__) {
-        console.log('[ArCodeView] skipped_set_isPreparing_after_unmount', {
-          instanceId: instanceIdRef.current,
-          stepId: stepId ?? 'unknown',
-        });
       }
     }
   };
@@ -1613,31 +1584,6 @@ export default function TourStepComponent({
 }: TourStepProps) {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
-  const instanceIdRef = useRef(`ts-${Math.random().toString(36).slice(2, 8)}`);
-  const latestStepIdRef = useRef(step.id);
-
-  useEffect(() => {
-    latestStepIdRef.current = step.id;
-  }, [step.id]);
-
-  useEffect(() => {
-    if (__DEV__) {
-      console.log('[TourStep] mount', {
-        instanceId: instanceIdRef.current,
-        stepId: step.id,
-        stepType: step.type,
-      });
-    }
-    return () => {
-      if (__DEV__) {
-        console.log('[TourStep] unmount', {
-          instanceId: instanceIdRef.current,
-          stepId: latestStepIdRef.current,
-        });
-      }
-    };
-  }, []);
-
   return (
     <View style={styles.container}>
       {step.type === 'story' && <StoryStepView step={step} />}

@@ -1,7 +1,7 @@
 import { View, Pressable, Text, Animated } from 'react-native';
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { usePathname, useRootNavigationState, useRouter, useSegments } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,7 +32,6 @@ import { LOCATION_CHECK_RADIUS_M } from '@/utils/locationCheck';
 const MAX_SEARCH_DELTA = 0.5;
 const MAX_NEARBY_TOURS_TO_RENDER = 10;
 const SKIP_COMPLETION_INTERSTITIAL_FOR_MEMORY_PROFILE = false;
-const DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS = new Set<string>();
 
 type CompletionSummary = {
   tourId: string;
@@ -145,27 +144,11 @@ function normalizeMapTours(rawTours: unknown[]): MapTour[] {
   return tours;
 }
 
-function approximateJsonSizeBytes(value: unknown): number {
-  try {
-    return JSON.stringify(value).length;
-  } catch {
-    return 0;
-  }
-}
-
-function getRootRouteNames(rootState: ReturnType<typeof useRootNavigationState>): string[] {
-  if (!rootState?.routes) return [];
-  return rootState.routes.map((route) => route.name);
-}
-
 export default function MapScreen() {
   const theme = useColorTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const colors = Colors[theme];
   const router = useRouter();
-  const pathname = usePathname();
-  const segments = useSegments();
-  const rootNavigationState = useRootNavigationState();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
@@ -190,7 +173,6 @@ export default function MapScreen() {
     disabled: SKIP_COMPLETION_INTERSTITIAL_FOR_MEMORY_PROFILE,
   });
   const completingTourRef = useRef(false);
-  const instanceIdRef = useRef(`ms-${Math.random().toString(36).slice(2, 8)}`);
 
   const [nearbyTours, setNearbyTours] = useState<MapTour[]>([]);
   const [nearbySort, setNearbySort] = useState<InBoundsSort>('rating');
@@ -231,19 +213,12 @@ export default function MapScreen() {
   const initialSearchDoneRef = useRef(false);
   const lastSortTapAtRef = useRef(0);
   const selectedNearbyTourIdRef = useRef<number | null>(null);
-  const wasActiveBranchRef = useRef<boolean | null>(null);
   const [legendPanelHeight, setLegendPanelHeight] = useState(168);
   const filterPanelAnim = useRef(new Animated.Value(0)).current;
   const mapMode: TourMapMode = isActive && tour ? 'active-tour' : 'explore';
   const mapInstanceKey = `${mapMode}:${mapResetVersion}`;
   const mapModeRef = useRef<TourMapMode>(mapMode);
   const mapInstanceKeyRef = useRef(mapInstanceKey);
-  const pathnameRef = useRef(pathname);
-  const segmentsRef = useRef<string[]>(segments.map((segment) => String(segment)));
-  const rootRouteNamesRef = useRef<string[]>(getRootRouteNames(rootNavigationState));
-  const rootRouteIndexRef = useRef<number | null>(
-    typeof rootNavigationState?.index === 'number' ? rootNavigationState.index : null
-  );
 
   useEffect(() => {
     nearbyFiltersRef.current = nearbyFilters;
@@ -254,126 +229,12 @@ export default function MapScreen() {
   }, [selectedNearbyTourId]);
 
   useEffect(() => {
-    const isActiveBranch = Boolean(isActive && tour);
-    if (__DEV__ && wasActiveBranchRef.current !== isActiveBranch) {
-      console.log('[MapScreen] branch_transition', {
-        instanceId: instanceIdRef.current,
-        branch: isActiveBranch ? 'active' : 'inactive',
-        tourId: tour?.id ?? null,
-        mapMode,
-        mapInstanceKey,
-      });
-    }
-    wasActiveBranchRef.current = isActiveBranch;
-  }, [isActive, mapInstanceKey, mapMode, tour]);
-
-  useEffect(() => {
-    if (__DEV__) {
-      DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS.add(instanceIdRef.current);
-      console.log('[MapScreen] mount', {
-        instanceId: instanceIdRef.current,
-        pathname: pathnameRef.current,
-        segments: segmentsRef.current,
-        rootRouteNames: rootRouteNamesRef.current,
-        rootRouteIndex: rootRouteIndexRef.current,
-        mapMode: mapModeRef.current,
-        mapInstanceKey: mapInstanceKeyRef.current,
-        mountedCount: DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS.size,
-        activeInstanceIds: Array.from(DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS),
-      });
-      if (DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS.size > 1) {
-        console.warn('[MapScreen] MULTIPLE_INSTANCES_DETECTED', {
-          severity: 'high',
-          pathname: pathnameRef.current,
-          segments: segmentsRef.current,
-          rootRouteNames: rootRouteNamesRef.current,
-          rootRouteIndex: rootRouteIndexRef.current,
-          mapMode: mapModeRef.current,
-          mapInstanceKey: mapInstanceKeyRef.current,
-          mountedCount: DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS.size,
-          activeInstanceIds: Array.from(DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS),
-        });
-        console.error('[MapScreen] MULTIPLE_INSTANCES_HARD_GUARD', {
-          severity: 'high',
-          pathname: pathnameRef.current,
-          segments: segmentsRef.current,
-          rootRouteNames: rootRouteNamesRef.current,
-          rootRouteIndex: rootRouteIndexRef.current,
-          mountedCount: DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS.size,
-          activeInstanceIds: Array.from(DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS),
-        });
-      }
-    }
-    return () => {
-      if (__DEV__) {
-        DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS.delete(instanceIdRef.current);
-        console.log('[MapScreen] unmount', {
-          instanceId: instanceIdRef.current,
-          pathname: pathnameRef.current,
-          segments: segmentsRef.current,
-          rootRouteNames: rootRouteNamesRef.current,
-          rootRouteIndex: rootRouteIndexRef.current,
-          mapMode: mapModeRef.current,
-          mapInstanceKey: mapInstanceKeyRef.current,
-          mountedCount: DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS.size,
-          activeInstanceIds: Array.from(DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS),
-        });
-      }
-    };
-  }, []);
-
-  useEffect(() => {
     mapModeRef.current = mapMode;
   }, [mapMode]);
 
   useEffect(() => {
     mapInstanceKeyRef.current = mapInstanceKey;
   }, [mapInstanceKey]);
-
-  useEffect(() => {
-    pathnameRef.current = pathname;
-  }, [pathname]);
-
-  useEffect(() => {
-    segmentsRef.current = segments.map((segment) => String(segment));
-  }, [segments]);
-
-  useEffect(() => {
-    rootRouteNamesRef.current = getRootRouteNames(rootNavigationState);
-    rootRouteIndexRef.current =
-      typeof rootNavigationState?.index === 'number' ? rootNavigationState.index : null;
-  }, [rootNavigationState]);
-
-  useEffect(() => {
-    if (!__DEV__) return;
-    if (DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS.size <= 1) return;
-    console.warn('[MapScreen] MULTIPLE_INSTANCES_ACTIVE_BRANCH_EVENT', {
-      severity: 'high',
-      pathname,
-      segments: segments.map((segment) => String(segment)),
-      rootRouteNames: getRootRouteNames(rootNavigationState),
-      rootRouteIndex:
-        typeof rootNavigationState?.index === 'number' ? rootNavigationState.index : null,
-      instanceId: instanceIdRef.current,
-      branch: isActive && tour ? 'active' : 'inactive',
-      tourId: tour?.id ?? null,
-      mapMode,
-      mapInstanceKey,
-      mountedCount: DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS.size,
-      activeInstanceIds: Array.from(DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS),
-    });
-    console.error('[MapScreen] MULTIPLE_INSTANCES_HARD_GUARD_EVENT', {
-      severity: 'high',
-      pathname,
-      segments: segments.map((segment) => String(segment)),
-      rootRouteNames: getRootRouteNames(rootNavigationState),
-      rootRouteIndex:
-        typeof rootNavigationState?.index === 'number' ? rootNavigationState.index : null,
-      instanceId: instanceIdRef.current,
-      mountedCount: DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS.size,
-      activeInstanceIds: Array.from(DEV_MAPSCREEN_MOUNTED_INSTANCE_IDS),
-    });
-  }, [isActive, mapInstanceKey, mapMode, pathname, rootNavigationState, segments, tour]);
 
   useEffect(() => {
     return () => {
@@ -422,12 +283,6 @@ export default function MapScreen() {
       );
 
       const normalizedTours = normalizeMapTours(rawTours as unknown[]);
-      if (__DEV__) {
-        console.log('[MapScreen] in_bounds_payload', {
-          count: normalizedTours.length,
-          approxBytes: approximateJsonSizeBytes(rawTours),
-        });
-      }
       return normalizedTours;
     },
     []
@@ -576,12 +431,6 @@ export default function MapScreen() {
       }
 
       if (SKIP_COMPLETION_INTERSTITIAL_FOR_MEMORY_PROFILE) {
-        if (__DEV__) {
-          console.log('[MapScreen] completion_interstitial_skipped_for_memory_profile', {
-            instanceId: instanceIdRef.current,
-            tourId: tour.id,
-          });
-        }
       } else {
         try {
           await showTourCompleteInterstitial();
@@ -602,38 +451,11 @@ export default function MapScreen() {
       };
 
       setCompletionSummary(summary);
-      if (__DEV__) {
-        console.log('[MapScreen] completion_summary_set', {
-          instanceId: instanceIdRef.current,
-          tourId: summary.tourId,
-          totalSteps: summary.totalSteps,
-          finalXP: summary.finalXP,
-          badgeCount: summary.badges.length,
-          completedAt: summary.completedAt,
-        });
-      }
 
       setShowCompleteModal(true);
-      if (__DEV__) {
-        console.log('[MapScreen] active_tour_clear_on_completion', {
-          instanceId: instanceIdRef.current,
-          tourId: summary.tourId,
-        });
-      }
-      const fromMode = mapModeRef.current;
-      const expectedToMode: TourMapMode = 'explore';
-      if (__DEV__) {
-        console.log('[MapScreen] map_reset_by_mode_change_on_completion', {
-          instanceId: instanceIdRef.current,
-          tourId: summary.tourId,
-          fromMode,
-          toMode: expectedToMode,
-          currentKey: `${fromMode}:${mapResetVersion}`,
-        });
-      }
       endTour();
     },
-    [endTour, mapResetVersion, showTourCompleteInterstitial, tour]
+    [endTour, showTourCompleteInterstitial, tour]
   );
 
   const handleEndTourPress = useCallback(() => setShowEndConfirmModal(true), []);
@@ -871,16 +693,6 @@ export default function MapScreen() {
     () => sortNearbyTours(nearbyTours, 'rating').slice(0, MAX_NEARBY_TOURS_TO_RENDER),
     [nearbyTours]
   );
-
-  useEffect(() => {
-    if (!__DEV__) return;
-    console.log('[MapScreen] nearby_state', {
-      nearbyToursCount: nearbyTours.length,
-      nearbyToursForMapCount: nearbyToursForMap.length,
-      selectedTourSummary: selectedNearbyTourId ? 'summary-selected' : 'none',
-      selectedTourDetails: selectedTour ? 'full-loaded' : selectedNearbyTourId ? 'loading' : 'none',
-    });
-  }, [nearbyTours.length, nearbyToursForMap.length, selectedNearbyTourId, selectedTour]);
 
   const nearbyMarkersForMap = useMemo(() => {
     if (nearbyToursForMap.length === 0) return EMPTY_MARKERS;

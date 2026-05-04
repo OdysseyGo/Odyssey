@@ -30,31 +30,11 @@ export function useInterstitial(placementKey: string, options?: { disabled?: boo
   const showInProgressRef = useRef(false);
   const loadInProgressRef = useRef(false);
   const mountedRef = useRef(false);
-  const metricsRef = useRef<Record<DevMetric, number>>({
-    created: 0,
-    load_started: 0,
-    loaded: 0,
-    show_started: 0,
-    closed: 0,
-    error: 0,
-    disposed: 0,
-    listener_attach: 0,
-    listener_detach: 0,
-  });
-  const instanceIdRef = useRef(`is-${Math.random().toString(36).slice(2, 8)}`);
   const disabled = options?.disabled ?? false;
 
   const logDev = useCallback(
-    (event: DevMetric, details: Record<string, unknown> = {}) => {
-      if (!__DEV__) return;
-      metricsRef.current[event] += 1;
-      console.log(`[useInterstitial:${placementKey}] ${event}`, {
-        hookInstanceId: instanceIdRef.current,
-        count: metricsRef.current[event],
-        ...details,
-      });
-    },
-    [placementKey]
+    (_event: DevMetric, _details: Record<string, unknown> = {}) => {},
+    []
   );
 
   const isPlacementEligible = useCallback(() => {
@@ -133,17 +113,13 @@ export function useInterstitial(placementKey: string, options?: { disabled?: boo
     mountedRef.current = true;
     if (!disabled) {
       loadAd();
-    } else if (__DEV__) {
-      console.log(`[useInterstitial:${placementKey}] disabled_for_memory_profile`, {
-        hookInstanceId: instanceIdRef.current,
-      });
     }
 
     return () => {
       mountedRef.current = false;
       disposeCurrentAd('unmount');
     };
-  }, [disabled, disposeCurrentAd, loadAd, placementKey]);
+  }, [disabled, disposeCurrentAd, loadAd]);
 
   const show = useCallback(async (): Promise<boolean> => {
     if (disabled) return false;

@@ -27,32 +27,11 @@ export function useRewardedAd(placementKey: string) {
   const loadInProgressRef = useRef(false);
   const pendingReloadRef = useRef(false);
   const mountedRef = useRef(false);
-  const metricsRef = useRef<Record<DevMetric, number>>({
-    created: 0,
-    load_started: 0,
-    loaded: 0,
-    show_started: 0,
-    closed: 0,
-    error: 0,
-    disposed: 0,
-    listener_attach: 0,
-    listener_detach: 0,
-  });
-  const instanceIdRef = useRef(`rw-${Math.random().toString(36).slice(2, 8)}`);
-
   const placement = getPlacement(placementKey);
 
   const logDev = useCallback(
-    (event: DevMetric, details: Record<string, unknown> = {}) => {
-      if (!__DEV__) return;
-      metricsRef.current[event] += 1;
-      console.log(`[useRewardedAd:${placementKey}] ${event}`, {
-        hookInstanceId: instanceIdRef.current,
-        count: metricsRef.current[event],
-        ...details,
-      });
-    },
-    [placementKey]
+    (_event: DevMetric, _details: Record<string, unknown> = {}) => {},
+    []
   );
 
   const detachListeners = useCallback(() => {
@@ -178,9 +157,7 @@ export function useRewardedAd(placementKey: string) {
       if (earned && __DEV__ && placement) {
         try {
           await devGrantReward(placement.key);
-        } catch (err) {
-          console.warn('devGrantReward failed', err);
-        }
+        } catch {}
       }
 
       return earned;
