@@ -17,12 +17,6 @@ type ImageUploadSectionProps = {
   infoMessage?: string;
 };
 
-const DEFAULT_INFO_MESSAGE = [
-  'Pick something that is not temporary.',
-  'Appropriate.',
-  "Has good lighting and doesn't depend much on the time of day.",
-].join('\n');
-
 export default function ImageUploadSection({
   image,
   onImageChange,
@@ -41,7 +35,10 @@ export default function ImageUploadSection({
   const pickFromLibrary = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Permission required', 'Please allow photo library access to select an image.');
+      Alert.alert(
+        t('creation.story.libraryPermissionTitle'),
+        t('creation.story.libraryPermissionMessage')
+      );
       return;
     }
 
@@ -58,10 +55,10 @@ export default function ImageUploadSection({
   };
 
   const handlePickImage = async () => {
-    Alert.alert(t('creation.story.imagePickerTitle'), 'Choose image source', [
-      { text: 'Camera', onPress: () => setIsCameraVisible(true) },
-      { text: 'Photo Library', onPress: pickFromLibrary },
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('creation.story.imagePickerTitle'), t('creation.story.chooseImageSource'), [
+      { text: t('creation.story.camera'), onPress: () => setIsCameraVisible(true) },
+      { text: t('creation.story.photoLibrary'), onPress: pickFromLibrary },
+      { text: t('common.cancel'), style: 'cancel' },
     ]);
   };
 
@@ -79,10 +76,13 @@ export default function ImageUploadSection({
         {canShowInfo && (
           <TouchableOpacity
             onPress={() =>
-              Alert.alert('Reference image requirements', infoMessage ?? DEFAULT_INFO_MESSAGE)
+              Alert.alert(
+                t('creation.story.referenceRequirementsTitle'),
+                infoMessage ?? t('creation.story.referenceRequirementsMessage')
+              )
             }
             accessibilityRole="button"
-            accessibilityLabel="Show reference image requirements"
+            accessibilityLabel={t('creation.story.referenceRequirementsAccessibilityLabel')}
             style={styles.infoButton}
           >
             <Ionicons name="information-circle-outline" size={16} color={color.subText} />
@@ -96,7 +96,7 @@ export default function ImageUploadSection({
               style={styles.referenceImageButton}
               onPress={() => setFullscreenImageUri(image)}
               accessibilityRole="button"
-              accessibilityLabel="Open target image full screen"
+              accessibilityLabel={t('creation.story.openTargetImageAccessibilityLabel')}
             >
               <Image
                 source={{ uri: image }}
@@ -104,7 +104,9 @@ export default function ImageUploadSection({
                 resizeMode="cover"
               />
               <View style={styles.referenceImageOverlay}>
-                <Text style={styles.referenceImageOverlayText}>Tap to view full image</Text>
+                <Text style={styles.referenceImageOverlayText}>
+                  {t('creation.story.tapToViewFullImage')}
+                </Text>
               </View>
             </Pressable>
           ) : (
@@ -125,9 +127,9 @@ export default function ImageUploadSection({
         visible={isCameraVisible}
         onClose={() => setIsCameraVisible(false)}
         onCapture={(uri) => onImageChange(uri)}
-        title="Place target in square"
-        subtitle="Only the highlighted square area is saved."
-        captureLabel="Capture Reference"
+        title={t('creation.story.captureReferenceTitle')}
+        subtitle={t('creation.story.captureReferenceSubtitle')}
+        captureLabel={t('creation.story.captureReference')}
       />
 
       <Modal

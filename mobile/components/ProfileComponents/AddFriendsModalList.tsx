@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
@@ -17,6 +18,7 @@ export default function AddFriendsModalList({
   const theme = useColorTheme();
   const styles = addFriendsModalListStyles(theme);
   const color = Colors[theme];
+  const { t } = useTranslation();
 
   const [users, setUsers] = useState<AddFriendUserDisplayDTO[]>([]);
   const [followedIds, setFollowedIds] = useState<Set<number>>(new Set());
@@ -103,7 +105,7 @@ export default function AddFriendsModalList({
       keyboardShouldPersistTaps="handled"
       ListEmptyComponent={
         <Text style={styles.emptyText}>
-          {searchTextVal ? 'No users found' : 'Start typing to search'}
+          {searchTextVal ? t('search.noUsersFound') : t('search.keepTypingUsers')}
         </Text>
       }
       contentContainerStyle={styles.listContainer}

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, PanResponder, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -18,6 +19,7 @@ export { ODYSSEY_TAB_BAR_FLOATING_HEIGHT };
 
 export default function OdysseyTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const themeName = useColorTheme();
+  const { t } = useTranslation();
   const colors = Colors[themeName];
   const activeContentColor =
     themeName === 'light' ? colors.white : ODYSSEY_TAB_BAR_ACTIVE_CONTENT_COLOR;
@@ -147,12 +149,21 @@ export default function OdysseyTabBar({ state, descriptors, navigation }: Bottom
             const options = descriptor.options;
             const isFocused = state.index === routeIndex;
             const iconColor = isFocused ? activeContentColor : colors.subText;
+            const translatedRouteLabel =
+              route.name === 'tourDisplay'
+                ? t('tabs.tours')
+                : route.name === 'map'
+                  ? t('tabs.map')
+                  : route.name === 'profile'
+                    ? t('tabs.profile')
+                    : undefined;
             const label =
-              typeof options.tabBarLabel === 'string'
+              translatedRouteLabel ??
+              (typeof options.tabBarLabel === 'string'
                 ? options.tabBarLabel
                 : typeof options.title === 'string'
                   ? options.title
-                  : route.name;
+                  : route.name);
 
             const onPress = () => {
               const event = navigation.emit({

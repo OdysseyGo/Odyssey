@@ -1,12 +1,18 @@
 {
   "common": {
-    "retry": "Tekrar Dene",
     "cancel": "İptal",
-    "submit": "Gönder",
-    "submitting": "Gönderiliyor...",
     "ok": "Tamam",
     "error": "Hata",
-    "syncError": "İlerleme sunucuyla senkronize edilemedi."
+    "syncError": "İlerleme sunucuyla senkronize edilemedi.",
+    "retry": "Tekrar Dene",
+    "submit": "Gönder",
+    "submitting": "Gönderiliyor...",
+    "close": "Kapat",
+    "save": "Kaydet",
+    "loading": "Yükleniyor...",
+    "noImage": "Görsel yok",
+    "done": "Bitti",
+    "modal": "Modal"
   },
   "auth": {
     "welcomeTitle": "Hoş geldin, kaşif!",
@@ -183,10 +189,42 @@
     "feature1": "Rehberli turlar oluştur ve katıl",
     "feature2": "Rozet ve XP kazan",
     "feature3": "Diğer gezginlerle bağlantı kur",
+    "logoutConfirmTitle": "Çıkış yap",
+    "logoutConfirmMessage": "Çıkış yapmak istediğinizden emin misiniz?",
+    "badgeMistakes_one": "{{count}} hata",
+    "badgeMistakes_other": "{{count}} hata",
+    "ownTourReviewDisabled": "Kendi turunuzu değerlendiremezsiniz",
+    "xpProgress": "{{current}} / {{total}} XP",
+    "xpToNextLevel": "{{title}} seviyesine {{xp}} XP",
+    "maxLevelReached": "MAKSİMUM SEVİYEYE ULAŞILDI",
+    "durationHoursMinutes": "{{hours}}s {{minutes}}d",
+    "durationHoursOnly": "{{hours}}s",
+    "badgeTier": {
+      "gold": "Altın",
+      "silver": "Gümüş",
+      "bronze": "Bronz",
+      "platinum": "Platin",
+      "diamond": "Elmas",
+      "neutral": "Rozet"
+    },
+    "levelTitles": {
+      "creator": "Yaratıcı",
+      "novice": "Acemi",
+      "explorer": "Kaşif",
+      "adventurer": "Maceracı",
+      "pathfinder": "Yol Bulucu",
+      "wanderer": "Gezgin",
+      "navigator": "Kılavuz",
+      "trailblazer": "Öncü",
+      "veteran": "Usta",
+      "expert": "Uzman",
+      "legend": "Efsane"
+    },
     "helpButton": "Yardım ve SSS",
     "helpMini": "Yardım",
     "helpDescription": "Sık sorulan soruları ve temel uygulama kullanımını inceleyin.",
-    "openFaq": "SSS'yi Aç"
+    "openFaq": "SSS'yi Aç",
+    "badgeMistakes": "{{count}} hata"
   },
   "tour": {
     "featured": "Öne Çıkan",
@@ -204,6 +242,37 @@
       "oceania": "Okyanusya",
       "antarctica": "Antarktika",
       "other": "Diğer"
+    },
+    "all": "Tümü",
+    "loadError": "Turlar yüklenemedi",
+    "errorTitle": "Bir şeyler yanlış gitti",
+    "emptyTitle": "Henüz burada tur yok",
+    "emptySubtitle": "Bu bölgede tur oluşturan ilk kişi olun!",
+    "headerEyebrow": "Keşfe hazır mısın?",
+    "headerTitle": "Turları Keşfet",
+    "filters": {
+      "title": "Turları filtrele",
+      "subtitle": "Kategori, süre ve tur tarzına göre daralt.",
+      "category": "Kategori",
+      "anyCategory": "Herhangi bir kategori",
+      "continent": "Kıta",
+      "anyContinent": "Herhangi bir kıta",
+      "duration": "Süre",
+      "durationAny": "Herhangi bir süre",
+      "durationShort": "1 saatten az",
+      "durationMedium": "1-2 saat",
+      "durationLong": "2+ saat",
+      "difficulty": "Zorluk",
+      "anyDifficulty": "Her zorluk",
+      "tourType": "Tur türü",
+      "anyTourType": "Her tür",
+      "clearAll": "Filtreleri temizle",
+      "resultsTitle": "Eşleşen turlar",
+      "emptyTitle": "Bu filtrelerle eşleşen tur yok",
+      "emptySubtitle": "Kategori veya süre seçimini genişletmeyi deneyin.",
+      "reset": "Sıfırla",
+      "apply": "Filtreleri uygula",
+      "showResults": "{{count}} turu göster"
     },
     "story": "Hikaye",
     "puzzle": "Bulmaca",
@@ -269,6 +338,7 @@
     "readLess": "Daha az göster",
     "lockedStopTitle": "Gizli durak",
     "lockedStopMessage": "Bu durağı açmak için tura başla ve bulmacayı çöz.",
+    "errorTitle": "Bir şeyler yanlış gitti",
     "reportButton": "Turu bildir",
     "reportClose": "Bildirim formunu kapat",
     "reportTitle": "Turu bildir",
@@ -296,7 +366,9 @@
       "SAFETY": "Güvenlik endişesi",
       "PRIVACY": "Gizlilik endişesi",
       "OTHER": "Diğer"
-    }
+    },
+    "tapToInteractMap": "Harita ile etkileşim için dokunun",
+    "photoCredit": "Fotoğraf: {{attribution}}"
   },
   "report": {
     "tourButton": "Turu bildir",
@@ -335,7 +407,8 @@
     "settings": "Ayarlar",
     "map": "Harita",
     "tours": "Turlar",
-    "profile": "Profil"
+    "profile": "Profil",
+    "tutorials": "Rehberler"
   },
   "settings": {
     "language": "Dil",
@@ -432,6 +505,18 @@
       "confirmAction": "Sil",
       "errorTitle": "Hesap silinemedi",
       "errorMessage": "Lütfen daha sonra tekrar dene."
+    },
+    "editProfile": {
+      "loadError": "Profil bilgileriniz yüklenemedi.",
+      "saveError": "Profil güncellenemedi."
+    },
+    "notifications": {
+      "deniedMessage": "Uyarıları almak için cihaz ayarlarından bildirimleri etkinleştirin.",
+      "deniedTitle": "Bildirimler Kapalı",
+      "openSettings": "Ayarları Aç",
+      "statusOff": "Kapalı",
+      "statusOn": "Açık",
+      "systemDisabled": "Bildirimler sistem düzeyinde kapalı. Ayarlar'dan etkinleştirin."
     }
   },
   "tourId": {
@@ -448,7 +533,9 @@
     "tourInProgressMessage": "Hazırda aktif turun var! Lütfen yeni tura başlamadan turu bitir ya da turu iptal et.",
     "locationRequiredTitle": "Konum izni gerekli",
     "locationRequiredMessage": "Bu tura başlamak için Odyssey'nin konumuna erişmesi gerekiyor. Lütfen cihaz ayarlarından konum iznini açıp tekrar dene.",
-    "locationUnavailableMessage": "Mevcut konumunu alamadık. Lütfen konum servislerini açıp tekrar dene."
+    "locationUnavailableMessage": "Mevcut konumunu alamadık. Lütfen konum servislerini açıp tekrar dene.",
+    "errorTitle": "Hata",
+    "errorMessage": "Tur başlatılamadı. Lütfen tekrar deneyin."
   },
   "creation": {
     "loginRequired": "Giriş Gerekli",
@@ -594,7 +681,20 @@
       "previous": "Önceki",
       "next": "Sonraki",
       "editLocation": "Konumu Düzenle",
-      "save": "Kaydet"
+      "save": "Kaydet",
+      "chooseImageSource": "Görsel kaynağı seç",
+      "camera": "Kamera",
+      "photoLibrary": "Fotoğraf Galerisi",
+      "libraryPermissionTitle": "İzin gerekli",
+      "libraryPermissionMessage": "Görsel seçmek için lütfen fotoğraf galerisi erişimine izin verin.",
+      "referenceRequirementsTitle": "Referans görsel gereksinimleri",
+      "referenceRequirementsMessage": "Geçici olmayan bir şey seçin.\nUygun olmalı.\nİyi aydınlatılmış olmalı ve günün saatine çok bağlı olmamalı.",
+      "referenceRequirementsAccessibilityLabel": "Referans görsel gereksinimlerini göster",
+      "openTargetImageAccessibilityLabel": "Hedef görseli tam ekranda aç",
+      "tapToViewFullImage": "Tam görseli görmek için dokun",
+      "captureReferenceTitle": "Hedefi kareye yerleştir",
+      "captureReferenceSubtitle": "Yalnızca vurgulanan kare alan kaydedilir.",
+      "captureReference": "Referansı Çek"
     },
     "puzzle": {
       "type": "Bulmaca Türü *",
@@ -614,7 +714,18 @@
       "correctAnswerHint": "Kullanıcı, yazdığı cevap buna yeterince benzerse geçer.",
       "hintLabel": "İpucu (İsteğe Bağlı)",
       "hintPlaceholder": "ör. Kapının üstündeki levhaya bakın.",
-      "hintText": "Kullanıcı takılırsa işe yarayacak bir ipucu."
+      "hintText": "Kullanıcı takılırsa işe yarayacak bir ipucu.",
+      "types": {
+        "trivia": "Bilgi Sorusu",
+        "openEnded": "Açık Uçlu",
+        "ar": "AR Meydan Okuması",
+        "compass": "Pusula",
+        "gyroscope": "Jiroskop",
+        "pictureCompare": "Görsel Karşılaştırma"
+      },
+      "pictureTargetImage": "Hedef görselini seç",
+      "targetHeadingLabel": "Hedef Yön (0-359) *",
+      "targetHeadingPlaceholder": "238"
     },
     "editLocation": {
       "header": "Konumu Düzenle",
@@ -625,7 +736,53 @@
       "storyLabel": "Hikaye *",
       "storyPlaceholder": "Bu konumun hikayesini anlatın...",
       "storyHint": "Ziyaretçilerin bu konumda okuyacağı veya duyacağı anlatıyı yazın"
-    }
+    },
+    "arPuzzle": {
+      "title": "AR Bulmaca Kurulumu",
+      "configured": "Yapılandırıldı: {{modelName}} ({{anchorLabel}})",
+      "noModels": "Şu anda AR modeli yok.",
+      "loadModelsError": "AR modelleri yüklenemedi. Lütfen tekrar deneyin.",
+      "noAnchors": "Bu AR modelinde henüz bağlantı noktası yok.",
+      "viroUnavailable": "AR bu çalışma ortamında kullanılamıyor.",
+      "anchorCount_one": "{{count}} bağlantı noktası",
+      "anchorCount_other": "{{count}} bağlantı noktası",
+      "enterSecretCode": "Gizli Kodu Gir",
+      "secretCodePlaceholder": "4-12 harf veya sayı",
+      "secretCodeError": "4-12 harf veya sayı kullanın.",
+      "reviewModel": "Model: {{modelName}}",
+      "reviewCode": "Kod: {{secretCode}}",
+      "reviewPosition": "Konum: {{anchorLabel}}",
+      "changeAnchor": "Bağlantı noktasını değiştir",
+      "previewInAr": "AR'de önizle",
+      "arUnavailable": "AR kullanılamıyor",
+      "confirm": "Onayla",
+      "anchorSelectionTitle": "Bağlantı Noktası Seçimi",
+      "anchorSelectionSubtitle": "AR içinde bağlantı noktaları arasında geçiş yapın ve kodun nerede saklanacağını seçin.",
+      "modelScale": "Model Ölçeği",
+      "noAnchorSelected": "Bağlantı noktası seçilmedi",
+      "scaleValue": "Ölçek: {{scale}}m",
+      "confirmAnchor": "Bağlantı Noktasını Onayla",
+      "arUnavailableRuntime": "AR bu çalışma ortamında kullanılamıyor.",
+      "selectModelFirst": "Önce bir AR modeli seçin.",
+      "anchorCount": "{{count}} bağlantı noktası"
+    },
+    "incompleteLocationTitle": "Konum bilgilerini tamamlayın",
+    "incompleteLocationMessage": "Lütfen ülke ve eyalet bilgilerini açılır listelerden seçin.",
+    "underReviewTitle": "Turunuz inceleniyor",
+    "underReviewMessage": "Turunuzu gönderdiğiniz için teşekkürler. Ekibimiz şimdi inceliyor ve yakında yayınlanacak.",
+    "reviewStatus": {
+      "review": "İncelemede",
+      "rejected": "Reddedildi"
+    },
+    "confirmEdit": "Düzenlemeyi Onayla",
+    "deleteRequestConfirm": "Silme Talep Et",
+    "deleteRequestMessage": "Bu tur zaten yayınlandı. Silme talebinde bulunmak istiyor musunuz? İnceleme sonrası arşivlenecek.",
+    "deleteRequestTitle": "Tur silme talebi gönderilsin mi?",
+    "deleteUnderReviewMessage": "Silme talebiniz incelemeye gönderildi.",
+    "editSubmitMessage": "Değişiklikleriniz yayına alınmadan önce incelenecek. Düzenleme talebi şimdi gönderilsin mi?",
+    "editSubmitTitle": "Düzenleme talebi gönder",
+    "noChangesMessage": "Göndermeden önce en az bir alanı güncelleyin.",
+    "noChangesTitle": "Değişiklik tespit edilmedi"
   },
   "aiTour": {
     "state": "Şehir",
@@ -674,7 +831,8 @@
     "includeCompass": {
       "title": "Pusula Bulmacalarını Dahil Et",
       "subtitle": "Yapay zekanın uygun olan duraklara pusula yönü bulmacaları eklemesine izin verin"
-    }
+    },
+    "adUnavailableMessage": "AI oluşturma öncesinde ödüllü reklam gerekli. Lütfen kısa süre sonra tekrar deneyin."
   },
   "tourStep": {
     "tourProgress": "Tur İlerlemesi",
@@ -684,11 +842,116 @@
     "answerConfirmTitle": "Bu cevabı kilitle?",
     "answerConfirmMessage": "Emin misiniz? Yanlış cevaplar rozet ilerlemenizi azaltabilir.",
     "answerConfirmAction": "Cevapla",
+    "story": "Hikaye",
+    "scenesFromStop": "Bu duraktan görüntüler",
+    "puzzle": "Bulmaca",
+    "solved": "Çözüldü",
+    "question": "Soru",
+    "attempts": "Denemeler",
+    "progressMissingTitle": "İlerleme eksik",
+    "progressMissingMessage": "Aktif tur ilerlemesi olmadan bulmaca doğrulanamadı.",
+    "alreadyAnswered": "Bu soruyu zaten cevapladınız.",
+    "confirmLocationToContinue": "Devam etmek için konumunuzu onaylayıp İleriye basın.",
     "locationCheckSuccessTitle": "Konum doğrulandı",
     "locationCheckSuccessMessage": "Harika, doğru noktadasın. Bu adımın kilidi açıldı.",
     "locationCheckFailedTitle": "Doğru noktada değilsin!",
     "locationCheckOutsideArea": "Haritada gösterilen mevcut tur adımına git (100m içinde).",
-    "locationCheckUnavailable": "Konumun şu anda doğrulanamadı. Lütfen tekrar dene."
+    "locationCheckUnavailable": "Konumun şu anda doğrulanamadı. Lütfen tekrar dene.",
+    "picture": {
+      "checkingSimilarity": "Benzerlik kontrol ediliyor...",
+      "matched": "Eşleşti (%{{similarity}}).",
+      "notCloseNoAttempts": "Yeterince yakın değil (%{{similarity}}). Deneme hakkı kalmadı.",
+      "notCloseAttemptsRemaining_one": "Yeterince yakın değil (%{{similarity}}). {{count}} deneme hakkı kaldı.",
+      "notCloseAttemptsRemaining_other": "Yeterince yakın değil (%{{similarity}}). {{count}} deneme hakkı kaldı.",
+      "verifyError": "Görsel şu anda doğrulanamadı. Lütfen tekrar deneyin.",
+      "photoChallenge": "Fotoğraf meydan okuması",
+      "findThis": "Etrafına bak ve bunu bulmaya çalış!",
+      "openReferenceAccessibilityLabel": "Referans görseli tam ekranda aç",
+      "tapToViewFullImage": "Tam görseli görmek için dokun",
+      "referenceMissing": "Referans görsel mevcut değil.",
+      "latestAttempt": "Son denemeniz",
+      "openLatestAttemptAccessibilityLabel": "Son denemeyi tam ekranda aç",
+      "captureAndCheck": "Çek ve Kontrol Et",
+      "captureTitle": "Görüntünü hedefle hizala",
+      "captureSubtitle": "Eşleştirme için yalnızca orta kare analiz edilir.",
+      "checkMatch": "Eşleşmeyi Kontrol Et",
+      "notCloseAttemptsRemaining": "Yeterince yakın değil (%{{similarity}}). {{count}} deneme hakkı kaldı."
+    },
+    "ar": {
+      "locationPermissionTitle": "Konum izni gerekli",
+      "locationPermissionMessage": "AR bulmaca moduna devam etmek için konum izni gereklidir.",
+      "cameraPermissionMessage": "AR bulmaca görünümünü açmak için kamera izni gereklidir.",
+      "unavailableTitle": "AR kullanılamıyor",
+      "prepareError": "AR bulmaca görünümü şu anda hazırlanamadı.",
+      "enterCodeFirst": "Önce gizli kodu girin.",
+      "checkingCode": "Kod kontrol ediliyor...",
+      "codeVerified": "Kod doğrulandı.",
+      "incorrectNoAttempts": "Kod doğru değil. Deneme hakkı kalmadı.",
+      "incorrectAttemptsRemaining_one": "Kod doğru değil. {{count}} deneme hakkı kaldı.",
+      "incorrectAttemptsRemaining_other": "Kod doğru değil. {{count}} deneme hakkı kaldı.",
+      "verifyError": "Kod şu anda doğrulanamadı. Lütfen tekrar deneyin.",
+      "challenge": "AR Meydan Okuması",
+      "openArView": "AR Görünümünü Aç",
+      "enterSecretCode": "Gizli kodu girin",
+      "enterSecretCodePlaceholder": "Gizli kodu gir",
+      "checkCode": "Kodu Kontrol Et",
+      "incorrectAttemptsRemaining": "Kod doğru değil. {{count}} deneme hakkı kaldı."
+    },
+    "questionFinishedReveal": "Bu soru tamamlandı. Doğru cevap gösterildi.",
+    "openEnded": {
+      "title": "Açık uçlu",
+      "enterAnswerFirst": "Önce bir cevap girin.",
+      "checkingAnswer": "Cevap kontrol ediliyor...",
+      "matchedUnlocked": "Eşleşti. Bu adımın kilidi açıldı.",
+      "notCloseNoAttempts": "Cevap yeterince yakın değil. Deneme hakkı kalmadı.",
+      "notCloseAttemptsRemaining_one": "Cevap yeterince yakın değil. {{count}} deneme hakkı kaldı.",
+      "notCloseAttemptsRemaining_other": "Cevap yeterince yakın değil. {{count}} deneme hakkı kaldı.",
+      "verifyError": "Cevap şu anda doğrulanamadı. Lütfen tekrar deneyin.",
+      "placeholder": "Cevabını yaz",
+      "submitAnswer": "Cevabı gönder",
+      "noAttemptsRemainingSkip": "Deneme hakkı kalmadı. Bu adımı atlayabilirsiniz.",
+      "notCloseAttemptsRemaining": "Cevap yeterince yakın değil. {{count}} deneme hakkı kaldı."
+    },
+    "compass": {
+      "title": "İşaret Noktasını Bul",
+      "subtitle": "Tur işareti kilitlenene kadar telefonunu döndür.",
+      "beaconStatus": "İşaret durumu",
+      "signal": "Sinyal",
+      "goal": "Hedef",
+      "holdProgress": "Bekletme ilerlemesi",
+      "guidance": {
+        "holdToLock": "Kilitlemek için sabit tut",
+        "rotateSlowly": "Yavaşça döndür"
+      },
+      "signalStrength": {
+        "locked": "Kilitli",
+        "strong": "Güçlü",
+        "good": "İyi",
+        "weak": "Zayıf",
+        "searching": "Aranıyor"
+      },
+      "action": {
+        "waypointLocked": "İşaret kilitlendi",
+        "holdSteady": "Sabit tut",
+        "moveGently": "Yavaşça hareket et",
+        "scanSlowly": "Yavaşça tara"
+      },
+      "status": {
+        "waypointFound": "İşaret bulundu",
+        "signalLocked": "Sinyal kilitlendi",
+        "holdSteady": "Sabit tut",
+        "strongSignal": "Güçlü sinyal",
+        "signalFound": "Sinyal bulundu",
+        "faintSignal": "Zayıf sinyal",
+        "turnSlowly": "Yavaşça dön"
+      },
+      "instruction": {
+        "locked": "Tur işaret noktası kilitlendi.",
+        "keepStill": "İşaret dolana kadar telefonu sabit tut.",
+        "followSignal": "Nazikçe hareket et ve güçlü sinyali takip et.",
+        "searchWaypoint": "İşaret noktasını aramak için telefonu yavaşça döndür."
+      }
+    }
   },
   "map": {
     "noActiveTour": {
@@ -706,7 +969,8 @@
       "stepsRemaining_one": "Hâlâ keşfedecek {{count}} adımın var!",
       "stepsRemaining_other": "Hâlâ keşfedecek {{count}} adımın var!",
       "continueTour": "Tura Devam Et",
-      "exitTour": "Turdan Çık"
+      "exitTour": "Turdan Çık",
+      "stepsRemaining": "Hâlâ keşfedecek {{count}} adımın var!"
     },
     "tourComplete": {
       "title": "Tur Tamamlandı!",
@@ -714,7 +978,8 @@
       "steps": "Adım",
       "complete": "Tamamlandı",
       "xpEarned": "+{{xp}} XP Kazandınız!",
-      "done": "Tamam"
+      "done": "Tamam",
+      "badgeEarned": "Kazanılan rozet"
     },
     "activeTour": {
       "stepOf": "Adım {{current}} / {{total}}",
@@ -735,7 +1000,25 @@
       "appleMaps": "Apple Maps",
       "googleMaps": "Google Maps",
       "yandexMaps": "Yandex Maps",
-      "directionsUnavailableMessage": "Yol tarifi şu anda açılamadı. Lütfen tekrar deneyin."
+      "directionsUnavailableMessage": "Yol tarifi şu anda açılamadı. Lütfen tekrar deneyin.",
+      "legend": {
+        "title": "Tur açıklaması",
+        "steps": "Adım türü",
+        "story": "Hikaye adımı",
+        "puzzle": "Bulmaca adımı",
+        "status": "İşaretleyici durumu",
+        "current": "Mevcut adım (daha büyük)",
+        "upcoming": "Sıradaki adım (soluk)",
+        "controlsTitle": "Kontroller",
+        "myLocation": "Konumum",
+        "currentStep": "Mevcut adıma git"
+      },
+      "skipPromptTitle": "Bu adım atlanacak mı?",
+      "skipPromptMessage": "Ceza almadan atlamak için kısa bir reklam izle veya yine de atla.",
+      "skipAnyway": "Yine de atla",
+      "watchAdToSkip": "Reklam izle",
+      "progressPanelAccessibilityLabel": "Tur ilerleme panelini ayarla",
+      "progressPanelAccessibilityHint": "Tur ilerleme panelini genişletir veya daraltır"
     },
     "nearby": {
       "title_one": "{{count}} yakın tur",
@@ -749,14 +1032,43 @@
       "emptySubtitle": "Farklı bir yere dokunmayı ya da daha kalabalık bir bölgeyi keşfetmeyi deneyin.",
       "duration_one": "{{count}} dk",
       "duration_other": "{{count}} dk",
+      "areaTitle": "Bu alanda {{count}} tur",
+      "duration": "{{count}} dk",
       "viewTour": "Tura Git",
       "stops_one": "{{count}} durak",
-      "stops_other": "{{count}} durak"
+      "stops_other": "{{count}} durak",
+      "notOnMap": "Haritada değil",
+      "sort": {
+        "rating": "En yüksek puan",
+        "reviews": "En çok yorum",
+        "name": "Ada göre",
+        "newest": "En yeni"
+      },
+      "stops": "{{count}} durak"
     },
     "searchMode": {
       "searchHere": "Burada ara",
       "stopDragging": "Aramak için sürüklemeyi bırak",
       "zoomIn": "Aramak için yakınlaştır"
+    },
+    "filters": {
+      "label": "Filtreler",
+      "active": "Filtreler aktif",
+      "reset": "Sıfırla",
+      "type": "Tur türü",
+      "all": "Tümü",
+      "difficulty": "Zorluk",
+      "category": "Kategori"
+    },
+    "legend": {
+      "title": "İşaretleyici açıklaması",
+      "typeTitle": "Tur türü",
+      "difficultyTitle": "Zorluk rengi",
+      "controlsTitle": "Kontroller",
+      "controls": {
+        "myLocation": "Konumum",
+        "searchHere": "Bu alanda ara"
+      }
     }
   },
   "friends": {
@@ -768,7 +1080,22 @@
     "addFriend": "Arkadaş Ekle"
   },
   "badges": {
-    "noBadges": "Henüz rozet yok"
+    "noBadges": "Henüz rozet yok",
+    "names": {
+      "creator": "Yaratıcı",
+      "novice": "Acemi",
+      "explorer": "Kaşif",
+      "adventurer": "Maceracı",
+      "pathfinder": "Yol Bulucu",
+      "wanderer": "Gezgin",
+      "navigator": "Kılavuz",
+      "trailblazer": "Öncü",
+      "veteran": "Usta",
+      "expert": "Uzman",
+      "legend": "Efsane",
+      "master": "Usta",
+      "social_butterfly": "Sosyal Kelebek"
+    }
   },
   "tutorial": {
     "title": "Yardım ve Rehberler",
@@ -797,6 +1124,30 @@
       "step4text": "Yapay zeka üretimi turlar oluşturmak için buraya dokunun!"
     }
   },
+  "camera": {
+    "defaultTitle": "Hedefi kareye hizala",
+    "defaultSubtitle": "Yalnızca orta kare bölgesi kullanılacak.",
+    "capture": "Çek",
+    "captureFailedTitle": "Çekim başarısız",
+    "captureFailedMessage": "Bu fotoğraf işlenemedi. Lütfen tekrar deneyin.",
+    "permissionTitle": "Kamera izni gerekli",
+    "permissionMessage": "Kılavuzlu kare içinde çekim yapmak için kamera erişimine izin verin.",
+    "grantPermission": "İzin Ver"
+  },
+  "arPreview": {
+    "title": "AR Önizleme",
+    "defaultCode": "Kod",
+    "viroUnavailable": "AR önizleme bu çalışma ortamında kullanılamıyor.",
+    "missingAsset": "AR model varlığı eksik.",
+    "previewUnavailable": "AR önizleme bu çalışma ortamında kullanılamıyor."
+  },
+  "arPuzzleView": {
+    "title": "Bulmacayı Görüntüle",
+    "defaultCode": "Kod",
+    "viroUnavailable": "AR görünümü bu çalışma ortamında kullanılamıyor.",
+    "missingAsset": "AR model varlığı eksik.",
+    "viewUnavailable": "AR görünümü bu çalışma ortamında kullanılamıyor."
+  },
   "disclaimer": {
     "title": "Güvenle Keşfet",
     "body": "Her büyük yolculuk farkındalıkla başlar. Odyssey ile keşfe çıkarken gözlerini açık tut ve çevrene karşı uyanık ol.",
@@ -807,5 +1158,26 @@
     "legalSuffix": "'nı kabul etmiş olursunuz. Görevinize başlamak için lütfen okuyun ve kabul edin.",
     "mascot": "Ody seni izliyor — gözlerini aç, kaşif!",
     "cta": "Kabul Ediyorum"
+  },
+  "puzzle": {
+    "watchAdForHint": "İpucunu açmak için reklam izle"
+  },
+  "notFound": {
+    "header": "Oops!",
+    "title": "Bu ekran mevcut değil.",
+    "goHome": "Ana ekrana git!"
+  },
+  "devInfo": {
+    "openCode": "Bu ekranın kodunu açın:",
+    "autoUpdateHint": "Metni değiştirin, dosyayı kaydedin ve uygulamanız otomatik güncellensin.",
+    "helpLinkText": "Değişikliklerden sonra uygulama otomatik güncellenmiyorsa buraya dokunun"
+  },
+  "compass": {
+    "calibrating": "Kalibre ediliyor...",
+    "legend": {
+      "acceptableWindow": "Yeşil alan: kabul edilebilir çözüm aralığı",
+      "exactHeading": "Koyu yeşil çizgi: tam hedef yön",
+      "pointerDirection": "Beyaz işaretçi: telefonun ileri yönü"
+    }
   }
 }

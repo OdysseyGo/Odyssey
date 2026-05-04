@@ -8,7 +8,7 @@ import {
   useWindowDimensions,
   Alert,
 } from 'react-native';
-import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
+import { useMemo, useRef, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -65,30 +65,8 @@ export default function BottomSlider({
   } = useActiveTour();
 
   const rewardedSkip = useRewardedAd('rewarded_hint');
-  const instanceIdRef = useRef(`bs-${Math.random().toString(36).slice(2, 8)}`);
-  const latestTourIdRef = useRef<string | null>(tour?.id ?? null);
   const skipUsingAdRef = useRef(false);
 
-  useEffect(() => {
-    latestTourIdRef.current = tour?.id ?? null;
-  }, [tour?.id]);
-
-  useEffect(() => {
-    if (__DEV__) {
-      console.log('[BottomSlider] mount', {
-        instanceId: instanceIdRef.current,
-        tourId: tour?.id ?? null,
-      });
-    }
-    return () => {
-      if (__DEV__) {
-        console.log('[BottomSlider] unmount', {
-          instanceId: instanceIdRef.current,
-          tourId: latestTourIdRef.current,
-        });
-      }
-    };
-  }, []);
   const skipCountsAsMistake = useCallback(
     (stepId: string) => {
       const currentStep = tour?.steps.find((step) => step.id === stepId);
@@ -307,7 +285,9 @@ export default function BottomSlider({
     async (stepId: string, latitude: number, longitude: number) => {
       const currentStep = tour?.steps.find((step) => step.id === stepId);
       if (!currentStep) {
-        throw new Error('MISSING_STEP');
+        return {
+          accepted: false,
+        };
       }
 
       const result = checkStepLocationLocal({
@@ -318,9 +298,16 @@ export default function BottomSlider({
         stepLongitude: currentStep.coordinate.longitude,
       });
       if (!result.accepted) {
-        throw new Error(`OUTSIDE_AREA:${result.distance_m}:${result.radius_m}`);
+        return {
+          accepted: false,
+          distance_m: result.distance_m,
+          radius_m: result.radius_m,
+        };
       }
       confirmLocation(stepId);
+      return {
+        accepted: true,
+      };
     },
     [confirmLocation, tour?.steps]
   );
@@ -453,8 +440,8 @@ export default function BottomSlider({
               onPress={toggleBottomSheet}
               style={styles.grabberPressable}
               accessibilityRole="button"
-              accessibilityLabel="Adjust tour progress panel"
-              accessibilityHint="Expands or collapses the tour progress sheet"
+              accessibilityLabel={t('map.activeTour.progressPanelAccessibilityLabel')}
+              accessibilityHint={t('map.activeTour.progressPanelAccessibilityHint')}
             >
               <Animated.View
                 style={[styles.grabberSurface, { transform: [{ translateY: headerLift }] }]}
@@ -521,7 +508,7 @@ export default function BottomSlider({
         <View style={styles.skipModalOverlay}>
           <View style={styles.skipModalContainer}>
             <View style={styles.skipModalIcon}>
-              <Text style={styles.skipModalIconText}>XP</Text>
+              <Text style={styles.skipModalIconText}>{t('profile.xp')}</Text>
             </View>
 
             <Text style={styles.skipModalTitle}>{t('map.activeTour.skipConfirmTitle')}</Text>

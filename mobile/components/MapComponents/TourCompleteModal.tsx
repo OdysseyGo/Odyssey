@@ -57,9 +57,6 @@ export default function TourCompleteModal({
 
   useEffect(() => {
     if (visible) {
-      if (__DEV__) {
-        console.log('[TourCompleteModal] visible', { hasFullTour: false });
-      }
       // Reset animations
       scaleAnim.setValue(0);
       rotateAnim.setValue(0);
