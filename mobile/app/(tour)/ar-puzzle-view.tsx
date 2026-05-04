@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   AppState,
   findNodeHandle,
   NativeModules,
@@ -20,6 +21,9 @@ const MODEL_SCALE: [number, number, number] = [0.25, 0.25, 0.25];
 const DEFAULT_MODEL_SCALE_METERS = 1;
 const MIN_MODEL_SCALE_METERS = 0.3;
 const MAX_MODEL_SCALE_METERS = 10;
+const MODEL_LOAD_SETTLE_MS = 300;
+
+type SceneReadyCallback = () => void;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -53,6 +57,7 @@ function ARPuzzleScene(props: any) {
   const stepId = (appProps?.stepId as string | undefined) ?? 'unknown';
   const puzzleId = (appProps?.puzzleId as string | undefined) ?? 'unknown';
   const anchorPosition = (appProps?.anchorPosition as [number, number, number]) ?? [0, 0.3, -1.2];
+  const onSceneReady = appProps?.onSceneReady as SceneReadyCallback | undefined;
   const modelScaleMeters = clamp(
     Number(appProps?.modelScaleMeters ?? DEFAULT_MODEL_SCALE_METERS),
     MIN_MODEL_SCALE_METERS,
@@ -60,8 +65,52 @@ function ARPuzzleScene(props: any) {
   );
   const modelScale = getScaledModelScale(modelScaleMeters);
   const anchorWorldPosition = toModelWorldPoint(anchorPosition, MODEL_POSITION, modelScale);
+  const readySentRef = useRef(false);
+  const loadsInFlightRef = useRef(0);
+  const loadCompletedCountRef = useRef(0);
+  const loadErrorCountRef = useRef(0);
+  const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearSettleTimer = useCallback(() => {
+    if (settleTimerRef.current) {
+      clearTimeout(settleTimerRef.current);
+      settleTimerRef.current = null;
+    }
+  }, []);
+
+  const signalSceneReadyWhenSettled = useCallback(() => {
+    if (readySentRef.current || loadsInFlightRef.current !== 0) {
+      return;
+    }
+    if (loadCompletedCountRef.current + loadErrorCountRef.current === 0) {
+      return;
+    }
+
+    clearSettleTimer();
+    settleTimerRef.current = setTimeout(() => {
+      if (readySentRef.current || loadsInFlightRef.current !== 0) {
+        return;
+      }
+      readySentRef.current = true;
+      onSceneReady?.();
+      if (__DEV__) {
+        console.log('[ARPuzzleScene] scene_ready', {
+          stepId,
+          puzzleId,
+          modelUri: sceneAssetUrl || 'none',
+          completedLoads: loadCompletedCountRef.current,
+          failedLoads: loadErrorCountRef.current,
+        });
+      }
+    }, MODEL_LOAD_SETTLE_MS);
+  }, [clearSettleTimer, onSceneReady, puzzleId, sceneAssetUrl, stepId]);
 
   useEffect(() => {
+    readySentRef.current = false;
+    loadsInFlightRef.current = 0;
+    loadCompletedCountRef.current = 0;
+    loadErrorCountRef.current = 0;
+    clearSettleTimer();
     if (__DEV__) {
       console.log('[ARPuzzleScene] mount', {
         stepId,
@@ -77,8 +126,9 @@ function ARPuzzleScene(props: any) {
           modelUri: sceneAssetUrl || 'none',
         });
       }
+      clearSettleTimer();
     };
-  }, [sceneAssetUrl, stepId, puzzleId]);
+  }, [clearSettleTimer, puzzleId, sceneAssetUrl, stepId]);
 
   if (!viro) {
     return null;
@@ -95,30 +145,45 @@ function ARPuzzleScene(props: any) {
         scale={modelScale}
         type="GLB"
         onLoadStart={() => {
+          loadsInFlightRef.current += 1;
+          clearSettleTimer();
           if (__DEV__) {
             console.log('[ARPuzzleScene] model_load_started', {
               stepId,
               puzzleId,
               modelUri: sceneAssetUrl || 'none',
+              inFlightLoads: loadsInFlightRef.current,
             });
           }
         }}
         onLoadEnd={() => {
+          if (loadsInFlightRef.current > 0) {
+            loadsInFlightRef.current -= 1;
+          }
+          loadCompletedCountRef.current += 1;
+          signalSceneReadyWhenSettled();
           if (__DEV__) {
             console.log('[ARPuzzleScene] model_loaded', {
               stepId,
               puzzleId,
               modelUri: sceneAssetUrl || 'none',
+              inFlightLoads: loadsInFlightRef.current,
             });
           }
         }}
         onError={(event: any) => {
+          if (loadsInFlightRef.current > 0) {
+            loadsInFlightRef.current -= 1;
+          }
+          loadErrorCountRef.current += 1;
+          signalSceneReadyWhenSettled();
           if (__DEV__) {
             console.log('[ARPuzzleScene] model_error', {
               stepId,
               puzzleId,
               modelUri: sceneAssetUrl || 'none',
               error: event?.nativeEvent ?? event ?? null,
+              inFlightLoads: loadsInFlightRef.current,
             });
           }
         }}
@@ -152,6 +217,7 @@ export default function ARPuzzleViewScreen() {
   const isDisposedRef = useRef(false);
   const navigatorRef = useRef<any>(null);
   const [navigatorVisible, setNavigatorVisible] = useState(true);
+  const [isSceneReady, setIsSceneReady] = useState(false);
   const params = useLocalSearchParams<{
     sceneAssetUrl?: string;
     secretCode?: string;
@@ -178,6 +244,13 @@ export default function ARPuzzleViewScreen() {
     MAX_MODEL_SCALE_METERS
   );
 
+  const handleSceneReady = useCallback(() => {
+    if (isDisposedRef.current) {
+      return;
+    }
+    setIsSceneReady(true);
+  }, []);
+
   const cleanupArResources = useCallback(
     (reason: string, hideNavigator: boolean = true) => {
       if (isDisposedRef.current) {
@@ -194,6 +267,7 @@ export default function ARPuzzleViewScreen() {
       }
 
       isDisposedRef.current = true;
+      setIsSceneReady(false);
       if (hideNavigator) {
         setNavigatorVisible(false);
       }
@@ -264,9 +338,14 @@ export default function ARPuzzleViewScreen() {
   );
 
   useEffect(() => {
+    setIsSceneReady(false);
+  }, [sceneAssetUrl]);
+
+  useEffect(() => {
+    const instanceId = instanceIdRef.current;
     if (__DEV__) {
       console.log('[ARPuzzleView] mount', {
-        instanceId: instanceIdRef.current,
+        instanceId,
         stepId,
         puzzleId,
         modelUri: sceneAssetUrl || 'none',
@@ -276,7 +355,7 @@ export default function ARPuzzleViewScreen() {
       cleanupArResources('unmount', false);
       if (__DEV__) {
         console.log('[ARPuzzleView] unmount', {
-          instanceId: instanceIdRef.current,
+          instanceId,
           stepId,
           puzzleId,
           modelUri: sceneAssetUrl || 'none',
@@ -383,12 +462,20 @@ export default function ARPuzzleViewScreen() {
             modelScaleMeters,
             stepId,
             puzzleId,
+            onSceneReady: handleSceneReady,
           }}
           style={styles.navigator}
         />
       ) : (
         <View style={styles.navigator} />
       )}
+      {!isSceneReady ? (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#ffffff" />
+          <Text style={styles.loadingTitle}>Loading AR Models</Text>
+          <Text style={styles.loadingSubtitle}>Please wait...</Text>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -446,6 +533,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 20,
+    backgroundColor: '#000',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  loadingTitle: {
+    marginTop: 16,
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  loadingSubtitle: {
+    marginTop: 6,
+    color: 'rgba(255,255,255,0.82)',
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
   },
   closeButton: {
     borderRadius: 10,

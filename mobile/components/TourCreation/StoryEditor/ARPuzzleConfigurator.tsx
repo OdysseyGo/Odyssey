@@ -42,6 +42,8 @@ const DEFAULT_MODEL_SCALE_METERS = 1;
 const MIN_MODEL_SCALE_METERS = 0.3;
 const MAX_MODEL_SCALE_METERS = 10;
 const HIGHLIGHT_HEIGHT = 0.18;
+const CODE_REVEAL_AFTER_MODEL_MS = 250;
+const CODE_REVEAL_FALLBACK_MS = 2500;
 const VIRO = getViroModule();
 const ViroMaterials = VIRO?.ViroMaterials as any;
 
@@ -103,11 +105,6 @@ function toModelWorldPoint(
 
 function ARSelectionScene(props: any) {
   const viro = getViroModule();
-  if (!viro) {
-    return null;
-  }
-
-  const { Viro3DObject, ViroARScene, ViroAmbientLight, ViroPolyline, ViroSphere, ViroText } = viro;
   const appProps = props.sceneNavigator.viroAppProps as SelectionSceneAppProps;
   const sceneAssetUrl = appProps?.sceneAssetUrl ?? '';
   const secretCode = appProps?.secretCode?.trim() || 'Code';
@@ -119,11 +116,76 @@ function ARSelectionScene(props: any) {
   );
   const modelScale = getScaledModelScale(modelScaleMeters);
   const anchorWorldPosition = toModelWorldPoint(anchorPosition, MODEL_POSITION, modelScale);
+  const [showCode, setShowCode] = React.useState(false);
+  const fallbackTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const revealTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadSignalSeenRef = React.useRef(false);
+
+  const clearTimers = React.useCallback(() => {
+    if (fallbackTimerRef.current) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+    if (revealTimerRef.current) {
+      clearTimeout(revealTimerRef.current);
+      revealTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleCodeReveal = React.useCallback(() => {
+    if (revealTimerRef.current) {
+      clearTimeout(revealTimerRef.current);
+    }
+    revealTimerRef.current = setTimeout(() => {
+      setShowCode(true);
+    }, CODE_REVEAL_AFTER_MODEL_MS);
+  }, []);
+
+  React.useEffect(() => {
+    setShowCode(false);
+    loadSignalSeenRef.current = false;
+    clearTimers();
+    // Runtime fallback: reveal even when onLoad callbacks do not fire.
+    fallbackTimerRef.current = setTimeout(() => {
+      if (!loadSignalSeenRef.current) {
+        setShowCode(true);
+      }
+    }, CODE_REVEAL_FALLBACK_MS);
+    return clearTimers;
+  }, [sceneAssetUrl, clearTimers]);
+
+  const handleModelLoad = React.useCallback(() => {
+    loadSignalSeenRef.current = true;
+    if (fallbackTimerRef.current) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+    scheduleCodeReveal();
+  }, [scheduleCodeReveal]);
+
+  const handleModelError = React.useCallback(
+    (error: unknown) => {
+      console.warn('AR selection model failed to load, revealing code via fallback path.', error);
+      loadSignalSeenRef.current = true;
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+        fallbackTimerRef.current = null;
+      }
+      scheduleCodeReveal();
+    },
+    [scheduleCodeReveal]
+  );
   const anchorTopPoint: [number, number, number] = [
     anchorWorldPosition[0],
     anchorWorldPosition[1] + HIGHLIGHT_HEIGHT,
     anchorWorldPosition[2],
   ];
+
+  if (!viro) {
+    return null;
+  }
+
+  const { Viro3DObject, ViroARScene, ViroAmbientLight, ViroPolyline, ViroSphere, ViroText } = viro;
 
   return (
     <ViroARScene>
@@ -133,6 +195,8 @@ function ARSelectionScene(props: any) {
         position={MODEL_POSITION}
         scale={modelScale}
         type="GLB"
+        onLoadEnd={handleModelLoad}
+        onError={handleModelError}
       />
       <ViroSphere
         position={anchorWorldPosition}
@@ -144,23 +208,27 @@ function ARSelectionScene(props: any) {
         thickness={0.015}
         materials={['arPuzzleAnchorLine']}
       />
-      <ViroText
-        text={secretCode}
-        width={1}
-        height={1}
-        position={anchorWorldPosition}
-        scale={[0.12, 0.12, 0.12]}
-        style={styles.viroText}
-      />
-      <ViroText
-        text={secretCode}
-        width={1}
-        height={1}
-        position={anchorWorldPosition}
-        rotation={[0, 180, 0]}
-        scale={[0.12, 0.12, 0.12]}
-        style={styles.viroText}
-      />
+      {showCode ? (
+        <>
+          <ViroText
+            text={secretCode}
+            width={1}
+            height={1}
+            position={anchorWorldPosition}
+            scale={[0.12, 0.12, 0.12]}
+            style={styles.viroText}
+          />
+          <ViroText
+            text={secretCode}
+            width={1}
+            height={1}
+            position={anchorWorldPosition}
+            rotation={[0, 180, 0]}
+            scale={[0.12, 0.12, 0.12]}
+            style={styles.viroText}
+          />
+        </>
+      ) : null}
     </ViroARScene>
   );
 }

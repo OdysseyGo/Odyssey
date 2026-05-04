@@ -10,6 +10,7 @@ export const authButtonStyles = (theme: ThemeName) => {
       paddingVertical: Spacing.md,
       borderRadius: Spacing.borderRadius,
       alignItems: 'center',
+      alignSelf: 'center',
       marginTop: Spacing.sm,
       width: '100%',
       maxWidth: 400,
