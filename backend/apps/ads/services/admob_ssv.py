@@ -84,11 +84,21 @@ def _build_signed_message_from_raw_query(raw_query_string: str) -> bytes:
     """
     if not raw_query_string:
         return b""
-    marker = "&signature="
-    if marker not in raw_query_string:
+
+    query = raw_query_string[1:] if raw_query_string.startswith("?") else raw_query_string
+    parts = [p for p in query.split("&") if p]
+    if not parts:
         return b""
-    signed_portion = raw_query_string.split(marker, 1)[0]
-    return signed_portion.encode("utf-8")
+
+    filtered = [
+        part
+        for part in parts
+        if not part.startswith("signature=") and not part.startswith("key_id=")
+    ]
+    if len(filtered) == len(parts):
+        return b""
+
+    return "&".join(filtered).encode("utf-8")
 
 
 def verify_ssv(query_params: dict, raw_query_string: str = "") -> SsvPayload:

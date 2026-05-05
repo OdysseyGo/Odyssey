@@ -110,3 +110,25 @@ def test_ssv_valid_signature_with_raw_query_string(keypair, patch_keys, base_par
     payload = verify_ssv(params, raw_query_string=raw_qs)
 
     assert payload.transaction_id == "tx-abc-123"
+
+
+def test_ssv_valid_signature_with_raw_query_signature_first(keypair, patch_keys, base_params):
+    priv, _ = keypair
+    sig = _sign(priv, base_params)
+    params = {**base_params, "key_id": "42", "signature": sig}
+    raw_qs = (
+        f"signature={sig}"
+        "&key_id=42"
+        "&ad_network=5450213213286189855"
+        "&ad_unit=1234567890"
+        "&reward_amount=10"
+        "&reward_item=credits"
+        "&timestamp=1700000000000"
+        "&transaction_id=tx-abc-123"
+        "&user_id=1"
+        "&custom_data=1%3Arewarded_credits"
+    )
+
+    payload = verify_ssv(params, raw_query_string=raw_qs)
+
+    assert payload.transaction_id == "tx-abc-123"
