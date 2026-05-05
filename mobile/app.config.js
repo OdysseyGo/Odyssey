@@ -54,6 +54,7 @@ export default {
       './scripts/newArchEnabled.js',
       'expo-router',
       'expo-localization',
+      'expo-notifications',
       [
         'expo-location',
         {
