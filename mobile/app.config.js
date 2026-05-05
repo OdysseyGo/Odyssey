@@ -53,6 +53,7 @@ export default {
     plugins: [
       './scripts/newArchEnabled.js',
       'expo-router',
+      'expo-localization',
       [
         'expo-location',
         {
