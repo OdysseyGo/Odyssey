@@ -14,9 +14,10 @@ const PLACEMENT_KEY = 'rewarded_hint_reveal';
 
 export default function RewardedHintReveal({ hint, stepId }: Props) {
   const { t } = useTranslation();
-  const { isReady } = useAds();
+  const { isReady, user } = useAds();
   const { status, show, available } = useRewardedAd(PLACEMENT_KEY);
   const [revealed, setRevealed] = useState(false);
+  const bypassAdGate = !!user?.is_review_account;
 
   useEffect(() => {
     setRevealed(false);
@@ -24,7 +25,7 @@ export default function RewardedHintReveal({ hint, stepId }: Props) {
 
   if (!hint) return null;
   const canUseRewardedGate = isReady && available;
-  if (revealed || !canUseRewardedGate) {
+  if (revealed || bypassAdGate || !canUseRewardedGate) {
     return (
       <View style={styles.hintBox}>
         <MaterialCommunityIcons name="lightbulb-on" size={18} color="#B45309" />

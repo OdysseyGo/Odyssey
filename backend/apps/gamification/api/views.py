@@ -493,20 +493,24 @@ class TourProgressViewSet(
         if progress.status == TourProgress.COMPLETED:
             return Response({"error": "Tour is already completed"}, status=400)
 
+        bypass_ad_gate = bool(getattr(request.user, "is_review_account", False))
         used_ad_skip = False
-        if request.data.get("use_ad_skip"):
-            used_ad_skip = self._consume_hint_grant(request.user)
-            if not used_ad_skip:
-                return Response(
-                    {
-                        "error": (
-                            "No unconsumed HINT reward available. "
-                            "Watch a rewarded ad first or wait a few seconds for "
-                            "verification."
-                        )
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if request.data.get("use_ad_skip") or bypass_ad_gate:
+            if bypass_ad_gate:
+                used_ad_skip = True
+            else:
+                used_ad_skip = self._consume_hint_grant(request.user)
+                if not used_ad_skip:
+                    return Response(
+                        {
+                            "error": (
+                                "No unconsumed HINT reward available. "
+                                "Watch a rewarded ad first or wait a few seconds for "
+                                "verification."
+                            )
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
         result = self._advance_progress(
             progress=progress,
