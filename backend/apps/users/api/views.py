@@ -83,7 +83,7 @@ class UserViewSet(ModelViewSet):
     queryset: QuerySet[User] = User.objects.all().order_by("id")
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ["username", "first_name", "last_name"]
+    search_fields = ["username"]
 
     @action(detail=False, methods=["get"], url_path="get-by-username")
     def get_by_username(self, request):

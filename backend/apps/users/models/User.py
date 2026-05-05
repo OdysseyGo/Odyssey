@@ -13,8 +13,8 @@ class User(AbstractUser):
         (CREATOR, "Content Creator"),
     ]
 
-    # Removed user_id, name, hashed_password as AbstractUser handles these
-    # (id, username/first_name/last_name, password)
+    first_name = None
+    last_name = None
 
     xp = models.IntegerField(default=0)
     following_count = models.IntegerField(default=0)

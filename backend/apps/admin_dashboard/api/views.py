@@ -84,7 +84,7 @@ class AdminUserViewSet(ModelViewSet):
     pagination_class = AdminPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = AdminUserFilter
-    search_fields = ["username", "email", "first_name", "last_name"]
+    search_fields = ["username", "email"]
     ordering_fields = ["date_joined", "username", "xp", "level"]
     ordering = ["-date_joined"]
     http_method_names = ["get", "patch", "post", "head", "options"]

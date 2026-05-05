@@ -58,8 +58,6 @@ type SettingsGroup = {
 
 type EditProfileForm = {
   username: string;
-  first_name: string;
-  last_name: string;
   email: string;
 };
 
@@ -87,8 +85,6 @@ export default function SettingsScreen({
   const [popupView, setPopupView] = useState<PopupView>('settings');
   const [editProfileForm, setEditProfileForm] = useState<EditProfileForm>({
     username: '',
-    first_name: '',
-    last_name: '',
     email: '',
   });
 
@@ -329,8 +325,6 @@ export default function SettingsScreen({
       setCurrentUserId(me.id);
       setEditProfileForm({
         username: me.username ?? '',
-        first_name: me.first_name ?? '',
-        last_name: me.last_name ?? '',
         email: me.email ?? '',
       });
     } catch {
@@ -358,17 +352,13 @@ export default function SettingsScreen({
 
     try {
       const payload = {
-        username: editProfileForm.username.trim(),
-        first_name: editProfileForm.first_name.trim(),
-        last_name: editProfileForm.last_name.trim(),
+        username: editProfileForm.username.trim().toLowerCase(),
         email: editProfileForm.email.trim(),
       };
 
       const updated = await partialUpdateUser(String(currentUserId), payload);
       setEditProfileForm({
         username: updated.username ?? payload.username,
-        first_name: updated.first_name ?? payload.first_name,
-        last_name: updated.last_name ?? payload.last_name,
         email: updated.email ?? payload.email,
       });
       setProfileNeedsRefresh();
@@ -540,7 +530,7 @@ export default function SettingsScreen({
                     <TextInput
                       value={editProfileForm.username}
                       onChangeText={(text) => {
-                        setEditProfileForm((prev) => ({ ...prev, username: text }));
+                        setEditProfileForm((prev) => ({ ...prev, username: text.toLowerCase() }));
                         setEditProfileErrors((prev) => ({ ...prev, username: undefined }));
                       }}
                       autoCapitalize="none"
@@ -560,48 +550,6 @@ export default function SettingsScreen({
                         {editProfileErrors.username}
                       </Text>
                     ) : null}
-
-                    <Text style={[styles.inputLabel, { color: colors.subText }]}>
-                      {t('auth.firstName')}
-                    </Text>
-                    <TextInput
-                      value={editProfileForm.first_name}
-                      onChangeText={(text) =>
-                        setEditProfileForm((prev) => ({ ...prev, first_name: text }))
-                      }
-                      autoCapitalize="words"
-                      style={[
-                        styles.textInput,
-                        {
-                          borderColor: colors.border,
-                          color: colors.text,
-                          backgroundColor: editProfileSurfaceColor,
-                        },
-                      ]}
-                      placeholder={t('auth.firstNamePlaceholder')}
-                      placeholderTextColor={colors.subText}
-                    />
-
-                    <Text style={[styles.inputLabel, { color: colors.subText }]}>
-                      {t('auth.lastName')}
-                    </Text>
-                    <TextInput
-                      value={editProfileForm.last_name}
-                      onChangeText={(text) =>
-                        setEditProfileForm((prev) => ({ ...prev, last_name: text }))
-                      }
-                      autoCapitalize="words"
-                      style={[
-                        styles.textInput,
-                        {
-                          borderColor: colors.border,
-                          color: colors.text,
-                          backgroundColor: editProfileSurfaceColor,
-                        },
-                      ]}
-                      placeholder={t('auth.lastNamePlaceholder')}
-                      placeholderTextColor={colors.subText}
-                    />
 
                     <Text style={[styles.inputLabel, { color: colors.subText }]}>
                       {t('auth.email')}

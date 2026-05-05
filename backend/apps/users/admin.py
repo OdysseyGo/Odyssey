@@ -51,14 +51,20 @@ class CustomUserAdmin(UserAdmin):
     list_display = (
         "username",
         "email",
-        "first_name",
-        "last_name",
         "user_type",
         "is_staff",
     )
+    search_fields = ("username", "email")
     list_filter = ("user_type", "is_staff", "is_superuser", "groups")
     readonly_fields = ("terms_accepted_at", "terms_version")
-    fieldsets = UserAdmin.fieldsets + (
+    fieldsets = (
+        (None, {"fields": ("username", "password")}),
+        ("Personal info", {"fields": ("email",)}),
+        (
+            "Permissions",
+            {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")},
+        ),
+        ("Important dates", {"fields": ("last_login", "date_joined")}),
         (
             "Extra Fields",
             {"fields": ("user_type", "xp", "level", "country", "tour_count", "rating")},

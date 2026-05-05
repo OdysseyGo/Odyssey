@@ -4,6 +4,8 @@ import { config } from 'dotenv';
 config({ path: path.resolve(__dirname, '../.env') });
 
 const bundleIdentifier = process.env.APP_BUNDLE_ID || 'com.app.odyssey.bilkent';
+const microphoneUsageDescription =
+  'Odyssey includes a third-party AR framework that declares microphone-related APIs. Odyssey does not record or store microphone audio in any app feature.';
 
 export default {
   expo: {
@@ -27,6 +29,8 @@ export default {
       infoPlist: {
         NSCameraUsageDescription:
           'Odyssey uses your camera for AR puzzle views and photo-based tour challenges.',
+        NSMicrophoneUsageDescription:
+          microphoneUsageDescription,
         NSLocationWhenInUseUsageDescription:
           'Odyssey uses your location while the app is open to show nearby tours, guide tour navigation, and verify location-based steps.',
         NSPhotoLibraryUsageDescription:
@@ -35,6 +39,7 @@ export default {
           'Odyssey uses motion sensors to align AR content and support compass-style puzzle interactions.',
         NSUserTrackingUsageDescription:
           'Odyssey uses tracking to show ads relevant to your interests. You can decline and still use the app.',
+        ITSAppUsesNonExemptEncryption: false,
       },
     },
     android: {
@@ -66,7 +71,7 @@ export default {
         {
           cameraPermission:
             'Odyssey uses your camera for AR puzzle views and photo-based tour challenges.',
-          microphonePermission: false,
+          microphonePermission: microphoneUsageDescription,
           recordAudioAndroid: false,
         },
       ],
@@ -77,7 +82,7 @@ export default {
             'Odyssey needs photo library access so you can pick images when creating picture-based tour puzzles.',
           cameraPermission:
             'Odyssey uses your camera for AR puzzle views and photo-based tour challenges.',
-          microphonePermission: false,
+          microphonePermission: microphoneUsageDescription,
         },
       ],
       [

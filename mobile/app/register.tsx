@@ -26,16 +26,15 @@ import AuthLanguageSelector from '@/components/LoginComponents/AuthLanguageSelec
 import AuthLogo from '@/components/LoginComponents/AuthLogo';
 import BackButton from '@/components/common/BackButton';
 import { ApiError } from '@/api/APIClient';
-import { createUser, CreateUserPayload } from '@/api/users';
+import { createUser, CreateUserPayload, getByUsername } from '@/api/users';
 import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.28 : SCREEN_HEIGHT * 0.32;
+const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.22 : SCREEN_HEIGHT * 0.28;
 const AUTH_INPUT_MAX_LENGTH = 50;
 const USERNAME_ALLOWED_CHAR_REGEX = /^[\p{L}\p{N}_.@+-]+$/u;
-const NAME_ALLOWED_CHAR_REGEX = /^[\p{L}\p{M}][\p{L}\p{M}' -]*$/u;
 
 const isUsernameInvalidCharacterError = (message: string) =>
   /enter a valid username|may contain only letters, numbers|invalid username/i.test(message);
@@ -49,8 +48,6 @@ export default function RegisterScreen() {
 
   const [step, setStep] = useState<1 | 2>(1);
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -59,8 +56,6 @@ export default function RegisterScreen() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const [errors, setErrors] = useState<{
-    firstName?: string;
-    lastName?: string;
     username?: string;
     email?: string;
     password?: string;
@@ -69,7 +64,7 @@ export default function RegisterScreen() {
     general?: string;
   }>({});
   const [loading, setLoading] = useState(false);
-  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  const [checkingUsername, setCheckingUsername] = useState(false);
   const isNavigatingAway = useRef(false);
   const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -115,6 +110,10 @@ export default function RegisterScreen() {
     }, [resetScrollPosition])
   );
 
+  useEffect(() => {
+    resetScrollPosition();
+  }, [step, resetScrollPosition]);
+
   // Intercept back navigation when on step 2
   useEffect(() => {
     if (step !== 2) return;
@@ -134,29 +133,18 @@ export default function RegisterScreen() {
   }, [step, navigation]);
 
   // Field refs
-  const lastNameRef = useRef<TextInput>(null);
   const usernameRef = useRef<TextInput>(null);
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const confirmPasswordRef = useRef<TextInput>(null);
 
-  const normalizeNameInput = (value: string) => value.replace(/[\r\n\t]/g, '');
-  const normalizeUsernameInput = (value: string) => value.replace(/[\r\n\t\s]/g, '');
+  const normalizeUsernameInput = (value: string) =>
+    value.replace(/[\r\n\t\s]/g, '').toLowerCase();
   const normalizeEmailInput = (value: string) => value.replace(/[\r\n\t\s]/g, '').toLowerCase();
 
   const validateStep1 = () => {
     const newErrors: typeof errors = {};
-    const normalizedFirstName = firstName.trim();
-    const normalizedLastName = lastName.trim();
-    const normalizedUsername = username.trim();
-
-    if (!normalizedFirstName) newErrors.firstName = t('auth.errors.firstNameRequired');
-    else if (!NAME_ALLOWED_CHAR_REGEX.test(normalizedFirstName))
-      newErrors.firstName = t('auth.errors.firstNameInvalidCharacters');
-
-    if (!normalizedLastName) newErrors.lastName = t('auth.errors.lastNameRequired');
-    else if (!NAME_ALLOWED_CHAR_REGEX.test(normalizedLastName))
-      newErrors.lastName = t('auth.errors.lastNameInvalidCharacters');
+    const normalizedUsername = username.trim().toLowerCase();
 
     if (!normalizedUsername) newErrors.username = t('auth.errors.usernameRequired');
     else if (!USERNAME_ALLOWED_CHAR_REGEX.test(normalizedUsername))
@@ -182,34 +170,53 @@ export default function RegisterScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!validateStep1()) return;
 
-    setFirstName((prev) => prev.trim());
-    setLastName((prev) => prev.trim());
-    setUsername((prev) => prev.trim());
-    setStep(2);
+    const normalizedUsername = username.trim().toLowerCase();
+    Keyboard.dismiss();
+    resetScrollPosition();
+    setCheckingUsername(true);
+
+    try {
+      await getByUsername(normalizedUsername);
+      setErrors((prev) => ({
+        ...prev,
+        username: t('auth.errors.usernameTaken', {
+          defaultValue: 'This username is already taken.',
+        }),
+      }));
+      return;
+    } catch (e) {
+      if (e instanceof ApiError && e.statusCode === 404) {
+        setUsername(normalizedUsername);
+        setStep(2);
+        return;
+      }
+
+      setErrors((prev) => ({
+        ...prev,
+        general: t('auth.errors.somethingWentWrong'),
+      }));
+    } finally {
+      setCheckingUsername(false);
+    }
   };
 
   const submitRegistration = async () => {
     setLoading(true);
     try {
-      const normalizedFirstName = firstName.trim();
-      const normalizedLastName = lastName.trim();
-      const normalizedUsername = username.trim();
+      const normalizedUsername = username.trim().toLowerCase();
       const normalizedEmail = email.trim().toLowerCase();
 
       const user: CreateUserPayload = {
         username: normalizedUsername,
         email: normalizedEmail,
         password,
-        first_name: normalizedFirstName,
-        last_name: normalizedLastName,
         terms_accepted: true,
       };
       await createUser(user);
       isNavigatingAway.current = true;
-      setShowSuccessBanner(true);
       redirectTimeoutRef.current = setTimeout(() => {
         router.dismissTo('/login');
       }, 1400);
@@ -337,35 +344,6 @@ export default function RegisterScreen() {
                 {step === 1 ? (
                   <>
                     <AuthTextInput
-                      label={t('auth.firstName')}
-                      value={firstName}
-                      onChangeText={(text) => {
-                        setFirstName(normalizeNameInput(text));
-                        setErrors((e) => ({ ...e, firstName: undefined }));
-                      }}
-                      placeholder={t('auth.firstNamePlaceholder')}
-                      autoCapitalize="words"
-                      maxLength={AUTH_INPUT_MAX_LENGTH}
-                      returnKeyType="next"
-                      onSubmitEditing={() => lastNameRef.current?.focus()}
-                      error={errors.firstName}
-                    />
-                    <AuthTextInput
-                      ref={lastNameRef}
-                      label={t('auth.lastName')}
-                      value={lastName}
-                      onChangeText={(text) => {
-                        setLastName(normalizeNameInput(text));
-                        setErrors((e) => ({ ...e, lastName: undefined }));
-                      }}
-                      placeholder={t('auth.lastNamePlaceholder')}
-                      autoCapitalize="words"
-                      maxLength={AUTH_INPUT_MAX_LENGTH}
-                      returnKeyType="next"
-                      onSubmitEditing={() => usernameRef.current?.focus()}
-                      error={errors.lastName}
-                    />
-                    <AuthTextInput
                       ref={usernameRef}
                       label={t('auth.username')}
                       value={username}
@@ -380,12 +358,19 @@ export default function RegisterScreen() {
                       onSubmitEditing={handleNext}
                       error={errors.username}
                     />
-                    <AuthButton title={t('auth.continue')} onPress={handleNext} />
+                    <AuthButton
+                      title={t('auth.continue')}
+                      onPress={handleNext}
+                      loading={checkingUsername}
+                    />
                     <View style={styles.footerRow}>
                       <Text style={[styles.footerLabel, { color: theme.subText }]}>
                         {t('auth.alreadyHaveAccount')}
                       </Text>
-                      <TouchableOpacity onPress={() => router.back()} disabled={loading}>
+                      <TouchableOpacity
+                        onPress={() => router.back()}
+                        disabled={loading || checkingUsername}
+                      >
                         <Text style={[styles.footerLink, { color: theme.primary }]}>
                           {` ${t('auth.signIn')}`}
                         </Text>
@@ -492,32 +477,10 @@ export default function RegisterScreen() {
                       </Text>
                     )}
 
-                    {showSuccessBanner ? (
-                      <View
-                        style={[
-                          styles.successBanner,
-                          { backgroundColor: `${theme.correctOptionBackground}14` },
-                        ]}
-                      >
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={16}
-                          color={theme.correctOptionBackground}
-                        />
-                        <Text
-                          style={[
-                            styles.successBannerText,
-                            { color: theme.correctOptionBackground },
-                          ]}
-                        >
-                          {t('auth.accountCreatedSubtitle', { username })}
-                        </Text>
-                      </View>
-                    ) : null}
                     <AuthButton
                       title={t('auth.createAccount')}
                       onPress={handleRegister}
-                      loading={loading || showSuccessBanner}
+                      loading={loading}
                     />
                     <View style={styles.footerRow}>
                       <TouchableOpacity onPress={() => setStep(1)} disabled={loading}>
@@ -546,7 +509,7 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingBottom: Spacing.xl,
+    paddingBottom: Spacing.lg + 2,
   },
   backButton: {
     position: 'absolute',
@@ -574,7 +537,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.xxl,
+    paddingTop: Spacing.xl + 4,
     flexGrow: 1,
   },
   cardTitle: {
@@ -623,22 +586,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: 18,
   },
-  successBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    borderRadius: Spacing.borderRadius,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    marginTop: Spacing.xs,
-  },
-  successBannerText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '700',
-    lineHeight: 18,
-  },
-
   // ── Inputs
   inputs: {
     gap: Spacing.xs,

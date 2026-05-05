@@ -356,8 +356,6 @@ export default function SearchScreen() {
   );
 
   const renderUserResult = (user: User) => {
-    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
-
     return (
       <Pressable
         key={user.id}
@@ -375,11 +373,6 @@ export default function SearchScreen() {
           <Text style={styles.userName} numberOfLines={1}>
             @{user.username}
           </Text>
-          {fullName ? (
-            <Text style={styles.userFullName} numberOfLines={1}>
-              {fullName}
-            </Text>
-          ) : null}
           <Text style={styles.userMeta}>
             {t('search.userMeta', {
               followers: user.follower_count ?? 0,

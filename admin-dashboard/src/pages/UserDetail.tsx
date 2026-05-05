@@ -13,8 +13,6 @@ interface UserData {
   id: number;
   username: string;
   email: string;
-  first_name: string;
-  last_name: string;
   user_type: number;
   country: string;
   is_staff: boolean;
@@ -214,12 +212,6 @@ export default function UserDetail() {
         <Card>
           <h2 className="mb-4 text-lg font-semibold">Profile</h2>
           <dl className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-muted-foreground">Name</dt>
-              <dd>
-                {user.first_name} {user.last_name || "—"}
-              </dd>
-            </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Type</dt>
               <dd>

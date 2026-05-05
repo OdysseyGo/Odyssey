@@ -12,8 +12,6 @@ interface User {
   id: number;
   username: string;
   email: string;
-  first_name: string;
-  last_name: string;
   user_type: number;
   is_staff: boolean;
   is_banned: boolean;
