@@ -29,8 +29,7 @@ export default {
       infoPlist: {
         NSCameraUsageDescription:
           'Odyssey uses your camera for AR puzzle views and photo-based tour challenges.',
-        NSMicrophoneUsageDescription:
-          microphoneUsageDescription,
+        NSMicrophoneUsageDescription: microphoneUsageDescription,
         NSLocationWhenInUseUsageDescription:
           'Odyssey uses your location while the app is open to show nearby tours, guide tour navigation, and verify location-based steps.',
         NSPhotoLibraryUsageDescription:

@@ -138,8 +138,7 @@ export default function RegisterScreen() {
   const passwordRef = useRef<TextInput>(null);
   const confirmPasswordRef = useRef<TextInput>(null);
 
-  const normalizeUsernameInput = (value: string) =>
-    value.replace(/[\r\n\t\s]/g, '').toLowerCase();
+  const normalizeUsernameInput = (value: string) => value.replace(/[\r\n\t\s]/g, '').toLowerCase();
   const normalizeEmailInput = (value: string) => value.replace(/[\r\n\t\s]/g, '').toLowerCase();
 
   const validateStep1 = () => {
