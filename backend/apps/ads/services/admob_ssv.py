@@ -101,7 +101,12 @@ def _build_signed_message_from_raw_query(raw_query_string: str) -> bytes:
     return "&".join(filtered).encode("utf-8")
 
 
-def verify_ssv(query_params: dict, raw_query_string: str = "") -> SsvPayload:
+def verify_ssv(
+    query_params: dict,
+    raw_query_string: str = "",
+    request_path: str = "",
+    request_url_base: str = "",
+) -> SsvPayload:
     """Verify an AdMob SSV callback. Raises SsvVerificationError on failure."""
     signature_b64 = query_params.get("signature")
     key_id = query_params.get("key_id")
@@ -136,15 +141,30 @@ def verify_ssv(query_params: dict, raw_query_string: str = "") -> SsvPayload:
         messages.append(raw_message)
     if canonical_message and canonical_message not in messages:
         messages.append(canonical_message)
+    if raw_message and request_path:
+        path_message = f"{request_path}?{raw_message.decode('utf-8')}".encode("utf-8")
+        if path_message not in messages:
+            messages.append(path_message)
+    if raw_message and request_url_base:
+        url_message = f"{request_url_base}?{raw_message.decode('utf-8')}".encode(
+            "utf-8"
+        )
+        if url_message not in messages:
+            messages.append(url_message)
     try:
         signature = base64.urlsafe_b64decode(signature_b64 + "==")
     except Exception as e:
         raise SsvVerificationError(f"Malformed signature: {e}")
 
     verified = False
-    for message in messages:
+    for idx, message in enumerate(messages):
         try:
             public_key.verify(signature, message, ec.ECDSA(hashes.SHA256()))
+            logger.info(
+                "AdMob SSV signature verified using candidate #%s (len=%s)",
+                idx + 1,
+                len(message),
+            )
             verified = True
             break
         except InvalidSignature:

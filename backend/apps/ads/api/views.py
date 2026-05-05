@@ -125,7 +125,10 @@ class AdMobSsvView(APIView):
         logger.info("AdMob SSV callback received: %s", debug_snapshot)
         try:
             payload = verify_ssv(
-                params, raw_query_string=request.META.get("QUERY_STRING", "")
+                params,
+                raw_query_string=request.META.get("QUERY_STRING", ""),
+                request_path=request.path,
+                request_url_base=request.build_absolute_uri(request.path),
             )
         except SsvVerificationError as e:
             logger.warning("AdMob SSV failed: %s | snapshot=%s", e, debug_snapshot)
