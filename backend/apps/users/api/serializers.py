@@ -43,9 +43,11 @@ class UserSerializer(serializers.ModelSerializer):
             "terms_accepted",
             "terms_update_required",
             "personal_tour_min_level",
+            "is_review_account",
         ]
         extra_kwargs = {
             "password": {"write_only": True},
+            "is_review_account": {"read_only": True},
         }
 
     def get_terms_update_required(self, obj):

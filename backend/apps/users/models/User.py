@@ -41,6 +41,13 @@ class User(AbstractUser):
     is_banned = models.BooleanField(default=False)
     terms_accepted_at = models.DateTimeField(null=True, blank=True)
     terms_version = models.CharField(max_length=20, blank=True, default="")
+    is_review_account = models.BooleanField(
+        default=False,
+        help_text=(
+            "Bypass rewarded-ad gates for App/Play Store reviewer accounts. "
+            "Enable only for accounts whose credentials are shared with store reviewers."
+        ),
+    )
 
     class Meta:
         db_table = "user"
