@@ -23,6 +23,9 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
+ADMOB_SETUP_TEST_AD_UNIT = "1234567890"
+ADMOB_SETUP_TEST_TRANSACTION_ID = "123456789"
+
 
 def _platform_from_request(request):
     platform = request.query_params.get("platform") or request.data.get("platform")
@@ -123,6 +126,15 @@ class AdMobSsvView(APIView):
         params = {k: v for k, v in request.query_params.items()}
         debug_snapshot = _ssv_debug_snapshot(request, params)
         logger.info("AdMob SSV callback received: %s", debug_snapshot)
+        if _is_admob_dashboard_setup_probe(params):
+            logger.info(
+                "AdMob dashboard setup probe accepted without reward grant: %s",
+                debug_snapshot,
+            )
+            return Response(
+                {"ok": True, "probe": True},
+                status=status.HTTP_200_OK,
+            )
         try:
             payload = verify_ssv(
                 params,
@@ -180,6 +192,29 @@ def _parse_custom_data(custom_data: str):
         return None, None
     user_id, _, placement_key = custom_data.partition(":")
     return user_id.strip() or None, placement_key.strip() or None
+
+
+def _is_admob_dashboard_setup_probe(params: dict) -> bool:
+    required_keys = {
+        "ad_network",
+        "ad_unit",
+        "reward_amount",
+        "reward_item",
+        "timestamp",
+        "transaction_id",
+        "user_id",
+        "custom_data",
+        "signature",
+        "key_id",
+    }
+    keys = set(params.keys())
+    return (
+        required_keys.issubset(keys)
+        and params.get("ad_unit") == ADMOB_SETUP_TEST_AD_UNIT
+        and params.get("transaction_id") == ADMOB_SETUP_TEST_TRANSACTION_ID
+        and bool(params.get("signature"))
+        and bool(params.get("key_id"))
+    )
 
 
 def _ssv_debug_snapshot(request, params: dict):

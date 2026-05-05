@@ -1,4 +1,5 @@
 import uuid
+from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -6,6 +7,7 @@ from rest_framework.test import APIClient
 
 from apps.ads.models import AdImpression, AdPlacement, RewardedAdGrant
 from apps.ads.services import reward_service
+from apps.ads.services.admob_ssv import SsvVerificationError
 
 User = get_user_model()
 
@@ -165,4 +167,54 @@ def test_consume_endpoint_rejects_credits_grant(client, user, rewarded_credits):
     resp = client.post(
         f"/api/ads/rewards/{grant_row.id}/consume/", {"context": {}}, format="json"
     )
+    assert resp.status_code == 400
+
+
+def test_admob_setup_probe_returns_200_and_does_not_grant(user):
+    client = APIClient()
+    params = {
+        "ad_network": "5450213213286189855",
+        "ad_unit": "1234567890",
+        "reward_amount": "1",
+        "reward_item": "rewarded_ai_slot",
+        "timestamp": "1777993762749",
+        "transaction_id": "123456789",
+        "user_id": "1",
+        "custom_data": "1:rewarded_ai_slot",
+        "signature": "invalid-signature",
+        "key_id": "3335741209",
+    }
+    with patch("apps.ads.api.views.verify_ssv") as verify_mock, patch(
+        "apps.ads.api.views.reward_service.grant"
+    ) as grant_mock:
+        resp = client.get("/api/ads/rewards/ssv/", params)
+
+    assert resp.status_code == 200
+    assert resp.json()["ok"] is True
+    assert resp.json()["probe"] is True
+    verify_mock.assert_not_called()
+    grant_mock.assert_not_called()
+    assert RewardedAdGrant.objects.count() == 0
+
+
+def test_admob_non_probe_invalid_signature_still_400():
+    client = APIClient()
+    params = {
+        "ad_network": "5450213213286189855",
+        "ad_unit": "ca-app-pub-1356436834325874/5652847196",
+        "reward_amount": "1",
+        "reward_item": "rewarded_ai_slot",
+        "timestamp": "1777993762749",
+        "transaction_id": "real-tx-123",
+        "user_id": "1",
+        "custom_data": "1:rewarded_ai_slot",
+        "signature": "invalid-signature",
+        "key_id": "3335741209",
+    }
+    with patch(
+        "apps.ads.api.views.verify_ssv",
+        side_effect=SsvVerificationError("Signature did not verify."),
+    ):
+        resp = client.get("/api/ads/rewards/ssv/", params)
+
     assert resp.status_code == 400
