@@ -1,6 +1,5 @@
 from django.db import migrations
 
-
 DISABLED_KEYS = [
     "profile_banner",
     "tour_start_interstitial",

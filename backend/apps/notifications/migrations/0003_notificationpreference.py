@@ -8,21 +8,39 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('notifications', '0002_notification_is_sent_notification_scheduled_at_and_more'),
+        (
+            "notifications",
+            "0002_notification_is_sent_notification_scheduled_at_and_more",
+        ),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='NotificationPreference',
+            name="NotificationPreference",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('new_tour', models.BooleanField(default=True)),
-                ('tour_approved', models.BooleanField(default=True)),
-                ('new_review', models.BooleanField(default=True)),
-                ('new_follower', models.BooleanField(default=True)),
-                ('friend_level_up', models.BooleanField(default=True)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='notification_prefs', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("new_tour", models.BooleanField(default=True)),
+                ("tour_approved", models.BooleanField(default=True)),
+                ("new_review", models.BooleanField(default=True)),
+                ("new_follower", models.BooleanField(default=True)),
+                ("friend_level_up", models.BooleanField(default=True)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="notification_prefs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

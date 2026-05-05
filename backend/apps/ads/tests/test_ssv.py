@@ -81,7 +81,12 @@ def test_modified_query_parameter_fails(keypair, patch_keys, signed_query, base_
     signature = _sign_raw(private_key, signed_query.encode("utf-8"))
     tampered_signed_query = signed_query.replace("reward_amount=1", "reward_amount=2")
     raw_query = _build_raw_query(tampered_signed_query, signature)
-    params = {**base_params, "signature": signature, "key_id": "42", "reward_amount": "2"}
+    params = {
+        **base_params,
+        "signature": signature,
+        "key_id": "42",
+        "reward_amount": "2",
+    }
 
     with pytest.raises(SsvVerificationError, match="Signature did not verify"):
         verify_ssv(params, raw_query_string=raw_query)
@@ -177,7 +182,9 @@ def test_duplicate_transaction_id_rejected_by_business_logic(
         )
 
 
-def test_extra_params_after_key_id_fails(keypair, patch_keys, signed_query, base_params):
+def test_extra_params_after_key_id_fails(
+    keypair, patch_keys, signed_query, base_params
+):
     private_key, _ = keypair
     signature = _sign_raw(private_key, signed_query.encode("utf-8"))
     raw_query = _build_raw_query(signed_query, signature) + "&foo=bar"

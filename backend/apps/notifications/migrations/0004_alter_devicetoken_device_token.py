@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('notifications', '0003_notificationpreference'),
+        ("notifications", "0003_notificationpreference"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='devicetoken',
-            name='device_token',
+            model_name="devicetoken",
+            name="device_token",
             field=models.CharField(max_length=500),
         ),
     ]

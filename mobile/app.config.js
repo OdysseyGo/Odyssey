@@ -55,9 +55,9 @@ export default {
       'expo-router',
       'expo-localization',
       'expo-notifications',
-      "expo-font",
-      "expo-secure-store",
-      "expo-web-browser",
+      'expo-font',
+      'expo-secure-store',
+      'expo-web-browser',
       [
         'expo-location',
         {
@@ -119,7 +119,7 @@ export default {
     ],
     extra: {
       eas: {
-        projectId: "f3f3ee95-71be-496e-baa6-c111977d3827",
+        projectId: 'f3f3ee95-71be-496e-baa6-c111977d3827',
       },
       envMode: process.env.ENV_MODE || 'production',
     },
@@ -127,10 +127,10 @@ export default {
       typedRoutes: true,
     },
     updates: {
-      url: "https://u.expo.dev/f3f3ee95-71be-496e-baa6-c111977d3827",
+      url: 'https://u.expo.dev/f3f3ee95-71be-496e-baa6-c111977d3827',
     },
     runtimeVersion: {
-      policy: "appVersion",
+      policy: 'appVersion',
     },
   },
 };

@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 VERIFIER_KEYS_URL = "https://www.gstatic.com/admob/reward/verifier-keys.json"
 KEYS_CACHE_KEY = "admob:ssv:verifier_keys"
 KEYS_CACHE_TTL = 60 * 60 * 24  # 24 hours
+
+
 class SsvVerificationError(Exception):
     pass
 
@@ -59,7 +61,9 @@ def _build_signed_message_from_raw_query(raw_query_string: str) -> bytes:
     if not raw_query_string:
         raise SsvVerificationError("Missing raw query string.")
 
-    query = raw_query_string[1:] if raw_query_string.startswith("?") else raw_query_string
+    query = (
+        raw_query_string[1:] if raw_query_string.startswith("?") else raw_query_string
+    )
     if not query:
         raise SsvVerificationError("Empty raw query string.")
 
