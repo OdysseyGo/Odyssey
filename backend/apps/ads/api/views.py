@@ -121,12 +121,14 @@ class AdMobSsvView(APIView):
 
     def get(self, request):
         params = {k: v for k, v in request.query_params.items()}
+        debug_snapshot = _ssv_debug_snapshot(request, params)
+        logger.info("AdMob SSV callback received: %s", debug_snapshot)
         try:
             payload = verify_ssv(
                 params, raw_query_string=request.META.get("QUERY_STRING", "")
             )
         except SsvVerificationError as e:
-            logger.warning("AdMob SSV failed: %s", e)
+            logger.warning("AdMob SSV failed: %s | snapshot=%s", e, debug_snapshot)
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         user_id, placement_key = _parse_custom_data(payload.custom_data)
@@ -177,6 +179,34 @@ def _parse_custom_data(custom_data: str):
         return None, None
     user_id, _, placement_key = custom_data.partition(":")
     return user_id.strip() or None, placement_key.strip() or None
+
+
+def _ssv_debug_snapshot(request, params: dict):
+    raw_query = request.META.get("QUERY_STRING", "")
+    raw_parts = [p for p in raw_query.split("&") if p]
+    raw_param_order = [p.split("=", 1)[0] for p in raw_parts]
+    redacted_raw_parts = []
+    for part in raw_parts:
+        if part.startswith("signature="):
+            redacted_raw_parts.append("signature=<redacted>")
+        else:
+            redacted_raw_parts.append(part)
+
+    signature = params.get("signature", "")
+    masked_signature = (
+        f"{signature[:12]}...len={len(signature)}" if signature else "<missing>"
+    )
+
+    return {
+        "path": request.path,
+        "raw_query": "&".join(redacted_raw_parts),
+        "raw_param_order": raw_param_order,
+        "query_param_keys": list(params.keys()),
+        "key_id": params.get("key_id", "<missing>"),
+        "signature": masked_signature,
+        "custom_data": params.get("custom_data", "<missing>"),
+        "user_id": params.get("user_id", "<missing>"),
+    }
 
 
 class DevRewardGrantView(APIView):

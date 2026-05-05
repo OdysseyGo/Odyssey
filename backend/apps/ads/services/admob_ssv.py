@@ -126,19 +126,30 @@ def verify_ssv(query_params: dict, raw_query_string: str = "") -> SsvPayload:
     if not isinstance(public_key, ec.EllipticCurvePublicKey):
         raise SsvVerificationError("Verifier key is not ECDSA.")
 
-    message = _build_signed_message_from_raw_query(raw_query_string)
-    if not message:
-        # Fallback for tests and non-standard intermediaries that may not
-        # provide the untouched raw query string.
-        message = _build_signed_message(query_params)
+    raw_message = _build_signed_message_from_raw_query(raw_query_string)
+    # Also attempt canonical reconstruction in case an intermediary rewrites
+    # query parameter ordering/encoding before Django receives the request.
+    canonical_message = _build_signed_message(query_params)
+
+    messages = []
+    if raw_message:
+        messages.append(raw_message)
+    if canonical_message and canonical_message not in messages:
+        messages.append(canonical_message)
     try:
         signature = base64.urlsafe_b64decode(signature_b64 + "==")
     except Exception as e:
         raise SsvVerificationError(f"Malformed signature: {e}")
 
-    try:
-        public_key.verify(signature, message, ec.ECDSA(hashes.SHA256()))
-    except InvalidSignature:
+    verified = False
+    for message in messages:
+        try:
+            public_key.verify(signature, message, ec.ECDSA(hashes.SHA256()))
+            verified = True
+            break
+        except InvalidSignature:
+            continue
+    if not verified:
         raise SsvVerificationError("Signature did not verify.")
 
     try:
