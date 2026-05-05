@@ -196,6 +196,7 @@ export default function TourNavigation({
   const requiresLocation = currentStep.requiresLocationConfirmation === true;
 
   const isLastStep = currentStepIndex === tour.steps.length - 1;
+  const isPastStep = currentStepIndex < highestStepIndex;
 
   const canGoBack = canNavigateBackward(currentStepIndex);
   const { t } = useTranslation();
@@ -218,11 +219,14 @@ export default function TourNavigation({
     !isSolved;
 
   const isForwardLocked =
-    (currentStep.type === 'puzzle' && !isSolved && !hasAnsweredWrong) ||
-    (requiresLocation && !isLocationConfirmed);
+    !isPastStep &&
+    ((currentStep.type === 'puzzle' && !isSolved && !hasAnsweredWrong) ||
+      (requiresLocation && !isLocationConfirmed));
 
   const canGoForward = isLastStep
     ? !isForwardLocked
+    : isPastStep
+      ? true
     : hasAnsweredWrong
       ? currentStepIndex < tour.steps.length - 1 && !isForwardLocked
       : canNavigateForward(

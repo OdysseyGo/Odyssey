@@ -118,6 +118,7 @@ export default function BottomSlider({
     try {
       const response = useSkip ? await skipStep(progressId) : await completeStep(progressId);
       if (useSkip) {
+        confirmLocation(currentStep.id);
         recordSkip(skipCountsAsMistake(currentStep.id));
       }
 
@@ -149,6 +150,7 @@ export default function BottomSlider({
     solvedSteps,
     setCurrentStepIndex,
     setHighestStepIndex,
+    confirmLocation,
     recordSkip,
     skipCountsAsMistake,
     onTourComplete,
@@ -195,6 +197,7 @@ export default function BottomSlider({
         }
       }
 
+      confirmLocation(currentStep.id);
       recordSkip(useAdSkip ? false : skipCountsAsMistake(currentStep.id));
 
       if (response.is_tour_complete) {
@@ -219,6 +222,7 @@ export default function BottomSlider({
     highestStepIndex,
     setCurrentStepIndex,
     setHighestStepIndex,
+    confirmLocation,
     recordSkip,
     skipCountsAsMistake,
     onTourComplete,
