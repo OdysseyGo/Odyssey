@@ -274,10 +274,7 @@ export default function TourDetailReviews({ tourId }: TourDetailReviewsProps) {
                 )}
                 <View style={styles.reviewerDetails}>
                   <View style={styles.reviewerNameRow}>
-                    <Text style={styles.reviewerName}>
-                      {review.user.first_name + ' ' + review.user.last_name}
-                    </Text>
-                    <Text style={styles.reviewerUsername}>{'@' + review.user.username}</Text>
+                    <Text style={styles.reviewerName}>{'@' + review.user.username}</Text>
                   </View>
                   <Text style={styles.reviewDate}>{formatDate(review.created_at)}</Text>
                 </View>

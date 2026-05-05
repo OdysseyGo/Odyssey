@@ -4,8 +4,6 @@ import { apiRequest } from './APIClient';
 export type User = {
   id: number;
   username: string;
-  first_name: string;
-  last_name: string;
   email: string;
   xp: number;
   following_count: number;
@@ -26,8 +24,6 @@ export type User = {
 export type AddFriendUserDisplayDTO = {
   id: number;
   username: string;
-  first_name: string;
-  last_name: string;
   avatar_url?: string;
 };
 
@@ -42,16 +38,12 @@ export type CreateUserPayload = {
   username: string;
   email: string;
   password: string;
-  first_name?: string;
-  last_name?: string;
   terms_accepted: boolean;
 };
 
 export type UpdateUserPayload = {
   username?: string;
   email?: string;
-  first_name?: string;
-  last_name?: string;
   country?: string;
 };
 
@@ -146,7 +138,7 @@ export type NotificationPreferences = {
 /**
  * GET /api/users/ - List all users with pagination
  * @param page - Page number (optional)
- * @param search - Search by username or name (optional)
+ * @param search - Search by username (optional)
  */
 export const getUsers = (page?: number, search?: string, signal?: AbortSignal) =>
   apiRequest<UsersListResponse>({

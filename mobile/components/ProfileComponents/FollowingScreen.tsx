@@ -110,11 +110,6 @@ function UserRow({
         )}
         <View style={rowStyles.info}>
           <Text style={[rowStyles.username, { color: theme.text }]}>{item.username}</Text>
-          {(item.first_name || item.last_name) && (
-            <Text style={[rowStyles.fullName, { color: theme.subText }]}>
-              {[item.first_name, item.last_name].filter(Boolean).join(' ')}
-            </Text>
-          )}
         </View>
       </TouchableOpacity>
       {renderAction()}

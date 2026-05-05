@@ -49,7 +49,7 @@ import { useActiveTour } from '@/contexts/ActiveTourContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = 240;
-const GUEST_HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEIGHT * 0.35;
+const GUEST_HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.22 : SCREEN_HEIGHT * 0.28;
 const FAQ_URL = 'https://odysseygo.github.io/Odyssey/faq';
 
 async function getAccessToken() {
@@ -359,7 +359,7 @@ const guestStyles = StyleSheet.create({
   hero: {
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xl + 4,
   },
   heroHelpButton: {
     position: 'absolute',
@@ -395,7 +395,7 @@ const guestStyles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.xxl,
+    paddingTop: Spacing.xl + 4,
   },
   helpMiniButton: {
     alignSelf: 'flex-end',

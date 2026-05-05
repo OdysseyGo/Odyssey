@@ -33,7 +33,7 @@ import { Spacing } from '@/constants/Spacing';
 import { isUsernameValid, sanitizeUsernameInput } from '@/utils/inputSanitizers';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.3 : SCREEN_HEIGHT * 0.36;
+const HERO_HEIGHT = SCREEN_HEIGHT < 700 ? SCREEN_HEIGHT * 0.22 : SCREEN_HEIGHT * 0.28;
 const AUTH_INPUT_MAX_LENGTH = 50;
 
 export default function LoginScreen() {
@@ -89,7 +89,7 @@ export default function LoginScreen() {
 
   const validate = () => {
     const newErrors: typeof errors = {};
-    const normalizedUsername = username.trim();
+    const normalizedUsername = username.trim().toLowerCase();
     if (!normalizedUsername) newErrors.username = t('auth.errors.usernameRequired');
     else if (!isUsernameValid(normalizedUsername))
       newErrors.username = t('auth.errors.usernameInvalidCharacters');
@@ -102,7 +102,7 @@ export default function LoginScreen() {
     if (!validate()) return;
     setLoading(true);
     try {
-      const credentials: UserCredentials = { username: username.trim(), password };
+      const credentials: UserCredentials = { username: username.trim().toLowerCase(), password };
       const response = await login(credentials);
       SecureStore.setItem('userToken', response.access);
       SecureStore.setItem('refreshToken', response.refresh);
@@ -233,7 +233,7 @@ export default function LoginScreen() {
                 label={t('auth.username')}
                 value={username}
                 onChangeText={(text) => {
-                  setUsername(sanitizeUsernameInput(text));
+                  setUsername(sanitizeUsernameInput(text).toLowerCase());
                   setErrors((e) => ({ ...e, username: undefined, general: undefined }));
                 }}
                 placeholder={t('auth.usernamePlaceholder')}
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingBottom: Spacing.xxl + 4,
+    paddingBottom: Spacing.xl + 6,
   },
   backButton: {
     position: 'absolute',
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.xxl,
+    paddingTop: Spacing.xl + 4,
     flexGrow: 1,
   },
   cardTitle: {
