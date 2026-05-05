@@ -55,6 +55,9 @@ export default {
       'expo-router',
       'expo-localization',
       'expo-notifications',
+      "expo-font",
+      "expo-secure-store",
+      "expo-web-browser",
       [
         'expo-location',
         {

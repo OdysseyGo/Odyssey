@@ -76,7 +76,22 @@ def _build_signed_message(params: dict) -> bytes:
     return urlencode(pairs).encode("utf-8")
 
 
-def verify_ssv(query_params: dict) -> SsvPayload:
+def _build_signed_message_from_raw_query(raw_query_string: str) -> bytes:
+    """Build signed bytes from AdMob's original callback query string.
+
+    AdMob signs the original query string bytes up to (but excluding)
+    `&signature=...` and `&key_id=...`, which are appended at the end.
+    """
+    if not raw_query_string:
+        return b""
+    marker = "&signature="
+    if marker not in raw_query_string:
+        return b""
+    signed_portion = raw_query_string.split(marker, 1)[0]
+    return signed_portion.encode("utf-8")
+
+
+def verify_ssv(query_params: dict, raw_query_string: str = "") -> SsvPayload:
     """Verify an AdMob SSV callback. Raises SsvVerificationError on failure."""
     signature_b64 = query_params.get("signature")
     key_id = query_params.get("key_id")
@@ -101,7 +116,11 @@ def verify_ssv(query_params: dict) -> SsvPayload:
     if not isinstance(public_key, ec.EllipticCurvePublicKey):
         raise SsvVerificationError("Verifier key is not ECDSA.")
 
-    message = _build_signed_message(query_params)
+    message = _build_signed_message_from_raw_query(raw_query_string)
+    if not message:
+        # Fallback for tests and non-standard intermediaries that may not
+        # provide the untouched raw query string.
+        message = _build_signed_message(query_params)
     try:
         signature = base64.urlsafe_b64decode(signature_b64 + "==")
     except Exception as e:

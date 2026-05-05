@@ -16,6 +16,8 @@ type DevMetric =
   | 'listener_attach'
   | 'listener_detach';
 
+const DEV_GRANT_ENABLED = process.env.EXPO_PUBLIC_ENABLE_DEV_GRANT === 'true';
+
 export function useRewardedAd(placementKey: string) {
   const { isReady, getPlacement, user } = useAds();
   const adRef = useRef<RewardedAd | null>(null);
@@ -151,7 +153,7 @@ export function useRewardedAd(placementKey: string) {
 
       // In dev, AdMob's SSV ping cannot reach a LAN backend, so the grant
       // row never lands. Mint it directly via the DEBUG-only endpoint.
-      if (earned && __DEV__ && placement) {
+      if (earned && __DEV__ && DEV_GRANT_ENABLED && placement) {
         try {
           await devGrantReward(placement.key);
         } catch {}

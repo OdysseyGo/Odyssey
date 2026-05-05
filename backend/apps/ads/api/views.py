@@ -122,7 +122,9 @@ class AdMobSsvView(APIView):
     def get(self, request):
         params = {k: v for k, v in request.query_params.items()}
         try:
-            payload = verify_ssv(params)
+            payload = verify_ssv(
+                params, raw_query_string=request.META.get("QUERY_STRING", "")
+            )
         except SsvVerificationError as e:
             logger.warning("AdMob SSV failed: %s", e)
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
