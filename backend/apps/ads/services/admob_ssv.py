@@ -1,21 +1,12 @@
 """AdMob Server-Side Verification (SSV) signature verification.
 
 Reference: https://developers.google.com/admob/android/ssv
-
-AdMob signs each rewarded-ad SSV callback with an ECDSA-P256 signature over a
-canonical message derived from the original query string. Public keys are
-published at:
-
-    https://www.gstatic.com/admob/reward/verifier-keys.json
-
-The signed message is the raw query string with the trailing `signature` and
-`key_id` parameters removed (everything before `&signature=...`).
 """
 
 import base64
 import logging
 from dataclasses import dataclass
-from urllib.parse import urlencode
+from typing import Callable
 
 import requests
 from cryptography.exceptions import InvalidSignature
@@ -28,18 +19,6 @@ logger = logging.getLogger(__name__)
 VERIFIER_KEYS_URL = "https://www.gstatic.com/admob/reward/verifier-keys.json"
 KEYS_CACHE_KEY = "admob:ssv:verifier_keys"
 KEYS_CACHE_TTL = 60 * 60 * 24  # 24 hours
-SIGNED_PARAM_ORDER = (
-    "ad_network",
-    "ad_unit",
-    "reward_amount",
-    "reward_item",
-    "timestamp",
-    "transaction_id",
-    "user_id",
-    "custom_data",
-)
-
-
 class SsvVerificationError(Exception):
     pass
 
@@ -71,43 +50,87 @@ def _load_public_key(pem: str):
     return serialization.load_pem_public_key(pem.encode("utf-8"))
 
 
-def _build_signed_message(params: dict) -> bytes:
-    pairs = [(k, params[k]) for k in SIGNED_PARAM_ORDER if k in params]
-    return urlencode(pairs).encode("utf-8")
-
-
 def _build_signed_message_from_raw_query(raw_query_string: str) -> bytes:
-    """Build signed bytes from AdMob's original callback query string.
+    """Build the exact signed AdMob message from the raw query string.
 
-    AdMob signs the original query string bytes up to (but excluding)
-    `&signature=...` and `&key_id=...`, which are appended at the end.
+    AdMob signs byte-exact query content before the trailing `&signature=...`
+    parameter. The final two params must be exactly `signature` then `key_id`.
     """
     if not raw_query_string:
-        return b""
+        raise SsvVerificationError("Missing raw query string.")
 
     query = raw_query_string[1:] if raw_query_string.startswith("?") else raw_query_string
-    parts = [p for p in query.split("&") if p]
-    if not parts:
-        return b""
+    if not query:
+        raise SsvVerificationError("Empty raw query string.")
 
-    filtered = [
-        part
-        for part in parts
-        if not part.startswith("signature=") and not part.startswith("key_id=")
-    ]
-    if len(filtered) == len(parts):
-        return b""
+    signature_marker = "&signature="
+    signature_idx = query.find(signature_marker)
+    if signature_idx == -1:
+        raise SsvVerificationError("Malformed raw query: missing '&signature='.")
 
-    return "&".join(filtered).encode("utf-8")
+    signed_query = query[:signature_idx]
+    if not signed_query:
+        raise SsvVerificationError("Malformed raw query: missing signed parameters.")
+
+    tail = query[signature_idx + 1 :]  # `signature=...&key_id=...`
+    tail_parts = tail.split("&")
+    if len(tail_parts) != 2:
+        raise SsvVerificationError(
+            "Malformed raw query: signature and key_id must be final two parameters."
+        )
+
+    if not tail_parts[0].startswith("signature="):
+        raise SsvVerificationError("Malformed raw query: expected signature parameter.")
+    if not tail_parts[1].startswith("key_id="):
+        raise SsvVerificationError(
+            "Malformed raw query: expected key_id parameter after signature."
+        )
+
+    signature_value = tail_parts[0].split("=", 1)[1]
+    key_id_value = tail_parts[1].split("=", 1)[1]
+    if not signature_value:
+        raise SsvVerificationError("Malformed raw query: empty signature parameter.")
+    if not key_id_value:
+        raise SsvVerificationError("Malformed raw query: empty key_id parameter.")
+
+    return signed_query.encode("utf-8")
+
+
+def _validate_business_rules(
+    payload: SsvPayload,
+    *,
+    is_duplicate_transaction: Callable[[str], bool] | None = None,
+    business_validator: Callable[[SsvPayload], None] | None = None,
+):
+    """Business validation hook-point after signature verification.
+
+    TODO: enforce timestamp freshness (reject stale/future callbacks).
+    TODO: enforce expected AdMob ad unit id(s) for this environment.
+    TODO: enforce expected reward_item/reward_amount per placement mapping.
+    TODO: bind callback to trusted user/session mapping from user_id/custom_data.
+    """
+    if is_duplicate_transaction and is_duplicate_transaction(payload.transaction_id):
+        raise SsvVerificationError("Duplicate transaction_id.")
+
+    if business_validator:
+        try:
+            business_validator(payload)
+        except SsvVerificationError:
+            raise
+        except Exception as e:
+            raise SsvVerificationError(f"Business validation failed: {e}") from e
 
 
 def verify_ssv(
     query_params: dict,
     raw_query_string: str = "",
-    request_path: str = "",
-    request_url_base: str = "",
+    *,
+    is_duplicate_transaction: Callable[[str], bool] | None = None,
+    business_validator: Callable[[SsvPayload], None] | None = None,
 ) -> SsvPayload:
     """Verify an AdMob SSV callback. Raises SsvVerificationError on failure."""
+    signed_message = _build_signed_message_from_raw_query(raw_query_string)
+
     signature_b64 = query_params.get("signature")
     key_id = query_params.get("key_id")
     if not signature_b64 or not key_id:
@@ -131,49 +154,19 @@ def verify_ssv(
     if not isinstance(public_key, ec.EllipticCurvePublicKey):
         raise SsvVerificationError("Verifier key is not ECDSA.")
 
-    raw_message = _build_signed_message_from_raw_query(raw_query_string)
-    # Also attempt canonical reconstruction in case an intermediary rewrites
-    # query parameter ordering/encoding before Django receives the request.
-    canonical_message = _build_signed_message(query_params)
-
-    messages = []
-    if raw_message:
-        messages.append(raw_message)
-    if canonical_message and canonical_message not in messages:
-        messages.append(canonical_message)
-    if raw_message and request_path:
-        path_message = f"{request_path}?{raw_message.decode('utf-8')}".encode("utf-8")
-        if path_message not in messages:
-            messages.append(path_message)
-    if raw_message and request_url_base:
-        url_message = f"{request_url_base}?{raw_message.decode('utf-8')}".encode(
-            "utf-8"
-        )
-        if url_message not in messages:
-            messages.append(url_message)
     try:
-        signature = base64.urlsafe_b64decode(signature_b64 + "==")
+        padded = signature_b64 + ("=" * (-len(signature_b64) % 4))
+        signature = base64.urlsafe_b64decode(padded)
     except Exception as e:
         raise SsvVerificationError(f"Malformed signature: {e}")
 
-    verified = False
-    for idx, message in enumerate(messages):
-        try:
-            public_key.verify(signature, message, ec.ECDSA(hashes.SHA256()))
-            logger.info(
-                "AdMob SSV signature verified using candidate #%s (len=%s)",
-                idx + 1,
-                len(message),
-            )
-            verified = True
-            break
-        except InvalidSignature:
-            continue
-    if not verified:
+    try:
+        public_key.verify(signature, signed_message, ec.ECDSA(hashes.SHA256()))
+    except InvalidSignature:
         raise SsvVerificationError("Signature did not verify.")
 
     try:
-        return SsvPayload(
+        payload = SsvPayload(
             ad_network=query_params.get("ad_network", ""),
             ad_unit=query_params.get("ad_unit", ""),
             reward_amount=int(query_params.get("reward_amount", "0")),
@@ -185,3 +178,11 @@ def verify_ssv(
         )
     except (KeyError, ValueError) as e:
         raise SsvVerificationError(f"Malformed SSV payload: {e}")
+
+    _validate_business_rules(
+        payload,
+        is_duplicate_transaction=is_duplicate_transaction,
+        business_validator=business_validator,
+    )
+
+    return payload

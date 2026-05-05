@@ -15,7 +15,7 @@
     },
     "production": {
       "channel": "production",
-      "autoIncrement": "buildNumber"
+      "autoIncrement": true
     }
   },
   "submit": {
