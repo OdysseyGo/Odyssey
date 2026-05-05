@@ -184,9 +184,10 @@ def test_admob_setup_probe_returns_200_and_does_not_grant(user):
         "signature": "invalid-signature",
         "key_id": "3335741209",
     }
-    with patch("apps.ads.api.views.verify_ssv") as verify_mock, patch(
-        "apps.ads.api.views.reward_service.grant"
-    ) as grant_mock:
+    with (
+        patch("apps.ads.api.views.verify_ssv") as verify_mock,
+        patch("apps.ads.api.views.reward_service.grant") as grant_mock,
+    ):
         resp = client.get("/api/ads/rewards/ssv/", params)
 
     assert resp.status_code == 200
