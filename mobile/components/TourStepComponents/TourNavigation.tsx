@@ -227,15 +227,15 @@ export default function TourNavigation({
     ? !isForwardLocked
     : isPastStep
       ? true
-    : hasAnsweredWrong
-      ? currentStepIndex < tour.steps.length - 1 && !isForwardLocked
-      : canNavigateForward(
-          currentStep,
-          currentStepIndex,
-          tour.steps.length,
-          solvedSteps,
-          locationConfirmedSteps
-        );
+      : hasAnsweredWrong
+        ? currentStepIndex < tour.steps.length - 1 && !isForwardLocked
+        : canNavigateForward(
+            currentStep,
+            currentStepIndex,
+            tour.steps.length,
+            solvedSteps,
+            locationConfirmedSteps
+          );
   const canSkipCurrentStep =
     currentStepIndex >= highestStepIndex &&
     !isSolved &&
