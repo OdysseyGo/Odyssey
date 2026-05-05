@@ -27,15 +27,7 @@ import { useColorTheme } from '@/utils/useColorTheme';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
-type CompletedTourStatus = 'PUBLISHED' | 'ARCHIVED';
-
-const TOUR_TABS: { key: CompletedTourStatus; label: string }[] = [
-  { key: 'PUBLISHED', label: 'profile.tabs.published' },
-  { key: 'ARCHIVED', label: 'profile.tabs.archived' },
-];
-
 export default function MyCompletedToursScreen() {
-  const [activeTab, setActiveTab] = useState<CompletedTourStatus>('PUBLISHED');
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
@@ -62,11 +54,11 @@ export default function MyCompletedToursScreen() {
     extrapolate: 'clamp',
   });
 
-  const fetchTours = useCallback(async (status: CompletedTourStatus) => {
+  const fetchTours = useCallback(async () => {
     setLoading(true);
     setFetchError(false);
     try {
-      const response = await getMyCompletedTours(status);
+      const response = await getMyCompletedTours();
       setTours(response.results);
     } catch (error) {
       console.error('Failed to fetch completed tours:', error);
@@ -79,7 +71,7 @@ export default function MyCompletedToursScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchTours(activeTab);
+      fetchTours();
       let mounted = true;
       (async () => {
         const me = await getCurrentUser();
@@ -88,12 +80,8 @@ export default function MyCompletedToursScreen() {
       return () => {
         mounted = false;
       };
-    }, [activeTab, retryKey, fetchTours])
+    }, [retryKey, fetchTours])
   );
-
-  const handleTabChange = (tab: CompletedTourStatus) => {
-    setActiveTab(tab);
-  };
 
   const getUserReview = (tour: Tour): Review | undefined => {
     return tour.reviews?.find((review) => review.user?.id === currentUser?.id);
@@ -138,7 +126,7 @@ export default function MyCompletedToursScreen() {
         t('profile.reviewSuccessMessage', { defaultValue: 'Thank you for your feedback!' })
       );
       closeReviewModal();
-      fetchTours(activeTab);
+      fetchTours();
     } catch (error) {
       console.error('Failed to submit review:', error);
       Alert.alert(
@@ -150,16 +138,8 @@ export default function MyCompletedToursScreen() {
     }
   };
 
-  const getEmptyMessage = () => {
-    switch (activeTab) {
-      case 'PUBLISHED':
-        return t('profile.emptyCompletedTour', { defaultValue: 'No published tours yet' });
-      case 'ARCHIVED':
-        return t('profile.emptyCompletedTour', { defaultValue: 'No archived tours yet' });
-      default:
-        return t('profile.emptyCompletedTour', { defaultValue: 'No tours found' });
-    }
-  };
+  const getEmptyMessage = () =>
+    t('profile.emptyCompletedTour', { defaultValue: 'No completed tours yet' });
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -181,36 +161,6 @@ export default function MyCompletedToursScreen() {
           <View style={{ width: 28 }} />
         </View>
       </Animated.View>
-
-      {/* ─── Tabs ────────────────────────────────── */}
-      <View
-        style={[
-          styles.tabsContainer,
-          { backgroundColor: theme.background, borderBottomColor: theme.foregroundSecondary },
-        ]}
-      >
-        {TOUR_TABS.map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[
-              styles.tab,
-              activeTab === tab.key && [styles.tabActive, { borderBottomColor: theme.primary }],
-            ]}
-            onPress={() => handleTabChange(tab.key)}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                { color: theme.text },
-                activeTab === tab.key && [styles.tabTextActive, { color: theme.primary }],
-              ]}
-            >
-              {t(tab.label)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
 
       {/* ─── Content ─────────────────────────────── */}
       {loading ? (
@@ -402,33 +352,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: -0.3,
-  },
-
-  tabsContainer: {
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.md,
-    borderBottomWidth: 1,
-    flexDirection: 'row',
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: Spacing.sm,
-    alignItems: 'center',
-    marginHorizontal: Spacing.sm,
-    borderBottomWidth: 3,
-    borderBottomColor: 'transparent',
-  },
-  tabActive: {
-    // Color set dynamically in JSX
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    opacity: 0.6,
-  },
-  tabTextActive: {
-    opacity: 1,
   },
 
   centerContainer: {

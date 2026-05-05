@@ -78,7 +78,7 @@ export default function ProfileTourCard({
           <Text style={styles.title} numberOfLines={1}>
             {tour.title}
           </Text>
-          <View style={[styles.statusBadge, { backgroundColor: color.primary }]}>
+          <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
             <Text style={[styles.statusText, { color: statusStyle.text }]}>
               {t(STATUS_LABELS[tour.status])}
             </Text>

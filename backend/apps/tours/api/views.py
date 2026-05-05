@@ -912,7 +912,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if tour.creator_id == self.request.user.id:
             raise PermissionDenied("You cannot review your own tour.")
 
-        serializer.save(user=self.request.user, tour=tour)
+        review = serializer.save(user=self.request.user, tour=tour)
         BadgeService.evaluate_user_badges(self.request.user)
         BadgeService.evaluate_user_badges(tour.creator)
 
@@ -922,7 +922,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             body=f"{self.request.user.username} gave a review to your tour '{tour.title}'.",
             data={
                 "tour_id": tour.id,
-                "review_id": self.review.id,
+                "review_id": review.id,
                 "type": "new_review",
             },
         )
