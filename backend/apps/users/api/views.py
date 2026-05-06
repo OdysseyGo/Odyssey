@@ -31,9 +31,15 @@ from .serializers import (
     LoginResponseSerializer,
     LoginSerializer,
     SearchHistorySerializer,
+    SignupSerializer,
+    UserUpdateSerializer,
     UserSerializer,
 )
-from .throttles import PasswordResetConfirmThrottle, PasswordResetRequestThrottle
+from .throttles import (
+    LoginAttemptThrottle,
+    PasswordResetConfirmThrottle,
+    PasswordResetRequestThrottle,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -82,10 +88,58 @@ def _delete_media_files(file_refs: Iterable[tuple[object, str]]) -> None:
 class UserViewSet(ModelViewSet):
     queryset: QuerySet[User] = User.objects.all().order_by("id")
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ["username"]
+    public_actions = {
+        "create",
+        "login",
+        "refresh_token",
+        "request_password_reset",
+        "reset_password",
+        "published_tours",
+        "get_by_username",
+    }
 
-    @action(detail=False, methods=["get"], url_path="get-by-username")
+    def get_permissions(self):
+        if self.action in self.public_actions:
+            return [AllowAny()]
+        return super().get_permissions()
+
+    def get_throttles(self):
+        action = getattr(self, "action", None)
+        request_path = getattr(getattr(self, "request", None), "path", "")
+        if action == "login" or request_path.endswith("/api/users/login/"):
+            return [LoginAttemptThrottle()]
+        return super().get_throttles()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if self.action in {"update", "partial_update", "destroy"}:
+            if user.is_authenticated and (user.is_staff or user.is_superuser):
+                return queryset
+            if user.is_authenticated:
+                return queryset.filter(pk=user.pk)
+            return queryset.none()
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return SignupSerializer
+        if self.action in {"update", "partial_update"}:
+            return UserUpdateSerializer
+        return super().get_serializer_class()
+
+    def _banned_response(self):
+        return Response({"detail": "This account is banned."}, status=403)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="get-by-username",
+        permission_classes=[AllowAny],
+    )
     def get_by_username(self, request):
         username = request.query_params.get("username")
         if not username:
@@ -100,12 +154,15 @@ class UserViewSet(ModelViewSet):
             {
                 "id": user.id,
                 "username": user.username,
-                "email": user.email,
             }
         )
 
     @extend_schema(request=LoginSerializer, responses={200: LoginResponseSerializer})
-    @action(detail=False, methods=["post"], url_path="login")
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="login",
+    )
     def login(self, request):
         username = request.data.get("username")
         password = request.data.get("password")
@@ -114,6 +171,9 @@ class UserViewSet(ModelViewSet):
 
         if user is None:
             return Response({"detail": "Invalid credentials"}, status=400)
+
+        if user.is_banned:
+            return self._banned_response()
 
         refresh = RefreshToken.for_user(user)
         BadgeService.sync_login_streak(user)
@@ -137,6 +197,15 @@ class UserViewSet(ModelViewSet):
 
         try:
             refresh = RefreshToken(refresh_token)
+
+            user_id = refresh.payload.get("user_id")
+            user = User.objects.filter(pk=user_id).only("id", "is_banned").first()
+            if user is None:
+                return Response({"detail": "Invalid refresh token"}, status=400)
+
+            if user.is_banned:
+                return self._banned_response()
+
             new_access = str(refresh.access_token)
 
             return Response({"access": new_access})

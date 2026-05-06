@@ -74,6 +74,50 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
+class SignupSerializer(serializers.ModelSerializer):
+    terms_accepted = serializers.BooleanField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "password",
+            "terms_accepted",
+        ]
+        extra_kwargs = {
+            "password": {"write_only": True},
+        }
+
+    def validate_terms_accepted(self, value):
+        if not value:
+            raise serializers.ValidationError("You must accept the terms to register.")
+        return value
+
+    def create(self, validated_data):
+        validated_data.pop("terms_accepted", None)
+        password = validated_data.pop("password")
+        validated_data["terms_accepted_at"] = timezone.now()
+        validated_data["terms_version"] = settings.CURRENT_TERMS_VERSION
+
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "username",
+            "email",
+            "country",
+            "avatar_url",
+        ]
+
+
 class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow

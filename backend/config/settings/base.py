@@ -36,9 +36,11 @@ if not SECRET_KEY:
         f"SECRET_KEY is {type(SECRET_KEY)}. Total Env Vars found: {len(env_keys)}. "
         f"Is 'SECRET_KEY' in keys? {'SECRET_KEY' in env_keys}"
     )
-DEBUG = os.getenv("DEBUG", "1") == "1"
+DEBUG = os.getenv("DEBUG", "0") == "1"
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
+ALLOWED_HOSTS = os.getenv(
+    "ALLOWED_HOSTS", "localhost,127.0.0.1,testserver"
+).split(",")
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # Application definition
@@ -85,6 +87,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_THROTTLE_RATES": {
+        "login_attempt": os.getenv("LOGIN_ATTEMPT_RATE_LIMIT", "10/minute"),
         "password_reset_request": "5/hour",
         "password_reset_confirm": "20/hour",
         "ai_generation": os.getenv("AI_GENERATION_RATE_LIMIT", "5/hour"),
