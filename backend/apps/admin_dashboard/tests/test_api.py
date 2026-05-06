@@ -18,6 +18,7 @@ from apps.gamification.models import (
 )
 from apps.gamification.visuals import FlagBadgeVisualFileRepository
 from apps.tours.models import ARModel, Review, Tour, TourStep
+from apps.users.models import UserRuntimeConfig
 
 User = get_user_model()
 
@@ -518,6 +519,70 @@ class PictureCompareTuningViewSetTests(APITestCase):
     def test_picture_compare_config_requires_staff(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get("/api/admin/picture-compare-config/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class DefaultReviewerConfigViewSetTests(APITestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username="admin",
+            email="admin@example.com",
+            password="adminpass123",
+            is_staff=True,
+        )
+        self.user = User.objects.create_user(
+            username="user",
+            email="user@example.com",
+            password="userpass123",
+        )
+        self.client.force_authenticate(user=self.admin)
+
+    def test_staff_can_read_and_update_default_reviewer_config(self):
+        response = self.client.get("/api/admin/default-reviewer-config/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["default_reviewer"])
+
+        response = self.client.post(
+            "/api/admin/default-reviewer-config/",
+            {"default_reviewer": True},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["default_reviewer"])
+        self.assertGreaterEqual(response.data["users_updated"], 1)
+
+        self.admin.refresh_from_db()
+        self.user.refresh_from_db()
+        self.assertTrue(self.admin.is_review_account)
+        self.assertTrue(self.user.is_review_account)
+
+        new_user = User.objects.create_user(
+            username="new_user",
+            email="new_user@example.com",
+            password="userpass123",
+        )
+        self.assertTrue(new_user.is_review_account)
+
+        response = self.client.post(
+            "/api/admin/default-reviewer-config/",
+            {"default_reviewer": False},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["default_reviewer"])
+        self.assertEqual(response.data["users_updated"], 0)
+
+        disabled_new_user = User.objects.create_user(
+            username="disabled_new_user",
+            email="disabled_new_user@example.com",
+            password="userpass123",
+        )
+        self.assertFalse(disabled_new_user.is_review_account)
+        self.assertFalse(UserRuntimeConfig.load().default_reviewer)
+
+    def test_default_reviewer_config_requires_staff(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get("/api/admin/default-reviewer-config/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 

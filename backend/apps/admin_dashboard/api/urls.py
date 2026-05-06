@@ -11,6 +11,7 @@ from apps.admin_dashboard.api.views import (
     PictureCompareTuningViewSet,
     ReportViewSet,
     SubmitReportView,
+    UserRuntimeConfigViewSet,
 )
 
 router = DefaultRouter()
@@ -28,6 +29,11 @@ router.register(
     r"picture-compare-config",
     PictureCompareConfigViewSet,
     basename="admin-picture-compare-config",
+)
+router.register(
+    r"default-reviewer-config",
+    UserRuntimeConfigViewSet,
+    basename="admin-default-reviewer-config",
 )
 router.register(
     r"badge-visuals",

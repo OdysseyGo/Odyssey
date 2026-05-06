@@ -1,12 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Filter, ArrowUpDown } from "lucide-react";
-import { getUsers } from "@/api/endpoints";
+import {
+  getDefaultReviewerConfig,
+  getUsers,
+  updateDefaultReviewerConfig,
+} from "@/api/endpoints";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import { Pagination } from "@/components/ui/Pagination";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 interface User {
   id: number;
@@ -38,6 +44,11 @@ const USER_TYPE_LABELS: Record<number, string> = {
   3: "Business",
 };
 
+interface DefaultReviewerConfigResponse {
+  default_reviewer: boolean;
+  users_updated?: number;
+}
+
 export default function Users() {
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
@@ -54,6 +65,12 @@ export default function Users() {
     date_joined_before: "",
     ordering: "-date_joined",
   });
+  const [defaultReviewer, setDefaultReviewer] = useState(false);
+  const [defaultReviewerDraft, setDefaultReviewerDraft] = useState(false);
+  const [defaultReviewerLoading, setDefaultReviewerLoading] = useState(true);
+  const [defaultReviewerSaving, setDefaultReviewerSaving] = useState(false);
+  const [defaultReviewerMessage, setDefaultReviewerMessage] = useState("");
+  const [defaultReviewerError, setDefaultReviewerError] = useState("");
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -80,9 +97,53 @@ export default function Users() {
     fetchUsers();
   }, [fetchUsers]);
 
+  useEffect(() => {
+    getDefaultReviewerConfig()
+      .then(({ data }: { data: DefaultReviewerConfigResponse }) => {
+        setDefaultReviewer(Boolean(data.default_reviewer));
+        setDefaultReviewerDraft(Boolean(data.default_reviewer));
+        setDefaultReviewerError("");
+      })
+      .catch(() => {
+        setDefaultReviewerError("Could not load reviewer default setting.");
+      })
+      .finally(() => {
+        setDefaultReviewerLoading(false);
+      });
+  }, []);
+
   const updateFilter = (key: keyof Filters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
     setPage(1);
+  };
+
+  const hasDefaultReviewerChanges = defaultReviewer !== defaultReviewerDraft;
+
+  const saveDefaultReviewerConfig = async () => {
+    try {
+      setDefaultReviewerSaving(true);
+      setDefaultReviewerError("");
+      setDefaultReviewerMessage("");
+      const { data }: { data: DefaultReviewerConfigResponse } =
+        await updateDefaultReviewerConfig(defaultReviewerDraft);
+      setDefaultReviewer(Boolean(data.default_reviewer));
+      const usersUpdated = data.users_updated ?? 0;
+      if (defaultReviewerDraft) {
+        setDefaultReviewerMessage(
+          usersUpdated > 0
+            ? `Default reviewer enabled. ${usersUpdated} existing users were updated to reviewer accounts.`
+            : "Default reviewer enabled.",
+        );
+      } else {
+        setDefaultReviewerMessage(
+          "Default reviewer disabled. New users will no longer be reviewer accounts.",
+        );
+      }
+    } catch {
+      setDefaultReviewerError("Could not update reviewer default setting.");
+    } finally {
+      setDefaultReviewerSaving(false);
+    }
   };
 
   return (
@@ -91,6 +152,53 @@ export default function Users() {
         <h1 className="text-2xl font-bold">Users</h1>
         <p className="text-muted-foreground">Manage platform users</p>
       </div>
+
+      <Card className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold">Reviewer Default</h2>
+          <p className="text-sm text-muted-foreground">
+            When enabled, all existing users are set as reviewer accounts and new
+            users will be reviewer by default.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <label className="flex items-center gap-3 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={defaultReviewerDraft}
+              onChange={(e) => {
+                setDefaultReviewerDraft(e.target.checked);
+                setDefaultReviewerMessage("");
+                setDefaultReviewerError("");
+              }}
+              disabled={defaultReviewerLoading || defaultReviewerSaving}
+              className="h-4 w-4 rounded border border-input"
+            />
+            Enable default reviewer mode
+          </label>
+          <Button
+            variant="secondary"
+            onClick={saveDefaultReviewerConfig}
+            disabled={
+              defaultReviewerLoading ||
+              defaultReviewerSaving ||
+              !hasDefaultReviewerChanges
+            }
+          >
+            {defaultReviewerSaving ? "Saving..." : "Save Reviewer Default"}
+          </Button>
+        </div>
+        {defaultReviewerError ? (
+          <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm text-destructive">
+            {defaultReviewerError}
+          </div>
+        ) : null}
+        {defaultReviewerMessage ? (
+          <div className="rounded-md border border-success/30 bg-success/10 px-4 py-2 text-sm text-success">
+            {defaultReviewerMessage}
+          </div>
+        ) : null}
+      </Card>
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1">
