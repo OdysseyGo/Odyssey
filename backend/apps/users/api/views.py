@@ -32,8 +32,8 @@ from .serializers import (
     LoginSerializer,
     SearchHistorySerializer,
     SignupSerializer,
-    UserUpdateSerializer,
     UserSerializer,
+    UserUpdateSerializer,
 )
 from .throttles import (
     LoginAttemptThrottle,
