@@ -19,6 +19,7 @@ export type User = {
   total_walked_km: number | string;
   terms_update_required: boolean;
   personal_tour_min_level?: number;
+  is_review_account?: boolean;
 };
 
 export type AddFriendUserDisplayDTO = {

@@ -5,6 +5,7 @@ from django.db import IntegrityError
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from apps.ads.models import RewardedAdGrant
 from apps.gamification.models import TourProgress, UserBadge
 from apps.gamification.services import BadgeService
 from apps.tours.models import (
@@ -214,6 +215,43 @@ class TourXpRulesTests(APITestCase):
         progress = TourProgress.objects.get(id=progress_id)
         self.assertEqual(progress.total_xp, 0)
         self.assertEqual(self.player.xp, 0)
+
+    def test_non_review_use_ad_skip_requires_hint_grant(self):
+        tour, _ = self._create_tour_with_single_step(title="Ad Skip Requires Grant")
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        progress_id = create_response.data["id"]
+        skip_response = self.client.post(
+            f"/api/tour-progress/{progress_id}/skip-step/",
+            {"use_ad_skip": True},
+            format="json",
+        )
+        self.assertEqual(skip_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("No unconsumed HINT", skip_response.data["error"])
+
+    def test_review_account_use_ad_skip_bypasses_hint_grant(self):
+        self.player.is_review_account = True
+        self.player.save(update_fields=["is_review_account"])
+        tour, _ = self._create_tour_with_single_step(title="Review Ad Skip Bypass")
+        create_response = self.client.post(
+            "/api/tour-progress/", {"tour_id": tour.id}, format="json"
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        progress_id = create_response.data["id"]
+        skip_response = self.client.post(
+            f"/api/tour-progress/{progress_id}/skip-step/",
+            {"use_ad_skip": True},
+            format="json",
+        )
+        self.assertEqual(skip_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(RewardedAdGrant.objects.count(), 0)
+
+        progress = TourProgress.objects.get(id=progress_id)
+        self.assertEqual(progress.skip_count, 0)
 
     def test_up_to_two_wrong_ar_attempts_then_correct_keeps_step_xp(self):
         tour, step = self._create_tour_with_single_step(title="Wrong Attempt Tour")

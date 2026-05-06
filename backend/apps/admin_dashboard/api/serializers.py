@@ -21,7 +21,7 @@ from apps.tours.models import (
     TourStep,
     TriviaPuzzleDetail,
 )
-from apps.users.models import User
+from apps.users.models import User, UserRuntimeConfig
 
 # ── User Management ──────────────────────────────────────────────────
 
@@ -307,6 +307,13 @@ class PictureCompareConfigSerializer(serializers.ModelSerializer):
                 )
 
         return attrs
+
+
+class UserRuntimeConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserRuntimeConfig
+        fields = ["default_reviewer", "updated_at"]
+        read_only_fields = ["updated_at"]
 
 
 class BadgeVisualTemplateSerializer(serializers.Serializer):

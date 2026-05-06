@@ -23,6 +23,9 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
+ADMOB_SETUP_TEST_AD_UNIT = "1234567890"
+ADMOB_SETUP_TEST_TRANSACTION_ID = "123456789"
+
 
 def _platform_from_request(request):
     platform = request.query_params.get("platform") or request.data.get("platform")
@@ -121,10 +124,24 @@ class AdMobSsvView(APIView):
 
     def get(self, request):
         params = {k: v for k, v in request.query_params.items()}
+        debug_snapshot = _ssv_debug_snapshot(request, params)
+        logger.info("AdMob SSV callback received: %s", debug_snapshot)
+        if _is_admob_dashboard_setup_probe(params):
+            logger.info(
+                "AdMob dashboard setup probe accepted without reward grant: %s",
+                debug_snapshot,
+            )
+            return Response(
+                {"ok": True, "probe": True},
+                status=status.HTTP_200_OK,
+            )
         try:
-            payload = verify_ssv(params)
+            payload = verify_ssv(
+                params,
+                raw_query_string=request.META.get("QUERY_STRING", ""),
+            )
         except SsvVerificationError as e:
-            logger.warning("AdMob SSV failed: %s", e)
+            logger.warning("AdMob SSV failed: %s | snapshot=%s", e, debug_snapshot)
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         user_id, placement_key = _parse_custom_data(payload.custom_data)
@@ -175,6 +192,57 @@ def _parse_custom_data(custom_data: str):
         return None, None
     user_id, _, placement_key = custom_data.partition(":")
     return user_id.strip() or None, placement_key.strip() or None
+
+
+def _is_admob_dashboard_setup_probe(params: dict) -> bool:
+    required_keys = {
+        "ad_network",
+        "ad_unit",
+        "reward_amount",
+        "reward_item",
+        "timestamp",
+        "transaction_id",
+        "user_id",
+        "custom_data",
+        "signature",
+        "key_id",
+    }
+    keys = set(params.keys())
+    return (
+        required_keys.issubset(keys)
+        and params.get("ad_unit") == ADMOB_SETUP_TEST_AD_UNIT
+        and params.get("transaction_id") == ADMOB_SETUP_TEST_TRANSACTION_ID
+        and bool(params.get("signature"))
+        and bool(params.get("key_id"))
+    )
+
+
+def _ssv_debug_snapshot(request, params: dict):
+    raw_query = request.META.get("QUERY_STRING", "")
+    raw_parts = [p for p in raw_query.split("&") if p]
+    raw_param_order = [p.split("=", 1)[0] for p in raw_parts]
+    redacted_raw_parts = []
+    for part in raw_parts:
+        if part.startswith("signature="):
+            redacted_raw_parts.append("signature=<redacted>")
+        else:
+            redacted_raw_parts.append(part)
+
+    signature = params.get("signature", "")
+    masked_signature = (
+        f"{signature[:12]}...len={len(signature)}" if signature else "<missing>"
+    )
+
+    return {
+        "path": request.path,
+        "raw_query": "&".join(redacted_raw_parts),
+        "raw_param_order": raw_param_order,
+        "query_param_keys": list(params.keys()),
+        "key_id": params.get("key_id", "<missing>"),
+        "signature": masked_signature,
+        "custom_data": params.get("custom_data", "<missing>"),
+        "user_id": params.get("user_id", "<missing>"),
+    }
 
 
 class DevRewardGrantView(APIView):

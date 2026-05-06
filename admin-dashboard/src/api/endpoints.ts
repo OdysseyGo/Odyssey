@@ -28,6 +28,14 @@ export const bulkUserAction = (data: {
   role?: number;
 }) => api.post("/admin/users/bulk-action/", data);
 
+export const getDefaultReviewerConfig = () =>
+  api.get("/admin/default-reviewer-config/");
+
+export const updateDefaultReviewerConfig = (defaultReviewer: boolean) =>
+  api.post("/admin/default-reviewer-config/", {
+    default_reviewer: defaultReviewer,
+  });
+
 // Tours
 export const getTours = (params?: Record<string, string | number>) =>
   api.get("/admin/tours/", { params });

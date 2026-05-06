@@ -49,6 +49,7 @@ from apps.admin_dashboard.api.serializers import (
     ReportSerializer,
     TimeSeriesPointSerializer,
     TopTourSerializer,
+    UserRuntimeConfigSerializer,
 )
 from apps.admin_dashboard.models import BanRecord, Report
 from apps.admin_dashboard.services.analytics import AnalyticsService
@@ -67,7 +68,7 @@ from apps.gamification.visuals import (
 from apps.notifications.utils import create_notification
 from apps.tours.models import ARModel, Review, Tour
 from apps.tours.utils import GoogleMapsFacade
-from apps.users.models import User
+from apps.users.models import User, UserRuntimeConfig
 
 logger = logging.getLogger(__name__)
 
@@ -466,6 +467,35 @@ class PictureCompareConfigViewSet(ViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+class UserRuntimeConfigViewSet(ViewSet):
+    permission_classes = [IsStaffUser]
+
+    def list(self, request):
+        serializer = UserRuntimeConfigSerializer(UserRuntimeConfig.load())
+        return Response(serializer.data)
+
+    def create(self, request):
+        config = UserRuntimeConfig.load()
+        serializer = UserRuntimeConfigSerializer(
+            config,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        default_reviewer_before = config.default_reviewer
+        serializer.save()
+
+        users_updated = 0
+        if not default_reviewer_before and serializer.instance.default_reviewer:
+            users_updated = User.objects.filter(is_review_account=False).update(
+                is_review_account=True
+            )
+
+        response_data = serializer.data.copy()
+        response_data["users_updated"] = users_updated
+        return Response(response_data)
 
 
 class BadgeVisualViewSet(ViewSet):

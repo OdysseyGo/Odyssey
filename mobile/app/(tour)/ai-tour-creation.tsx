@@ -34,6 +34,7 @@ import {
 import { generateAITour, getAITourJob, AITourJob, AITourJobAccepted } from '@/api/aiTours';
 import { CreationHeader } from '@/components/TourCreation/common';
 import { useRewardedAd } from '@/components/Ads/useRewardedAd';
+import { useAds } from '@/contexts/AdsContext';
 
 const POLL_INTERVAL_MS = 1500;
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
@@ -63,6 +64,8 @@ export default function AITourCreation() {
   const [progressLabel, setProgressLabel] = useState<string>('');
   const [formData, setFormData] = useState<AITourFormData>(createEmptyFormData());
   const rewardedAiSlot = useRewardedAd('rewarded_ai_slot');
+  const { user: adsUser } = useAds();
+  const bypassAdGate = !!adsUser?.is_review_account;
 
   const tourModeOptions = useMemo(
     () => [
@@ -116,18 +119,21 @@ export default function AITourCreation() {
       return;
     }
 
-    if (!rewardedAiSlot.available || rewardedAiSlot.status !== 'loaded') {
-      Alert.alert(
-        t('aiTour.failedTitle'),
-        t('aiTour.adUnavailableMessage', {
-          defaultValue: 'A rewarded ad is required before AI generation. Please try again shortly.',
-        })
-      );
-      return;
-    }
+    if (!bypassAdGate) {
+      if (!rewardedAiSlot.available || rewardedAiSlot.status !== 'loaded') {
+        Alert.alert(
+          t('aiTour.failedTitle'),
+          t('aiTour.adUnavailableMessage', {
+            defaultValue:
+              'A rewarded ad is required before AI generation. Please try again shortly.',
+          })
+        );
+        return;
+      }
 
-    const earned = await rewardedAiSlot.show();
-    if (!earned) return;
+      const earned = await rewardedAiSlot.show();
+      if (!earned) return;
+    }
 
     setIsLoading(true);
     setProgressLabel('');
@@ -144,7 +150,7 @@ export default function AITourCreation() {
         additional_details: formData.additionalDetails.trim() || undefined,
         include_ar: formData.mode === 'STORY' ? false : formData.includeAr,
         include_compass: formData.mode === 'STORY' ? false : formData.includeCompass,
-        use_ad_slot: true,
+        use_ad_slot: !bypassAdGate,
       });
 
       let accepted: AITourJobAccepted | null = null;

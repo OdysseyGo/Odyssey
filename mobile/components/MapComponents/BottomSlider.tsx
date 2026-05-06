@@ -23,6 +23,7 @@ import { ODYSSEY_TAB_BAR_FLOATING_HEIGHT } from '@/components/Navigation/Odyssey
 import { useActiveTour } from '@/contexts/ActiveTourContext';
 import { completeStep, DEFAULT_MAX_FAILED_ATTEMPTS, skipStep } from '@/api/tourProgress'; //TODO: implement a skip button, api endpoint is ready
 import { useRewardedAd } from '@/components/Ads/useRewardedAd';
+import { useAds } from '@/contexts/AdsContext';
 import type { UserBadge } from '@/api/profile';
 import { checkStepLocationLocal } from '@/utils/locationCheck';
 
@@ -65,6 +66,8 @@ export default function BottomSlider({
   } = useActiveTour();
 
   const rewardedSkip = useRewardedAd('rewarded_hint');
+  const { user: adsUser } = useAds();
+  const bypassAdGate = !!adsUser?.is_review_account;
   const skipUsingAdRef = useRef(false);
 
   const skipCountsAsMistake = useCallback(
@@ -173,6 +176,7 @@ export default function BottomSlider({
     }
 
     const useAdSkip = skipUsingAdRef.current;
+    const skipWithoutPenalty = useAdSkip || bypassAdGate;
     skipUsingAdRef.current = false;
 
     setIsSkipConfirmVisible(false);
@@ -183,7 +187,7 @@ export default function BottomSlider({
       const maxAttempts = useAdSkip ? 6 : 1;
       while (true) {
         try {
-          response = await skipStep(progressId, { useAdSkip });
+          response = await skipStep(progressId, useAdSkip ? { useAdSkip: true } : undefined);
           break;
         } catch (err: any) {
           attempt += 1;
@@ -198,7 +202,7 @@ export default function BottomSlider({
       }
 
       confirmLocation(currentStep.id);
-      recordSkip(useAdSkip ? false : skipCountsAsMistake(currentStep.id));
+      recordSkip(skipWithoutPenalty ? false : skipCountsAsMistake(currentStep.id));
 
       if (response.is_tour_complete) {
         await onTourComplete?.(response.awarded_xp ?? 0, response.awarded_badges);
@@ -216,6 +220,7 @@ export default function BottomSlider({
       Alert.alert(t('common.error'), t('common.syncError'));
     }
   }, [
+    bypassAdGate,
     tour,
     progressId,
     currentStepIndex,
@@ -233,6 +238,7 @@ export default function BottomSlider({
     if (!tour || !progressId) return;
 
     if (currentStepIndex < highestStepIndex) {
+      skipUsingAdRef.current = false;
       setCurrentStepIndex(currentStepIndex + 1);
       return;
     }
@@ -241,6 +247,12 @@ export default function BottomSlider({
   }, [tour, progressId, currentStepIndex, highestStepIndex, setCurrentStepIndex]);
 
   const handleSkipPress = useCallback(() => {
+    if (bypassAdGate) {
+      skipUsingAdRef.current = false;
+      handleSkip();
+      return;
+    }
+
     if (!rewardedSkip.available || rewardedSkip.status !== 'loaded') {
       handleSkip();
       return;
@@ -270,7 +282,7 @@ export default function BottomSlider({
         },
       ]
     );
-  }, [rewardedSkip, handleSkip, handleConfirmSkip, t]);
+  }, [bypassAdGate, rewardedSkip, handleSkip, handleConfirmSkip, t]);
 
   const handleNavigatePrev = useCallback(() => {
     if (currentStepIndex > 0) {

@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.db import DatabaseError, models
 
 
 class User(AbstractUser):
@@ -41,9 +41,40 @@ class User(AbstractUser):
     is_banned = models.BooleanField(default=False)
     terms_accepted_at = models.DateTimeField(null=True, blank=True)
     terms_version = models.CharField(max_length=20, blank=True, default="")
+    is_review_account = models.BooleanField(
+        default=False,
+        help_text=(
+            "Bypass rewarded-ad gates for App/Play Store reviewer accounts. "
+            "Enable only for accounts whose credentials are shared with store reviewers."
+        ),
+    )
 
     class Meta:
         db_table = "user"
 
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            try:
+                self.is_review_account = bool(UserRuntimeConfig.load().default_reviewer)
+            except DatabaseError:
+                self.is_review_account = False
+        return super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.username} (id={self.id})"
+
+
+class UserRuntimeConfig(models.Model):
+    singleton_id = models.PositiveSmallIntegerField(
+        default=1, unique=True, editable=False
+    )
+    default_reviewer = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def load(cls):
+        config, _ = cls.objects.get_or_create(singleton_id=1)
+        return config
+
+    def __str__(self):
+        return "User runtime config"

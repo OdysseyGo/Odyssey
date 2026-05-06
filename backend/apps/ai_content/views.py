@@ -122,14 +122,16 @@ class GenerateTourView(APIView):
                 status=status.HTTP_409_CONFLICT,
             )
 
-        if not serializer.validated_data.get("use_ad_slot"):
+        bypass_ad_gate = bool(getattr(request.user, "is_review_account", False))
+
+        if not bypass_ad_gate and not serializer.validated_data.get("use_ad_slot"):
             return Response(
                 {"error": "Watch a rewarded ad before generating an AI tour."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         with transaction.atomic():
-            if not _consume_ai_slot_grant(request.user):
+            if not bypass_ad_gate and not _consume_ai_slot_grant(request.user):
                 return Response(
                     {
                         "error": (

@@ -55,7 +55,13 @@ class CustomUserAdmin(UserAdmin):
         "is_staff",
     )
     search_fields = ("username", "email")
-    list_filter = ("user_type", "is_staff", "is_superuser", "groups")
+    list_filter = (
+        "user_type",
+        "is_staff",
+        "is_superuser",
+        "is_review_account",
+        "groups",
+    )
     readonly_fields = ("terms_accepted_at", "terms_version")
     fieldsets = (
         (None, {"fields": ("username", "password")}),
@@ -67,6 +73,7 @@ class CustomUserAdmin(UserAdmin):
                     "is_active",
                     "is_staff",
                     "is_superuser",
+                    "is_review_account",
                     "groups",
                     "user_permissions",
                 )

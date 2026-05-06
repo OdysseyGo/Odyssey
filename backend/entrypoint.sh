@@ -5,7 +5,7 @@ echo "Mode: $ENV_MODE | DB: $DB_HOST"
 
 # 1. Always run migrations (Safe for all environments)
 echo "Applying migrations..."
-mkdir -p /staticfiles
+mkdir -p /staticfiles /media
 python manage.py migrate --noinput
 python manage.py collectstatic --noinput --clear
 
