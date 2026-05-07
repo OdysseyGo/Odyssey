@@ -206,3 +206,40 @@ class TourValidationTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("steps", response.data)
+
+    def test_create_tour_description_rejects_above_max_length(self):
+        tour_data = {
+            "title": "Tour",
+            "description": "x" * 1001,
+            "tour_type": "STORY",
+            "category": "History",
+            "difficulty": "EASY",
+            "duration_minutes": 60,
+        }
+        response = self.client.post("/api/tours/", tour_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("description", response.data)
+
+    def test_create_step_story_rejects_above_max_length(self):
+        tour = Tour.objects.create(
+            title="T",
+            description="D",
+            creator=self.user,
+            tour_type="STORY",
+            category="History",
+            difficulty="EASY",
+            duration_minutes=60,
+        )
+
+        step_data = {
+            "title": "Valid Title",
+            "description": "x" * 1001,
+            "latitude": "1.0",
+            "longitude": "1.0",
+            "order": 0,
+        }
+        response = self.client.post(
+            f"/api/tours/{tour.id}/steps/", step_data, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("description", response.data)

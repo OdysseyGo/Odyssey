@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { storyEditorStyles } from './StoryEditor.styles';
-import { TourLocation, TOUR_TEXT_FIELD_MAX_LENGTH } from '../TourCreation.types';
+import {
+  TourLocation,
+  TOUR_STORY_MAX_LENGTH,
+  TOUR_TEXT_FIELD_MAX_LENGTH,
+} from '../TourCreation.types';
 import StoryEditorHeader from './StoryEditorHeader';
 import LocationBadge from './LocationBadge';
 import StoryInputField from './StoryInputField';
@@ -40,6 +44,7 @@ export default function StoryEditor({
   const [address, setAddress] = useState(location.address || '');
   const [story, setStory] = useState(location.story);
   const [image, setImage] = useState<string | undefined>(location.image);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     setTitle(location.title);
@@ -60,6 +65,14 @@ export default function StoryEditor({
 
   const isValid = title.trim().length > 0 && story.trim().length > 0;
 
+  const handleStoryFocus = (event: any) => {
+    const target = event.target;
+    setTimeout(() => {
+      const responder = (scrollViewRef.current as any)?.getScrollResponder?.();
+      responder?.scrollResponderScrollNativeHandleToKeyboard?.(target, 100, true);
+    }, 50);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -69,6 +82,7 @@ export default function StoryEditor({
         <StoryEditorHeader onClose={onCancel} onSave={handleSave} isValid={isValid} />
 
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
@@ -101,7 +115,8 @@ export default function StoryEditor({
             hint={t('creation.storyEditor.storyHint')}
             multiline
             showCharacterCount
-            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
+            maxLength={TOUR_STORY_MAX_LENGTH}
+            onFocus={handleStoryFocus}
           />
 
           <WritingTips />

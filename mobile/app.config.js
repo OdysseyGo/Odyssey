@@ -11,7 +11,7 @@ export default {
   expo: {
     name: 'Odyssey',
     slug: 'mobile',
-    version: '1.0.0',
+    version: '1.0.2',
     platforms: ['ios', 'android'],
     orientation: 'portrait',
     icon: './assets/images/mobile_icon.png',

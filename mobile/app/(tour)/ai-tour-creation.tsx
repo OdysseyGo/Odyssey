@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -35,6 +35,7 @@ import { generateAITour, getAITourJob, AITourJob, AITourJobAccepted } from '@/ap
 import { CreationHeader } from '@/components/TourCreation/common';
 import { useRewardedAd } from '@/components/Ads/useRewardedAd';
 import { useAds } from '@/contexts/AdsContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const POLL_INTERVAL_MS = 1500;
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
@@ -59,10 +60,12 @@ export default function AITourCreation() {
   const theme = useColorTheme();
   const styles = aiTourCreationStyles(theme);
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   const [isLoading, setIsLoading] = useState(false);
   const [progressLabel, setProgressLabel] = useState<string>('');
   const [formData, setFormData] = useState<AITourFormData>(createEmptyFormData());
+  const scrollViewRef = useRef<ScrollView>(null);
   const rewardedAiSlot = useRewardedAd('rewarded_ai_slot');
   const { user: adsUser } = useAds();
   const bypassAdGate = !!adsUser?.is_review_account;
@@ -200,17 +203,27 @@ export default function AITourCreation() {
     }
   };
 
+  const handleAdditionalDetailsFocus = (event: any) => {
+    const target = event.target;
+    setTimeout(() => {
+      const responder = (scrollViewRef.current as any)?.getScrollResponder?.();
+      responder?.scrollResponderScrollNativeHandleToKeyboard?.(target, 200, true);
+    }, 50);
+  };
+
   return (
     <View style={styles.container}>
       <CreationHeader title={t('aiTour.header.title')} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 20 + insets.bottom }]}
           showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
         >
@@ -354,6 +367,7 @@ export default function AITourCreation() {
             <FormTextArea
               value={formData.additionalDetails}
               onChangeText={(text) => updateFormData({ additionalDetails: text })}
+              onFocus={handleAdditionalDetailsFocus}
               placeholder={t('aiTour.additionalDetailsPlaceholder')}
               numberOfLines={4}
               maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}

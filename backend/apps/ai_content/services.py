@@ -76,16 +76,16 @@ class GeminiService:
         prompt = f"""
         You are a tour planning assistant. The user wants a "{theme}" themed tour in {city}.
         They also have this specific request: "{custom_prompt}"
-        
+
         To help me find suitable locations on Google Maps, generate a maximum of 5 search queries.
-        
+
         CRITICAL RULES:
-        1. GEOGRAPHIC VALIDATION: First, analyze if the user's specifically requested neighborhood, landmark, or district (if any) actually exists within or near the city of {city}. 
+        1. GEOGRAPHIC VALIDATION: First, analyze if the user's specifically requested neighborhood, landmark, or district (if any) actually exists within or near the city of {city}.
            - If it is NOT in {city}, completely IGNORE their specific location request and generate queries for the general {city} area.
         2. LOCATION BINDING: If the user specifies a valid area that IS in {city} (e.g., "Dallas" in "Texas"), you MUST append that area to EVERY query you generate (e.g., "parks in Dallas", "historical sites in Dallas").
         3. Translate abstract ideas into physical place categories.
         4. Do NOT provide exact single venue names, only categorical queries bounded by the validated location.
-        
+
         Return ONLY a valid JSON array of strings in English. Do not include any other text or explanation.
         """
         try:
@@ -96,8 +96,23 @@ class GeminiService:
             queries = self._parse_response(response.text)
 
             if isinstance(queries, list) and len(queries) > 0:
-                logger.info(f"AI planned queries for '{custom_prompt}': {queries}")
-                return queries
+                sanitized_queries = [
+                    str(query).strip()
+                    for query in queries
+                    if isinstance(query, str) and query.strip()
+                ]
+                if sanitized_queries:
+                    logger.info(
+                        "AI planned queries for '%s': %s",
+                        custom_prompt,
+                        sanitized_queries,
+                    )
+                    return sanitized_queries
+                logger.warning(
+                    "AI planner returned non-string/empty queries for '%s': %s",
+                    custom_prompt,
+                    queries,
+                )
         except Exception as e:
             logger.warning("Query planning failed, falling back to base theme: %s", e)
 
@@ -300,9 +315,12 @@ class GeminiService:
             country_code=country_code,
         )
         with transaction.atomic():
+            tour_description = str(tour_data["description"])[
+                : Tour.DESCRIPTION_MAX_LENGTH
+            ]
             tour = Tour.objects.create(
                 title=tour_data["title"],
-                description=tour_data["description"],
+                description=tour_description,
                 creator=creator,
                 tour_type=mode,
                 category=theme,
@@ -327,11 +345,14 @@ class GeminiService:
 
             ar_lookup = {m.id: m for m in ar_models}
             for idx, step_data in enumerate(tour_data["steps"], start=1):
+                step_description = str(step_data.get("description", ""))[
+                    : TourStep.DESCRIPTION_MAX_LENGTH
+                ]
                 step = TourStep.objects.create(
                     tour=tour,
                     order=idx,
                     title=step_data["title"],
-                    description=step_data.get("description", ""),
+                    description=step_description,
                     latitude=step_data["latitude"],
                     longitude=step_data["longitude"],
                 )
@@ -519,10 +540,16 @@ class GeminiService:
 
         # Ask AI to generate search terms based on the user's custom prompt
         search_queries = self._plan_search_queries(city, theme, custom_prompt)
+        search_queries = [
+            q.strip() for q in search_queries if isinstance(q, str) and q.strip()
+        ]
+        if not search_queries:
+            search_queries = [theme]
 
         # Search Maps for each query
-        results_per_query = max_candidates // len(search_queries[:2])
-        for query in search_queries[:2]:
+        selected_queries = search_queries[:2]
+        results_per_query = max(1, max_candidates // len(selected_queries))
+        for query in selected_queries:
             places = maps_facade.search_places(
                 city=city, theme=query, max_results=results_per_query
             )

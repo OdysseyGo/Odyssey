@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useColorTheme } from '@/utils/useColorTheme';
@@ -11,7 +11,11 @@ import WritingTips from '@/components/TourCreation/StoryEditor/WritingTips';
 import StoryEditorFooter from '@/components/TourCreation/StoryEditor/StoryEditorFooter';
 import PuzzleEditor from '@/components/TourCreation/StoryEditor/PuzzleEditor';
 import { CreationHeader } from '@/components/TourCreation/common';
-import { Puzzle, TOUR_TEXT_FIELD_MAX_LENGTH } from '@/components/TourCreation';
+import {
+  Puzzle,
+  TOUR_STORY_MAX_LENGTH,
+  TOUR_TEXT_FIELD_MAX_LENGTH,
+} from '@/components/TourCreation';
 import { useTranslation } from 'react-i18next';
 
 export default function EditLocationScreen() {
@@ -25,6 +29,7 @@ export default function EditLocationScreen() {
   const [story, setStory] = useState('');
   const [image, setImage] = useState<string | undefined>(undefined);
   const [puzzle, setPuzzle] = useState<Puzzle | undefined>(undefined);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const isPuzzleMode = tourData.tourType === 'PUZZLE' || tourData.tourType === 'HYBRID';
 
@@ -137,6 +142,14 @@ export default function EditLocationScreen() {
     story.trim().length > 0 &&
     (!shouldValidatePuzzle || isPuzzleValid(puzzle));
 
+  const handleStoryFocus = (event: any) => {
+    const target = event.target;
+    setTimeout(() => {
+      const responder = (scrollViewRef.current as any)?.getScrollResponder?.();
+      responder?.scrollResponderScrollNativeHandleToKeyboard?.(target, 260, true);
+    }, 50);
+  };
+
   const currentIndex = selectedLocation
     ? tourData.locations.findIndex((loc) => loc.id === selectedLocation.id)
     : -1;
@@ -155,6 +168,7 @@ export default function EditLocationScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollContent}
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
@@ -191,7 +205,8 @@ export default function EditLocationScreen() {
             hint={t('creation.editLocation.storyHint')}
             multiline
             showCharacterCount
-            maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
+            maxLength={TOUR_STORY_MAX_LENGTH}
+            onFocus={handleStoryFocus}
           />
 
           {isPuzzleMode && (

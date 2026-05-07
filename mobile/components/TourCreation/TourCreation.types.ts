@@ -3,6 +3,8 @@ import { sanitizeMultiLineText, sanitizeSingleLineText } from '@/utils/inputSani
 export type PuzzleType = 'TRIVIA' | 'OPEN_ENDED' | 'AR' | 'PICTURE_COMPARE' | 'COMPASS';
 
 export const TOUR_TEXT_FIELD_MAX_LENGTH = 255;
+export const TOUR_DESCRIPTION_MAX_LENGTH = 1000;
+export const TOUR_STORY_MAX_LENGTH = 1000;
 export const TOUR_STEPS_MAX_COUNT = 150;
 
 export type ARAnchorPosition = {

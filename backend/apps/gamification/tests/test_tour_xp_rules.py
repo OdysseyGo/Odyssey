@@ -232,7 +232,7 @@ class TourXpRulesTests(APITestCase):
         self.assertEqual(skip_response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("No unconsumed HINT", skip_response.data["error"])
 
-    def test_review_account_use_ad_skip_bypasses_hint_grant(self):
+    def test_review_account_use_ad_skip_bypasses_hint_grant_but_still_counts_skip(self):
         self.player.is_review_account = True
         self.player.save(update_fields=["is_review_account"])
         tour, _ = self._create_tour_with_single_step(title="Review Ad Skip Bypass")
@@ -251,7 +251,7 @@ class TourXpRulesTests(APITestCase):
         self.assertEqual(RewardedAdGrant.objects.count(), 0)
 
         progress = TourProgress.objects.get(id=progress_id)
-        self.assertEqual(progress.skip_count, 0)
+        self.assertEqual(progress.skip_count, 1)
 
     def test_up_to_two_wrong_ar_attempts_then_correct_keeps_step_xp(self):
         tour, step = self._create_tour_with_single_step(title="Wrong Attempt Tour")

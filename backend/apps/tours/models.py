@@ -22,6 +22,8 @@ def ar_model_scene_asset_upload_to(instance, filename):
 
 
 class Tour(models.Model):
+    DESCRIPTION_MAX_LENGTH = 1000
+
     STORY = "STORY"
     PUZZLE = "PUZZLE"
     HYBRID = "HYBRID"
@@ -75,7 +77,7 @@ class Tour(models.Model):
     ]
 
     title = models.CharField(max_length=255)
-    description = models.TextField()
+    description = models.TextField(max_length=DESCRIPTION_MAX_LENGTH)
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_tours"
     )
@@ -166,11 +168,15 @@ class Tour(models.Model):
 
 
 class TourStep(models.Model):
+    DESCRIPTION_MAX_LENGTH = 1000
+
     tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name="steps")
     order = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
     description = models.TextField(
-        help_text="Story content or location description", blank=True
+        max_length=DESCRIPTION_MAX_LENGTH,
+        help_text="Story content or location description",
+        blank=True,
     )
     latitude = models.DecimalField(max_digits=18, decimal_places=9)
     longitude = models.DecimalField(max_digits=18, decimal_places=9)

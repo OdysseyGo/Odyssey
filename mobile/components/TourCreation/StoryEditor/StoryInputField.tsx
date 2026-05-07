@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput } from 'react-native';
+import { View, Text, TextInput, TextInputProps } from 'react-native';
 import { useColorTheme } from '@/utils/useColorTheme';
 import { storyInputFieldStyles } from './StoryInputField.styles';
 import Colors from '@/constants/Colors';
@@ -15,6 +15,7 @@ type StoryInputFieldProps = {
   multiline?: boolean;
   showCharacterCount?: boolean;
   maxLength?: number;
+  onFocus?: TextInputProps['onFocus'];
 };
 
 export default function StoryInputField({
@@ -26,6 +27,7 @@ export default function StoryInputField({
   multiline = false,
   showCharacterCount = false,
   maxLength,
+  onFocus,
 }: StoryInputFieldProps) {
   const theme = useColorTheme();
   const styles = storyInputFieldStyles(theme);
@@ -47,6 +49,7 @@ export default function StoryInputField({
         multiline={multiline}
         maxLength={maxLength}
         textAlignVertical={multiline ? 'top' : 'center'}
+        onFocus={onFocus}
       />
       {showCharacterCount && (
         <Text style={styles.characterCount}>
