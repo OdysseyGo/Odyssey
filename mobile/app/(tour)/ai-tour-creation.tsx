@@ -221,10 +221,7 @@ export default function AITourCreation() {
         <ScrollView
           ref={scrollViewRef}
           style={styles.scrollView}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: 20 + insets.bottom },
-          ]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 20 + insets.bottom }]}
           showsVerticalScrollIndicator={false}
           automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
           keyboardShouldPersistTaps="handled"
