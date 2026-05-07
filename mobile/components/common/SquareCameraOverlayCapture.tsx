@@ -74,11 +74,21 @@ export default function SquareCameraOverlayCapture({
   const frameTop = (height - squareSize) / 2;
   const frameLeft = (width - squareSize) / 2;
   const maskBleed = Math.max(width, height);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const handleTakePhoto = async () => {
     if (isCapturing || !cameraRef.current) return;
 
     let rawPhotoUri: string | null = null;
+    let fixedPhotoUri: string | null = null;
+
     try {
       setIsCapturing(true);
       const photo = await cameraRef.current.takePictureAsync({
@@ -86,16 +96,22 @@ export default function SquareCameraOverlayCapture({
       });
       rawPhotoUri = photo?.uri ?? null;
 
-      if (!photo?.uri || !photo.width || !photo.height) {
+      if (!photo?.uri || !photo.width || !photo.height || !isMounted.current) {
         return;
       }
+      const fixedImage = await ImageManipulator.manipulateAsync(photo.uri, [], {
+        compress: 1,
+        format: ImageManipulator.SaveFormat.JPEG,
+      });
+      fixedPhotoUri = fixedImage.uri;
+      if (!isMounted.current) return;
 
-      const cropEdge = Math.floor(Math.min(photo.width, photo.height) * CROP_RATIO);
-      const originX = Math.max(0, Math.floor((photo.width - cropEdge) / 2));
-      const originY = Math.max(0, Math.floor((photo.height - cropEdge) / 2));
+      const cropEdge = Math.floor(Math.min(fixedImage.width, fixedImage.height) * CROP_RATIO);
+      const originX = Math.max(0, Math.floor((fixedImage.width - cropEdge) / 2));
+      const originY = Math.max(0, Math.floor((fixedImage.height - cropEdge) / 2));
 
       const manipulated = await ImageManipulator.manipulateAsync(
-        photo.uri,
+        fixedImage.uri,
         [
           {
             crop: {
@@ -115,15 +131,28 @@ export default function SquareCameraOverlayCapture({
         }
       );
 
+      if (!isMounted.current) {
+        // If user closed the camera while processing, delete the final result too!
+        await safeDeleteFile(manipulated.uri);
+        return;
+      }
+
       await onCapture(manipulated.uri);
       onClose();
+
       if (manipulated.uri !== rawPhotoUri) {
         await safeDeleteFile(rawPhotoUri);
+      }
+      if (fixedPhotoUri && manipulated.uri !== fixedPhotoUri) {
+        await safeDeleteFile(fixedPhotoUri);
       }
     } catch {
       Alert.alert(t('camera.captureFailedTitle'), t('camera.captureFailedMessage'));
       await safeDeleteFile(rawPhotoUri);
+      await safeDeleteFile(fixedPhotoUri);
     } finally {
+      await safeDeleteFile(rawPhotoUri);
+      await safeDeleteFile(fixedPhotoUri);
       setIsCapturing(false);
     }
   };

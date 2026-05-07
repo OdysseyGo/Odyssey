@@ -81,7 +81,7 @@ const config: Config = {
         { to: '/faq',            label: 'FAQ',          position: 'left'  },
         { to: '/contact',        label: 'Contact',      position: 'left'  },
         {
-          href: '#',
+          href: 'https://apps.apple.com/tr/app/odyssey-world-quest/id6763287597',
           label: 'Download App',
           position: 'right',
           className: 'button button--primary',
