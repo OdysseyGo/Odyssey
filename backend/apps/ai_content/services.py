@@ -540,7 +540,9 @@ class GeminiService:
 
         # Ask AI to generate search terms based on the user's custom prompt
         search_queries = self._plan_search_queries(city, theme, custom_prompt)
-        search_queries = [q.strip() for q in search_queries if isinstance(q, str) and q.strip()]
+        search_queries = [
+            q.strip() for q in search_queries if isinstance(q, str) and q.strip()
+        ]
         if not search_queries:
             search_queries = [theme]
 
