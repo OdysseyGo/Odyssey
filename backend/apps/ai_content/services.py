@@ -76,16 +76,16 @@ class GeminiService:
         prompt = f"""
         You are a tour planning assistant. The user wants a "{theme}" themed tour in {city}.
         They also have this specific request: "{custom_prompt}"
-        
+
         To help me find suitable locations on Google Maps, generate a maximum of 5 search queries.
-        
+
         CRITICAL RULES:
-        1. GEOGRAPHIC VALIDATION: First, analyze if the user's specifically requested neighborhood, landmark, or district (if any) actually exists within or near the city of {city}. 
+        1. GEOGRAPHIC VALIDATION: First, analyze if the user's specifically requested neighborhood, landmark, or district (if any) actually exists within or near the city of {city}.
            - If it is NOT in {city}, completely IGNORE their specific location request and generate queries for the general {city} area.
         2. LOCATION BINDING: If the user specifies a valid area that IS in {city} (e.g., "Dallas" in "Texas"), you MUST append that area to EVERY query you generate (e.g., "parks in Dallas", "historical sites in Dallas").
         3. Translate abstract ideas into physical place categories.
         4. Do NOT provide exact single venue names, only categorical queries bounded by the validated location.
-        
+
         Return ONLY a valid JSON array of strings in English. Do not include any other text or explanation.
         """
         try:
