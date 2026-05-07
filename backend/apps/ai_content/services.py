@@ -63,10 +63,11 @@ class GeminiService:
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel(self.GEMINI_MODEL)
 
-
-    def _plan_search_queries(self, city: str, theme: str, custom_prompt: str) -> list[str]:
+    def _plan_search_queries(
+        self, city: str, theme: str, custom_prompt: str
+    ) -> list[str]:
         """
-        Acts as a 'Query Planner' using AI to translate abstract user requests 
+        Acts as a 'Query Planner' using AI to translate abstract user requests
         into concrete search terms that Google Maps can understand.
         """
         if not custom_prompt:
@@ -89,18 +90,18 @@ class GeminiService:
         """
         try:
             # Keep timeout low for the planning step to ensure a quick response
-            response = self.model.generate_content(prompt, request_options={"timeout": 10})
+            response = self.model.generate_content(
+                prompt, request_options={"timeout": 10}
+            )
             queries = self._parse_response(response.text)
-            
+
             if isinstance(queries, list) and len(queries) > 0:
                 logger.info(f"AI planned queries for '{custom_prompt}': {queries}")
                 return queries
         except Exception as e:
             logger.warning("Query planning failed, falling back to base theme: %s", e)
-            
-        return [theme]
-    
 
+        return [theme]
 
     def generate_tour(
         self,
@@ -515,10 +516,10 @@ class GeminiService:
         maps_facade = GoogleMapsFacade()
         max_candidates = min(20, max(num_steps * 3, 15))
         all_candidates = []
-        
+
         # Ask AI to generate search terms based on the user's custom prompt
         search_queries = self._plan_search_queries(city, theme, custom_prompt)
-        
+
         # Search Maps for each query
         results_per_query = max_candidates // len(search_queries[:2])
         for query in search_queries[:2]:
@@ -526,10 +527,10 @@ class GeminiService:
                 city=city, theme=query, max_results=results_per_query
             )
             all_candidates.extend(places)
-            
+
         # Filter out duplicate places based on name
         unique_places = {p["name"]: p for p in all_candidates}.values()
-        
+
         return list(unique_places)
 
     OUTLIER_MULTIPLIER = 2.5
