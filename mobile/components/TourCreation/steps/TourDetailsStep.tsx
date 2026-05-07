@@ -5,6 +5,7 @@ import { tourDetailsStepStyles } from './TourDetailsStep.styles';
 import {
   TourCreationData,
   TOUR_CATEGORIES,
+  TOUR_DESCRIPTION_MAX_LENGTH,
   TOUR_TEXT_FIELD_MAX_LENGTH,
 } from '../TourCreation.types';
 import {
@@ -109,7 +110,7 @@ export default function TourDetailsStep({ tourData, onUpdate }: TourDetailsStepP
           value={tourData.description}
           onChangeText={(text) => onUpdate({ description: text })}
           placeholder={t('creation.details.descriptionPlaceholder')}
-          maxLength={TOUR_TEXT_FIELD_MAX_LENGTH}
+          maxLength={TOUR_DESCRIPTION_MAX_LENGTH}
         />
       </FormInputGroup>
 

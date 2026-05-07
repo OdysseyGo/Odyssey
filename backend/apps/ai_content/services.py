@@ -258,9 +258,12 @@ class GeminiService:
             country_code=country_code,
         )
         with transaction.atomic():
+            tour_description = str(tour_data["description"])[
+                : Tour.DESCRIPTION_MAX_LENGTH
+            ]
             tour = Tour.objects.create(
                 title=tour_data["title"],
-                description=tour_data["description"],
+                description=tour_description,
                 creator=creator,
                 tour_type=mode,
                 category=theme,
@@ -285,11 +288,14 @@ class GeminiService:
 
             ar_lookup = {m.id: m for m in ar_models}
             for idx, step_data in enumerate(tour_data["steps"], start=1):
+                step_description = str(step_data.get("description", ""))[
+                    : TourStep.DESCRIPTION_MAX_LENGTH
+                ]
                 step = TourStep.objects.create(
                     tour=tour,
                     order=idx,
                     title=step_data["title"],
-                    description=step_data.get("description", ""),
+                    description=step_description,
                     latitude=step_data["latitude"],
                     longitude=step_data["longitude"],
                 )
