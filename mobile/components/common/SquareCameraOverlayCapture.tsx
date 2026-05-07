@@ -87,7 +87,7 @@ export default function SquareCameraOverlayCapture({
     if (isCapturing || !cameraRef.current) return;
 
     let rawPhotoUri: string | null = null;
-    let fixedPhotoUri: string | null = null; 
+    let fixedPhotoUri: string | null = null;
 
     try {
       setIsCapturing(true);
@@ -99,18 +99,16 @@ export default function SquareCameraOverlayCapture({
       if (!photo?.uri || !photo.width || !photo.height || !isMounted.current) {
         return;
       }
-      const fixedImage = await ImageManipulator.manipulateAsync(
-        photo.uri,
-        [], 
-        { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
-      );
+      const fixedImage = await ImageManipulator.manipulateAsync(photo.uri, [], {
+        compress: 1,
+        format: ImageManipulator.SaveFormat.JPEG,
+      });
       fixedPhotoUri = fixedImage.uri;
       if (!isMounted.current) return;
 
       const cropEdge = Math.floor(Math.min(fixedImage.width, fixedImage.height) * CROP_RATIO);
       const originX = Math.max(0, Math.floor((fixedImage.width - cropEdge) / 2));
       const originY = Math.max(0, Math.floor((fixedImage.height - cropEdge) / 2));
-
 
       const manipulated = await ImageManipulator.manipulateAsync(
         fixedImage.uri,
@@ -141,7 +139,7 @@ export default function SquareCameraOverlayCapture({
 
       await onCapture(manipulated.uri);
       onClose();
-      
+
       if (manipulated.uri !== rawPhotoUri) {
         await safeDeleteFile(rawPhotoUri);
       }
