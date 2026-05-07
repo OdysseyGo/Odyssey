@@ -63,6 +63,46 @@ class GeminiService:
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel(self.GEMINI_MODEL)
 
+    def _plan_search_queries(
+        self, city: str, theme: str, custom_prompt: str
+    ) -> list[str]:
+        """
+        Acts as a 'Query Planner' using AI to translate abstract user requests
+        into concrete search terms that Google Maps can understand.
+        """
+        if not custom_prompt:
+            return [theme]
+
+        prompt = f"""
+        You are a tour planning assistant. The user wants a "{theme}" themed tour in {city}.
+        They also have this specific request: "{custom_prompt}"
+        
+        To help me find suitable locations on Google Maps, generate a maximum of 5 search queries.
+        
+        CRITICAL RULES:
+        1. GEOGRAPHIC VALIDATION: First, analyze if the user's specifically requested neighborhood, landmark, or district (if any) actually exists within or near the city of {city}. 
+           - If it is NOT in {city}, completely IGNORE their specific location request and generate queries for the general {city} area.
+        2. LOCATION BINDING: If the user specifies a valid area that IS in {city} (e.g., "Dallas" in "Texas"), you MUST append that area to EVERY query you generate (e.g., "parks in Dallas", "historical sites in Dallas").
+        3. Translate abstract ideas into physical place categories.
+        4. Do NOT provide exact single venue names, only categorical queries bounded by the validated location.
+        
+        Return ONLY a valid JSON array of strings in English. Do not include any other text or explanation.
+        """
+        try:
+            # Keep timeout low for the planning step to ensure a quick response
+            response = self.model.generate_content(
+                prompt, request_options={"timeout": 10}
+            )
+            queries = self._parse_response(response.text)
+
+            if isinstance(queries, list) and len(queries) > 0:
+                logger.info(f"AI planned queries for '{custom_prompt}': {queries}")
+                return queries
+        except Exception as e:
+            logger.warning("Query planning failed, falling back to base theme: %s", e)
+
+        return [theme]
+
     def generate_tour(
         self,
         city: str,
@@ -109,7 +149,9 @@ class GeminiService:
         _emit(f"Exploring {city} for the perfect spots…")
         num_steps = max(3, duration // 15)
         location_query = self._format_location(city, country)
-        candidate_places = self._discover_places(location_query, theme, num_steps)
+        candidate_places = self._discover_places(
+            location_query, theme, num_steps, custom_prompt
+        )
         candidate_places = self._cluster_candidates(
             candidate_places, keep=max(num_steps * 3, 12)
         )
@@ -465,21 +507,31 @@ class GeminiService:
     def _format_location(city: str, country: str = "") -> str:
         return ", ".join(part for part in (city, country) if part)
 
-    def _discover_places(self, city: str, theme: str, num_steps: int) -> list[dict]:
+    def _discover_places(
+        self, city: str, theme: str, num_steps: int, custom_prompt: str = ""
+    ) -> list[dict]:
         """
-        Retrieve real, verified places from Google Maps.
-
-        Requests more candidates than needed so the AI has a rich pool to
-        choose from.  Typically fetches 3× the required number of steps.
+        Retrieve real, verified places from Google Maps using AI-planned queries.
         """
         maps_facade = GoogleMapsFacade()
-        # Cap at 20 — Google Places returns up to 20 results per page, and
-        # paginating costs a hard-coded 2s sleep waiting for the next_page_token
-        # to activate. Staying under 20 keeps generation snappy.
         max_candidates = min(20, max(num_steps * 3, 15))
-        return maps_facade.search_places(
-            city=city, theme=theme, max_results=max_candidates
-        )
+        all_candidates = []
+
+        # Ask AI to generate search terms based on the user's custom prompt
+        search_queries = self._plan_search_queries(city, theme, custom_prompt)
+
+        # Search Maps for each query
+        results_per_query = max_candidates // len(search_queries[:2])
+        for query in search_queries[:2]:
+            places = maps_facade.search_places(
+                city=city, theme=query, max_results=results_per_query
+            )
+            all_candidates.extend(places)
+
+        # Filter out duplicate places based on name
+        unique_places = {p["name"]: p for p in all_candidates}.values()
+
+        return list(unique_places)
 
     OUTLIER_MULTIPLIER = 2.5
     MIN_CANDIDATES_AFTER_TRIM = 4
