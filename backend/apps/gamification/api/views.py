@@ -494,11 +494,10 @@ class TourProgressViewSet(
             return Response({"error": "Tour is already completed"}, status=400)
 
         bypass_ad_gate = bool(getattr(request.user, "is_review_account", False))
+        requested_ad_skip = bool(request.data.get("use_ad_skip"))
         used_ad_skip = False
-        if request.data.get("use_ad_skip") or bypass_ad_gate:
-            if bypass_ad_gate:
-                used_ad_skip = True
-            else:
+        if requested_ad_skip:
+            if not bypass_ad_gate:
                 used_ad_skip = self._consume_hint_grant(request.user)
                 if not used_ad_skip:
                     return Response(
@@ -512,15 +511,20 @@ class TourProgressViewSet(
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
+        counts_as_badge_mistake = TourRewardService.skip_counts_as_badge_mistake(
+            progress=progress
+        )
+        if bypass_ad_gate:
+            # Reviewer accounts bypass ad requirements, but skips must still
+            # penalize badge progression.
+            counts_as_badge_mistake = True
+
         result = self._advance_progress(
             progress=progress,
             user=request.user,
             award_xp=False,
             step_action_word="skipped",
-            increment_skip_count=(
-                (not used_ad_skip)
-                and TourRewardService.skip_counts_as_badge_mistake(progress=progress)
-            ),
+            increment_skip_count=((not used_ad_skip) and counts_as_badge_mistake),
         )
         if result.get("status_code"):
             return Response({"error": result["error"]}, status=result["status_code"])

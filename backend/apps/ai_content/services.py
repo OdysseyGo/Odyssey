@@ -96,8 +96,23 @@ class GeminiService:
             queries = self._parse_response(response.text)
 
             if isinstance(queries, list) and len(queries) > 0:
-                logger.info(f"AI planned queries for '{custom_prompt}': {queries}")
-                return queries
+                sanitized_queries = [
+                    str(query).strip()
+                    for query in queries
+                    if isinstance(query, str) and query.strip()
+                ]
+                if sanitized_queries:
+                    logger.info(
+                        "AI planned queries for '%s': %s",
+                        custom_prompt,
+                        sanitized_queries,
+                    )
+                    return sanitized_queries
+                logger.warning(
+                    "AI planner returned non-string/empty queries for '%s': %s",
+                    custom_prompt,
+                    queries,
+                )
         except Exception as e:
             logger.warning("Query planning failed, falling back to base theme: %s", e)
 
@@ -525,10 +540,14 @@ class GeminiService:
 
         # Ask AI to generate search terms based on the user's custom prompt
         search_queries = self._plan_search_queries(city, theme, custom_prompt)
+        search_queries = [q.strip() for q in search_queries if isinstance(q, str) and q.strip()]
+        if not search_queries:
+            search_queries = [theme]
 
         # Search Maps for each query
-        results_per_query = max_candidates // len(search_queries[:2])
-        for query in search_queries[:2]:
+        selected_queries = search_queries[:2]
+        results_per_query = max(1, max_candidates // len(selected_queries))
+        for query in selected_queries:
             places = maps_facade.search_places(
                 city=city, theme=query, max_results=results_per_query
             )

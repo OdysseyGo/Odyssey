@@ -176,7 +176,7 @@ export default function BottomSlider({
     }
 
     const useAdSkip = skipUsingAdRef.current;
-    const skipWithoutPenalty = useAdSkip || bypassAdGate;
+    const skipWithoutPenalty = useAdSkip && !bypassAdGate;
     skipUsingAdRef.current = false;
 
     setIsSkipConfirmVisible(false);
@@ -202,7 +202,12 @@ export default function BottomSlider({
       }
 
       confirmLocation(currentStep.id);
-      recordSkip(skipWithoutPenalty ? false : skipCountsAsMistake(currentStep.id));
+      const countsAsMistake = bypassAdGate
+        ? true
+        : skipWithoutPenalty
+          ? false
+          : skipCountsAsMistake(currentStep.id);
+      recordSkip(countsAsMistake);
 
       if (response.is_tour_complete) {
         await onTourComplete?.(response.awarded_xp ?? 0, response.awarded_badges);
