@@ -205,3 +205,27 @@ def test_signature_candidate_variants_are_not_accepted(
 
     with pytest.raises(SsvVerificationError, match="Signature did not verify"):
         verify_ssv(params, raw_query_string=raw_query)
+
+
+def test_plus_in_signature_is_verified_from_raw_query(keypair, patch_keys, signed_query, base_params):
+    private_key, _ = keypair
+
+    signature = ""
+    for _ in range(100):
+        raw_sig = private_key.sign(signed_query.encode("utf-8"), ec.ECDSA(hashes.SHA256()))
+        candidate = base64.b64encode(raw_sig).rstrip(b"=").decode("ascii")
+        if "+" in candidate:
+            signature = candidate
+            break
+    assert "+" in signature
+
+    raw_query = _build_raw_query(signed_query, signature)
+    params = {
+        **base_params,
+        "signature": signature.replace("+", " "),
+        "key_id": "42",
+    }
+
+    payload = verify_ssv(params, raw_query_string=raw_query)
+
+    assert payload.transaction_id == base_params["transaction_id"]

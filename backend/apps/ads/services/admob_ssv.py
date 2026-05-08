@@ -7,6 +7,7 @@ import base64
 import logging
 from dataclasses import dataclass
 from typing import Callable
+from urllib.parse import unquote
 
 import requests
 from cryptography.exceptions import InvalidSignature
@@ -37,9 +38,16 @@ class SsvPayload:
     custom_data: str
 
 
-def _fetch_verifier_keys():
+@dataclass
+class ParsedRawSsvQuery:
+    signed_message: bytes
+    signature_b64: str
+    key_id: str
+
+
+def _fetch_verifier_keys(*, force_refresh: bool = False):
     cached = cache.get(KEYS_CACHE_KEY)
-    if cached:
+    if cached and not force_refresh:
         return cached
     resp = requests.get(VERIFIER_KEYS_URL, timeout=5)
     resp.raise_for_status()
@@ -52,7 +60,7 @@ def _load_public_key(pem: str):
     return serialization.load_pem_public_key(pem.encode("utf-8"))
 
 
-def _build_signed_message_from_raw_query(raw_query_string: str) -> bytes:
+def _parse_raw_ssv_query(raw_query_string: str) -> ParsedRawSsvQuery:
     """Build the exact signed AdMob message from the raw query string.
 
     AdMob signs byte-exact query content before the trailing `&signature=...`
@@ -97,7 +105,13 @@ def _build_signed_message_from_raw_query(raw_query_string: str) -> bytes:
     if not key_id_value:
         raise SsvVerificationError("Malformed raw query: empty key_id parameter.")
 
-    return signed_query.encode("utf-8")
+    # Use percent-decoding without '+' -> ' ' conversion. Query parser layers
+    # may normalize '+' and corrupt base64 signatures.
+    return ParsedRawSsvQuery(
+        signed_message=signed_query.encode("utf-8"),
+        signature_b64=unquote(signature_value),
+        key_id=unquote(key_id_value),
+    )
 
 
 def _validate_business_rules(
@@ -133,10 +147,10 @@ def verify_ssv(
     business_validator: Callable[[SsvPayload], None] | None = None,
 ) -> SsvPayload:
     """Verify an AdMob SSV callback. Raises SsvVerificationError on failure."""
-    signed_message = _build_signed_message_from_raw_query(raw_query_string)
-
-    signature_b64 = query_params.get("signature")
-    key_id = query_params.get("key_id")
+    parsed_raw_query = _parse_raw_ssv_query(raw_query_string)
+    signed_message = parsed_raw_query.signed_message
+    signature_b64 = parsed_raw_query.signature_b64
+    key_id = parsed_raw_query.key_id
     if not signature_b64 or not key_id:
         raise SsvVerificationError("Missing signature or key_id.")
 
@@ -147,6 +161,10 @@ def verify_ssv(
         raise SsvVerificationError(f"Could not fetch verifier keys: {e}")
 
     pem = keys.get(str(key_id))
+    if not pem:
+        # Key rotation can happen before cache TTL expiry.
+        keys = _fetch_verifier_keys(force_refresh=True)
+        pem = keys.get(str(key_id))
     if not pem:
         raise SsvVerificationError(f"Unknown key_id: {key_id}")
 
