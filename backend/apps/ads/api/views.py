@@ -1,5 +1,7 @@
 import logging
+import hashlib
 import uuid
+from urllib.parse import unquote
 
 from django.conf import settings
 from django.db import IntegrityError
@@ -141,7 +143,12 @@ class AdMobSsvView(APIView):
                 raw_query_string=request.META.get("QUERY_STRING", ""),
             )
         except SsvVerificationError as e:
-            logger.warning("AdMob SSV failed: %s | snapshot=%s", e, debug_snapshot)
+            logger.warning(
+                "AdMob SSV failed: %s | snapshot=%s | diagnostics=%s",
+                e,
+                debug_snapshot,
+                _ssv_verification_diagnostics(request, params),
+            )
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         user_id, placement_key = _parse_custom_data(payload.custom_data)
@@ -242,6 +249,52 @@ def _ssv_debug_snapshot(request, params: dict):
         "signature": masked_signature,
         "custom_data": params.get("custom_data", "<missing>"),
         "user_id": params.get("user_id", "<missing>"),
+    }
+
+
+def _ssv_verification_diagnostics(request, params: dict):
+    raw_query = request.META.get("QUERY_STRING", "")
+    parsed_signature = params.get("signature", "") or ""
+    parsed_key_id = params.get("key_id", "") or ""
+
+    raw_signature = ""
+    raw_key_id = ""
+    signed_message_prefix = ""
+    parse_error = None
+    try:
+        marker = "&signature="
+        idx = raw_query.find(marker)
+        if idx == -1:
+            raise ValueError("missing_signature_marker")
+        signed_query = raw_query[:idx]
+        signed_message_prefix = hashlib.sha256(
+            signed_query.encode("utf-8")
+        ).hexdigest()[:16]
+
+        tail = raw_query[idx + 1 :]
+        parts = tail.split("&")
+        if len(parts) != 2:
+            raise ValueError("unexpected_tail_param_count")
+        if not parts[0].startswith("signature="):
+            raise ValueError("unexpected_signature_position")
+        if not parts[1].startswith("key_id="):
+            raise ValueError("unexpected_key_id_position")
+        raw_signature = unquote(parts[0].split("=", 1)[1])
+        raw_key_id = unquote(parts[1].split("=", 1)[1])
+    except Exception as exc:
+        parse_error = str(exc)
+
+    return {
+        "parse_error": parse_error,
+        "raw_signature_len": len(raw_signature),
+        "parsed_signature_len": len(parsed_signature),
+        "raw_vs_parsed_signature_differs": bool(raw_signature)
+        and (raw_signature != parsed_signature),
+        "parsed_signature_contains_space": " " in parsed_signature,
+        "raw_key_id": raw_key_id or "<missing>",
+        "parsed_key_id": parsed_key_id or "<missing>",
+        "raw_vs_parsed_key_id_differs": bool(raw_key_id) and (raw_key_id != parsed_key_id),
+        "signed_message_sha256_prefix": signed_message_prefix or "<missing>",
     }
 
 

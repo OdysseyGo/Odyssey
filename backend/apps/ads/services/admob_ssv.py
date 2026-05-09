@@ -7,6 +7,7 @@ import base64
 import logging
 from dataclasses import dataclass
 from typing import Callable
+from urllib.parse import unquote
 
 import requests
 from cryptography.exceptions import InvalidSignature
@@ -37,9 +38,16 @@ class SsvPayload:
     custom_data: str
 
 
-def _fetch_verifier_keys():
+@dataclass
+class ParsedRawSsvQuery:
+    signed_message: bytes
+    signature_b64: str
+    key_id: str
+
+
+def _fetch_verifier_keys(*, force_refresh: bool = False):
     cached = cache.get(KEYS_CACHE_KEY)
-    if cached:
+    if cached and not force_refresh:
         return cached
     resp = requests.get(VERIFIER_KEYS_URL, timeout=5)
     resp.raise_for_status()
@@ -52,53 +60,44 @@ def _load_public_key(pem: str):
     return serialization.load_pem_public_key(pem.encode("utf-8"))
 
 
-def _build_signed_message_from_raw_query(raw_query_string: str) -> bytes:
-    """Build the exact signed AdMob message from the raw query string.
+def _parse_raw_ssv_query(raw_query_string: str) -> ParsedRawSsvQuery:
+    """Build the AdMob SSV signed message from the raw query string.
 
-    AdMob signs byte-exact query content before the trailing `&signature=...`
-    parameter. The final two params must be exactly `signature` then `key_id`.
+    AdMob places `signature` and `key_id` as the final two query params.
+    The message to verify is the query content before `&signature=...`.
     """
     if not raw_query_string:
         raise SsvVerificationError("Missing raw query string.")
 
-    query = (
-        raw_query_string[1:] if raw_query_string.startswith("?") else raw_query_string
-    )
+    query = raw_query_string[1:] if raw_query_string.startswith("?") else raw_query_string
     if not query:
         raise SsvVerificationError("Empty raw query string.")
 
-    signature_marker = "&signature="
-    signature_idx = query.find(signature_marker)
-    if signature_idx == -1:
-        raise SsvVerificationError("Malformed raw query: missing '&signature='.")
+    try:
+        signed_query, tail = query.rsplit("&signature=", 1)
+        signature_value, key_id_value = tail.rsplit("&key_id=", 1)
+    except ValueError as e:
+        raise SsvVerificationError(
+            "Malformed raw query: expected final '&signature=...&key_id=...'."
+        ) from e
 
-    signed_query = query[:signature_idx]
     if not signed_query:
         raise SsvVerificationError("Malformed raw query: missing signed parameters.")
-
-    tail = query[signature_idx + 1 :]  # `signature=...&key_id=...`
-    tail_parts = tail.split("&")
-    if len(tail_parts) != 2:
-        raise SsvVerificationError(
-            "Malformed raw query: signature and key_id must be final two parameters."
-        )
-
-    if not tail_parts[0].startswith("signature="):
-        raise SsvVerificationError("Malformed raw query: expected signature parameter.")
-    if not tail_parts[1].startswith("key_id="):
-        raise SsvVerificationError(
-            "Malformed raw query: expected key_id parameter after signature."
-        )
-
-    signature_value = tail_parts[0].split("=", 1)[1]
-    key_id_value = tail_parts[1].split("=", 1)[1]
     if not signature_value:
         raise SsvVerificationError("Malformed raw query: empty signature parameter.")
     if not key_id_value:
         raise SsvVerificationError("Malformed raw query: empty key_id parameter.")
 
-    return signed_query.encode("utf-8")
+    decoded_signed = unquote(signed_query).encode("utf-8")
 
+    logger.debug("AdMob SSV signed query raw: %s", signed_query.encode("utf-8"))
+    logger.debug("AdMob SSV signed query decoded: %s", decoded_signed)
+
+    return ParsedRawSsvQuery(
+        signed_message=decoded_signed,
+        signature_b64=unquote(signature_value),
+        key_id=unquote(key_id_value),
+    )
 
 def _validate_business_rules(
     payload: SsvPayload,
@@ -133,10 +132,10 @@ def verify_ssv(
     business_validator: Callable[[SsvPayload], None] | None = None,
 ) -> SsvPayload:
     """Verify an AdMob SSV callback. Raises SsvVerificationError on failure."""
-    signed_message = _build_signed_message_from_raw_query(raw_query_string)
-
-    signature_b64 = query_params.get("signature")
-    key_id = query_params.get("key_id")
+    parsed_raw_query = _parse_raw_ssv_query(raw_query_string)
+    signed_message = parsed_raw_query.signed_message
+    signature_b64 = parsed_raw_query.signature_b64
+    key_id = parsed_raw_query.key_id
     if not signature_b64 or not key_id:
         raise SsvVerificationError("Missing signature or key_id.")
 
@@ -147,6 +146,10 @@ def verify_ssv(
         raise SsvVerificationError(f"Could not fetch verifier keys: {e}")
 
     pem = keys.get(str(key_id))
+    if not pem:
+        # Key rotation can happen before cache TTL expiry.
+        keys = _fetch_verifier_keys(force_refresh=True)
+        pem = keys.get(str(key_id))
     if not pem:
         raise SsvVerificationError(f"Unknown key_id: {key_id}")
 
