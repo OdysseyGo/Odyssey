@@ -61,58 +61,43 @@ def _load_public_key(pem: str):
 
 
 def _parse_raw_ssv_query(raw_query_string: str) -> ParsedRawSsvQuery:
-    """Build the exact signed AdMob message from the raw query string.
+    """Build the AdMob SSV signed message from the raw query string.
 
-    AdMob signs byte-exact query content before the trailing `&signature=...`
-    parameter. The final two params must be exactly `signature` then `key_id`.
+    AdMob places `signature` and `key_id` as the final two query params.
+    The message to verify is the query content before `&signature=...`.
     """
     if not raw_query_string:
         raise SsvVerificationError("Missing raw query string.")
 
-    query = (
-        raw_query_string[1:] if raw_query_string.startswith("?") else raw_query_string
-    )
+    query = raw_query_string[1:] if raw_query_string.startswith("?") else raw_query_string
     if not query:
         raise SsvVerificationError("Empty raw query string.")
 
-    signature_marker = "&signature="
-    signature_idx = query.find(signature_marker)
-    if signature_idx == -1:
-        raise SsvVerificationError("Malformed raw query: missing '&signature='.")
+    try:
+        signed_query, tail = query.rsplit("&signature=", 1)
+        signature_value, key_id_value = tail.rsplit("&key_id=", 1)
+    except ValueError as e:
+        raise SsvVerificationError(
+            "Malformed raw query: expected final '&signature=...&key_id=...'."
+        ) from e
 
-    signed_query = query[:signature_idx]
     if not signed_query:
         raise SsvVerificationError("Malformed raw query: missing signed parameters.")
-
-    tail = query[signature_idx + 1 :]  # `signature=...&key_id=...`
-    tail_parts = tail.split("&")
-    if len(tail_parts) != 2:
-        raise SsvVerificationError(
-            "Malformed raw query: signature and key_id must be final two parameters."
-        )
-
-    if not tail_parts[0].startswith("signature="):
-        raise SsvVerificationError("Malformed raw query: expected signature parameter.")
-    if not tail_parts[1].startswith("key_id="):
-        raise SsvVerificationError(
-            "Malformed raw query: expected key_id parameter after signature."
-        )
-
-    signature_value = tail_parts[0].split("=", 1)[1]
-    key_id_value = tail_parts[1].split("=", 1)[1]
     if not signature_value:
         raise SsvVerificationError("Malformed raw query: empty signature parameter.")
     if not key_id_value:
         raise SsvVerificationError("Malformed raw query: empty key_id parameter.")
 
-    # Use percent-decoding without '+' -> ' ' conversion. Query parser layers
-    # may normalize '+' and corrupt base64 signatures.
+    decoded_signed = unquote(signed_query).encode("utf-8")
+
+    logger.debug("AdMob SSV signed query raw: %s", signed_query.encode("utf-8"))
+    logger.debug("AdMob SSV signed query decoded: %s", decoded_signed)
+
     return ParsedRawSsvQuery(
-        signed_message=signed_query.encode("utf-8"),
+        signed_message=decoded_signed,
         signature_b64=unquote(signature_value),
         key_id=unquote(key_id_value),
     )
-
 
 def _validate_business_rules(
     payload: SsvPayload,
